@@ -1214,3 +1214,8 @@
     border-radius: 14px;
   }
 }
+
+/* Keep the completed workflow progress panel hidden despite section layout styles. */
+#event-create-modal #event-workflow-progress-section[hidden] {
+  display: none !important;
+}
