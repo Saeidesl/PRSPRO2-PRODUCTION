@@ -30,3 +30,50 @@
 #event-create-modal .event-context-form-value{display:grid;gap:2px;padding:5px 0;border-top:1px solid var(--color-border)}#event-create-modal .event-context-form-value strong{font-size:10px;color:var(--color-text-secondary)}#event-create-modal .event-context-form-value span{font-size:11px;color:var(--color-text);overflow-wrap:anywhere}
 
 #event-create-modal .event-modal-heading,#event-create-modal #event-form-error{grid-column:1/-1}
+
+/* Independent scrolling for the event form and its contextual side panel. */
+@media (min-width: 821px) {
+  #event-create-modal .event-form-workspace {
+    height: min(82vh, 780px);
+    max-height: min(82vh, 780px);
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  #event-create-modal .event-form-workspace > form,
+  #event-create-modal .event-context-panel {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  #event-create-modal .event-context-panel {
+    position: relative;
+    top: auto;
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 820px) {
+  #event-create-modal .event-form-workspace {
+    height: auto;
+    min-height: 0;
+    grid-template-rows: none;
+  }
+
+  #event-create-modal .event-context-panel {
+    min-height: 0;
+    max-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+}
