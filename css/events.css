@@ -1283,3 +1283,18 @@
   }
   #event-create-modal #event-form-type { min-height: 50px; }
 }
+
+/* Event center project cards: profile image and latest registered event */
+.events-page .event-queue-project-main{display:flex;align-items:center;gap:12px;min-width:0;margin-bottom:10px}
+.events-page .event-queue-project-media{position:relative;display:grid;flex:0 0 64px;width:64px;height:64px;place-items:center;overflow:hidden;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface-secondary,var(--color-bg));color:var(--color-text-muted);font-size:.68rem;text-align:center}
+.events-page .event-queue-project-media img{display:block;width:100%;height:100%;object-fit:cover}
+.events-page .event-queue-project-image-placeholder{padding:4px;line-height:1.5}
+.events-page .event-queue-project-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:2px}
+.events-page .event-queue-project-copy strong{display:block;overflow-wrap:anywhere}
+.events-page .event-queue-project-copy .event-queue-project-status{margin:0;font-size:.75rem}
+.events-page .event-queue-latest-event{display:flex;min-width:0;flex-direction:column;gap:2px;padding:9px 10px;margin:0 0 12px;border-radius:9px;background:var(--color-bg-subtle,var(--color-surface-secondary));line-height:1.6}
+.events-page .event-queue-latest-event strong{font-size:.8rem;line-height:1.6}
+.events-page .event-queue-latest-event > span:last-child{color:var(--color-text-muted);font-size:.7rem;overflow-wrap:anywhere}
+.events-page .event-queue-latest-label{color:var(--color-text-muted);font-size:.68rem}
+.events-page .event-queue-latest-event.is-empty{min-height:56px;justify-content:center}
+@media(max-width:640px){.events-page .event-queue-project-media{flex-basis:58px;width:58px;height:58px}.events-page .event-queue-latest-event{padding:8px;margin-bottom:10px}}

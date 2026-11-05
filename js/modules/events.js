@@ -40,6 +40,9 @@
     amendmentSourceUpdatedAt: '',
     amendmentEventId: '',
     amendmentPendingValues: null,
+    queueProjectImageObserver: null,
+    queueProjectImageRequestId: 0,
+    queueProjectImageAttachments: Object.create(null),
 
     init: function () {
       this.bindEvents();
@@ -696,6 +699,25 @@
       });
     },
 
+    getLatestEventByProject: function (events) {
+      const latestByProject = new Map();
+      (events || []).forEach(function (event) {
+        if (!event || String(event.Status || 'ACTIVE').toUpperCase() === 'VOID') return;
+        const projectId = String(event.ProjectID || '').trim();
+        if (!projectId) return;
+        const createdAt = new Date(event.CreatedAt || '').getTime();
+        const occurredAt = new Date(event.OccurredAt || '').getTime();
+        const timestamp = Number.isFinite(createdAt) && createdAt > 0
+          ? createdAt
+          : Number.isFinite(occurredAt) && occurredAt > 0 ? occurredAt : 0;
+        const previous = latestByProject.get(projectId);
+        if (!previous || timestamp > previous.timestamp) {
+          latestByProject.set(projectId, { event: event, timestamp: timestamp });
+        }
+      });
+      return latestByProject;
+    },
+
     renderProjectQueues: function () {
       const user = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
       const userId = String(user.ID || user.Id || user.id || '');
@@ -703,13 +725,15 @@
       const typeMap = new Map();
       this.eventTypes.forEach(function (type) { typeMap.set(Events.idOf(type), type); });
 
-      // Aggregate relevant events once. The former project-by-project filter
-      // scanned the full event list for every project (O(projects × events)).
+      // Aggregate project activity once; latest-event selection is independently testable.
       const activityByProject = new Map();
+      const latestEventByProject = this.getLatestEventByProject(this.events);
+
       this.events.forEach(function (event) {
         if (String(event.Status || 'ACTIVE').toUpperCase() === 'VOID') return;
         const projectId = String(event.ProjectID || '').trim();
         if (!projectId) return;
+
         const belongsToUser = !!userId && (
           String(event.PerformedBy || '') === userId ||
           String(event.CreatedBy || '') === userId
@@ -746,6 +770,7 @@
         queues[activity && activity.completed ? 'completed' :
           activity && activity.hasRelated ? 'progress' : 'pending'].push(project);
       });
+
       const definitions = [
         { key: 'pending', id: 'event-queue-pending', countId: 'event-queue-pending-count', empty: 'پروژه‌ای در انتظار اقدام نیست.' },
         { key: 'progress', id: 'event-queue-progress', countId: 'event-queue-progress-count', empty: 'پروژه‌ای در حال انجام نیست.' },
@@ -766,11 +791,171 @@
           const code = project.ProjectCode || id;
           const title = project.Title || project.Name || project.ProjectName || 'بدون عنوان';
           const status = project.CurrentStepStatus || project.Status || '';
-          return '<article class="event-queue-project"><strong>' + Events.escape(code) + ' — ' + Events.escape(title) + '</strong>' +
-            (status ? '<p>' + Events.escape(status) + '</p>' : '') +
+          const latest = latestEventByProject.get(id);
+          const latestEvent = latest && latest.event;
+          const eventType = latestEvent
+            ? (latestEvent.EventTypeName || (typeMap.get(String(latestEvent.EventTypeID || '')) || {}).Name ||
+              (typeMap.get(String(latestEvent.EventTypeID || '')) || {}).Code || 'رویداد ثبت‌شده')
+            : '';
+          const eventCreator = latestEvent ? Events.creatorValue(latestEvent) : '';
+          const eventDate = latestEvent
+            ? Events.formatDate(latestEvent.CreatedAt || latestEvent.OccurredAt)
+            : '';
+          return '<article class="event-queue-project" data-event-project-card="' + Events.escape(id) + '">' +
+            '<div class="event-queue-project-main">' +
+              '<div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
+                '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" hidden>' +
+                '<span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span>' +
+              '</div>' +
+              '<div class="event-queue-project-copy">' +
+                '<strong>' + Events.escape(code) + ' — ' + Events.escape(title) + '</strong>' +
+                (status ? '<p class="event-queue-project-status">' + Events.escape(status) + '</p>' : '') +
+              '</div>' +
+            '</div>' +
+            (latestEvent
+              ? '<div class="event-queue-latest-event"><span class="event-queue-latest-label">آخرین رویداد</span>' +
+                '<strong>' + Events.escape(eventType) + '</strong>' +
+                '<span>' + Events.escape(eventCreator) + (eventDate ? ' · ' + Events.escape(eventDate) : '') + '</span></div>'
+              : '<div class="event-queue-latest-event is-empty"><span class="event-queue-latest-label">آخرین رویداد</span><span>هنوز رویدادی ثبت نشده است.</span></div>') +
             (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '">ثبت رویداد برای این پروژه</button>' : '') +
             '</article>';
         }).join('');
+      });
+
+      this.loadQueueProjectImages(this.projects);
+    },
+
+    loadQueueProjectImages: async function (projects) {
+      const projectModule = PMS.Modules && PMS.Modules.Projects;
+      const containers = [
+        document.getElementById('event-queue-pending'),
+        document.getElementById('event-queue-progress'),
+        document.getElementById('event-queue-completed')
+      ].filter(Boolean);
+      const requestId = ++this.queueProjectImageRequestId;
+      if (this.queueProjectImageObserver) this.queueProjectImageObserver.disconnect();
+      if (!projectModule || typeof projectModule.getProjectCardAttachments !== 'function') return;
+
+      const router = PMS.Router;
+      const canViewAttachments = !!(router && (
+        (typeof router.isAdmin === 'function' && router.isAdmin()) ||
+        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
+      ));
+      if (!canViewAttachments) {
+        this.applyQueueProjectImages();
+        return;
+      }
+
+      try {
+        const attachments = await projectModule.getProjectCardAttachments();
+        if (requestId !== this.queueProjectImageRequestId) return;
+        const visibleIds = new Set((projects || []).map(Events.idOf).filter(Boolean));
+        const latestByProject = Object.create(null);
+        (attachments || []).filter(function (item) {
+          const entityType = String(item.EntityType || item.entityType || '').toUpperCase();
+          const projectId = String(item.EntityID || item.entityID || item.EntityId || '');
+          const mime = String(item.MimeType || item.mimeType || '').toLowerCase();
+          const attachmentType = String(item.AttachmentType || item.attachmentType || '').toUpperCase();
+          const status = String(item.Status || item.status || 'ACTIVE').toUpperCase();
+          return entityType === 'PROJECT' && visibleIds.has(projectId) &&
+            mime.indexOf('image/') === 0 && attachmentType === 'PROFILE' &&
+            status !== 'DELETED' && status !== 'VOID';
+        }).sort(function (a, b) {
+          return new Date(b.UploadedAt || b.uploadedAt || b.CreatedAt || 0).getTime() -
+            new Date(a.UploadedAt || a.uploadedAt || a.CreatedAt || 0).getTime();
+        }).forEach(function (item) {
+          const projectId = String(item.EntityID || item.entityID || item.EntityId || '');
+          if (projectId && !latestByProject[projectId]) latestByProject[projectId] = item;
+        });
+
+        this.queueProjectImageAttachments = latestByProject;
+        (projects || []).forEach(function (project) {
+          const projectId = Events.idOf(project);
+          if (!projectId) return;
+          if (!latestByProject[projectId] && !projectModule.projectCardImages[projectId]) {
+            projectModule.projectCardImageStates[projectId] = 'empty';
+          } else if (latestByProject[projectId] && !projectModule.projectCardImages[projectId]) {
+            projectModule.projectCardImageStates[projectId] = 'loading';
+          }
+        });
+        this.applyQueueProjectImages();
+        const targets = containers.reduce(function (all, container) {
+          return all.concat(Array.from(container.querySelectorAll('[data-event-project-media]')));
+        }, []);
+        if ('IntersectionObserver' in window) {
+          this.queueProjectImageObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              const media = entry.target;
+              this.queueProjectImageObserver.unobserve(media);
+              const projectId = String(media.getAttribute('data-event-project-media') || '');
+              const attachment = this.queueProjectImageAttachments[projectId];
+              if (attachment && typeof projectModule.loadOneProjectCardImage === 'function') {
+                projectModule.loadOneProjectCardImage(projectId, attachment)
+                  .finally(() => this.applyQueueProjectImages());
+              }
+            });
+          }, { rootMargin: '240px 0px', threshold: 0.01 });
+          targets.forEach((target) => this.queueProjectImageObserver.observe(target));
+        } else {
+          await Promise.all(targets.map((target) => {
+            const projectId = String(target.getAttribute('data-event-project-media') || '');
+            const attachment = this.queueProjectImageAttachments[projectId];
+            return attachment && typeof projectModule.loadOneProjectCardImage === 'function'
+              ? projectModule.loadOneProjectCardImage(projectId, attachment)
+              : Promise.resolve();
+          }));
+          this.applyQueueProjectImages();
+        }
+      } catch (error) {
+        if (requestId !== this.queueProjectImageRequestId) return;
+        (projects || []).forEach(function (project) {
+          const projectId = Events.idOf(project);
+          if (projectId && projectModule.projectCardImageStates) projectModule.projectCardImageStates[projectId] = 'error';
+        });
+        console.warn('Event queue project images could not be loaded:', error);
+        this.applyQueueProjectImages();
+      }
+    },
+
+    applyQueueProjectImages: function () {
+      const projectModule = PMS.Modules && PMS.Modules.Projects;
+      const router = PMS.Router;
+      const canViewAttachments = !!(router && (
+        (typeof router.isAdmin === 'function' && router.isAdmin()) ||
+        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
+      ));
+      const containers = [
+        document.getElementById('event-queue-pending'),
+        document.getElementById('event-queue-progress'),
+        document.getElementById('event-queue-completed')
+      ].filter(Boolean);
+      containers.forEach(function (container) {
+        container.querySelectorAll('[data-event-project-media]').forEach(function (media) {
+          const projectId = String(media.getAttribute('data-event-project-media') || '');
+          const image = media.querySelector('[data-event-project-thumbnail]');
+          const placeholder = media.querySelector('.event-queue-project-image-placeholder');
+          const src = canViewAttachments && projectModule && projectModule.projectCardImages
+            ? projectModule.projectCardImages[projectId]
+            : '';
+          const state = canViewAttachments && projectModule && projectModule.projectCardImageStates
+            ? projectModule.projectCardImageStates[projectId] || 'empty'
+            : 'empty';
+          media.dataset.imageState = src ? 'ready' : state;
+          if (src && image) {
+            image.src = src;
+            image.hidden = false;
+            if (placeholder) placeholder.hidden = true;
+          } else {
+            if (image) { image.removeAttribute('src'); image.hidden = true; }
+            if (placeholder) {
+              placeholder.hidden = false;
+              placeholder.textContent = state === 'loading' || state === 'loading-image'
+                ? 'در حال بارگذاری تصویر'
+                : state === 'error' ? 'تصویر در دسترس نیست' : 'بدون تصویر';
+            }
+          }
+        });
       });
     },
 
