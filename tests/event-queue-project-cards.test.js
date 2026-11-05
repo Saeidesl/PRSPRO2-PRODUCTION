@@ -80,7 +80,7 @@ test('event operations center defaults to the in-progress project queue', () => 
   const html = read('pages/events.html');
   const events = read('js/modules/events.js');
 
-  assert.match(html, /id="event-tab-progress"[^>]*class="event-queue-tab is-active"/);
+  assert.match(html, /class="event-queue-tab is-active" id="event-tab-progress"/);
   assert.match(html, /id="event-panel-progress"[^>]*class="event-project-queue queue-progress is-active"[^>]*>/);
   assert.match(html, /id="event-panel-pending"[^>]*hidden/);
   assert.match(events, /this\.activateQueue\('progress'\)/);
