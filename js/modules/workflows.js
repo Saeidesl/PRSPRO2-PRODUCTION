@@ -880,6 +880,31 @@
         </div>
       `,
       onReady: function(modalOverlay) {
+        // Delegate the add action at the modal level so it remains reliable
+        // across the asynchronous rules-loading/rendering lifecycle.
+        modalOverlay.addEventListener('click', function(event) {
+          const addButton = event.target && event.target.closest
+            ? event.target.closest('#workflow-rule-add')
+            : null;
+          if (!addButton || !modalOverlay.contains(addButton)) return;
+          event.preventDefault();
+          const rows = modalOverlay.querySelector('#workflow-rule-rows');
+          const sequence = modalOverlay.querySelector('#workflow-rule-sequence');
+          if (!rows || !sequence) return;
+          try {
+            appendRuleRow(rows, {}, sequence.value);
+            const message = modalOverlay.querySelector('#workflow-rule-message');
+            if (message) message.hidden = true;
+          } catch (error) {
+            const message = modalOverlay.querySelector('#workflow-rule-message');
+            if (message) {
+              message.textContent = error.message || 'افزودن ردیف رویداد ناموفق بود.';
+              message.className = 'alert alert-danger';
+              message.hidden = false;
+            }
+          }
+        });
+
         modalOverlay.querySelector('#workflow-rule-save').addEventListener('click', async function() {
           if (state.rulesSaving || this.disabled) return;
           const rows = modalOverlay.querySelector('#workflow-rule-rows');
@@ -947,7 +972,6 @@
       const editor = overlay.querySelector('#workflow-rule-editor');
       const rows = overlay.querySelector('#workflow-rule-rows');
       const sequence = overlay.querySelector('#workflow-rule-sequence');
-      const addButton = overlay.querySelector('#workflow-rule-add');
       const saveButton = overlay.querySelector('#workflow-rule-save');
       const message = overlay.querySelector('#workflow-rule-message');
 
@@ -956,10 +980,6 @@
       sequence.addEventListener('change', function() {
         updateRuleSequenceVisibility(rows, sequence.value);
       });
-      addButton.addEventListener('click', function() {
-        appendRuleRow(rows, {}, sequence.value);
-      });
-
       loading.hidden = true;
       editor.hidden = false;
       saveButton.disabled = false;
