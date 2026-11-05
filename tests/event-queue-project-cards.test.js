@@ -97,9 +97,9 @@ test('project queue cards color the actual project status instead of the queue l
   assert.equal(events.getProjectStatusTone('متوقف'), 'paused');
   assert.match(source, /event-queue-project-status-badge status-/);
   assert.doesNotMatch(source, /event-queue-project-state/);
-  assert.match(css, /grid-template-columns:\\s*minmax\\(0, 1fr\\) minmax\\(0, 1fr\\)/);
-  assert.match(css, /aspect-ratio:\\s*3 \/ 4/);
-  assert.match(css, /min-height:\\s*190px/);
+  assert.match(css, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(css, /aspect-ratio:\s*3 \/ 4/);
+  assert.match(css, /min-height:\s*190px/);
   assert.match(css, /status-waiting/);
   assert.match(css, /status-active/);
   assert.match(css, /status-completed/);
