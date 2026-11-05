@@ -394,8 +394,7 @@
             PMS.Api.getCached('/events', CACHE_KEY, {
               onRefresh: function (data) {
                 Events.events = Events.normalize(data);
-                Events.renderFilters();
-                Events.applyFilters();
+                Events.scheduleRefreshRender();
               },
               onError: function (error, isBackground) {
                 if (!isBackground && cachedEvents === null) {
@@ -412,8 +411,7 @@
             PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY, {
               onRefresh: function (data) {
                 Events.projects = Events.normalize(data);
-                Events.renderFilters();
-                Events.applyFilters();
+                Events.scheduleRefreshRender();
               }
             })
           );
@@ -425,30 +423,45 @@
             PMS.Api.getCached('/event-types', EVENT_TYPES_CACHE_KEY, {
               onRefresh: function (data) {
                 Events.eventTypes = Events.normalize(data);
-                Events.renderFilters();
-                Events.applyFilters();
+                Events.scheduleRefreshRender();
               }
             })
           );
         }
 
         const results = await Promise.all(requests);
+        let hasFreshResult = false;
         results.forEach(function (result, index) {
           if (!result || result.cached !== false) return;
 
+          hasFreshResult = true;
           const key = resultKeys[index];
           if (key === 'events') Events.events = Events.normalize(result.data);
           if (key === 'projects') Events.projects = Events.normalize(result.data);
           if (key === 'types') Events.eventTypes = Events.normalize(result.data);
         });
 
-        this.renderFilters();
-        this.applyFilters();
+        // Cache hits were already rendered above. Only render here when this
+        // request batch supplied data that was not available in the cache.
+        if (hasFreshResult) {
+          this.renderFilters();
+          this.applyFilters();
+        }
       } catch (error) {
         if (cachedEvents === null) this.showError(error);
       } finally {
         if (loading) loading.hidden = true;
       }
+    },
+
+    scheduleRefreshRender: function () {
+      // Coalesce background refreshes from /events, /projects and /event-types
+      // into one UI update instead of rendering once per response.
+      clearTimeout(this.refreshRenderTimer);
+      this.refreshRenderTimer = setTimeout(function () {
+        Events.renderFilters();
+        Events.applyFilters();
+      }, 40);
     },
 
     normalize: function (data) {
