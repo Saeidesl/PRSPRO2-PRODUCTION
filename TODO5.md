@@ -67,12 +67,10 @@ SHA مبنای Frontend: `d560a02990d6eaab9572a32c84ccd384468f6671`
 - [x] **Task 1 — Discovery & Planning**
   - *Log:* مخازن عملیاتی و شاخه main بررسی شدند؛ TODO5.md و ARCHITECTURE.md خوانده شد. SHAهای مبنا ثبت و شاخه کاری مستقل `feature/unified-calendar-time-context-scroll-20261106` در هر دو مخزن از همان commitها ایجاد شد. مسیرهای واقعی `js/components/jalali-calendar.js`, `css/jalali-calendar.css`, `css/event-context.css`, `index.html`, `pages/events.html`, `js/modules/events.js`, `js/modules/projects.js`, `js/modules/project-detail.js`, `js/modules/information-types.js` ردیابی شدند. تقویم مشترک با MutationObserver ورودی‌های ثابت/پویا را پوشش می‌دهد؛ popup فعلی انتخاب ساعت ندارد و CSS از توکن‌های legacy استفاده می‌کند. پنل جانبی در grid ارتفاع محدود/حداقل ارتفاع مناسب ندارد. قرارداد Backend شامل `POST /events` و `13_Events.OccurredAt` بدون تغییر می‌ماند؛ تغییر Backend/DB/API لازم نیست. فاز به سه Macro-Task اجرایی تقسیم شد.
 
-- [ ] **Task 2 — اسکرول مستقل پنل اطلاعات کمکی (IN PROGRESS)**
-  - اصلاح زنجیره ارتفاع و overflow در `css/event-context.css` برای دسکتاپ و drawer موبایل.
-  - محدودسازی پنل به فضای قابل مشاهده Modal با `min-height:0`, `max-height` و `overflow-y:auto`؛ جلوگیری از رشد grid بر اساس محتوای پنل.
-  - آزمون رگرسیون ساختاری و حفظ رفتار موبایل.
+- [x] **Task 2 — اسکرول مستقل پنل اطلاعات کمکی**
+  - *Log:* در `css/event-context.css` ارتفاع workspace دسکتاپ با محدودیت `min(82vh, 780px)` تثبیت شد؛ grid با `grid-template-rows:auto minmax(0,1fr)` و `min-height:0` از رشد بر اساس محتوای پنل جلوگیری می‌کند. فرم اصلی و `.event-context-panel` دارای ارتفاع کامل، `overflow-y:auto` و `overscroll-behavior:contain` شدند؛ sticky پنل به relative تغییر کرد. drawer موبایل با `max-height:100dvh` و اسکرول مستقل حفظ شد. تست‌های ساختاری در `tests/event-context-panel-scroll.test.js` برای دسکتاپ و موبایل اضافه شدند. کاربر نتیجه را تأیید کرد.
 
-- [ ] **Task 3 — یکپارچه‌سازی تم تقویم شمسی**
+- [ ] **Task 3 — یکپارچه‌سازی تم تقویم شمسی (IN PROGRESS)**
   - اصلاح `css/jalali-calendar.css` با توکن‌های رسمی برنامه برای تمام سطوح، دکمه‌ها، hover/focus/selected/today/disabled و کنترل ساعت.
   - بررسی تم روشن و تاریک و حذف وابستگی به توکن‌های legacy.
 
