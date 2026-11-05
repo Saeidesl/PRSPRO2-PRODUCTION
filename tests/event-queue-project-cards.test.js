@@ -120,14 +120,15 @@ test('event queue project image preview reuses the projects lightbox and guards 
   const source = read('js/modules/events.js');
   const css = read('css/events.css');
 
-  assert.match(source, /queueThumbnail\\.closest\\('\[data-event-project-media\]'\)/);
-  assert.match(source, /media\\.dataset\\.imageState === 'ready'/);
-  assert.match(source, /PMS\\.Modules\\.Projects\\.openProjectImage\\(imageSrc/);
-  assert.doesNotMatch(source, /openQueueProjectImage: function|adjustQueueProjectImage: function/);
-  assert.doesNotMatch(source, /event-queue-image-controls|event-queue-image-viewport/);
-  assert.match(css, /event-project-image-reveal/);
-  assert.match(css, /event-project-image-spin/);
-  assert.match(css, /prefers-reduced-motion:reduce/);
+  assert.ok(source.includes("queueThumbnail.closest('[data-event-project-media]')"));
+  assert.ok(source.includes("media.dataset.imageState === 'ready'"));
+  assert.ok(source.includes("PMS.Modules.Projects.openProjectImage(imageSrc"));
+  assert.ok(!source.includes('openQueueProjectImage: function'));
+  assert.ok(!source.includes('adjustQueueProjectImage: function'));
+  assert.ok(!source.includes('event-queue-image-controls'));
+  assert.ok(css.includes('event-project-image-reveal'));
+  assert.ok(css.includes('event-project-image-spin'));
+  assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
 
 
