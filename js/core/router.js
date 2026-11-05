@@ -74,13 +74,13 @@ getBaseUrl: function () {
 
   // Operational GitHub Pages is published from PRSPRO2-PRODUCTION.
   // Resolve all dynamically loaded pages from that same project path.
-  if (firstSegment === 'prspr02-production') {
+  if (firstSegment === 'prspro2-production') {
     return new URL('/PRSPRO2-PRODUCTION/', window.location.origin);
   }
 
   // Keep the explicitly addressed legacy/staging path compatible when used
   // outside the operational deployment.
-  if (firstSegment === 'prspr02') {
+  if (firstSegment === 'prspro2') {
     if (parts[1] && parts[1].toLowerCase() === 'staging') {
       return new URL('/PRSPRO2/staging/', window.location.origin);
     }
