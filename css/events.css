@@ -1317,15 +1317,12 @@
 @media(max-width:640px){.events-filter-toolbar{align-items:stretch;flex-direction:column}.events-filter-toolbar>.filter-group{max-width:none}.events-filter-summary{justify-content:space-between}.events-filter-summary button{flex:0 0 auto}}
 
 
-/* Event queue card layout and semantic status palette */
+/* Event queue cards: project status colors and taller portrait thumbnails */
 .events-page .event-queue-project {
   overflow: hidden;
   padding: 12px;
   border-inline-start: 3px solid var(--color-border);
 }
-.events-page .event-queue-project.queue-pending { border-inline-start-color: var(--color-danger); }
-.events-page .event-queue-project.queue-progress { border-inline-start-color: var(--color-warning); }
-.events-page .event-queue-project.queue-completed { border-inline-start-color: var(--color-success); }
 .events-page .event-queue-project-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1338,8 +1335,8 @@
   position: relative;
   width: 100%;
   min-width: 0;
-  min-height: 150px;
-  aspect-ratio: 4 / 3;
+  min-height: 190px;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -1349,13 +1346,13 @@
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 150px;
+  min-height: 190px;
   object-fit: cover;
 }
 .events-page .event-queue-project-image-placeholder {
   display: grid;
   width: 100%;
-  min-height: 150px;
+  min-height: 190px;
   height: 100%;
   place-items: center;
   padding: 10px;
@@ -1369,42 +1366,58 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 7px;
+  gap: 10px;
   direction: rtl;
   text-align: right;
-}
-.events-page .event-queue-project-state {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  max-width: 100%;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: .74rem;
-  font-weight: 750;
-  line-height: 1.6;
-}
-.events-page .queue-pending .event-queue-project-state {
-  background: var(--color-danger-bg);
-  color: var(--color-danger);
-}
-.events-page .queue-progress .event-queue-project-state {
-  background: var(--color-warning-bg);
-  color: var(--color-warning);
-}
-.events-page .queue-completed .event-queue-project-state {
-  background: var(--color-success-bg);
-  color: var(--color-success);
 }
 .events-page .event-queue-project-copy strong {
   overflow-wrap: anywhere;
 }
-.events-page .event-queue-project-copy .event-queue-project-status { margin: 0; }
+.events-page .event-queue-project-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 750;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.events-page .event-queue-project-status-badge.status-waiting,
+.events-page .event-queue-project-status-badge.status-paused {
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-color: color-mix(in srgb, var(--color-warning) 22%, transparent);
+}
+.events-page .event-queue-project-status-badge.status-active {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 13%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+.events-page .event-queue-project-status-badge.status-completed {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+}
+.events-page .event-queue-project-status-badge.status-danger {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border-color: color-mix(in srgb, var(--color-danger) 22%, transparent);
+}
+.events-page .event-queue-project-status-badge.status-neutral {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-alt);
+  border-color: var(--color-border);
+}
 @media (max-width: 640px) {
   .events-page .event-queue-project-main { gap: 9px; }
   .events-page .event-queue-project-media,
   .events-page .event-queue-project-media img,
-  .events-page .event-queue-project-image-placeholder { min-height: 118px; }
+  .events-page .event-queue-project-image-placeholder { min-height: 165px; }
+  .events-page .event-queue-project-copy { gap: 8px; }
   .events-page .event-queue-project-copy strong { font-size: .84rem; }
-  .events-page .event-queue-project-state { font-size: .68rem; padding: 3px 7px; }
+  .events-page .event-queue-project-status-badge { font-size: .7rem; padding: 4px 8px; }
 }
