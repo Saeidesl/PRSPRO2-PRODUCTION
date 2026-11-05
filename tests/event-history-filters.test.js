@@ -44,3 +44,18 @@ test('event history date ranges compare calendar dates without timezone drift', 
   const source = read('js/modules/events.js');
   assert.ok(source.includes('/^\\d{4}-\\d{2}-\\d{2}$/'));
 });
+
+
+test('event history supports CreatedAt sorting in both directions and preserves sort while filtering', () => {
+  const html = read('pages/events.html');
+  const source = read('js/modules/events.js');
+  assert.match(html, /id="event-history-sort"/);
+  assert.match(html, /value="desc" selected/);
+  assert.match(html, /value="asc">قدیم به جدید/);
+  assert.match(source, /'event-history-sort'/);
+  assert.match(source, /this\.historySortOrder = sortControl && sortControl\.value === 'asc' \? 'asc' : 'desc'/);
+  assert.match(source, /Date\.parse\(event && event\.CreatedAt/);
+  assert.match(source, /\(a\.timestamp - b\.timestamp\) \* sortDirection/);
+  assert.match(source, /this\.render\(sorted\)/);
+  assert.doesNotMatch(source.match(/clearHistoryFilters: function \(\) \{[\s\S]*?\n    \},/)?.[0] || '', /event-history-sort/);
+});
