@@ -20,3 +20,16 @@ test('event context drawer remains independently scrollable on mobile', () => {
   assert.match(css, /\.event-context-panel\s*\{[\s\S]*?max-height:\s*100dvh;[\s\S]*?overflow-y:\s*auto;[\s\S]*?overscroll-behavior:\s*contain;/);
   assert.match(css, /\.event-context-panel\.is-open\s*\{\s*display:\s*block;/);
 });
+
+
+test('shared Jalali calendar uses unified semantic theme tokens for all controls and states', () => {
+  const css = read('css/jalali-calendar.css');
+  for (const token of ['--color-surface', '--color-surface-alt', '--color-surface-hover', '--color-text', '--color-text-secondary', '--color-text-muted', '--color-border', '--color-primary', '--color-input-bg', '--color-input-text', '--color-danger', '--shadow-overlay']) {
+    assert.ok(css.includes('var(' + token), 'missing theme token ' + token);
+  }
+  assert.match(css, /\.pms-jalali-cal-head button[\s\S]*?background:\s*var\(--color-surface-alt\)/);
+  assert.match(css, /\.pms-jalali-cal-footer button:hover[\s\S]*?background:\s*var\(--color-surface-hover\)/);
+  assert.match(css, /\.pms-jalali-cal-grid button\.is-selected[\s\S]*?background:\s*var\(--color-primary\)/);
+  assert.match(css, /\.pms-jalali-cal-grid button:disabled/);
+  assert.doesNotMatch(css, /var\(--(border-color|card-bg|text-color|surface|muted|accent)(?:,|\))/);
+});
