@@ -573,6 +573,7 @@
     renderRecentProjects: function () {
       const container = document.getElementById('events-recent-projects');
       if (!container) return;
+      container.removeAttribute('aria-busy');
       const searchInput = document.getElementById('events-project-search');
       const query = String(searchInput && searchInput.value || '').trim().toLocaleLowerCase('fa');
       const projects = this.projects.filter(function (project) {
@@ -931,6 +932,7 @@
         const container = document.getElementById(definition.id);
         const count = document.getElementById(definition.countId);
         if (!container) return;
+        container.removeAttribute('aria-busy');
         const items = queues[definition.key];
         if (count) count.textContent = String(items.length).replace(/\d/g, function (digit) { return '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]; });
         if (!items.length) {
@@ -1181,6 +1183,11 @@
       const empty = document.getElementById('events-empty');
 
       if (!container) return;
+      const loading = document.getElementById('events-loading');
+      if (loading) {
+        loading.hidden = true;
+        loading.removeAttribute('aria-busy');
+      }
 
       if (!events || events.length === 0) {
         container.replaceChildren();
