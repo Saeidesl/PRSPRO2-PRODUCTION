@@ -74,3 +74,27 @@ test('event queue reuses existing project image metadata and download flow with 
   assert.match(source, /IntersectionObserver/);
   assert.match(source, /queueProjectImageRequestId/);
 });
+
+
+test('event operations center defaults to the in-progress project queue', () => {
+  const html = read('pages/events.html');
+  const events = read('js/modules/events.js');
+
+  assert.match(html, /class="event-queue-tab is-active" id="event-tab-progress"/);
+  assert.match(html, /id="event-panel-progress"[^>]*class="event-project-queue queue-progress is-active"[^>]*>/);
+  assert.match(html, /id="event-panel-pending"[^>]*hidden/);
+  assert.match(events, /this\.activateQueue\('progress'\)/);
+});
+
+test('project queue cards expose semantic queue status and a half-width left image layout', () => {
+  const source = read('js/modules/events.js');
+  const css = read('css/events.css');
+
+  assert.match(source, /class="event-queue-project queue-' \+ definition\.key/);
+  assert.match(source, /event-queue-project-state/);
+  assert.match(css, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(css, /direction:\s*ltr/);
+  assert.match(css, /queue-pending.*color-danger/s);
+  assert.match(css, /queue-progress.*color-warning/s);
+  assert.match(css, /queue-completed.*color-success/s);
+});
