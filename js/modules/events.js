@@ -9,6 +9,8 @@
   const Events = {
     events: [],
     projects: [],
+    eventsLoaded: false,
+    projectsLoaded: false,
     workflowProgress: null,
     workflowProgressRequestId: 0,
     workflowProgressProjectId: '',
@@ -369,6 +371,8 @@
         PMS.Cache.remove(EVENT_TYPES_CACHE_KEY);
       }
 
+      this.eventsLoaded = !canViewEvents || cachedEvents !== null;
+      this.projectsLoaded = !canLoadProjectOptions || cachedProjects !== null;
       if (cachedEvents !== null) this.events = this.normalize(cachedEvents);
       if (cachedProjects !== null) this.projects = this.normalize(cachedProjects);
       if (cachedTypes !== null) this.eventTypes = this.normalize(cachedTypes);
@@ -394,6 +398,7 @@
             PMS.Api.getCached('/events', CACHE_KEY, {
               onRefresh: function (data) {
                 Events.events = Events.normalize(data);
+                Events.eventsLoaded = true;
                 Events.scheduleRefreshRender();
               },
               onError: function (error, isBackground) {
@@ -411,6 +416,7 @@
             PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY, {
               onRefresh: function (data) {
                 Events.projects = Events.normalize(data);
+                Events.projectsLoaded = true;
                 Events.scheduleRefreshRender();
               }
             })
@@ -436,8 +442,8 @@
 
           hasFreshResult = true;
           const key = resultKeys[index];
-          if (key === 'events') Events.events = Events.normalize(result.data);
-          if (key === 'projects') Events.projects = Events.normalize(result.data);
+          if (key === 'events') { Events.events = Events.normalize(result.data); Events.eventsLoaded = true; }
+          if (key === 'projects') { Events.projects = Events.normalize(result.data); Events.projectsLoaded = true; }
           if (key === 'types') Events.eventTypes = Events.normalize(result.data);
         });
 
@@ -596,7 +602,7 @@
 
     renderRecentProjects: function () {
       const container = document.getElementById('events-recent-projects');
-      if (!container) return;
+      if (!container || !this.projectsLoaded) return;
       container.removeAttribute('aria-busy');
       const searchInput = document.getElementById('events-project-search');
       const query = String(searchInput && searchInput.value || '').trim().toLocaleLowerCase('fa');
@@ -895,6 +901,7 @@
     },
 
     renderProjectQueues: function () {
+      if (!this.projectsLoaded) return;
       const user = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
       const userId = String(user.ID || user.Id || user.id || '');
       const departmentId = String(user.DepartmentID || user.departmentId || '');
@@ -1203,6 +1210,7 @@
     },
 
     render: function (events) {
+      if (!this.eventsLoaded) return;
       const container = document.getElementById('events-table-container');
       const empty = document.getElementById('events-empty');
 
