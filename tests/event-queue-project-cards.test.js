@@ -165,3 +165,15 @@ test('failed initial event loading clears unresolved skeletons and busy states',
   assert.ok(source.includes('ناموفق بود. صفحه را دوباره بارگذاری کنید.'));
   assert.ok(source.includes("loading.removeAttribute('aria-busy')"));
 });
+
+
+test('partial cache keeps unresolved project and history skeletons visible', () => {
+  const source = read('js/modules/events.js');
+  assert.match(source, /eventsLoaded: false/);
+  assert.match(source, /projectsLoaded: false/);
+  assert.match(source, /if \(!container \|\| !this\.projectsLoaded\) return/);
+  assert.match(source, /if \(!this\.projectsLoaded\) return/);
+  assert.match(source, /if \(!this\.eventsLoaded\) return/);
+  assert.match(source, /Events\.projectsLoaded = true/);
+  assert.match(source, /Events\.eventsLoaded = true/);
+});
