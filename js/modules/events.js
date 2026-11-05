@@ -39,7 +39,9 @@
     amendmentSourceVersion: 0,
     amendmentSourceUpdatedAt: '',
     amendmentEventId: '',
-    amendmentPendingValues: null,\n    queueProjectImageObserver: null,\n    queueProjectImageAttachments: Object.create(null),
+    amendmentPendingValues: null,
+    queueProjectImageObserver: null,
+    queueProjectImageAttachments: Object.create(null),
 
     init: function () {
       this.bindEvents();
@@ -771,7 +773,7 @@
         const count = document.getElementById(definition.countId);
         if (!container) return;
         const items = queues[definition.key];
-        if (count) count.textContent = String(items.length).replace(/\\d/g, function (digit) { return '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]; });
+        if (count) count.textContent = String(items.length).replace(/\d/g, function (digit) { return '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]; });
         if (!items.length) {
           container.innerHTML = '<p class="event-queue-empty">' + Events.escape(definition.empty) + '</p>';
           return;
