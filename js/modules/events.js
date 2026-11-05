@@ -43,7 +43,6 @@
     queueProjectImageObserver: null,
     queueProjectImageRequestId: 0,
     queueProjectImageAttachments: Object.create(null),
-    historyScope: 'mine',
 
     init: function () {
       this.bindEvents();
