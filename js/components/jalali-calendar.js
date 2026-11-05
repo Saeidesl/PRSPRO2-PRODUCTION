@@ -265,7 +265,7 @@
         if(action==='today'){
           const p=self.localDateParts(new Date());
           const todayISO=self.fromJalali(p.year+'/'+p.month+'/'+p.day);
-          if(originalType==='datetime-local'){draftISO=todayISO;pickerMode='time';render();}
+          if(originalType==='datetime-local'){draftISO=todayISO;pickerMode='time';Promise.resolve().then(render);}
           else setValue(todayISO);
           return;
         }
@@ -278,7 +278,7 @@
         }
         if(btn.dataset.day){
           const selectedISO=self.fromJalali(viewYear+'/'+viewMonth+'/'+btn.dataset.day);
-          if(originalType==='datetime-local'){draftISO=selectedISO;pickerMode='time';render();}
+          if(originalType==='datetime-local'){draftISO=selectedISO;pickerMode='time';Promise.resolve().then(render);}
           else setValue(selectedISO);
         }
       });
