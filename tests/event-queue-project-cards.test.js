@@ -130,3 +130,14 @@ test('event queue project image preview reuses the shared modal and guards unava
   assert.match(css, /event-queue-image-viewport/);
   assert.match(css, /max-height:min\(68vh,720px\)/);
 });
+
+
+test('completed project queue uses a change-request CTA without opening event registration', () => {
+  const source = read('js/modules/events.js');
+
+  assert.match(source, /definition\.key === 'completed'[\s\S]*?event-queue-change-request-button/);
+  assert.match(source, /درخواست ثبت تغییرات/);
+  assert.match(source, /changeRequestAction[\s\S]*?PMS\.Alert\.info\('این امکان فعلاً در دسترس نیست و به‌زودی فعال می‌شود'\)/);
+  assert.match(source, /event-queue-register-button[\s\S]*?Events\.openForm\(\)/);
+  assert.doesNotMatch(source, /event-queue-change-request-button[\s\S]{0,500}Events\.openForm\(\)/);
+});
