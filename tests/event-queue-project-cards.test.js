@@ -141,3 +141,25 @@ test('completed project queue uses a change-request CTA without opening event re
   assert.match(source, /event-queue-register-button[\s\S]*?Events\.openForm\(\)/);
   assert.match(source, /if \(changeRequestAction\)[\s\S]*?PMS\.Alert\.info\([\s\S]*?return;[\s\S]*?const queueAction = target\.closest\('\.event-queue-register-button'\)/);
 });
+
+
+test('event page provides skeletons for all three queues, recent projects and history', () => {
+  const html = read('pages/events.html');
+  assert.match(html, /id="events-recent-projects"[^>]*aria-busy="true"[^>]*>[\\s\\S]*?event-skeleton-stack/);
+  for (const id of ['event-queue-pending', 'event-queue-progress', 'event-queue-completed']) {
+    const start = html.indexOf('id="' + id + '"');
+    const end = html.indexOf('</div>', start);
+    assert.ok(start >= 0 && html.slice(start, start + 500).includes('event-skeleton-grid'), id + ' should show queue skeleton');
+    assert.ok(end > start);
+  }
+  assert.match(html, /id="events-loading"[^>]*aria-busy="true"[^>]*>[\\s\\S]*?event-skeleton-history/);
+});
+
+test('failed initial event loading clears unresolved skeletons and busy states', () => {
+  const source = read('js/modules/events.js');
+  assert.match(source, /catch \\(error\\) \\{[\\s\\S]*?this\\.clearUnresolvedSkeletons\\(\\)/);
+  assert.match(source, /clearUnresolvedSkeletons: function \\(\\)/);
+  assert.match(source, /container\\.removeAttribute\\('aria-busy'\\)/);
+  assert.match(source, /دریافت \\x27 \\+ target\\.label \\+ \\x27 ناموفق بود/);
+  assert.match(source, /if \\(loading\\) \\{ loading\\.hidden = true; loading\\.removeAttribute\\('aria-busy'\\); \\}/);
+});
