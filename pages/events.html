@@ -29,7 +29,23 @@
   <section class="events-history-section" aria-labelledby="events-history-title">
     <div class="events-history-heading"><div><span class="events-section-kicker">سوابق</span><h3 id="events-history-title">رویدادهای ثبت‌شده</h3></div><p>برای مشاهده اطلاعات کامل هر فعالیت، جزئیات آن را باز کنید.</p></div>
     <section class="events-quick-search" aria-label="جستجو در رویدادها"><label for="event-search">جستجو در رویدادها</label><div class="events-search-control"><span aria-hidden="true">⌕</span><input type="search" id="event-search" placeholder="نام پروژه، نوع رویداد یا شرح فعالیت..." autocomplete="off"></div><button type="button" class="btn btn-secondary events-filter-toggle" id="events-filter-toggle" aria-expanded="false" aria-controls="events-filter-content"><span aria-hidden="true">☷</span> فیلترهای بیشتر <span id="events-filter-arrow" aria-hidden="true">⌄</span></button></section>
-    <section id="events-filter-content" class="events-filter-content" hidden aria-label="فیلترهای پیشرفته"><div class="events-filter-grid"><div class="filter-group"><label for="event-project-filter">پروژه</label><select id="event-project-filter"><option value="">همه پروژه‌ها</option></select></div><div class="filter-group"><label for="event-type-filter">نوع رویداد</label><select id="event-type-filter"><option value="">همه انواع</option></select></div><div class="filter-group"><label for="event-status-filter">وضعیت رویداد</label><select id="event-status-filter"><option value="">همه وضعیت‌ها</option><option value="ACTIVE">فعال</option><option value="VOID">باطل‌شده</option></select></div></div></section>
+    <section id="events-filter-content" class="events-filter-content" hidden aria-label="فیلترهای پیشرفته">
+      <div class="events-filter-toolbar">
+        <div class="filter-group"><label for="event-history-scope">محدوده نمایش</label><select id="event-history-scope"><option value="mine" selected>رویدادهای ثبت‌شده توسط من</option><option value="all">همه رویدادهای مجاز</option></select></div>
+        <div class="events-filter-summary"><span id="events-active-filter-count" aria-live="polite">فیلتر فعالی وجود ندارد</span><button type="button" class="btn btn-secondary" id="events-clear-filters">پاک‌کردن فیلترها</button></div>
+      </div>
+      <div class="events-filter-grid">
+        <div class="filter-group"><label for="event-project-filter">پروژه</label><select id="event-project-filter"><option value="">همه پروژه‌ها</option></select></div>
+        <div class="filter-group"><label for="event-creator-filter">ثبت‌کننده</label><select id="event-creator-filter"><option value="">همه ثبت‌کنندگان</option></select></div>
+        <div class="filter-group"><label for="event-department-filter">واحد</label><select id="event-department-filter"><option value="">همه واحدها</option></select></div>
+        <div class="filter-group"><label for="event-type-filter">نوع رویداد</label><select id="event-type-filter"><option value="">همه انواع</option></select></div>
+        <div class="filter-group"><label for="event-status-filter">وضعیت رویداد</label><select id="event-status-filter"><option value="">همه وضعیت‌ها</option><option value="ACTIVE">فعال</option><option value="VOID">باطل‌شده</option></select></div>
+        <div class="filter-group"><label for="event-created-from">تاریخ ثبت از</label><input id="event-created-from" type="date"></div>
+        <div class="filter-group"><label for="event-created-to">تاریخ ثبت تا</label><input id="event-created-to" type="date"></div>
+        <div class="filter-group"><label for="event-occurred-from">تاریخ وقوع از</label><input id="event-occurred-from" type="date"></div>
+        <div class="filter-group"><label for="event-occurred-to">تاریخ وقوع تا</label><input id="event-occurred-to" type="date"></div>
+      </div>
+    </section>
     <div id="events-loading" class="loading-state">در حال بارگذاری رویدادها...</div><div id="events-error" class="alert alert-danger" hidden></div><div id="events-table-container" class="table-wrapper" hidden></div><div id="events-empty" class="table-empty" hidden>رویدادی مطابق جستجو یا فیلترهای انتخاب‌شده پیدا نشد.</div>
   </section>
 </section>
