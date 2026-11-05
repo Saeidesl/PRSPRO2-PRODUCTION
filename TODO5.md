@@ -22,7 +22,7 @@
 ### مخازن، شاخه و پشته
 - Backend: https://github.com/Saeidesl/PRSPRO2BACKEND-PRODUCTION
 - Frontend: https://github.com/Saeidesl/PRSPRO2-PRODUCTION
-- شاخه کاری جاری هر دو: feature/event-history-filters (مبنای فعلی main؛ شاخه قبلی feature/project-cards-event-filters به‌دلیل واگرایی/عقب‌ماندگی برای ادامه توسعه کنار گذاشته شد)
+- وضعیت شاخه‌ها: اصلاح مسیر عملیاتی در شاخه fix/production-router-base-path انجام و با PR #7 در main ادغام شد؛ commit فعلی مبنای عملیاتی 6897640e41679a04486341809e1e80fb9387450b است. تغییرات مستندسازی این تأیید در شاخه docs/complete-event-history-task3 ثبت می‌شود. Task 4 باید در شاخه کاری مستقل مبتنی بر main توسعه یابد.
 - مبنای ایجاد شاخه: main در هر مخزن.
 - Backend: Google Apps Script V8؛ Google Sheets پایگاه داده.
 - Frontend: HTML/CSS/JavaScript، رابط فارسی RTL و responsive.
@@ -109,18 +109,15 @@
   - آزمون منطق انتخاب آخرین رویداد، مجوزها، cache و رگرسیون صف‌ها.
   - *Log:* پیاده‌سازی Frontend در فایل‌های `js/modules/events.js`، `css/events.css` و `index.html` انجام شد؛ آزمون‌های regression در `tests/event-queue-project-cards.test.js` اضافه/تکمیل و assertion نسخه asset در `tests/workflow-management.test.js` به‌روز شد. توابع `Events.getLatestEventByProject` و `Events.renderProjectQueues` برای انتخاب آخرین رویداد غیر VOID با اولویت `CreatedAt` و fallback به `OccurredAt` و نمایش نوع رویداد/ثبت‌کننده/تاریخ روی کارت‌ها استفاده شدند. بارگذاری تصویر PROFILE با reuse زیرساخت موجود پروژه، metadata، مجوز `ATTACHMENT_VIEW`، cache و `IntersectionObserver` انجام شد. هیچ API، Sheet، ساختار دیتابیس یا کد اجرایی Backend تغییر نکرد. آزمون‌های Frontend شامل 127 تست بدون شکست و Cross-repository QA، agent suite، syntax/asset و UI performance audit موفق بودند. PR فرانت‌اند #4 با commit ادغام `a789b8a1f73a0c766a3a6da1298f98c85ebbc9b4` در `main` ادغام شد؛ GitHub Pages publish workflow با Run ID `42101855707` موفق گزارش شد. مالک محصول تست دستی کارت‌ها را تأیید کرد. تأیید زنده عملکرد توسط مالک محصول دریافت شد؛ Backend deployment لازم نبود چون کد Backend تغییر نکرد.
 
-- [ ] **Task 3 — فیلتر پیشرفته و پیش‌فرض رویدادهای کاربر جاری (IN PROGRESS)**
-  - **یافته اجرایی:** در نسخه عملیاتی، `Router.getBaseUrl()` در `js/core/router.js` مسیر `PRSPRO2` را به‌صورت ثابت مبنا می‌گرفت؛ بنابراین صفحه‌های پویا مانند `pages/events.html` از مسیر Development بارگذاری می‌شدند، با وجود آنکه `index.html` از GitHub Pages عملیاتی باز شده بود. این علت با URL عملیاتی کاربر و سورس Router تأیید شد.
-  - **اصلاح انجام‌شده:** تشخیص صریح مسیر `PRSPRO2-PRODUCTION`، جلوگیری از fallback ناخواسته به مسیر Development و حفظ سازگاری مسیرهای صریح قدیمی/staging در `Router.getBaseUrl()`. نسخه asset مربوط به Router در `index.html` برای cache-busting به‌روز شد.
-  - **آزمون رگرسیون:** `tests/router-production-base-path.test.js` مسیر عملیاتی، مسیر ریشه و سازگاری مسیر legacy/staging را بررسی می‌کند. اجرای کامل CI و تست مرورگر واقعی پس از merge باید بررسی شود.
+- [x] **Task 3 — فیلتر پیشرفته و پیش‌فرض رویدادهای کاربر جاری**
   - پیش‌فرض سوابق فقط CreatedBy کاربر جاری باشد.
   - افزودن گزینه دامنه نمایش: رویدادهای من / همه رویدادهای مجاز.
   - تکمیل فیلتر ثبت‌کننده، واحد، نوع رویداد، پروژه، وضعیت، جستجو و بازه تاریخ ثبت/وقوع.
-  - افزودن کنترل‌های HTML مفقود و حفظ بخش جمع‌شونده.
-  - امکان ترکیب فیلترها، پاک‌کردن فیلترها و نمایش تعداد/وضعیت فیلترهای فعال.
+  - امکان ترکیب فیلترها، پاک‌کردن فیلترها و نمایش تعداد فیلترهای فعال.
   - استفاده از شناسه‌های پایدار و حفظ tenant/permission scope.
+  - *Log:* تست دستی مالک محصول با موفقیت تأیید شد. در pages/events.html کنترل‌های دامنه نمایش (event-history-scope)، پروژه، ثبت‌کننده، واحد، نوع رویداد، وضعیت، تاریخ ثبت از/تا، تاریخ وقوع از/تا، جستجو، شمارنده فیلتر فعال و پاک‌سازی فیلترها بررسی و در نسخه عملیاتی قابل مشاهده/استفاده تأیید شدند. در js/modules/events.js منطق Events.applyFilters، Events.clearHistoryFilters، Events.updateHistoryFilterSummary و اتصال رویدادهای کنترل‌ها با شناسه‌های پایدار، پیش‌فرض mine مبتنی بر CreatedBy و دامنه all محدود به داده‌های مجاز، مورد پذیرش قرار گرفت. در css/events.css چیدمان پنل جمع‌شونده و نمایش responsive/RTL استفاده شد. اصلاح ریشه‌ای بارگذاری صفحه پویا در js/core/router.js از طریق Router.getBaseUrl() مسیر PRSPRO2-PRODUCTION را تشخیص می‌دهد؛ index.html نسخه cache-busting را به js/core/router.js?v=20261106-production-base-path-1 تغییر داد؛ آزمون tests/router-production-base-path.test.js مسیر عملیاتی، ریشه و legacy/staging را پوشش می‌دهد. PR #7 با commit ادغام 6897640e41679a04486341809e1e80fb9387450b وارد Frontend main شد و GitHub Pages publish run 42107639255 موفق بود. Frontend checks، Cross-repository QA و agent suite موفق شدند. هیچ API، Sheet، ساختار داده یا کد اجرایی Backend تغییر نکرد؛ بنابراین Backend deployment لازم نبود. مالک محصول تست زنده UI را موفق اعلام کرد.
 
-- [ ] **Task 4 — مرتب‌سازی، بهینه‌سازی و آزمون پذیرش**
+- [ ] **Task 4 — مرتب‌سازی، بهینه‌سازی و آزمون پذیرش (IN PROGRESS)**
   - انتخاب ترتیب جدید به قدیم یا قدیم به جدید بر اساس CreatedAt.
   - حفظ انتخاب sort هنگام تغییر فیلتر و برعکس.
   - آزمون موبایل/دسکتاپ، RTL، تم‌ها، loading/empty/error، مجوزها و رگرسیون ثبت رویداد.
