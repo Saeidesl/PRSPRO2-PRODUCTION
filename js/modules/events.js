@@ -876,7 +876,7 @@
           const code = project.ProjectCode || id;
           const title = project.Title || project.Name || project.ProjectName || 'بدون عنوان';
           const status = String(project.CurrentStepStatus || project.Status || '').trim();
-          const statusTone = this.getProjectStatusTone(status);
+          const statusTone = Events.getProjectStatusTone(status);
           const latest = latestEventByProject.get(id);
           const latestEvent = latest && latest.event;
           const eventType = latestEvent
