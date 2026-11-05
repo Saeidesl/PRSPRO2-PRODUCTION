@@ -139,5 +139,5 @@ test('completed project queue uses a change-request CTA without opening event re
   assert.match(source, /درخواست ثبت تغییرات/);
   assert.match(source, /changeRequestAction[\s\S]*?PMS\.Alert\.info\('این امکان فعلاً در دسترس نیست و به‌زودی فعال می‌شود'\)/);
   assert.match(source, /event-queue-register-button[\s\S]*?Events\.openForm\(\)/);
-  assert.doesNotMatch(source, /event-queue-change-request-button[\s\S]{0,500}Events\.openForm\(\)/);
+  assert.match(source, /if \(changeRequestAction\)[\s\S]*?PMS\.Alert\.info\([\s\S]*?return;[\s\S]*?const queueAction = target\.closest\('\.event-queue-register-button'\)/);
 });
