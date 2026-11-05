@@ -104,6 +104,13 @@
       document.addEventListener('click', function (event) {
         const target = event.target;
 
+        const clearFiltersButton = target.closest('#events-clear-filters');
+        if (clearFiltersButton) {
+          event.preventDefault();
+          Events.clearHistoryFilters();
+          return;
+        }
+
         const filterButton = target.closest('#events-filter-toggle');
         if (filterButton) {
           event.preventDefault();
@@ -220,6 +227,7 @@
         'event-project-filter',
         'event-type-filter',
         'event-status-filter',
+        'event-history-scope',
         'event-creator-filter',
         'event-department-filter',
         'event-occurred-from',
@@ -475,13 +483,15 @@
       }));
 
       const creators = this.uniqueValues(this.events.map(function (event) {
-        const value = Events.creatorValue(event);
-        return value === '-' ? null : { value: value, label: value };
+        const value = Events.creatorIdValue(event);
+        const label = Events.creatorValue(event);
+        return value && label !== '-' ? { value: value, label: label } : null;
       }));
 
       const departments = this.uniqueValues(this.events.map(function (event) {
-        const value = Events.departmentValue(event);
-        return value === '-' ? null : { value: value, label: value };
+        const value = Events.departmentIdValue(event);
+        const label = Events.departmentValue(event);
+        return value && label !== '-' ? { value: value, label: label } : null;
       }));
 
       fillSelect(projectFilter, 'همه پروژه‌ها', projects);
@@ -555,6 +565,7 @@
       const filters = {
         project: get('event-project-filter'),
         type: get('event-type-filter'),
+        scope: get('event-history-scope') || 'mine',
         creator: get('event-creator-filter'),
         department: get('event-department-filter'),
         status: get('event-status-filter').toUpperCase(),
@@ -581,6 +592,8 @@
 
       const dateKey = function (value) {
         if (!value) return '';
+        const raw = String(value).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw.slice(0, 10);
 
         const date = new Date(value);
         if (isNaN(date.getTime())) return '';
@@ -603,7 +616,12 @@
         return true;
       };
 
+      const currentUserId = this.currentUserId();
       const filtered = this.events.filter(function (event) {
+        if (filters.scope === 'mine' && (!currentUserId || String(event.CreatedBy || '') !== currentUserId)) {
+          return false;
+        }
+
         if (filters.project && String(event.ProjectID || '') !== filters.project) {
           return false;
         }
@@ -617,12 +635,11 @@
           return false;
         }
 
-        if (filters.creator && Events.creatorValue(event) !== filters.creator) {
+        if (filters.creator && Events.creatorIdValue(event) !== filters.creator) {
           return false;
         }
 
-        if (filters.department &&
-            Events.departmentValue(event) !== filters.department) {
+        if (filters.department && Events.departmentIdValue(event) !== filters.department) {
           return false;
         }
 
@@ -675,6 +692,45 @@
       });
 
       this.render(filtered);
+      this.updateHistoryFilterSummary(filters);
+    },
+
+    currentUserId: function () {
+      const user = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
+      return String(user.ID || user.Id || user.id || '');
+    },
+
+    creatorIdValue: function (event) {
+      return String(event && event.CreatedBy || '').trim();
+    },
+
+    departmentIdValue: function (event) {
+      return String(event && event.DepartmentID || '').trim();
+    },
+
+    updateHistoryFilterSummary: function (filters) {
+      const count = [
+        filters.scope === 'all', filters.project, filters.creator, filters.department,
+        filters.type, filters.status, filters.occurredFrom, filters.occurredTo,
+        filters.createdFrom, filters.createdTo, filters.search
+      ].filter(Boolean).length;
+      const label = document.getElementById('events-active-filter-count');
+      const clear = document.getElementById('events-clear-filters');
+      if (label) label.textContent = count ? count + ' فیلتر فعال' : 'فیلتر فعالی وجود ندارد';
+      if (clear) clear.disabled = count === 0;
+    },
+
+    clearHistoryFilters: function () {
+      const ids = [
+        'event-history-scope', 'event-project-filter', 'event-creator-filter',
+        'event-department-filter', 'event-type-filter', 'event-status-filter',
+        'event-created-from', 'event-created-to', 'event-occurred-from', 'event-occurred-to', 'event-search'
+      ];
+      ids.forEach(function (id) {
+        const element = document.getElementById(id);
+        if (element) element.value = id === 'event-history-scope' ? 'mine' : '';
+      });
+      this.applyFilters();
     },
 
     activateQueue: function (key) {
