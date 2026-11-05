@@ -116,19 +116,18 @@ test('event module asset version changes after queue image preview', () => {
 });
 
 
-test('event queue project image preview reuses the shared modal and guards unavailable images', () => {
+test('event queue project image preview reuses the projects lightbox and guards unavailable images', () => {
   const source = read('js/modules/events.js');
   const css = read('css/events.css');
 
-  assert.match(source, /queueThumbnail\.closest\('\[data-event-project-media\]'\)/);
-  assert.match(source, /media\.dataset\.imageState === 'ready'/);
-  assert.match(source, /PMS\.Modal\.open|modal\.open\(/);
-  assert.match(source, /openQueueProjectImage: function/);
-  assert.match(source, /adjustQueueProjectImage: function/);
-  assert.match(source, /Math\.min\(4, current \+ 0\.25\)/);
-  assert.match(source, /Math\.max\(0\.5, current - 0\.25\)/);
-  assert.match(css, /event-queue-image-viewport/);
-  assert.match(css, /max-height:min\(68vh,720px\)/);
+  assert.match(source, /queueThumbnail\\.closest\\('\[data-event-project-media\]'\)/);
+  assert.match(source, /media\\.dataset\\.imageState === 'ready'/);
+  assert.match(source, /PMS\\.Modules\\.Projects\\.openProjectImage\\(imageSrc/);
+  assert.doesNotMatch(source, /openQueueProjectImage: function|adjustQueueProjectImage: function/);
+  assert.doesNotMatch(source, /event-queue-image-controls|event-queue-image-viewport/);
+  assert.match(css, /event-project-image-reveal/);
+  assert.match(css, /event-project-image-spin/);
+  assert.match(css, /prefers-reduced-motion:reduce/);
 });
 
 
