@@ -449,9 +449,33 @@
         }
       } catch (error) {
         if (cachedEvents === null) this.showError(error);
+        this.clearUnresolvedSkeletons();
       } finally {
-        if (loading) loading.hidden = true;
+        if (loading) {
+          loading.hidden = true;
+          loading.removeAttribute('aria-busy');
+        }
       }
+    },
+
+    clearUnresolvedSkeletons: function () {
+      const targets = [
+        { id: 'events-recent-projects', label: 'فهرست پروژه‌ها' },
+        { id: 'event-queue-pending', label: 'صف پروژه‌های در انتظار اقدام' },
+        { id: 'event-queue-progress', label: 'صف پروژه‌های در حال انجام' },
+        { id: 'event-queue-completed', label: 'صف پروژه‌های تکمیل‌شده' }
+      ];
+      targets.forEach(function (target) {
+        const container = document.getElementById(target.id);
+        if (!container) return;
+        const hasSkeleton = !!container.querySelector('.event-skeleton-stack, .event-skeleton-grid');
+        const hasLegacyLoading = /در حال بارگذاری/.test(container.textContent || '');
+        if (!hasSkeleton && !hasLegacyLoading) return;
+        container.removeAttribute('aria-busy');
+        container.innerHTML = '<p class="event-queue-empty">' +
+          Events.escape('دریافت ' + target.label + ' ناموفق بود. صفحه را دوباره بارگذاری کنید.') +
+          '</p>';
+      });
     },
 
     scheduleRefreshRender: function () {
@@ -3509,6 +3533,8 @@
     },
 
     showError: function (error) {
+      const loading = document.getElementById('events-loading');
+      if (loading) { loading.hidden = true; loading.removeAttribute('aria-busy'); }
       const box = document.getElementById('events-error');
       if (!box) return;
 
