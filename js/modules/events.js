@@ -1742,7 +1742,13 @@
                 try {
                   await PMS.Api.post('/projects/' + encodeURIComponent(selectedProjectId) + '/complete-step', {});
                   status.textContent = 'پایان مرحله ثبت شد؛ ثبت رویدادهای این مرحله بسته است.';
-                  await this.loadWorkflowProgress(selectedProjectId);
+                  this.workflowProgress = Object.assign({}, this.workflowProgress, {
+                    stepClosed: true,
+                    stageComplete: true,
+                    canCompleteStep: false
+                  });
+                  this.refreshEventTypeOptions();
+                  completeButton.remove();
                 } catch (completeError) {
                   status.textContent = this.errorMessage(completeError);
                   completeButton.disabled = false;
