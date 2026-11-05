@@ -42,5 +42,5 @@ test('event history exposes all planned filters and a reset action', () => {
 
 test('event history date ranges compare calendar dates without timezone drift', () => {
   const source = read('js/modules/events.js');
-  assert.match(source, /\^\\d\{4\}-\\d\{2\}-\\d\{2\}/);
+  assert.ok(source.includes('/^\\d{4}-\\d{2}-\\d{2}$/'));
 });
