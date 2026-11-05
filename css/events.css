@@ -1219,3 +1219,67 @@
 #event-create-modal #event-workflow-progress-section[hidden] {
   display: none !important;
 }
+
+
+/* Event type selection — clearer hierarchy for workflow-aware choices. */
+#event-create-modal #event-form-type {
+  min-height: 52px;
+  padding: 12px 15px;
+  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+  border-radius: 13px;
+  background-color: var(--color-input-bg);
+  color: var(--color-input-text);
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+#event-create-modal #event-form-type:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+}
+#event-create-modal #event-form-type:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+#event-create-modal #event-form-type optgroup {
+  padding-block: 7px;
+  color: var(--color-primary);
+  background: var(--color-surface-alt);
+  font-weight: 750;
+}
+#event-create-modal #event-form-type option {
+  min-height: 38px;
+  padding: 9px 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 500;
+}
+#event-create-modal #event-form-type option:disabled {
+  color: var(--color-text-muted);
+  background: var(--color-surface-alt);
+}
+#event-create-modal .event-form-section:first-of-type {
+  padding: 17px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+#event-create-modal .event-form-section:first-of-type .event-section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+#event-create-modal .event-form-section:first-of-type .event-section-title::before {
+  width: 5px;
+  height: 19px;
+  margin-left: 10px;
+}
+@media (max-width: 600px) {
+  #event-create-modal .event-form-section:first-of-type {
+    padding: 13px;
+    border-radius: 14px;
+  }
+  #event-create-modal #event-form-type { min-height: 50px; }
+}
