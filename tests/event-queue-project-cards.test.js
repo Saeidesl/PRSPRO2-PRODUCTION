@@ -86,15 +86,21 @@ test('event operations center defaults to the in-progress project queue', () => 
   assert.match(events, /this\.activateQueue\('progress'\)/);
 });
 
-test('project queue cards expose semantic queue status and a half-width left image layout', () => {
+test('project queue cards color the actual project status instead of the queue label', () => {
+  const events = loadEventsModule();
   const source = read('js/modules/events.js');
   const css = read('css/events.css');
 
-  assert.match(source, /class="event-queue-project queue-' \+ definition\.key/);
-  assert.match(source, /event-queue-project-state/);
-  assert.match(css, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
-  assert.match(css, /direction:\s*ltr/);
-  assert.match(css, /queue-pending.*color-danger/s);
-  assert.match(css, /queue-progress.*color-warning/s);
-  assert.match(css, /queue-completed.*color-success/s);
+  assert.equal(events.getProjectStatusTone('در حال الگوسازی'), 'active');
+  assert.equal(events.getProjectStatusTone('در انتظار الگوسازی'), 'waiting');
+  assert.equal(events.getProjectStatusTone('تکمیل‌شده'), 'completed');
+  assert.equal(events.getProjectStatusTone('متوقف'), 'paused');
+  assert.match(source, /event-queue-project-status-badge status-/);
+  assert.doesNotMatch(source, /event-queue-project-state/);
+  assert.match(css, /grid-template-columns:\\s*minmax\\(0, 1fr\\) minmax\\(0, 1fr\\)/);
+  assert.match(css, /aspect-ratio:\\s*3 \/ 4/);
+  assert.match(css, /min-height:\\s*190px/);
+  assert.match(css, /status-waiting/);
+  assert.match(css, /status-active/);
+  assert.match(css, /status-completed/);
 });
