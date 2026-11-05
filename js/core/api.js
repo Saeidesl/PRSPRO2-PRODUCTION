@@ -2,14 +2,8 @@
 (function () {
   'use strict';
 
- const DEFAULT_API_BASE_URL =
-  'https://script.google.com/macros/s/AKfycbzHlLF_UuVZu6VIbl59EyIi4ZnLeJfssrBmo0jkn4BvrCPpqYyJ5qP71WdALtyalOKv_A/exec';
-  const STAGING_API_BASE_URL =
-  'https://script.google.com/macros/s/AKfycbw-o15vVNFbnfqhVYV6PtpDOTt4jURF5QKEahvnENkZp2hOPlek1Hj55T2tBnypfPCb/exec';
-  // Explicit override is supported for controlled tests. The isolated /staging/ site must never call production.
-  const configuredApiBase = String(window.PMS_API_BASE_URL || '').trim();
-  const isStagingPath = /(?:^|\/)staging(?:\/|$)/i.test(String(window.location.pathname || ''));
-  const API_BASE_URL = configuredApiBase || (isStagingPath ? STAGING_API_BASE_URL : DEFAULT_API_BASE_URL);
+  // Production must receive its own API URL explicitly; never fall back to a Development/Staging deployment.
+  const API_BASE_URL = String(window.PMS_API_BASE_URL || '').trim();
   const TOKEN_KEY = 'pms_api_token';
 
   let memoryToken = null;
@@ -321,6 +315,13 @@
 
         if (usePostOverride) {
           params.set('_method', actualMethod);
+        }
+
+        if (!API_BASE_URL) {
+          const configurationError = new Error('نشانی سرور نسخه عملیاتی هنوز تنظیم نشده است.');
+          configurationError.code = 'PRODUCTION_API_NOT_CONFIGURED';
+          configurationError.status = 0;
+          throw configurationError;
         }
 
         const url = API_BASE_URL + '?' + params.toString();
