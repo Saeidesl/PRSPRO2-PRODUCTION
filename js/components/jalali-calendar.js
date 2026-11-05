@@ -120,8 +120,8 @@
         const value=iso+'T'+(time || '09:00');
         const min=visible.dataset.minValue || '';
         const max=visible.dataset.maxValue || '';
-        const minValue=min ? (min.length===10?min+'T00:00':min) : '';
-        const maxValue=max ? (max.length===10?max+'T23:59':max) : '';
+        const minValue=min ? (min.length===10?min+'T00:00':min.slice(0,16)) : '';
+        const maxValue=max ? (max.length===10?max+'T23:59':max.slice(0,16)) : '';
         return (!minValue || value>=minValue) && (!maxValue || value<=maxValue);
       }
       function setValue(iso, display, timeOverride) {
@@ -181,6 +181,7 @@
         pop.innerHTML=html;
       }
       function open() {
+        if(original.disabled || original.readOnly) return;
         const dateText=String(visible.value||'').replace(/\s+\d{1,2}:\d{2}$/,'');
         const parsed=self.parseJalali(dateText);
         const storedDate=self.parseISO(String(original.value||'').slice(0,10));
@@ -237,6 +238,7 @@
       }
       visible.addEventListener('focus',function(){});
       visible.addEventListener('blur',function(){
+        if(!pop.hidden) return;
         const val=visible.value.trim();
         if(!val){ if(original.value) setValue('',''); return; }
         const dateText=originalType==='datetime-local'?val.replace(/\s+\d{1,2}:\d{2}$/,''):val;
