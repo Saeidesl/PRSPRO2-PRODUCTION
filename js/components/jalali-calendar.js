@@ -100,7 +100,7 @@
       visible.parentNode.insertBefore(wrap,visible); wrap.appendChild(visible); wrap.appendChild(original);
       const trigger=document.createElement('button'); trigger.type='button'; trigger.className='pms-jalali-calendar-trigger'; trigger.textContent='▦'; trigger.title='انتخاب از تقویم شمسی'; trigger.setAttribute('aria-label','باز کردن تقویم شمسی'); trigger.disabled=original.disabled || original.readOnly; wrap.appendChild(trigger);
       const pop=document.createElement('div'); pop.className='pms-jalali-calendar'; pop.hidden=true; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','تقویم شمسی'); wrap.appendChild(pop);
-      let viewYear=1405, viewMonth=1, draftISO='', draftTime='09:00';
+      let viewYear=1405, viewMonth=1, draftISO='', draftTime='09:00', pickerMode='date';
       function updateFromISO() {
         const value=String(original.value||'');
         const d=self.parseISO(value);
@@ -155,7 +155,15 @@
         pop.style.removeProperty('max-height');
         pop.style.removeProperty('overflow-y');
       }
+      function renderTimePicker() {
+        const hourOptions=Array.from({length:24},function(_,i){const v=String(i).padStart(2,'0');return '<option value="'+v+'"'+(draftTime.slice(0,2)===v?' selected':'')+'>'+self.toFa(v)+'</option>';}).join('');
+        const minuteOptions=Array.from({length:60},function(_,i){const v=String(i).padStart(2,'0');return '<option value="'+v+'"'+(draftTime.slice(3,5)===v?' selected':'')+'>'+self.toFa(v)+'</option>';}).join('');
+        const date=self.parseISO(draftISO);
+        const jalali=date?self.toFa(self.toJalali(date)):'—';
+        pop.innerHTML='<div class="pms-jalali-time-head"><strong>انتخاب ساعت</strong><span>'+jalali+'</span></div><div class="pms-jalali-time-picker" aria-label="انتخاب ساعت"><label>ساعت<select data-time="hour"'+(original.disabled||original.readOnly?' disabled':'')+'>'+hourOptions+'</select></label><span class="pms-jalali-time-separator">:</span><label>دقیقه<select data-time="minute"'+(original.disabled||original.readOnly?' disabled':'')+'>'+minuteOptions+'</select></label></div><div class="pms-jalali-cal-footer"><button type="button" data-cal="back-date">بازگشت به تاریخ</button><button type="button" data-cal="confirm" class="pms-jalali-cal-confirm">تأیید ساعت</button></div>';
+      }
       function render() {
+        if(originalType==='datetime-local' && pickerMode==='time'){renderTimePicker();return;}
         const today=self.localDateParts(new Date());
         let html='<div class="pms-jalali-cal-head"><button type="button" data-cal="prev" aria-label="ماه قبل">‹</button><strong>'+self.months[viewMonth-1]+' '+self.toFa(viewYear)+'</strong><button type="button" data-cal="next" aria-label="ماه بعد">›</button></div><div class="pms-jalali-cal-grid pms-jalali-weekdays">'+self.weekdays.map(function(x){return '<span>'+x+'</span>';}).join('')+'</div><div class="pms-jalali-cal-grid">';
         const firstISO=self.fromJalali(viewYear+'/'+viewMonth+'/01');
@@ -172,16 +180,12 @@
           html+='<button type="button" class="pms-jalali-day'+(selected?' is-selected':'')+(isToday?' is-today':'')+(!inRange?' is-out-of-range':'')+'" data-day="'+day+'"'+(!inRange?' disabled aria-disabled="true"':'')+'>'+self.toFa(day)+'</button>';
         }
         html+='</div>';
-        if(originalType==='datetime-local'){
-          const hourOptions=Array.from({length:24},function(_,i){const v=String(i).padStart(2,'0');return '<option value="'+v+'"'+(draftTime.slice(0,2)===v?' selected':'')+'>'+self.toFa(v)+'</option>';}).join('');
-          const minuteOptions=Array.from({length:60},function(_,i){const v=String(i).padStart(2,'0');return '<option value="'+v+'"'+(draftTime.slice(3,5)===v?' selected':'')+'>'+self.toFa(v)+'</option>';}).join('');
-          html+='<div class="pms-jalali-time-picker" aria-label="انتخاب ساعت"><label>ساعت<select data-time="hour"'+(original.disabled||original.readOnly?' disabled':'')+'>'+hourOptions+'</select></label><span class="pms-jalali-time-separator">:</span><label>دقیقه<select data-time="minute"'+(original.disabled||original.readOnly?' disabled':'')+'>'+minuteOptions+'</select></label></div>';
-        }
-        html+='<div class="pms-jalali-cal-footer"><button type="button" data-cal="today">امروز</button><button type="button" data-cal="clear">پاک کردن</button>'+(originalType==='datetime-local'?'<button type="button" data-cal="confirm" class="pms-jalali-cal-confirm"'+(!draftISO?' disabled':'')+'>تأیید</button>':'')+'</div>';
+        html+='<div class="pms-jalali-cal-footer"><button type="button" data-cal="today">امروز</button><button type="button" data-cal="clear">پاک کردن</button></div>';
         pop.innerHTML=html;
       }
       function open() {
         if(original.disabled || original.readOnly) return;
+        pickerMode='date';
         const dateText=String(visible.value||'').replace(/\s+\d{1,2}:\d{2}$/,'');
         const parsed=self.parseJalali(dateText);
         const storedDate=self.parseISO(String(original.value||'').slice(0,10));
@@ -261,11 +265,12 @@
         if(action==='today'){
           const p=self.localDateParts(new Date());
           const todayISO=self.fromJalali(p.year+'/'+p.month+'/'+p.day);
-          if(originalType==='datetime-local'){draftISO=todayISO;render();}
+          if(originalType==='datetime-local'){draftISO=todayISO;pickerMode='time';render();}
           else setValue(todayISO);
           return;
         }
         if(action==='clear'){setValue('','');return;}
+        if(action==='back-date'){pickerMode='date';render();return;}
         if(action==='confirm'){
           if(!draftISO){visible.setCustomValidity('ابتدا یک تاریخ انتخاب کنید.');return;}
           setValue(draftISO,'',draftTime);
@@ -273,7 +278,7 @@
         }
         if(btn.dataset.day){
           const selectedISO=self.fromJalali(viewYear+'/'+viewMonth+'/'+btn.dataset.day);
-          if(originalType==='datetime-local'){draftISO=selectedISO;render();}
+          if(originalType==='datetime-local'){draftISO=selectedISO;pickerMode='time';render();}
           else setValue(selectedISO);
         }
       });
