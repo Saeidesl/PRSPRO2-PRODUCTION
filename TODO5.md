@@ -12,9 +12,10 @@
 
 
 ## وضعیت ادغام و تحویل
-- به درخواست صریح مالک محصول، تغییرات این تسک در 2026-11-05 از طریق PR #1 در شاخه `main` ادغام شد؛ Merge Commit: `ec13efe137deb14c9937499666046538e35a46a0`.
-- ادغام GitHub به معنی انتشار Backend نیست. گردش‌کار همگام‌سازی/انتشار Backend دستی است و در این مرحله اجرا نشده است.
-- پذیرش عملیاتی کاربر هنوز انجام نشده؛ Task 2 باز می‌ماند تا آزمون ثبت چندباره و پایان دستی مرحله تأیید شود.
+- تغییرات Frontend از طریق PR #1 در `main` ادغام شدند؛ Merge Commit: `ec13efe137deb14c9937499666046538e35a46a0`.
+- انتشار Frontend از طریق GitHub Pages workflow با Run ID `42090914176` و نتیجه `success` انجام شد.
+- Backend نیز در مخزن عملیاتی مربوطه از طریق Workflow رسمی Apps Script با Run ID `42091457135` با موفقیت Push و Deploy شد.
+- مالک محصول آزمون عملیاتی ثبت چندباره، مستقل بودن پاسخ فرم‌ها، عدم تکمیل خودکار مرحله، اعلام پایان توسط مسئول و جلوگیری از ثبت پس از پایان را موفق اعلام کرد.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 
@@ -67,12 +68,12 @@
 
 - [x] **Task 1 — Discovery & Planning: بررسی معماری، تثبیت تصمیم محصول و طراحی دامنه تغییر**
   - *Log:* هر دو مخزن عملیاتی و mainهای فعلی، شاخه‌ها، آخرین commitها، `TODO5.md` و `ARCHITECTURE.md` بررسی شدند. مسیر ثبت `openForm()` → `refreshEventTypeOptions()` → `submitForm()` → `POST /events` و دریافت پیشرفت از `loadWorkflowProgress()` ردیابی شد. ویرایشگر قواعد در `js/modules/workflows.js` و قراردادهای Backend بررسی شدند. محدودیت UI از `rule.satisfied` و محدودیت Backend از `_validateWorkflowEvent_()` ناشی می‌شود. پاسخ‌های فرم در `35_EventFormData` به EventID مستقل متصل‌اند. تصمیم کاربر: ثبت نامحدود رویداد تکرارپذیر و اعلام پایان توسط مسئول مرحله؛ مسیر اصلی و Idempotency حفظ شوند. شاخه `feature/repeatable-workflow-events` از main هر دو مخزن ایجاد شد؛ فایل اجرایی تغییر نکرد.
-- [ ] **Task 2 — پشتیبانی یکپارچه از رویدادهای تکرارپذیر و پایان دستی مرحله (IN PROGRESS / ادغام‌شده در main؛ در انتظار آزمون پذیرش کاربر)
-  - Backend: ذخیره و اعتبارسنجی افزایشی AllowRepeat در قواعد Workflow؛ شمارش وقوع هر رویداد؛ اجازه ثبت چندباره تا زمان بسته‌شدن مرحله؛ API پایان مرحله با کنترل tenant، دسترسی پروژه، واحد تخصیص‌یافته، تکمیل الزامات و ثبت Audit.
-  - Frontend: تنظیم تکرارپذیری در ویرایشگر قواعد، نمایش شمارنده ثبت، نمایش وضعیت مرحله و اقدام پایان برای مسئول مجاز؛ حفظ مسیر اصلی POST /events و فرم‌های مستقل هر ثبت.
-  - حفظ رفتار پیش‌فرض Workflowهای قدیمی، Idempotency، ابطال رویداد، پیوست‌ها و پاسخ فرم.
-  - آزمون پذیرش کاربر: ثبت ۳ یا بیشتر رویداد هم‌نوع، بررسی شمارنده و پاسخ‌های مستقل، اعلام پایان توسط مسئول و رد ثبت بعدی.
-- [ ] **Task 3 — Integration QA & Regression: آزمون سرتاسری و اصلاح موارد کشف‌شده
-  - اجرای تست‌های Backend و Frontend، بررسی قرارداد API، مجوزها، tenant isolation، Idempotency، فرم/فایل، ابطال و Workflowهای قدیمی.
-  - رفع هر شکست تست یا رگرسیون؛ بررسی وضعیت CI و سازگاری دو مخزن.
-  - پس از تأیید کاربر، ثبت Log نهایی و آماده‌سازی برای ادغام/انتشار فقط با مجوز جداگانه.
+- [x] **Task 2 — پشتیبانی یکپارچه از رویدادهای تکرارپذیر و پایان دستی مرحله**
+  - Backend: افزودن `AllowRepeat` به قواعد Workflow؛ شمارش occurrenceها؛ اجازه ثبت چندباره تا بسته‌شدن مرحله؛ افزودن `POST /projects/{id}/complete-step` با کنترل tenant، دسترسی پروژه، واحد مسئول، الزامات و Audit.
+  - Frontend: تنظیم تکرارپذیری در `js/modules/workflows.js`؛ نمایش شمارنده، وضعیت مرحله و اقدام پایان برای مسئول مجاز در `js/modules/events.js`؛ حفظ مسیر اصلی `POST /events` و پاسخ مستقل فرم‌ها.
+  - انتشار: Backend با Workflow Run `42091457135` (Push و Deploy موفق)؛ Frontend با GitHub Pages Run `42090914176` (موفق).
+  - *Log:* Backend: `WorkflowStepEventRuleValidator.js` اعتبارسنجی `AllowRepeat`؛ `WorkflowStepEventRuleRepository.js` افزودن ستون و حفظ آن هنگام clone نسخه Workflow؛ `DatabaseSetup.js` افزودن header افزایشی؛ `EventService.js` شمارش occurrenceها و خروجی‌های `eventCount`, `allowRepeat`, `manualCompletionRequired`, `stepClosed`, `requirementsSatisfied`, `stageComplete`، متد `completeStep()` و کنترل `_canUserCompleteStep_()`؛ `EventRepository.js` و `GoogleSheetsRepository.js` اجرای revalidation در callback داخل ScriptLock؛ `Router.js` افزودن `POST /projects/{id}/complete-step` با `EVENT_CREATE`. Frontend: `js/modules/workflows.js` تنظیم `AllowRepeat`؛ `js/modules/events.js` ثبت مجدد رویداد، نمایش شمارنده و اقدام اعلام پایان؛ `index.html` cache-busting. ذخیره رویدادها در `13_Events` و پاسخ فرم‌ها در `35_EventFormData` با EventID مستقل؛ قواعد در `37_WorkflowStepEventRules`. تست‌های افزوده/به‌روزشده در `tests/workflow-event-enforcement.test.js` و `tests/workflow-management.test.js`. PRهای ادغام‌شده: Backend #2 (merge `91d7c80aaaae0f04284f00fab95a52e3b666c039`) و Frontend #1 (merge `ec13efe137deb14c9937499666046538e35a46a0`). آزمون پذیرش عملیاتی کاربر در 2026-11-05 موفق اعلام شد: حداقل سه ثبت هم‌نوع مستقل، شمارنده، عدم تکمیل خودکار، پایان دستی توسط مسئول و رد ثبت پس از بسته‌شدن مرحله تأیید شدند.
+- [ ] **Task 3 — Integration QA & Regression (IN PROGRESS): آزمون سرتاسری و بررسی رگرسیون
+  - تکمیل بررسی CI و اجرای مجموعه تست Backend/Frontend؛ بررسی قرارداد API، مجوزها، tenant isolation، Idempotency، فرم/فایل، ابطال و Workflowهای قدیمی.
+  - پیگیری شکست‌های CI شناخته‌شده Backend (سه تست `google-sheets-cache-invalidation` و یک تست `schema-contract`) و تفکیک baseline از رگرسیون این قابلیت.
+  - بررسی سازگاری نسخه‌های منتشرشده و انجام آزمون‌های تکمیلی بدون تغییر داده عملیاتی؛ گزارش نتیجه و توقف برای تأیید مالک محصول.
