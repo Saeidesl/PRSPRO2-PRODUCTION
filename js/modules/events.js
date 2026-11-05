@@ -795,11 +795,11 @@
         .replace(/[\u200c\s]+/g, ' ');
 
       if (!value) return 'neutral';
-      if (/لغو|رد شده|ناموفق|مردود|cancelled|rejected/.test(value)) return 'danger';
-      if (/تکمیل شده|تکمیل‌شده|پایان یافته|پایان‌یافته|انجام شده|انجام‌شده|completed/.test(value)) return 'completed';
-      if (/متوقف|تعلیق|on hold|paused/.test(value)) return 'paused';
-      if (/در انتظار|منتظر|آماده|pending|waiting/.test(value)) return 'waiting';
-      if (/در حال|جاری|فعال|الگوسازی|برش|دوخت|بسته بندی|بسته‌بندی|in progress|active/.test(value)) return 'active';
+      if (/لغو|رد شده|ناموفق|مردود|cancelled|rejected|\\bcancelled\\b|\\brejected\\b/.test(value)) return 'danger';
+      if (/تکمیل شده|تکمیل‌شده|پایان یافته|پایان‌یافته|انجام شده|انجام‌شده|completed|\\bdone\\b|\\bfinished\\b/.test(value)) return 'completed';
+      if (/متوقف|تعلیق|on hold|on_hold|on-hold|paused/.test(value)) return 'paused';
+      if (/در انتظار|منتظر|آماده|pending|waiting|not_started|not-started/.test(value)) return 'waiting';
+      if (/در حال|جاری|فعال|الگوسازی|برش|دوخت|بسته بندی|بسته‌بندی|in progress|in_progress|in-progress|active|started/.test(value)) return 'active';
       return 'neutral';
     },
 
