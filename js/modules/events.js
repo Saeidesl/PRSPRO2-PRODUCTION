@@ -1338,7 +1338,15 @@
       document.getElementById('event-create-form')
         .addEventListener('submit', (event) => {
           event.preventDefault();
-          this.submitForm();
+          // Catch failures in async preflight work too (for example form-value
+          // collection or file preparation), before submitForm enters its API try/catch.
+          this.submitForm().catch((error) => {
+            this.submitting = false;
+            this.showFormError(
+              'آماده‌سازی یا ثبت رویداد با مشکل مواجه شد: ' + this.errorMessage(error)
+            );
+            this.setSubmitState(false);
+          });
         });
 
       modal.addEventListener('click', (event) => {
