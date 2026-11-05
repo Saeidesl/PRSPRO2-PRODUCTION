@@ -1709,31 +1709,10 @@
         this.workflowProgressError = false;
         this.refreshEventTypeOptions();
         container.replaceChildren();
-        if (!data.configured) {
-          section.hidden = true;
-          return;
-        }
-        const summary = document.createElement('p');
-        summary.textContent = (data.stepName ? 'مرحله: ' + data.stepName + ' — ' : '') +
-          (data.stageComplete ? 'تمام الزامات این مرحله تکمیل شده است.' :
-            'رویدادهای اجباری باقی‌مانده: ' + (data.remaining || []).filter(function(item) {
-              return item.requirementMode === 'REQUIRED' || item.requirementMode === 'REFERENCE';
-            }).length);
-        container.appendChild(summary);
-        const list = document.createElement('ul');
-        list.style.margin = '8px 0 0';
-        list.style.paddingInlineStart = '20px';
-        (data.rules || []).forEach(function(rule) {
-          const item = document.createElement('li');
-          const type = Events.findById(Events.eventTypes, rule.eventTypeId);
-          const status = rule.satisfied ? 'تکمیل‌شده' :
-            rule.requirementMode === 'OPTIONAL' ? 'اختیاری' :
-            rule.requirementMode === 'REFERENCE' ? 'در انتظار اطلاعات مرجع' :
-            rule.requirementMode === 'NOT_REQUIRED' ? 'غیرضروری' : 'باقی‌مانده';
-          item.textContent = ((type && (type.Name || type.Code)) || rule.eventTypeId) + ' — ' + status;
-          list.appendChild(item);
-        });
-        container.appendChild(list);
+        // Keep the workflow result in memory for event-type filtering, but
+        // automatically close the temporary progress panel after a successful check.
+        section.hidden = true;
+        container.replaceChildren();
       } catch (error) {
         if (requestId !== this.workflowProgressRequestId) return;
         this.workflowProgressLoading = false;
