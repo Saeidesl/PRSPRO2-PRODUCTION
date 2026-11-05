@@ -24,6 +24,7 @@
     formMode: 'quick',
     formsReady: true,
     formsRequestId: 0,
+    eventFormsLoadRequestId: 0,
     modalOpen: false,
     submitting: false,
     escapeHandlerBound: false,
@@ -1932,6 +1933,7 @@
     },
 
     loadEventForms: async function (eventTypeId) {
+      const requestId = ++this.eventFormsLoadRequestId;
       const selectedTypeId = String(eventTypeId || '');
       this.formDefinitions = [];
       this.formsReady = !selectedTypeId;
@@ -1948,6 +1950,7 @@
         if (container) container.replaceChildren();
         this.eventFormsLoading = false;
         this.eventFormsReady = false;
+        this.formsLoadedForTypeId = '';
         this.updateSubmitAvailability();
         return;
       }
@@ -1956,6 +1959,13 @@
       this.eventFormsReady = false;
       this.eventFormsError = false;
       await this.loadConfiguredForms(selectedTypeId);
+      // Ignore stale responses when the user changes event type quickly.
+      // Only the latest selected type may unlock the submit button.
+      if (requestId !== this.eventFormsLoadRequestId ||
+          !document.getElementById('event-create-modal') ||
+          String((document.getElementById('event-form-type') || {}).value || '') !== selectedTypeId) {
+        return;
+      }
       this.eventFormsLoading = false;
       this.eventFormsReady = this.formsReady;
       this.eventFormsError = !this.formsReady;
