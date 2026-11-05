@@ -41,6 +41,7 @@
     amendmentEventId: '',
     amendmentPendingValues: null,
     queueProjectImageObserver: null,
+    queueProjectImageRequestId: 0,
     queueProjectImageAttachments: Object.create(null),
 
     init: function () {
@@ -824,6 +825,8 @@
         document.getElementById('event-queue-progress'),
         document.getElementById('event-queue-completed')
       ].filter(Boolean);
+      const requestId = ++this.queueProjectImageRequestId;
+      if (this.queueProjectImageObserver) this.queueProjectImageObserver.disconnect();
       if (!projectModule || typeof projectModule.getProjectCardAttachments !== 'function') return;
 
       const router = PMS.Router;
@@ -836,9 +839,9 @@
         return;
       }
 
-      if (this.queueProjectImageObserver) this.queueProjectImageObserver.disconnect();
       try {
         const attachments = await projectModule.getProjectCardAttachments();
+        if (requestId !== this.queueProjectImageRequestId) return;
         const visibleIds = new Set((projects || []).map(Events.idOf).filter(Boolean));
         const latestByProject = Object.create(null);
         (attachments || []).filter(function (item) {
@@ -859,6 +862,15 @@
         });
 
         this.queueProjectImageAttachments = latestByProject;
+        (projects || []).forEach(function (project) {
+          const projectId = Events.idOf(project);
+          if (!projectId) return;
+          if (!latestByProject[projectId] && !projectModule.projectCardImages[projectId]) {
+            projectModule.projectCardImageStates[projectId] = 'empty';
+          } else if (latestByProject[projectId] && !projectModule.projectCardImages[projectId]) {
+            projectModule.projectCardImageStates[projectId] = 'loading';
+          }
+        });
         this.applyQueueProjectImages();
         const targets = containers.reduce(function (all, container) {
           return all.concat(Array.from(container.querySelectorAll('[data-event-project-media]')));
@@ -889,6 +901,11 @@
           this.applyQueueProjectImages();
         }
       } catch (error) {
+        if (requestId !== this.queueProjectImageRequestId) return;
+        (projects || []).forEach(function (project) {
+          const projectId = Events.idOf(project);
+          if (projectId && projectModule.projectCardImageStates) projectModule.projectCardImageStates[projectId] = 'error';
+        });
         console.warn('Event queue project images could not be loaded:', error);
         this.applyQueueProjectImages();
       }
@@ -896,6 +913,11 @@
 
     applyQueueProjectImages: function () {
       const projectModule = PMS.Modules && PMS.Modules.Projects;
+      const router = PMS.Router;
+      const canViewAttachments = !!(router && (
+        (typeof router.isAdmin === 'function' && router.isAdmin()) ||
+        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
+      ));
       const containers = [
         document.getElementById('event-queue-pending'),
         document.getElementById('event-queue-progress'),
@@ -906,10 +928,10 @@
           const projectId = String(media.getAttribute('data-event-project-media') || '');
           const image = media.querySelector('[data-event-project-thumbnail]');
           const placeholder = media.querySelector('.event-queue-project-image-placeholder');
-          const src = projectModule && projectModule.projectCardImages
+          const src = canViewAttachments && projectModule && projectModule.projectCardImages
             ? projectModule.projectCardImages[projectId]
             : '';
-          const state = projectModule && projectModule.projectCardImageStates
+          const state = canViewAttachments && projectModule && projectModule.projectCardImageStates
             ? projectModule.projectCardImageStates[projectId] || 'empty'
             : 'empty';
           media.dataset.imageState = src ? 'ready' : state;
