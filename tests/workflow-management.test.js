@@ -51,3 +51,20 @@ test('event module cache version is refreshed for workflow progress', () => {
   const html = read('index.html');
   assert.match(html, /js\/modules\/events\.js\?v=20261105-event-submit-feedback-fix-1/);
 });
+
+
+test('workflow editor persists the repeatable-event rule setting', () => {
+  const source = read('js/modules/workflows.js');
+  assert.match(source, /data-field="allow-repeat"/);
+  assert.match(source, /ثبت تکراری بدون محدودیت/);
+  assert.match(source, /AllowRepeat:\s*!!row\.querySelector/);
+});
+
+test('event registration allows repeatable rules until manual step completion', () => {
+  const source = read('js/modules/events.js');
+  assert.match(source, /rule\.satisfied && !rule\.allowRepeat/);
+  assert.match(source, /progress\.stepClosed/);
+  assert.match(source, /تعداد ثبت/);
+  assert.match(source, /complete-step/);
+  assert.match(source, /data\.canCompleteStep/);
+});
