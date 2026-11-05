@@ -183,6 +183,33 @@
           return;
         }
 
+        const queueThumbnail = target.closest('[data-event-project-thumbnail]');
+        if (queueThumbnail) {
+          event.preventDefault();
+          const media = queueThumbnail.closest('[data-event-project-media]');
+          const projectId = media && String(media.getAttribute('data-event-project-media') || '');
+          const imageSrc = projectId && PMS.Modules && PMS.Modules.Projects &&
+            PMS.Modules.Projects.projectCardImages
+            ? PMS.Modules.Projects.projectCardImages[projectId]
+            : '';
+          const canViewImage = !!(PMS.Router && (
+            (typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin()) ||
+            (Array.isArray(PMS.Router.permissions) && PMS.Router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
+          ));
+          if (canViewImage && imageSrc && !queueThumbnail.hidden &&
+              media && media.dataset.imageState === 'ready') {
+            Events.openQueueProjectImage(imageSrc, queueThumbnail.alt || 'تصویر پروژه');
+          }
+          return;
+        }
+
+        const queueImageControl = target.closest('[data-queue-image-action]');
+        if (queueImageControl) {
+          event.preventDefault();
+          Events.adjustQueueProjectImage(queueImageControl.dataset.queueImageAction);
+          return;
+        }
+
         const queueAction = target.closest('.event-queue-register-button');
         if (queueAction) {
           event.preventDefault();
@@ -207,6 +234,23 @@
 
       // Complete the ARIA tab interaction for keyboard and assistive-technology users.
       document.addEventListener('keydown', function (event) {
+        const thumbnail = event.target && event.target.closest
+          ? event.target.closest('[data-event-project-thumbnail]') : null;
+        if (thumbnail && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          const media = thumbnail.closest('[data-event-project-media]');
+          const projectId = media && String(media.getAttribute('data-event-project-media') || '');
+          const imageSrc = projectId && PMS.Modules && PMS.Modules.Projects &&
+            PMS.Modules.Projects.projectCardImages ? PMS.Modules.Projects.projectCardImages[projectId] : '';
+          const canViewImage = !!(PMS.Router && (
+            (typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin()) ||
+            (Array.isArray(PMS.Router.permissions) && PMS.Router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
+          ));
+          if (canViewImage && imageSrc && !thumbnail.hidden && media && media.dataset.imageState === 'ready') {
+            Events.openQueueProjectImage(imageSrc, thumbnail.alt || 'تصویر پروژه');
+          }
+          return;
+        }
         const current = event.target && event.target.closest
           ? event.target.closest('.event-queue-tab') : null;
         if (!current) return;
@@ -890,7 +934,7 @@
           return '<article class="event-queue-project queue-' + definition.key + '" data-queue="' + definition.key + '" data-event-project-card="' + Events.escape(id) + '">' +
             '<div class="event-queue-project-main">' +
               '<div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
-                '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" hidden>' +
+                '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" role="button" tabindex="0" aria-label="نمایش بزرگ تصویر پروژه" hidden>' +
                 '<span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span>' +
               '</div>' +
               '<div class="event-queue-project-copy">' +
@@ -1004,6 +1048,57 @@
       }
     },
 
+    openQueueProjectImage: function (src, alt) {
+      const modal = PMS.Modal;
+      let previewImage = null;
+      if (!modal || typeof modal.open !== 'function' || !src) return;
+      const safeSrc = String(src).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      const safeAlt = Events.escape(alt || 'تصویر پروژه');
+      modal.open({
+        id: 'event-queue-project-image-modal',
+        title: 'پیش‌نمایش تصویر پروژه',
+        closeOnEscape: true,
+        closeOnOverlay: true,
+        content: '<div class="event-queue-image-viewer">' +
+          '<div class="event-queue-image-controls" role="group" aria-label="کنترل بزرگ‌نمایی تصویر">' +
+            '<button type="button" class="btn btn-secondary" data-queue-image-action="zoom-in" aria-label="بزرگ‌نمایی">+</button>' +
+            '<button type="button" class="btn btn-secondary" data-queue-image-action="zoom-out" aria-label="کوچک‌نمایی">−</button>' +
+            '<button type="button" class="btn btn-light" data-queue-image-action="reset" aria-label="اندازه اصلی">اندازه اصلی</button>' +
+          '</div>' +
+          '<div class="event-queue-image-viewport" tabindex="0" aria-label="تصویر قابل بزرگ‌نمایی">' +
+            '<img class="event-queue-image-preview" src="' + safeSrc + '" alt="' + safeAlt + '" style="transform:scale(1)">' +
+          '</div>' +
+          '<p class="event-queue-image-hint">برای مشاهده جزئیات از دکمه‌های بزرگ‌نمایی استفاده کنید.</p>' +
+        '</div>',
+        onOpen: function (element) {
+          const image = element.querySelector('.event-queue-image-preview');
+          previewImage = image;
+          if (image) image.addEventListener('error', function () {
+            image.hidden = true;
+            const hint = element.querySelector('.event-queue-image-hint');
+            if (hint) hint.textContent = 'تصویر در دسترس نیست.';
+          }, { once: true });
+        },
+        onClose: function () {
+          if (previewImage) {
+            previewImage.removeAttribute('src');
+            previewImage.removeAttribute('srcset');
+          }
+          previewImage = null;
+        }
+      });
+    },
+
+    adjustQueueProjectImage: function (action) {
+      const image = document.querySelector('#event-queue-project-image-modal .event-queue-image-preview');
+      if (!image || image.hidden) return;
+      const current = Number(image.dataset.zoom || 1);
+      const next = action === 'zoom-in' ? Math.min(4, current + 0.25)
+        : action === 'zoom-out' ? Math.max(0.5, current - 0.25) : 1;
+      image.dataset.zoom = String(next);
+      image.style.transform = 'scale(' + next + ')';
+    },
+
     applyQueueProjectImages: function () {
       const projectModule = PMS.Modules && PMS.Modules.Projects;
       const router = PMS.Router;
@@ -1027,6 +1122,18 @@
           const state = canViewAttachments && projectModule && projectModule.projectCardImageStates
             ? projectModule.projectCardImageStates[projectId] || 'empty'
             : 'empty';
+          if (image && !image.dataset.queueImageErrorBound) {
+            image.dataset.queueImageErrorBound = '1';
+            image.addEventListener('error', function () {
+              image.hidden = true;
+              image.removeAttribute('src');
+              media.dataset.imageState = 'error';
+              if (placeholder) {
+                placeholder.hidden = false;
+                placeholder.textContent = 'تصویر در دسترس نیست';
+              }
+            });
+          }
           media.dataset.imageState = src ? 'ready' : state;
           if (src && image) {
             image.src = src;

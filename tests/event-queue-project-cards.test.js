@@ -108,9 +108,25 @@ test('project queue cards color the actual project status instead of the queue l
 });
 
 
-test('event module asset version changes after queue rendering fix', () => {
+test('event module asset version changes after queue image preview', () => {
   const html = read('index.html');
 
-  assert.match(html, /js\/modules\/events\.js\?v=20261106-event-queue-render-fix-3/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261106-event-queue-image-preview-1/);
   assert.doesNotMatch(html, /js\/modules\/events\.js\?v=20261106-event-queue-card-1/);
+});
+
+
+test('event queue project image preview reuses the shared modal and guards unavailable images', () => {
+  const source = read('js/modules/events.js');
+  const css = read('css/events.css');
+
+  assert.match(source, /queueThumbnail\.closest\('\[data-event-project-media\]'\)/);
+  assert.match(source, /media\.dataset\.imageState === 'ready'/);
+  assert.match(source, /PMS\.Modal\.open|modal\.open\(/);
+  assert.match(source, /openQueueProjectImage: function/);
+  assert.match(source, /adjustQueueProjectImage: function/);
+  assert.match(source, /Math\.min\(4, current \+ 0\.25\)/);
+  assert.match(source, /Math\.max\(0\.5, current - 0\.25\)/);
+  assert.match(css, /event-queue-image-viewport/);
+  assert.match(css, /max-height:min\(68vh,720px\)/);
 });
