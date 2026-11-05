@@ -1557,7 +1557,8 @@
         const mode = String(rule.requirementMode || 'REQUIRED').toUpperCase();
         if (mode === 'REFERENCE') return 'از پروژه مرجع تأمین می‌شود';
         if (mode === 'NOT_REQUIRED') return 'برای این مرحله قابل ثبت نیست';
-        if (rule.satisfied) return 'قبلاً در این مرحله ثبت شده است';
+        if (progress.stepClosed) return 'مرحله پایان یافته است';
+        if (rule.satisfied && !rule.allowRepeat) return 'قبلاً در این مرحله ثبت شده است';
 
         const requiredIncomplete = rules.filter(function(item) {
           return String(item.requirementMode || 'REQUIRED').toUpperCase() === 'REQUIRED' &&
@@ -1598,7 +1599,11 @@
         option.value = id;
         option.dataset.connectionType = isProjectEvent ? 'PROJECT' : 'INDEPENDENT';
         option.dataset.allowOnDraft = String(type.AllowOnDraft === true || String(type.AllowOnDraft).toLowerCase() === 'true');
-        option.textContent = (type.Name || type.Code || id) + (reason ? ' — ' + reason : '');
+        const repeatRule = progress && Array.isArray(progress.rules)
+          ? progress.rules.find(function(item) { return String(item.eventTypeId || '') === id; }) : null;
+        const repeatSuffix = repeatRule && repeatRule.allowRepeat
+          ? ' · تعداد ثبت: ' + Number(repeatRule.eventCount || 0) : '';
+        option.textContent = (type.Name || type.Code || id) + repeatSuffix + (reason ? ' — ' + reason : '');
         option.disabled = !!reason;
         (reason ? restricted : available).push(option);
       });
@@ -1709,8 +1714,53 @@
         this.workflowProgressError = false;
         this.refreshEventTypeOptions();
         container.replaceChildren();
-        // Remove the temporary panel from the DOM entirely. This avoids
-        // any global section/layout CSS overriding the hidden attribute.
+
+        const actions = document.querySelector('#event-create-form .event-modal-actions');
+        if (actions) {
+          const oldAction = actions.querySelector('.event-step-complete-action');
+          if (oldAction) oldAction.remove();
+          if (data.manualCompletionRequired) {
+            const action = document.createElement('div');
+            action.className = 'event-step-complete-action';
+            action.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-bottom:8px';
+            const status = document.createElement('span');
+            status.className = 'event-muted';
+            status.textContent = data.stepClosed
+              ? 'این مرحله توسط مسئول پایان یافته است.'
+              : (data.requirementsSatisfied ? 'همه رویدادهای اجباری ثبت شده‌اند؛ مسئول مرحله می‌تواند پایان کار را اعلام کند.' : 'پس از ثبت رویدادهای اجباری، مسئول مرحله می‌تواند پایان کار را اعلام کند.');
+            action.appendChild(status);
+            if (!data.stepClosed && data.canCompleteStep) {
+              const completeButton = document.createElement('button');
+              completeButton.type = 'button';
+              completeButton.className = 'event-modal-button event-modal-button-primary';
+              completeButton.textContent = 'اعلام پایان مرحله';
+              completeButton.disabled = !data.requirementsSatisfied;
+              completeButton.addEventListener('click', async () => {
+                if (!window.confirm('آیا از پایان این مرحله و توقف ثبت رویدادهای آن مطمئن هستید؟')) return;
+                completeButton.disabled = true;
+                completeButton.textContent = 'در حال ثبت...';
+                try {
+                  await PMS.Api.post('/projects/' + encodeURIComponent(selectedProjectId) + '/complete-step', {});
+                  status.textContent = 'پایان مرحله ثبت شد؛ ثبت رویدادهای این مرحله بسته است.';
+                  this.workflowProgress = Object.assign({}, this.workflowProgress, {
+                    stepClosed: true,
+                    stageComplete: true,
+                    canCompleteStep: false
+                  });
+                  this.refreshEventTypeOptions();
+                  completeButton.remove();
+                } catch (completeError) {
+                  status.textContent = this.errorMessage(completeError);
+                  completeButton.disabled = false;
+                  completeButton.textContent = 'اعلام پایان مرحله';
+                }
+              });
+              action.appendChild(completeButton);
+            }
+            actions.insertBefore(action, actions.firstChild);
+          }
+        }
+        // Keep the compact completion action outside the temporary progress panel.
         section.remove();
       } catch (error) {
         if (requestId !== this.workflowProgressRequestId) return;

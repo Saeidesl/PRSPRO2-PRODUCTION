@@ -818,6 +818,13 @@
         <input class="form-control" data-field="group-order" type="number" min="1" step="1"
                value="${escapeAttribute(getValue(rule, 'GroupOrder', 'groupOrder') || '')}" placeholder="ترتیب گروه" style="margin-top:5px">
       </div>
+      <div class="form-group" style="margin:0">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" data-field="allow-repeat" ${getValue(rule, 'AllowRepeat', 'allowRepeat') === true || String(getValue(rule, 'AllowRepeat', 'allowRepeat')).toLowerCase() === 'true' || String(getValue(rule, 'AllowRepeat', 'allowRepeat')) === '1' ? 'checked' : ''}>
+          ثبت تکراری بدون محدودیت
+        </label>
+        <small>مرحله پس از اعلام پایان توسط مسئول بسته می‌شود.</small>
+      </div>
       <button type="button" class="btn btn-light btn-sm" data-remove-rule aria-label="حذف رویداد">حذف</button>
     `;
     const remove = row.querySelector('[data-remove-rule]');
@@ -925,7 +932,8 @@
               GroupKey: sequence.value === 'GROUPED' ?
                 row.querySelector('[data-field="group-key"]').value.trim() : '',
               GroupOrder: sequence.value === 'GROUPED' ?
-                Number(row.querySelector('[data-field="group-order"]').value || 0) : 0
+                Number(row.querySelector('[data-field="group-order"]').value || 0) : 0,
+              AllowRepeat: !!row.querySelector('[data-field="allow-repeat"]').checked
             });
           });
 
