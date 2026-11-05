@@ -47,6 +47,7 @@
 
     init: function () {
       this.bindEvents();
+      this.activateQueue('progress');
 
       const permissions = PMS.Router && Array.isArray(PMS.Router.permissions)
         ? PMS.Router.permissions : [];
@@ -841,9 +842,9 @@
       });
 
       const definitions = [
-        { key: 'pending', id: 'event-queue-pending', countId: 'event-queue-pending-count', empty: 'پروژه‌ای در انتظار اقدام نیست.' },
-        { key: 'progress', id: 'event-queue-progress', countId: 'event-queue-progress-count', empty: 'پروژه‌ای در حال انجام نیست.' },
-        { key: 'completed', id: 'event-queue-completed', countId: 'event-queue-completed-count', empty: 'هنوز پروژه‌ای با رویداد پایان کار ثبت نشده است.' }
+        { key: 'pending', label: 'در انتظار اقدام', id: 'event-queue-pending', countId: 'event-queue-pending-count', empty: 'پروژه‌ای در انتظار اقدام نیست.' },
+        { key: 'progress', label: 'در حال انجام', id: 'event-queue-progress', countId: 'event-queue-progress-count', empty: 'پروژه‌ای در حال انجام نیست.' },
+        { key: 'completed', label: 'تکمیل‌شده', id: 'event-queue-completed', countId: 'event-queue-completed-count', empty: 'هنوز پروژه‌ای با رویداد پایان کار ثبت نشده است.' }
       ];
       definitions.forEach(function (definition) {
         const container = document.getElementById(definition.id);
@@ -870,13 +871,14 @@
           const eventDate = latestEvent
             ? Events.formatDate(latestEvent.CreatedAt || latestEvent.OccurredAt)
             : '';
-          return '<article class="event-queue-project" data-event-project-card="' + Events.escape(id) + '">' +
+          return '<article class="event-queue-project queue-' + definition.key + '" data-queue="' + definition.key + '" data-event-project-card="' + Events.escape(id) + '">' +
             '<div class="event-queue-project-main">' +
               '<div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
                 '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" hidden>' +
                 '<span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span>' +
               '</div>' +
               '<div class="event-queue-project-copy">' +
+                '<span class="event-queue-project-state">' + Events.escape(definition.label) + '</span>' +
                 '<strong>' + Events.escape(code) + ' — ' + Events.escape(title) + '</strong>' +
                 (status ? '<p class="event-queue-project-status">' + Events.escape(status) + '</p>' : '') +
               '</div>' +
