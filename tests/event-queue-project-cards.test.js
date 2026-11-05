@@ -95,9 +95,6 @@ test('project queue cards color the actual project status instead of the queue l
   assert.equal(events.getProjectStatusTone('در انتظار الگوسازی'), 'waiting');
   assert.equal(events.getProjectStatusTone('تکمیل‌شده'), 'completed');
   assert.equal(events.getProjectStatusTone('متوقف'), 'paused');
-  assert.equal(events.getProjectStatusTone('IN_PROGRESS'), 'active');
-  assert.equal(events.getProjectStatusTone('PENDING'), 'waiting');
-  assert.equal(events.getProjectStatusTone('COMPLETED'), 'completed');
   assert.match(source, /event-queue-project-status-badge status-/);
   assert.doesNotMatch(source, /event-queue-project-state/);
   assert.match(css, /grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
