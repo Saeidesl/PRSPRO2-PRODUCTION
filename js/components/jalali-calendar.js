@@ -289,7 +289,14 @@
         const minute=pop.querySelector('select[data-time="minute"]');
         if(hour&&minute) draftTime=hour.value+':'+minute.value;
       });
-      document.addEventListener('click',function(e){if(!wrap.contains(e.target)&&!pop.contains(e.target))close();});
+      document.addEventListener('click',function(e){
+        // On mobile the popup is portaled to body. A day click re-renders pop.innerHTML,
+        // detaching the clicked button before this document listener runs. Use the
+        // original event path so an internal popup click is never mistaken for outside.
+        const path=typeof e.composedPath==='function'?e.composedPath():[];
+        const clickedInsidePopup=path.indexOf(pop)!==-1 || pop.contains(e.target);
+        if(!wrap.contains(e.target)&&!clickedInsidePopup)close();
+      });
       window.addEventListener('resize',function(){if(!pop.hidden){if(isMobileCalendar()&&pop.parentNode!==document.body){open();}else if(!isMobileCalendar()&&pop.parentNode===document.body){close();open();}}});
       original.addEventListener('change',updateFromISO);
       if(original.form) original.form.addEventListener('reset',function(){setTimeout(function(){updateFromISO();render();},0);});

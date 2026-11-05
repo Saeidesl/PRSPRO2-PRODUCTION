@@ -31,6 +31,12 @@ test('date-only fields still commit immediately without time step', () => {
  assert.match(js,/else setValue\(selectedISO\)/);
  assert.match(js,/if\(originalType==='datetime-local' && pickerMode==='time'\)/);
 });
+test('mobile popup remains open when date click replaces its contents', () => {
+ const js=read('js/components/jalali-calendar.js');
+ assert.match(js,/const path=typeof e\.composedPath==='function'\?e\.composedPath\(\):\[\]/);
+ assert.match(js,/const clickedInsidePopup=path\.indexOf\(pop\)!==-1 \|\| pop\.contains\(e\.target\)/);
+ assert.match(js,/if\(!wrap\.contains\(e\.target\)&&!clickedInsidePopup\)close\(\)/);
+});
 test('time step retains themed styling and cache busting', () => {
  const css=read('css/jalali-calendar.css');
  assert.match(css,/\.pms-jalali-time-picker/);
