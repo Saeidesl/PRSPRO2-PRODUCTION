@@ -84,8 +84,8 @@
       visible.required=original.required;
       const minValue=original.getAttribute('min') || '';
       const maxValue=original.getAttribute('max') || '';
-      if (minValue) visible.dataset.minIso=minValue.slice(0,10);
-      if (maxValue) visible.dataset.maxIso=maxValue.slice(0,10);
+      if (minValue) { visible.dataset.minIso=minValue.slice(0,10); visible.dataset.minValue=minValue; }
+      if (maxValue) { visible.dataset.maxIso=maxValue.slice(0,10); visible.dataset.maxValue=maxValue; }
       visible.disabled=original.disabled;
       visible.readOnly=original.readOnly;
       visible.title='تاریخ شمسی (سال/ماه/روز)';
@@ -98,24 +98,42 @@
       if (original.value) { const isoDate=self.parseISO(original.value); if(isoDate){ visible.value=self.toFa(self.toJalali(isoDate))+(originalType==='datetime-local'?' '+String(original.value).slice(11,16):''); } else { const converted=self.fromJalali(original.value); if(converted){ original.value=converted; visible.value=self.toFa(self.toJalali(self.parseISO(converted))); } else { visible.value=original.value; } } }
       const wrap=document.createElement('span'); wrap.className='pms-jalali-date-wrap';
       visible.parentNode.insertBefore(wrap,visible); wrap.appendChild(visible); wrap.appendChild(original);
-      const trigger=document.createElement('button'); trigger.type='button'; trigger.className='pms-jalali-calendar-trigger'; trigger.textContent='▦'; trigger.title='انتخاب از تقویم شمسی'; trigger.setAttribute('aria-label','باز کردن تقویم شمسی'); wrap.appendChild(trigger);
+      const trigger=document.createElement('button'); trigger.type='button'; trigger.className='pms-jalali-calendar-trigger'; trigger.textContent='▦'; trigger.title='انتخاب از تقویم شمسی'; trigger.setAttribute('aria-label','باز کردن تقویم شمسی'); trigger.disabled=original.disabled || original.readOnly; wrap.appendChild(trigger);
       const pop=document.createElement('div'); pop.className='pms-jalali-calendar'; pop.hidden=true; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','تقویم شمسی'); wrap.appendChild(pop);
-      let viewYear=1405, viewMonth=1;
-      function updateFromISO() { const d=self.parseISO(original.value); visible.value=d?self.toFa(self.toJalali(d)):''; }
-      function withinBounds(iso) {
+      let viewYear=1405, viewMonth=1, draftISO='', draftTime='09:00';
+      function updateFromISO() {
+        const value=String(original.value||'');
+        const d=self.parseISO(value);
+        draftISO=d?value.slice(0,10):'';
+        if(originalType==='datetime-local') draftTime=/^\d{2}:\d{2}$/.test(value.slice(11,16))?value.slice(11,16):'09:00';
+        visible.value=d?self.toFa(self.toJalali(d))+(originalType==='datetime-local'?' '+draftTime:''):'';
+      }
+      function dateWithinBounds(iso) {
         if (!iso) return true;
         const min=visible.dataset.minIso || '';
         const max=visible.dataset.maxIso || '';
         return (!min || iso >= min) && (!max || iso <= max);
       }
-      function setValue(iso, display) {
-        if (iso && !withinBounds(iso)) {
-          visible.setCustomValidity('تاریخ باید در محدوده مجاز باشد.');
+      function withinBounds(iso,time) {
+        if (!iso || !dateWithinBounds(iso)) return !iso;
+        if(originalType!=='datetime-local') return true;
+        const value=iso+'T'+(time || '09:00');
+        const min=visible.dataset.minValue || '';
+        const max=visible.dataset.maxValue || '';
+        const minValue=min ? (min.length===10?min+'T00:00':min) : '';
+        const maxValue=max ? (max.length===10?max+'T23:59':max) : '';
+        return (!minValue || value>=minValue) && (!maxValue || value<=maxValue);
+      }
+      function setValue(iso, display, timeOverride) {
+        const timePart=originalType==='datetime-local' ? (timeOverride || (String(visible.value||'').match(/(?:^|\s)(\d{1,2}:\d{2})$/)||[])[1] || draftTime || '09:00') : '';
+        if (iso && !withinBounds(iso,timePart)) {
+          visible.setCustomValidity('تاریخ و ساعت باید در محدوده مجاز باشد.');
           return;
         }
         visible.setCustomValidity('');
-        const timePart=originalType==='datetime-local' ? ((String(visible.value||'').match(/(?:^|\s)(\d{1,2}:\d{2})$/)||[])[1]||'09:00') : '';
         original.value=iso ? (originalType==='datetime-local' ? iso+'T'+timePart : iso) : '';
+        draftISO=iso || '';
+        if(originalType==='datetime-local' && iso) draftTime=timePart;
         visible.value=display || (iso ? self.toFa(self.toJalali(self.parseISO(iso)))+(originalType==='datetime-local'?' '+timePart:'') : '');
         original.dispatchEvent(new Event('input',{bubbles:true}));
         original.dispatchEvent(new Event('change',{bubbles:true}));
@@ -148,18 +166,32 @@
         const days=viewMonth<=6?31:(viewMonth<=11?30:(self.fromJalali(viewYear+'/12/30')?30:29));
         for(let day=1;day<=days;day++){
           const iso=self.fromJalali(viewYear+'/'+viewMonth+'/'+day);
-          const selected=iso && iso===original.value;
+          const selected=iso && iso===(originalType==='datetime-local'?(draftISO || String(original.value||'').slice(0,10)):original.value);
           const isToday=today.year===viewYear&&today.month===viewMonth&&today.day===day;
-          const inRange=withinBounds(iso);
+          const inRange=dateWithinBounds(iso);
           html+='<button type="button" class="pms-jalali-day'+(selected?' is-selected':'')+(isToday?' is-today':'')+(!inRange?' is-out-of-range':'')+'" data-day="'+day+'"'+(!inRange?' disabled aria-disabled="true"':'')+'>'+self.toFa(day)+'</button>';
         }
-        html+='</div><div class="pms-jalali-cal-footer"><button type="button" data-cal="today">امروز</button><button type="button" data-cal="clear">پاک کردن</button></div>';
+        html+='</div>';
+        if(originalType==='datetime-local'){
+          const hourOptions=Array.from({length:24},function(_,i){const v=String(i).padStart(2,'0');return '<option value="'+v+'"'+(draftTime.slice(0,2)===v?' selected':'')+'>'+self.toFa(v)+'</option>';}).join('');
+          const minuteOptions=Array.from({length:60},function(_,i){const v=String(i).padStart(2,'0');return '<option value="'+v+'"'+(draftTime.slice(3,5)===v?' selected':'')+'>'+self.toFa(v)+'</option>';}).join('');
+          html+='<div class="pms-jalali-time-picker" aria-label="انتخاب ساعت"><label>ساعت<select data-time="hour"'+(original.disabled||original.readOnly?' disabled':'')+'>'+hourOptions+'</select></label><span class="pms-jalali-time-separator">:</span><label>دقیقه<select data-time="minute"'+(original.disabled||original.readOnly?' disabled':'')+'>'+minuteOptions+'</select></label></div>';
+        }
+        html+='<div class="pms-jalali-cal-footer"><button type="button" data-cal="today">امروز</button><button type="button" data-cal="clear">پاک کردن</button>'+(originalType==='datetime-local'?'<button type="button" data-cal="confirm" class="pms-jalali-cal-confirm"'+(!draftISO?' disabled':'')+'>تأیید</button>':'')+'</div>';
         pop.innerHTML=html;
       }
       function open() {
-        const parsed=self.parseJalali(visible.value);
+        const dateText=String(visible.value||'').replace(/\s+\d{1,2}:\d{2}$/,'');
+        const parsed=self.parseJalali(dateText);
+        const storedDate=self.parseISO(String(original.value||'').slice(0,10));
         const now=self.localDateParts(new Date());
-        viewYear=parsed?parsed.parts.year:now.year; viewMonth=parsed?parsed.parts.month:now.month;
+        const parts=parsed?parsed.parts:(storedDate?self.parts(storedDate):now);
+        draftISO=parsed?parsed.iso:(storedDate?String(original.value).slice(0,10):self.fromJalali(parts.year+'/'+parts.month+'/'+parts.day));
+        if(originalType==='datetime-local'){
+          const displayTime=(String(visible.value||'').match(/(\d{1,2}:\d{2})$/)||[])[1];
+          draftTime=/^\d{2}:\d{2}$/.test(String(original.value||'').slice(11,16))?String(original.value).slice(11,16):(displayTime||'09:00');
+        }
+        viewYear=parts.year; viewMonth=parts.month;
         render();
         if(isMobileCalendar()){
           if(pop.parentNode!==document.body) document.body.appendChild(pop);
@@ -224,14 +256,36 @@
           if(viewMonth<1){viewMonth=12;viewYear--;} if(viewMonth>12){viewMonth=1;viewYear++;}
           render();return;
         }
-        if(action==='today'){const p=self.localDateParts(new Date());setValue(self.fromJalali(p.year+'/'+p.month+'/'+p.day));return;}
+        if(action==='today'){
+          const p=self.localDateParts(new Date());
+          const todayISO=self.fromJalali(p.year+'/'+p.month+'/'+p.day);
+          if(originalType==='datetime-local'){draftISO=todayISO;render();}
+          else setValue(todayISO);
+          return;
+        }
         if(action==='clear'){setValue('','');return;}
-        if(btn.dataset.day){setValue(self.fromJalali(viewYear+'/'+viewMonth+'/'+btn.dataset.day));}
+        if(action==='confirm'){
+          if(!draftISO){visible.setCustomValidity('ابتدا یک تاریخ انتخاب کنید.');return;}
+          setValue(draftISO,'',draftTime);
+          return;
+        }
+        if(btn.dataset.day){
+          const selectedISO=self.fromJalali(viewYear+'/'+viewMonth+'/'+btn.dataset.day);
+          if(originalType==='datetime-local'){draftISO=selectedISO;render();}
+          else setValue(selectedISO);
+        }
+      });
+      pop.addEventListener('change',function(e){
+        const control=e.target.closest('select[data-time]');
+        if(!control)return;
+        const hour=pop.querySelector('select[data-time="hour"]');
+        const minute=pop.querySelector('select[data-time="minute"]');
+        if(hour&&minute) draftTime=hour.value+':'+minute.value;
       });
       document.addEventListener('click',function(e){if(!wrap.contains(e.target)&&!pop.contains(e.target))close();});
       window.addEventListener('resize',function(){if(!pop.hidden){if(isMobileCalendar()&&pop.parentNode!==document.body){open();}else if(!isMobileCalendar()&&pop.parentNode===document.body){close();open();}}});
       original.addEventListener('change',updateFromISO);
-      if(original.form) original.form.addEventListener('reset',function(){setTimeout(updateFromISO,0);});
+      if(original.form) original.form.addEventListener('reset',function(){setTimeout(function(){updateFromISO();render();},0);});
       render();
     }
   };
