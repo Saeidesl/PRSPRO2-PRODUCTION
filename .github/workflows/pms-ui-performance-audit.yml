@@ -47,7 +47,7 @@ jobs:
 
       - name: Install browser test runtime
         run: |
-          npm install --no-save playwright
+          npm install --no-save playwright@1.64.1
           npx playwright install --with-deps chromium
 
       - name: Run real-browser project modal keyboard tests
@@ -102,7 +102,7 @@ jobs:
           if [ -f test-results/latest-performance-report.md ]; then
             cp test-results/latest-performance-report.md /tmp/pms-audit-report/latest-performance-report.md
           else
-            printf '# PMS UI and Performance Audit\n\n- Overall: **runner-error**\n- The audit runner did not produce a Markdown report.\n' > /tmp/pms-audit-report/latest-performance-report.md
+            printf '# PMS UI and Performance Audit\\n\\n- Overall: **runner-error**\\n- The audit runner did not produce a Markdown report.\\n' > /tmp/pms-audit-report/latest-performance-report.md
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
