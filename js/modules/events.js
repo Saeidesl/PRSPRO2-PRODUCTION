@@ -210,6 +210,15 @@
           return;
         }
 
+        const changeRequestAction = target.closest('.event-queue-change-request-button');
+        if (changeRequestAction) {
+          event.preventDefault();
+          if (PMS.Alert && typeof PMS.Alert.info === 'function') {
+            PMS.Alert.info('این امکان فعلاً در دسترس نیست و به‌زودی فعال می‌شود');
+          }
+          return;
+        }
+
         const queueAction = target.closest('.event-queue-register-button');
         if (queueAction) {
           event.preventDefault();
@@ -947,7 +956,9 @@
                 '<strong>' + Events.escape(eventType) + '</strong>' +
                 '<span>' + Events.escape(eventCreator) + (eventDate ? ' · ' + Events.escape(eventDate) : '') + '</span></div>'
               : '<div class="event-queue-latest-event is-empty"><span class="event-queue-latest-label">آخرین رویداد</span><span>هنوز رویدادی ثبت نشده است.</span></div>') +
-            (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '">ثبت رویداد برای این پروژه</button>' : '') +
+            (definition.key === 'completed'
+              ? '<button type="button" class="btn btn-secondary event-queue-change-request-button">درخواست ثبت تغییرات</button>'
+              : (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '">ثبت رویداد برای این پروژه</button>' : '')) +
             '</article>';
         }).join('');
       });
