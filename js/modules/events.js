@@ -9,6 +9,8 @@
   const Events = {
     events: [],
     projects: [],
+    eventsLoaded: false,
+    projectsLoaded: false,
     workflowProgress: null,
     workflowProgressRequestId: 0,
     workflowProgressProjectId: '',
@@ -369,6 +371,8 @@
         PMS.Cache.remove(EVENT_TYPES_CACHE_KEY);
       }
 
+      this.eventsLoaded = !canViewEvents || cachedEvents !== null;
+      this.projectsLoaded = !canLoadProjectOptions || cachedProjects !== null;
       if (cachedEvents !== null) this.events = this.normalize(cachedEvents);
       if (cachedProjects !== null) this.projects = this.normalize(cachedProjects);
       if (cachedTypes !== null) this.eventTypes = this.normalize(cachedTypes);
@@ -394,8 +398,8 @@
             PMS.Api.getCached('/events', CACHE_KEY, {
               onRefresh: function (data) {
                 Events.events = Events.normalize(data);
-                Events.renderFilters();
-                Events.applyFilters();
+                Events.eventsLoaded = true;
+                Events.scheduleRefreshRender();
               },
               onError: function (error, isBackground) {
                 if (!isBackground && cachedEvents === null) {
@@ -412,8 +416,8 @@
             PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY, {
               onRefresh: function (data) {
                 Events.projects = Events.normalize(data);
-                Events.renderFilters();
-                Events.applyFilters();
+                Events.projectsLoaded = true;
+                Events.scheduleRefreshRender();
               }
             })
           );
@@ -425,30 +429,69 @@
             PMS.Api.getCached('/event-types', EVENT_TYPES_CACHE_KEY, {
               onRefresh: function (data) {
                 Events.eventTypes = Events.normalize(data);
-                Events.renderFilters();
-                Events.applyFilters();
+                Events.scheduleRefreshRender();
               }
             })
           );
         }
 
         const results = await Promise.all(requests);
+        let hasFreshResult = false;
         results.forEach(function (result, index) {
           if (!result || result.cached !== false) return;
 
+          hasFreshResult = true;
           const key = resultKeys[index];
-          if (key === 'events') Events.events = Events.normalize(result.data);
-          if (key === 'projects') Events.projects = Events.normalize(result.data);
+          if (key === 'events') { Events.events = Events.normalize(result.data); Events.eventsLoaded = true; }
+          if (key === 'projects') { Events.projects = Events.normalize(result.data); Events.projectsLoaded = true; }
           if (key === 'types') Events.eventTypes = Events.normalize(result.data);
         });
 
-        this.renderFilters();
-        this.applyFilters();
+        // Cache hits were already rendered above. Only render here when this
+        // request batch supplied data that was not available in the cache.
+        if (hasFreshResult) {
+          this.renderFilters();
+          this.applyFilters();
+        }
       } catch (error) {
         if (cachedEvents === null) this.showError(error);
+        this.clearUnresolvedSkeletons();
       } finally {
-        if (loading) loading.hidden = true;
+        if (loading) {
+          loading.hidden = true;
+          loading.removeAttribute('aria-busy');
+        }
       }
+    },
+
+    clearUnresolvedSkeletons: function () {
+      const targets = [
+        { id: 'events-recent-projects', label: 'فهرست پروژه‌ها' },
+        { id: 'event-queue-pending', label: 'صف پروژه‌های در انتظار اقدام' },
+        { id: 'event-queue-progress', label: 'صف پروژه‌های در حال انجام' },
+        { id: 'event-queue-completed', label: 'صف پروژه‌های تکمیل‌شده' }
+      ];
+      targets.forEach(function (target) {
+        const container = document.getElementById(target.id);
+        if (!container) return;
+        const hasSkeleton = !!container.querySelector('.event-skeleton-stack, .event-skeleton-grid');
+        const hasLegacyLoading = /در حال بارگذاری/.test(container.textContent || '');
+        if (!hasSkeleton && !hasLegacyLoading) return;
+        container.removeAttribute('aria-busy');
+        container.innerHTML = '<p class="event-queue-empty">' +
+          Events.escape('دریافت ' + target.label + ' ناموفق بود. صفحه را دوباره بارگذاری کنید.') +
+          '</p>';
+      });
+    },
+
+    scheduleRefreshRender: function () {
+      // Coalesce background refreshes from /events, /projects and /event-types
+      // into one UI update instead of rendering once per response.
+      clearTimeout(this.refreshRenderTimer);
+      this.refreshRenderTimer = setTimeout(function () {
+        Events.renderFilters();
+        Events.applyFilters();
+      }, 40);
     },
 
     normalize: function (data) {
@@ -559,7 +602,8 @@
 
     renderRecentProjects: function () {
       const container = document.getElementById('events-recent-projects');
-      if (!container) return;
+      if (!container || !this.projectsLoaded) return;
+      container.removeAttribute('aria-busy');
       const searchInput = document.getElementById('events-project-search');
       const query = String(searchInput && searchInput.value || '').trim().toLocaleLowerCase('fa');
       const projects = this.projects.filter(function (project) {
@@ -857,6 +901,7 @@
     },
 
     renderProjectQueues: function () {
+      if (!this.projectsLoaded) return;
       const user = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
       const userId = String(user.ID || user.Id || user.id || '');
       const departmentId = String(user.DepartmentID || user.departmentId || '');
@@ -918,6 +963,7 @@
         const container = document.getElementById(definition.id);
         const count = document.getElementById(definition.countId);
         if (!container) return;
+        container.removeAttribute('aria-busy');
         const items = queues[definition.key];
         if (count) count.textContent = String(items.length).replace(/\d/g, function (digit) { return '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]; });
         if (!items.length) {
@@ -1164,10 +1210,16 @@
     },
 
     render: function (events) {
+      if (!this.eventsLoaded) return;
       const container = document.getElementById('events-table-container');
       const empty = document.getElementById('events-empty');
 
       if (!container) return;
+      const loading = document.getElementById('events-loading');
+      if (loading) {
+        loading.hidden = true;
+        loading.removeAttribute('aria-busy');
+      }
 
       if (!events || events.length === 0) {
         container.replaceChildren();
@@ -3489,6 +3541,8 @@
     },
 
     showError: function (error) {
+      const loading = document.getElementById('events-loading');
+      if (loading) { loading.hidden = true; loading.removeAttribute('aria-busy'); }
       const box = document.getElementById('events-error');
       if (!box) return;
 

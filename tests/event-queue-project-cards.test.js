@@ -111,7 +111,7 @@ test('project queue cards color the actual project status instead of the queue l
 test('event module asset version changes after queue image preview', () => {
   const html = read('index.html');
 
-  assert.match(html, /js\/modules\/events\.js\?v=20261106-event-queue-image-preview-1/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261106-events-skeleton-2/);
   assert.doesNotMatch(html, /js\/modules\/events\.js\?v=20261106-event-queue-card-1/);
 });
 
@@ -140,4 +140,40 @@ test('completed project queue uses a change-request CTA without opening event re
   assert.match(source, /changeRequestAction[\s\S]*?PMS\.Alert\.info\('این امکان فعلاً در دسترس نیست و به‌زودی فعال می‌شود'\)/);
   assert.match(source, /event-queue-register-button[\s\S]*?Events\.openForm\(\)/);
   assert.match(source, /if \(changeRequestAction\)[\s\S]*?PMS\.Alert\.info\([\s\S]*?return;[\s\S]*?const queueAction = target\.closest\('\.event-queue-register-button'\)/);
+});
+
+
+
+test('event page provides skeletons for all three queues, recent projects and history', () => {
+  const html = read('pages/events.html');
+  assert.ok(html.includes('id="events-recent-projects" class="events-recent-projects" aria-busy="true"'));
+  assert.ok(html.includes('id="events-loading" class="loading-state event-history-loading" aria-busy="true"'));
+  for (const id of ['event-queue-pending', 'event-queue-progress', 'event-queue-completed']) {
+    const start = html.indexOf('id="' + id + '"');
+    assert.ok(start >= 0, id + ' should exist');
+    assert.ok(html.slice(start, start + 500).includes('event-skeleton-grid'), id + ' should show queue skeleton');
+  }
+  assert.ok(html.includes('event-skeleton-stack'));
+  assert.ok(html.includes('event-skeleton-history'));
+});
+
+test('failed initial event loading clears unresolved skeletons and busy states', () => {
+  const source = read('js/modules/events.js');
+  assert.ok(source.includes('this.clearUnresolvedSkeletons();'));
+  assert.ok(source.includes('clearUnresolvedSkeletons: function ()'));
+  assert.ok(source.includes("container.removeAttribute('aria-busy')"));
+  assert.ok(source.includes('ناموفق بود. صفحه را دوباره بارگذاری کنید.'));
+  assert.ok(source.includes("loading.removeAttribute('aria-busy')"));
+});
+
+
+test('partial cache keeps unresolved project and history skeletons visible', () => {
+  const source = read('js/modules/events.js');
+  assert.match(source, /eventsLoaded: false/);
+  assert.match(source, /projectsLoaded: false/);
+  assert.match(source, /if \(!container \|\| !this\.projectsLoaded\) return/);
+  assert.match(source, /if \(!this\.projectsLoaded\) return/);
+  assert.match(source, /if \(!this\.eventsLoaded\) return/);
+  assert.match(source, /Events\.projectsLoaded = true/);
+  assert.match(source, /Events\.eventsLoaded = true/);
 });
