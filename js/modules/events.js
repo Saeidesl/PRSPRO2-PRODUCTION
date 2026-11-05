@@ -1050,6 +1050,7 @@
 
     openQueueProjectImage: function (src, alt) {
       const modal = PMS.Modal;
+      let previewImage = null;
       if (!modal || typeof modal.open !== 'function' || !src) return;
       const safeSrc = String(src).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       const safeAlt = Events.escape(alt || 'تصویر پروژه');
@@ -1071,6 +1072,7 @@
         '</div>',
         onOpen: function (element) {
           const image = element.querySelector('.event-queue-image-preview');
+          previewImage = image;
           if (image) image.addEventListener('error', function () {
             image.hidden = true;
             const hint = element.querySelector('.event-queue-image-hint');
@@ -1078,8 +1080,11 @@
           }, { once: true });
         },
         onClose: function () {
-          const image = document.querySelector('#event-queue-project-image-modal .event-queue-image-preview');
-          if (image) image.removeAttribute('src');
+          if (previewImage) {
+            previewImage.removeAttribute('src');
+            previewImage.removeAttribute('srcset');
+          }
+          previewImage = null;
         }
       });
     },
