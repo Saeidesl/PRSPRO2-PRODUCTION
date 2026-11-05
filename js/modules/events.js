@@ -1709,10 +1709,9 @@
         this.workflowProgressError = false;
         this.refreshEventTypeOptions();
         container.replaceChildren();
-        // Keep the workflow result in memory for event-type filtering, but
-        // automatically close the temporary progress panel after a successful check.
-        section.hidden = true;
-        container.replaceChildren();
+        // Remove the temporary panel from the DOM entirely. This avoids
+        // any global section/layout CSS overriding the hidden attribute.
+        section.remove();
       } catch (error) {
         if (requestId !== this.workflowProgressRequestId) return;
         this.workflowProgressLoading = false;
