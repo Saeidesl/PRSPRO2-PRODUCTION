@@ -31,6 +31,7 @@
     pendingIdempotencyKey: '',
     pendingIdempotencyFingerprint: '',
     searchTimer: null,
+    historySortOrder: 'desc',
     preselectedProjectId: '',
     entryMode: 'all',
     amendmentMode: false,
@@ -233,7 +234,8 @@
         'event-occurred-from',
         'event-occurred-to',
         'event-created-from',
-        'event-created-to'
+        'event-created-to',
+        'event-history-sort'
       ].forEach(function (id) {
         const element = document.getElementById(id);
         if (element) {
@@ -691,7 +693,18 @@
         return true;
       });
 
-      this.render(filtered);
+      const sortControl = document.getElementById('event-history-sort');
+      this.historySortOrder = sortControl && sortControl.value === 'asc' ? 'asc' : 'desc';
+      const sortDirection = this.historySortOrder === 'asc' ? 1 : -1;
+      const sorted = filtered.map(function (event, index) {
+        const timestamp = Date.parse(event && event.CreatedAt || '');
+        return { event: event, index: index, timestamp: Number.isFinite(timestamp) ? timestamp : 0 };
+      }).sort(function (a, b) {
+        if (a.timestamp === b.timestamp) return a.index - b.index;
+        return (a.timestamp - b.timestamp) * sortDirection;
+      }).map(function (item) { return item.event; });
+
+      this.render(sorted);
       this.updateHistoryFilterSummary(filters);
     },
 
