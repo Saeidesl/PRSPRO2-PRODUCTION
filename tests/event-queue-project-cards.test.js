@@ -1,0 +1,76 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const test = require('node:test');
+
+const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+
+function loadEventsModule() {
+  const window = {
+    PMS: {
+      Cache: { keys: { EVENTS: 'events', PROJECTS: 'projects', EVENT_TYPES: 'event-types' } },
+      Modules: {}
+    }
+  };
+  const context = { window, console, Date, Map, Number, String, Object, Array, Set, Promise };
+  vm.runInNewContext(read('js/modules/events.js'), context, { filename: 'js/modules/events.js' });
+  return window.PMS.Modules.Events;
+}
+
+test('latest project event is selected by registration date with occurrence-date fallback', () => {
+  const events = loadEventsModule();
+  const first = {
+    ID: 'e1', ProjectID: 'p1',
+    CreatedAt: '2026-11-05T10:00:00Z',
+    OccurredAt: '2026-11-05T12:00:00Z'
+  };
+  const second = {
+    ID: 'e2', ProjectID: 'p1',
+    CreatedAt: '2026-11-05T10:05:00Z',
+    OccurredAt: '2026-11-05T09:00:00Z'
+  };
+  const fallback = {
+    ID: 'e3', ProjectID: 'p1',
+    CreatedAt: 'invalid-date',
+    OccurredAt: '2026-11-05T10:10:00Z'
+  };
+  const voidEvent = {
+    ID: 'e4', ProjectID: 'p1', Status: 'VOID',
+    CreatedAt: '2026-11-05T13:00:00Z'
+  };
+  const independent = {
+    ID: 'e5', ProjectID: '',
+    CreatedAt: '2026-11-05T14:00:00Z'
+  };
+
+  const latest = events.getLatestEventByProject([
+    first, second, fallback, voidEvent, independent
+  ]);
+
+  assert.equal(latest.get('p1').event, fallback);
+  assert.equal(latest.has(''), false);
+  assert.equal(latest.get('p1').event.ID, 'e3');
+});
+
+test('event queue cards expose project profile image and latest-event details', () => {
+  const source = read('js/modules/events.js');
+
+  assert.match(source, /data-event-project-media=/);
+  assert.match(source, /data-event-project-thumbnail/);
+  assert.match(source, /آخرین رویداد/);
+  assert.match(source, /Events\.creatorValue\(latestEvent\)/);
+  assert.match(source, /Events\.formatDate\(latestEvent\.CreatedAt \|\| latestEvent\.OccurredAt\)/);
+});
+
+test('event queue reuses existing project image metadata and download flow with permission checks', () => {
+  const source = read('js/modules/events.js');
+
+  assert.match(source, /projectModule\.getProjectCardAttachments\(\)/);
+  assert.match(source, /projectModule\.loadOneProjectCardImage\(projectId, attachment\)/);
+  assert.match(source, /ATTACHMENT_VIEW/);
+  assert.match(source, /IntersectionObserver/);
+  assert.match(source, /queueProjectImageRequestId/);
+});
