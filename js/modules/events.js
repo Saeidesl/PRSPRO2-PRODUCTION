@@ -699,6 +699,25 @@
       });
     },
 
+    getLatestEventByProject: function (events) {
+      const latestByProject = new Map();
+      (events || []).forEach(function (event) {
+        if (!event || String(event.Status || 'ACTIVE').toUpperCase() === 'VOID') return;
+        const projectId = String(event.ProjectID || '').trim();
+        if (!projectId) return;
+        const createdAt = new Date(event.CreatedAt || '').getTime();
+        const occurredAt = new Date(event.OccurredAt || '').getTime();
+        const timestamp = Number.isFinite(createdAt) && createdAt > 0
+          ? createdAt
+          : Number.isFinite(occurredAt) && occurredAt > 0 ? occurredAt : 0;
+        const previous = latestByProject.get(projectId);
+        if (!previous || timestamp > previous.timestamp) {
+          latestByProject.set(projectId, { event: event, timestamp: timestamp });
+        }
+      });
+      return latestByProject;
+    },
+
     renderProjectQueues: function () {
       const user = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
       const userId = String(user.ID || user.Id || user.id || '');
@@ -706,26 +725,14 @@
       const typeMap = new Map();
       this.eventTypes.forEach(function (type) { typeMap.set(Events.idOf(type), type); });
 
-      // Aggregate project activity and latest event in one pass.
+      // Aggregate project activity once; latest-event selection is independently testable.
       const activityByProject = new Map();
-      const latestEventByProject = new Map();
-      const eventTimestamp = function (event) {
-        const created = new Date(event.CreatedAt || '').getTime();
-        if (Number.isFinite(created) && created > 0) return created;
-        const occurred = new Date(event.OccurredAt || '').getTime();
-        return Number.isFinite(occurred) && occurred > 0 ? occurred : 0;
-      };
+      const latestEventByProject = this.getLatestEventByProject(this.events);
 
       this.events.forEach(function (event) {
         if (String(event.Status || 'ACTIVE').toUpperCase() === 'VOID') return;
         const projectId = String(event.ProjectID || '').trim();
         if (!projectId) return;
-
-        const timestamp = eventTimestamp(event);
-        const previous = latestEventByProject.get(projectId);
-        if (!previous || timestamp > previous.timestamp) {
-          latestEventByProject.set(projectId, { event: event, timestamp: timestamp });
-        }
 
         const belongsToUser = !!userId && (
           String(event.PerformedBy || '') === userId ||
