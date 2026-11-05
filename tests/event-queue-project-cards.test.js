@@ -106,3 +106,11 @@ test('project queue cards color the actual project status instead of the queue l
   assert.match(css, /status-active/);
   assert.match(css, /status-completed/);
 });
+
+
+test('event module asset version changes after queue rendering fix', () => {
+  const html = read('index.html');
+
+  assert.match(html, /js\/modules\/events\.js\?v=20261106-event-queue-render-fix-3/);
+  assert.doesNotMatch(html, /js\/modules\/events\.js\?v=20261106-event-queue-card-1/);
+});
