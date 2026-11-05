@@ -8,7 +8,7 @@ const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 test('datetime picker switches from date selection to a separate time step', () => {
  const js=read('js/components/jalali-calendar.js');
  assert.match(js,/pickerMode='date'/);
- assert.match(js,/pickerMode='time';render\(\)/);
+ assert.match(js,/pickerMode='time';Promise\.resolve\(\)\.then\(render\)/);
  assert.match(js,/function renderTimePicker\(\)/);
  assert.match(js,/data-cal="back-date"/);
  assert.match(js,/data-cal="confirm" class="pms-jalali-cal-confirm"/);
@@ -16,7 +16,7 @@ test('datetime picker switches from date selection to a separate time step', () 
 });
 test('date selection opens time step without saving early', () => {
  const js=read('js/components/jalali-calendar.js');
- assert.match(js,/if\(originalType==='datetime-local'\)\{draftISO=selectedISO;pickerMode='time';render\(\);\}/);
+ assert.match(js,/if\(originalType==='datetime-local'\)\{draftISO=selectedISO;pickerMode='time';Promise\.resolve\(\)\.then\(render\);\}/);
  assert.match(js,/if\(action==='confirm'\)[\s\S]*?setValue\(draftISO,'',draftTime\)/);
  assert.match(js,/if\(action==='back-date'\)\{pickerMode='date';render\(\);return;\}/);
 });
@@ -43,4 +43,11 @@ test('time step retains themed styling and cache busting', () => {
  assert.match(css,/\.pms-jalali-time-head/);
  const index=read('index.html');
  assert.match(index,/jalali-calendar\.css\?v=20261106-date-then-time-1/);
+});
+
+test('date-to-time transition renders after click propagation completes', () => {
+ const js=read('js/components/jalali-calendar.js');
+ assert.match(js,/draftISO=selectedISO;pickerMode='time';Promise\.resolve\(\)\.then\(render\)/);
+ assert.match(js,/const clickedInsidePopup=path\.indexOf\(pop\)!==-1 \|\| pop\.contains\(e\.target\)/);
+ assert.match(js,/if\(!wrap\.contains\(e\.target\)&&!clickedInsidePopup\)close\(\)/);
 });
