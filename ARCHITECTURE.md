@@ -423,3 +423,43 @@
 
 ### اجزای Frontend و رابط
 - تغییرات اجرایی رابط PMS انجام نشد؛ فقط workflow آزمون مرورگر در `.github/workflows/pms-ui-performance-audit.yml` اصلاح شد. صفحات، ماژول‌های رابط، APIها و دارایی‌های منتشرشده تغییر نکردند.
+
+
+## 2026-11-06 — فاز ارتقای کارت پروژه‌ها و سوابق رویدادها (نسخه عملیاتی)
+
+### محدوده و نتیجه
+- مخزن: `Saeidesl/PRSPRO2-PRODUCTION`؛ مخزن Backend مرتبط: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`.
+- شاخه عملیاتی نهایی: `main`. چهار Macro-Task فاز تکمیل و تست‌های دستی کاربر موفق اعلام شد.
+- هدف فاز: ارتقای کارت پروژه‌های مرکز عملیات، فیلتر پیشرفته سوابق رویدادها و مرتب‌سازی تاریخ ثبت، بدون ایجاد مسیر یا ساختار موازی.
+
+### نقشه اجرایی Frontend
+- `pages/events.html`: میزبان صف‌های مرکز عملیات، کارت پروژه‌ها، فیلترهای سوابق و کنترل `#event-history-sort`.
+- `js/modules/events.js`:
+  - `Events.getLatestEventByProject(events)`: انتخاب آخرین رویداد معتبر هر پروژه با اولویت `CreatedAt` و fallback به `OccurredAt`؛ رویدادهای `VOID` از انتخاب کارت حذف می‌شوند.
+  - `Events.renderProjectQueues`: تجمیع رویدادها با `ProjectID` و نمایش نوع رویداد، ثبت‌کننده و تاریخ ثبت روی کارت‌ها.
+  - `Events.loadQueueProjectImages` و `Events.applyQueueProjectImages`: دریافت و اعمال تصاویر PROFILE با reuse زیرساخت پیوست‌ها، cache، lazy loading و مجوز موجود.
+  - `Events.applyFilters`: اعمال scope پیش‌فرض mine بر اساس شناسه پایدار `CreatedBy`، دامنه all محدود به داده‌های مجاز API و فیلترهای ترکیبی پروژه، ثبت‌کننده، واحد، نوع، وضعیت، جستجو و بازه تاریخ ثبت/وقوع.
+  - `Events.clearHistoryFilters` و `Events.updateHistoryFilterSummary`: پاک‌سازی فیلترها و به‌روزرسانی شمارنده.
+  - مرتب‌سازی با وضعیت `historySortOrder` و گزینه‌های `desc` و `asc` بر اساس `CreatedAt`؛ ترتیب پایدار برای تاریخ‌های برابر و حفظ انتخاب در تغییر/پاک‌سازی فیلترها.
+- `js/modules/projects.js`: reuse الگوی موجود دریافت metadata تصاویر کارت پروژه، cache و بارگذاری lazy.
+- `js/modules/project-images.js`: نوع پیوست PROFILE با عنوان عکس پروفایل پروژه.
+- `css/events.css`: استایل کارت‌ها، فیلترها و کنترل مرتب‌سازی با پشتیبانی RTL و responsive.
+- `js/core/router.js`: اصلاح `Router.getBaseUrl()` برای تشخیص مسیر مخزن عملیاتی GitHub Pages و حفظ مسیرهای legacy/staging.
+- `index.html`: cache-busting برای Router و assetهای CSS/JS تغییرکرده.
+
+### قرارداد Backend و داده
+- مسیر موجود `GET /events` در `Router.js` با مجوز `EVENT_VIEW` به `EventService.list(params)` متصل است.
+- شیت رویدادها: `13_Events`؛ شیت metadata پیوست‌ها: `15_Attachments`.
+- APIهای موجود: `GET /project-card-images` و `GET /attachments/:attachmentId/download`.
+- `CreatedBy` ثبت‌کننده، `PerformedBy` انجام‌دهنده، `CreatedAt` تاریخ ثبت و `OccurredAt` تاریخ وقوع است.
+- هیچ endpoint، Sheet، schema یا مسیر ثبت جدید ایجاد نشد و کد اجرایی Backend تغییر نکرد. tenant isolation و مجوزهای موجود حفظ شدند.
+
+### فایل‌های آزمون و پذیرش
+- `tests/event-queue-project-cards.test.js`
+- `tests/event-history-filters.test.js`
+- `tests/router-production-base-path.test.js`
+- `tests/workflow-management.test.js`
+- CI نهایی Task 4: ۱۳۵ تست Frontend بدون شکست؛ PMS cross-repository QA، frontend agent suite و comprehensive UI performance audit موفق.
+- PR #4، PR #7 و PR #9 ادغام شدند. commit ادغام PR #9: `57f2605d6f25b021a099528dcbc287131555cb3a`.
+- کاربر نمایش کارت‌ها، فیلترها و مرتب‌سازی را در نسخه مورد استفاده تست و تأیید کرد.
+- محدودیت ثبت‌شده: workflow انتشار Pages پس از ادغام PR #9 مستقلاً تأیید نشده بود؛ موفقیت تست دستی کاربر ثبت شده است.
