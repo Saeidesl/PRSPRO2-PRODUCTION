@@ -788,6 +788,21 @@
       return latestByProject;
     },
 
+    getProjectStatusTone: function (status) {
+      const value = String(status || '').trim().toLowerCase()
+        .replace(/[ي]/g, 'ی')
+        .replace(/[ك]/g, 'ک')
+        .replace(/[\u200c\s]+/g, ' ');
+
+      if (!value) return 'neutral';
+      if (/لغو|رد شده|ناموفق|مردود|cancelled|rejected/.test(value)) return 'danger';
+      if (/تکمیل شده|تکمیل‌شده|پایان یافته|پایان‌یافته|انجام شده|انجام‌شده|completed/.test(value)) return 'completed';
+      if (/متوقف|تعلیق|on hold|paused/.test(value)) return 'paused';
+      if (/در انتظار|منتظر|آماده|pending|waiting/.test(value)) return 'waiting';
+      if (/در حال|جاری|فعال|الگوسازی|برش|دوخت|بسته بندی|بسته‌بندی|in progress|active/.test(value)) return 'active';
+      return 'neutral';
+    },
+
     renderProjectQueues: function () {
       const user = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
       const userId = String(user.ID || user.Id || user.id || '');
@@ -860,7 +875,8 @@
           const id = Events.idOf(project);
           const code = project.ProjectCode || id;
           const title = project.Title || project.Name || project.ProjectName || 'بدون عنوان';
-          const status = project.CurrentStepStatus || project.Status || '';
+          const status = String(project.CurrentStepStatus || project.Status || '').trim();
+          const statusTone = this.getProjectStatusTone(status);
           const latest = latestEventByProject.get(id);
           const latestEvent = latest && latest.event;
           const eventType = latestEvent
@@ -878,9 +894,8 @@
                 '<span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span>' +
               '</div>' +
               '<div class="event-queue-project-copy">' +
-                '<span class="event-queue-project-state">' + Events.escape(definition.label) + '</span>' +
                 '<strong>' + Events.escape(code) + ' — ' + Events.escape(title) + '</strong>' +
-                (status ? '<p class="event-queue-project-status">' + Events.escape(status) + '</p>' : '') +
+                (status ? '<span class="event-queue-project-status-badge status-' + statusTone + '" title="وضعیت پروژه">' + Events.escape(status) + '</span>' : '') +
               '</div>' +
             '</div>' +
             (latestEvent
