@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "suite": "PMS Comprehensive UI and Performance Audit",
   "scope": "all",
-  "generatedAt": "2026-11-05T23:46:35.157Z",
+  "generatedAt": "2026-11-05T23:50:26.499Z",
   "baseURL": "http://127.0.0.1:4173/PRSPRO2/",
   "mode": "public-login-and-shell-only",
   "safety": {
@@ -95,8 +95,8 @@
       "navigation": [],
       "visibleControlCount": 2,
       "visibleTextLength": 70,
-      "routeReadyMs": 275,
-      "navigationMs": 863,
+      "routeReadyMs": 146,
+      "navigationMs": 768,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -115,19 +115,19 @@
       "path": "/PRSPRO2/pages/login.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 13
+      "durationMs": 10
     },
     {
       "path": "/PRSPRO2/pages/login.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 3
+      "durationMs": 2
     },
     {
       "path": "/PRSPRO2/pages/login.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 19
+      "durationMs": 5
     }
   ],
   "consoleErrors": [],
@@ -138,7 +138,7 @@
   ],
   "overallStatus": "blocked-no-staging-api",
   "login": {
-    "loginFormReadyMs": 262,
+    "loginFormReadyMs": 157,
     "authenticated": false,
     "note": "Authenticated audit skipped: configure PMS_STAGING_API_BASE_URL to a separate staging Apps Script deployment. Production API will not be used for test login."
   },
