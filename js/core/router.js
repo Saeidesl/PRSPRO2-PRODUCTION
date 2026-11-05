@@ -70,17 +70,26 @@
 
 getBaseUrl: function () {
   const parts = window.location.pathname.split('/').filter(Boolean);
-  const projectName = 'PRSPRO2';
+  const firstSegment = String(parts[0] || '').toLowerCase();
 
-  if (parts.length && parts[0].toLowerCase() === projectName.toLowerCase()) {
-    // The isolated staging frontend is published under /PRSPRO2/staging/.
-    if (parts[1] && parts[1].toLowerCase() === 'staging') {
-      return new URL('/' + parts[0] + '/staging/', window.location.origin);
-    }
-    return new URL('/' + parts[0] + '/', window.location.origin);
+  // Operational GitHub Pages is published from PRSPRO2-PRODUCTION.
+  // Resolve all dynamically loaded pages from that same project path.
+  if (firstSegment === 'prspro2-production') {
+    return new URL('/PRSPRO2-PRODUCTION/', window.location.origin);
   }
 
-  return new URL('/PRSPRO2/', window.location.origin);
+  // Keep the explicitly addressed legacy/staging path compatible when used
+  // outside the operational deployment.
+  if (firstSegment === 'prspro2') {
+    if (parts[1] && parts[1].toLowerCase() === 'staging') {
+      return new URL('/PRSPRO2/staging/', window.location.origin);
+    }
+    return new URL('/PRSPRO2/', window.location.origin);
+  }
+
+  // This router belongs to the operational repository; never silently fall
+  // back to the Development repository path on an unknown/root URL.
+  return new URL('/PRSPRO2-PRODUCTION/', window.location.origin);
 },
     resolveUrl: function (path) {
       path = String(path || '').trim();
