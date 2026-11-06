@@ -7,6 +7,7 @@ const test = require('node:test');
 
 const script = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'pms-ui-performance-audit.cjs'), 'utf8');
 const workflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'pms-ui-performance-audit.yml'), 'utf8');
+const apiScript = fs.readFileSync(path.join(__dirname, '..', 'js', 'core', 'api.js'), 'utf8');
 
 test('performance audit supports a focused event-form scope', () => {
   assert.match(script, /\['procurement', 'events'\]\.includes\(requestedAuditScope\)/);
@@ -31,7 +32,7 @@ test('event-form benchmark only selects existing options and never submits', () 
 test('event-form diagnostics are restricted to safe endpoint summaries', () => {
   assert.match(script, /diagnosticEndpoints/);
   assert.match(script, /PMS_PERFORMANCE_DIAGNOSTICS/);
-  assert.match(script, /event-types\(\?:\\\/\|\$\)/);
+  assert.ok(apiScript.includes('event-types(?:\\/|$)'));
   assert.match(script, /safeRequestPath/);
   assert.match(script, /never the full query string/);
 });
