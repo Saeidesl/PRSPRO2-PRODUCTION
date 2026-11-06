@@ -31,6 +31,7 @@ test('event-form benchmark only selects existing options and never submits', () 
 test('event-form diagnostics are restricted to safe endpoint summaries', () => {
   assert.match(script, /diagnosticEndpoints/);
   assert.match(script, /PMS_PERFORMANCE_DIAGNOSTICS/);
+  assert.match(script, /event-types\(\?:\\\/\|\$\)/);
   assert.match(script, /safeRequestPath/);
   assert.match(script, /never the full query string/);
 });
