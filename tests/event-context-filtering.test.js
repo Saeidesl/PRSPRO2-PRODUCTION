@@ -45,3 +45,35 @@ test('event creation controls are hidden or blocked without EVENT_CREATE permiss
 test('disabled event types cannot enable event submission', () => {
   assert.match(source, /selectedOption && !selectedOption\.disabled/);
 });
+
+test('project context, historical form responses, and workflow use scoped TTL cache with in-flight deduplication', () => {
+  assert.match(source, /EVENT_DEPENDENT_CACHE_TTL_MS = 60000/);
+  assert.match(source, /EVENT_WORKFLOW_CACHE_TTL_MS = 15000/);
+  assert.match(source, /eventDependentDataCache = new Map\(\)/);
+  assert.match(source, /eventDependentDataRequests = new Map\(\)/);
+  assert.match(source, /function getEventDependentData\(key, loader, ttlMs\)/);
+  assert.match(source, /eventDependentDataRequests\.has\(key\)/);
+  assert.match(source, /eventDependentCacheKey\('project-information', \[projectKey\]\)/);
+  assert.match(source, /eventDependentCacheKey\('event-forms', \[projectKey, item\.ID\]\)/);
+  assert.match(source, /eventDependentCacheKey\('workflow-progress', \[selectedProjectId\]\)/);
+});
+
+test('dependent data cache is invalidated on auth, relevant routes, event creation and workflow completion', () => {
+  assert.match(source, /clearEventDependentDataCache\(\)/);
+  assert.match(source, /pms:auth-expired/);
+  assert.match(source, /'information-types', 'projects'/);
+  assert.match(source, /clearEventDependentDataCache\(selectedProjectId\)/);
+  assert.match(source, /const generation = eventDependentDataCacheGeneration/);
+  assert.match(source, /generation === eventDependentDataCacheGeneration/);
+});
+
+test('amendment source forms are fetched in bounded parallel batches while preserving newest-first selection and version guards', () => {
+  assert.match(source, /amendmentSourceRequestId: 0/);
+  assert.match(source, /const requestId = \+\+this\.amendmentSourceRequestId/);
+  assert.match(source, /const batchSize = 4/);
+  assert.match(source, /Promise\.all\(batch\.map\(async event/);
+  assert.match(source, /Keep newest-first precedence/);
+  assert.match(source, /requestId !== this\.amendmentSourceRequestId/);
+  assert.match(source, /FormVersion: this\.amendmentSourceVersion/);
+  assert.match(source, /ExpectedUpdatedAt: this\.amendmentSourceUpdatedAt/);
+});

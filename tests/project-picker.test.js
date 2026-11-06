@@ -40,5 +40,5 @@ test('project picker supports filtering, empty state, accessibility, and respons
   assert.match(styles, /\.event-project-picker-panel/);
   assert.match(styles, /@media \(max-width: 640px\)/);
   assert.match(index, /events\.css\?v=20261106-event-history-cards-1/);
-  assert.match(index, /events\.js\?v=20261106-event-history-cards-1/);
+  assert.match(index, /events\.js\?v=20261106-event-dependent-cache-1/);
 });
