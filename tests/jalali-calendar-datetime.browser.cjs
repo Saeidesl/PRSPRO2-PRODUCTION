@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
     await trigger.click();
     await page.locator('.pms-jalali-calendar button.is-selected').click();
     await page.locator('.pms-jalali-time-picker').waitFor({ state: 'visible', timeout: 1500 });
-    assert.equal(await page.locator('.pms-jalali-calendar').isVisible(), true, 'time picker must remain open after selecting a day');
+    assert.equal(await page.locator('.pms-jalali-calendar:visible').count(), 1, 'exactly one time picker popup must remain open after selecting a day');
     assert.equal(await page.locator('.pms-jalali-time-picker select[data-time="hour"] option').count(), 24);
     assert.equal(await page.locator('.pms-jalali-time-picker select[data-time="minute"] option').count(), 60);
 
