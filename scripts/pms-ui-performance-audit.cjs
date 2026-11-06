@@ -408,6 +408,7 @@ const visible = el => {
               projectWorkflowReadyMs: null,
               formDefinitionsReadyMs: null,
               warmFormDefinitionsRequestMs: null,
+              warmFormDefinitionsTimedOut: false,
               projectOptions: 0,
               eligibleEventTypes: 0,
               configuredFormControls: 0,
@@ -447,13 +448,20 @@ const visible = el => {
                     return !!container && !container.textContent.includes('در حال دریافت فرم‌های متصل');
                   }, null, { timeout: 25000 });
                   benchmark.formDefinitionsReadyMs = Date.now() - modalOpenedAt;
-                  benchmark.warmFormDefinitionsRequestMs = await page.evaluate(async () => {
+                  const warmCacheMeasurement = await page.evaluate(async () => {
                     const typeId = String((document.getElementById('event-form-type') || {}).value || '');
-                    if (!typeId || !window.PMS || !window.PMS.Api || typeof window.PMS.Api.get !== 'function') return null;
+                    if (!typeId || !window.PMS || !window.PMS.Api || typeof window.PMS.Api.get !== 'function') {
+                      return { elapsedMs: null, timedOut: false };
+                    }
                     const startedAt = performance.now();
-                    await window.PMS.Api.get('/event-types/' + encodeURIComponent(typeId) + '/forms');
-                    return Math.round(performance.now() - startedAt);
+                    const request = window.PMS.Api.get('/event-types/' + encodeURIComponent(typeId) + '/forms')
+                      .then(() => ({ elapsedMs: Math.round(performance.now() - startedAt), timedOut: false }))
+                      .catch(() => ({ elapsedMs: null, timedOut: false }));
+                    const timeout = new Promise(resolve => setTimeout(() => resolve({ elapsedMs: null, timedOut: true }), 12000));
+                    return await Promise.race([request, timeout]);
                   });
+                  benchmark.warmFormDefinitionsRequestMs = warmCacheMeasurement.elapsedMs;
+                  benchmark.warmFormDefinitionsTimedOut = warmCacheMeasurement.timedOut;
                   benchmark.configuredFormControls = await page.locator('#event-configured-forms').locator('input,select,textarea').count();
                   if (diagnosticsEnabled) {
                     benchmark.diagnosticEndpoints = await page.locator('#pms-performance-diagnostics-table tr').evaluateAll(rows =>
@@ -625,6 +633,7 @@ function renderMarkdown(report) {
       '- Project/workflow readiness: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.projectWorkflowReadyMs === 'number' ? report.eventFormDiagnostics.projectWorkflowReadyMs + ' ms' : 'n/a'),
       '- Form definitions readiness: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.formDefinitionsReadyMs === 'number' ? report.eventFormDiagnostics.formDefinitionsReadyMs + ' ms' : 'n/a'),
       '- Warm backend form-definition request: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.warmFormDefinitionsRequestMs === 'number' ? report.eventFormDiagnostics.warmFormDefinitionsRequestMs + ' ms' : 'n/a'),
+      '- Warm backend request timed out: ' + (report.eventFormDiagnostics && report.eventFormDiagnostics.warmFormDefinitionsTimedOut ? 'yes (12s limit)' : 'no'),
       '- Project options: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.projectOptions : 0),
       '- Eligible event types: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.eligibleEventTypes : 0),
       '- Visible controls after selecting the event type: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.configuredFormControls : 0),
