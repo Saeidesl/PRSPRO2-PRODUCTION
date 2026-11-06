@@ -401,7 +401,7 @@ const visible = el => {
           // are already present in the DOM but only become relevant within this dialog.
           snapshot.dynamicFormInventory.push({ openerId, opened: inventory.dialogVisible || inventory.forms.length > 0 || inventory.visibleControls > before.visibleControls, baselineFormCount: before.forms.length, baselineVisibleControls: before.visibleControls, visibleControls: inventory.visibleControls, forms: inventory.forms });
 
-          if (route === 'events' && openerId === 'event-create-button') {
+          if (route === 'events' && openerId === 'event-project-entry') {
             const modalOpenedAt = Date.now();
             const benchmark = {
               modalReadyMs: modalOpenedAt - modalOpenStartedAt,
