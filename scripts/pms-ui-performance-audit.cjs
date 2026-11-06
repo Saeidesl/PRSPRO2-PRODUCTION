@@ -28,7 +28,7 @@ const routes = [
 const dangerousAction = /ثبت|ذخیره|حذف|پاک.?کردن|ارسال|تحویل|تأیید|تایید|ایجاد|افزودن|ویرایش|آپلود|بارگذاری فایل|خروج|ورود|لغو سفارش|اعمال تغییر|انتشار|دریافت فایل|دانلود/i;
 const results = {
   schemaVersion: 1,
-  suite: auditScope === 'procurement' ? 'PMS Procurement Performance Audit' : 'PMS Comprehensive UI and Performance Audit',
+  suite: auditScope === 'procurement' ? 'PMS Procurement Performance Audit' : (auditScope === 'events' ? 'PMS Event Form Performance Audit' : 'PMS Comprehensive UI and Performance Audit'),
   scope: auditScope,
   generatedAt: new Date().toISOString(),
   baseURL,
@@ -216,7 +216,7 @@ async function main() {
     results.coverageGaps.push(note);
   }
 
-  const routeList = authenticated ? (auditScope === 'procurement' ? ['procurement'] : routes.filter(route => route !== 'login')) : ['login'];
+  const routeList = authenticated ? (auditScope === 'procurement' ? ['procurement'] : (auditScope === 'events' ? ['events'] : routes.filter(route => route !== 'login'))) : ['login'];
   for (const route of routeList) {
     const start = Date.now();
     // Load each route in a fresh document so dialogs from previous routes cannot leak.
