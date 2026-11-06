@@ -2157,11 +2157,11 @@
       if (!typeSelect || !loading) return;
 
       if (isLoading && projectId) {
+        const pickerRoot = document.getElementById('event-type-picker');
+        if (pickerRoot) this.setEventTypePickerOpen(false);
         typeSelect.disabled = true;
         const pickerTrigger = document.getElementById('event-type-picker-trigger');
         if (pickerTrigger) pickerTrigger.disabled = true;
-        const pickerRoot = document.getElementById('event-type-picker');
-        if (pickerRoot) this.setEventTypePickerOpen(false);
         loading.hidden = false;
         const projectKey = String(projectId);
         if (loading.dataset.projectId !== projectKey || !loading.querySelector('.loading-state')) {
