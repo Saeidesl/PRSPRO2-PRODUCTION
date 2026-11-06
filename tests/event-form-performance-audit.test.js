@@ -24,6 +24,8 @@ test('event-form benchmark only selects existing options and never submits', () 
   assert.match(script, /event-form-type/);
   assert.match(script, /formDefinitionsReadyMs/);
   assert.match(script, /warmFormDefinitionsRequestMs/);
+  assert.match(script, /Promise\.race\(\[request, timeout\]\)/);
+  assert.match(script, /12000/);
   assert.match(script, /window\.PMS\.Api\.get\('\/event-types\/'/);
   assert.match(script, /event-configured-forms/);
   assert.match(script, /No form values were entered and no event was submitted/);
