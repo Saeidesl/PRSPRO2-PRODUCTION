@@ -7,9 +7,14 @@ const test = require('node:test');
 
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 
+function getEventRender(source) {
+  const start = source.indexOf('render: function (events)');
+  const end = source.indexOf('statusClass: function', start);
+  return start >= 0 && end > start ? source.slice(start, end) : '';
+}
+
 test('event history renders one responsive project-style card layout', () => {
-  const source = read('js/modules/events.js');
-  const render = source.match(/render: function \(events\) \{[\\s\\S]*?\n    \},\n\n    statusClass: function/)?.[0] || '';
+  const render = getEventRender(read('js/modules/events.js'));
   assert.ok(render, 'event history render method must exist');
   assert.match(render, /event-history-card-grid/);
   assert.match(render, /event-list-card/);
@@ -17,8 +22,7 @@ test('event history renders one responsive project-style card layout', () => {
 });
 
 test('event cards preserve event details, status, dates, creator and department', () => {
-  const source = read('js/modules/events.js');
-  const render = source.match(/render: function \(events\) \{[\\s\\S]*?\n    \},\n\n    statusClass: function/)?.[0] || '';
+  const render = getEventRender(read('js/modules/events.js'));
   [
     'ProjectCode', 'ProjectTitle', 'EventTypeName', 'Description',
     'OccurredAt', 'CreatedAt', 'creatorValue', 'departmentValue',
