@@ -1155,8 +1155,8 @@
       if (!this.eventsLoaded) return;
       const container = document.getElementById('events-table-container');
       const empty = document.getElementById('events-empty');
-
       if (!container) return;
+
       const loading = document.getElementById('events-loading');
       if (loading) {
         loading.hidden = true;
@@ -1172,87 +1172,62 @@
 
       if (empty) empty.hidden = true;
 
-      let tableHtml =
-        '<div class="events-desktop-view"><table class="data-table">' +
-        '<thead><tr><th>پروژه</th><th>نوع رویداد</th><th>شرح فعالیت</th>' +
-        '<th>تاریخ وقوع</th><th>تاریخ ثبت</th><th>ثبت‌کننده</th>' +
-        '<th>واحد</th><th>وضعیت</th><th>جزئیات</th></tr></thead><tbody>';
-
-      let mobileHtml = '<div class="events-mobile-view">';
       const projectMap = new Map();
       const typeMap = new Map();
       this.projects.forEach(function (project) { projectMap.set(Events.idOf(project), project); });
       this.eventTypes.forEach(function (type) { typeMap.set(Events.idOf(type), type); });
 
-      events.forEach(function (event) {
+      const cards = events.map(function (event) {
         const project = projectMap.get(String(event.ProjectID || '')) || null;
         const type = typeMap.get(String(event.EventTypeID || '')) || null;
-
-        const projectName =
-          event.ProjectCode ||
-          (project && (project.ProjectCode || project.Title || project.Name)) ||
-          event.ProjectID ||
-          '-';
-
-        const typeName =
-          event.EventTypeName ||
-          (type && (type.Name || type.Code)) ||
-          event.EventTypeID ||
-          '-';
-
+        const projectCode = (project && project.ProjectCode) || event.ProjectCode || event.ProjectID || '-';
+        const projectTitle = (project && (project.Title || project.Name || project.ProjectName)) ||
+          event.ProjectTitle || event.ProjectName || 'بدون عنوان';
+        const typeName = event.EventTypeName || (type && (type.Name || type.Code)) ||
+          event.EventTypeID || 'رویداد ثبت‌شده';
         const description = event.Description || 'بدون شرح';
-        const creator = Events.creatorValue(event);
-        const department = Events.departmentValue(event);
+        const creator = Events.creatorValue(event) || '-';
+        const department = Events.departmentValue(event) || '-';
         const status = String(event.Status || '').toUpperCase();
         const statusClass = Events.statusClass(status);
         const eventId = Events.escape(event.ID || '');
+        const occurredAt = Events.formatDate(event.OccurredAt) || '-';
+        const createdAt = Events.formatDate(event.CreatedAt) || '-';
 
-        tableHtml +=
-          '<tr>' +
-          '<td>' + Events.escape(projectName) + '</td>' +
-          '<td>' + Events.escape(typeName) + '</td>' +
-          '<td>' + Events.escape(description) + '</td>' +
-          '<td>' + Events.escape(Events.formatDate(event.OccurredAt)) + '</td>' +
-          '<td>' + Events.escape(Events.formatDate(event.CreatedAt)) + '</td>' +
-          '<td>' + Events.escape(creator) + '</td>' +
-          '<td>' + Events.escape(department) + '</td>' +
-          '<td><span class="status-badge ' + statusClass + '">' +
-          Events.escape(Events.statusText(event.Status)) + '</span></td>' +
-          '<td><button type="button" class="btn btn-secondary event-details-button" ' +
-          'data-event-id="' + eventId + '">مشاهده</button></td>' +
-          '</tr>';
+        return '<article class="event-list-card">' +
+          '<div class="event-list-card-main">' +
+            '<div class="event-list-card-heading">' +
+              '<div class="event-list-card-project">' +
+                '<span class="event-list-card-eyebrow">پروژه</span>' +
+                '<strong class="event-list-card-code">' + Events.escape(projectCode) + '</strong>' +
+                '<span class="event-list-card-title">' + Events.escape(projectTitle) + '</span>' +
+              '</div>' +
+              '<span class="event-list-card-status ' + statusClass + '">' +
+                Events.escape(Events.statusText(event.Status)) +
+              '</span>' +
+            '</div>' +
+            '<div class="event-list-card-type"><span class="event-list-card-type-dot" aria-hidden="true"></span>' +
+              Events.escape(typeName) +
+            '</div>' +
+            '<div class="event-list-card-description">' +
+              '<span class="event-list-card-label">شرح فعالیت</span>' +
+              '<p>' + Events.escape(description) + '</p>' +
+            '</div>' +
+            '<div class="event-list-card-meta">' +
+              '<div class="event-list-card-meta-item"><span class="event-list-card-label">تاریخ وقوع</span><strong>' + Events.escape(occurredAt) + '</strong></div>' +
+              '<div class="event-list-card-meta-item"><span class="event-list-card-label">تاریخ ثبت</span><strong>' + Events.escape(createdAt) + '</strong></div>' +
+              '<div class="event-list-card-meta-item"><span class="event-list-card-label">ثبت‌کننده</span><strong>' + Events.escape(creator) + '</strong></div>' +
+              '<div class="event-list-card-meta-item"><span class="event-list-card-label">واحد</span><strong>' + Events.escape(department) + '</strong></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="event-list-card-actions">' +
+            '<span class="event-list-card-id">شناسه: ' + Events.escape(event.ID || '-') + '</span>' +
+            '<button type="button" class="btn btn-secondary event-details-button" data-event-id="' + eventId + '">مشاهده جزئیات <span aria-hidden="true">←</span></button>' +
+          '</div>' +
+        '</article>';
+      }).join('');
 
-        mobileHtml +=
-          '<article class="event-mobile-card">' +
-          '<div class="event-mobile-card-top">' +
-          '<div class="event-mobile-title-group"><span class="event-mobile-eyebrow">پروژه</span>' +
-          '<h3>' + Events.escape(projectName) + '</h3></div>' +
-          '<span class="event-mobile-status ' + statusClass + '">' +
-          Events.escape(Events.statusText(event.Status)) + '</span></div>' +
-          '<div class="event-mobile-type"><span class="event-mobile-type-dot"></span>' +
-          Events.escape(typeName) + '</div>' +
-          '<div class="event-mobile-description"><span class="event-mobile-label">شرح فعالیت</span>' +
-          '<p>' + Events.escape(description) + '</p></div>' +
-          '<div class="event-mobile-meta">' +
-          '<div class="event-mobile-meta-item"><span class="event-mobile-label">تاریخ وقوع</span>' +
-          '<span>' + Events.escape(Events.formatDate(event.OccurredAt)) + '</span></div>' +
-          '<div class="event-mobile-meta-item"><span class="event-mobile-label">تاریخ ثبت</span>' +
-          '<span>' + Events.escape(Events.formatDate(event.CreatedAt)) + '</span></div>' +
-          '<div class="event-mobile-meta-item"><span class="event-mobile-label">ثبت‌کننده</span>' +
-          '<span>' + Events.escape(creator) + '</span></div>' +
-          '<div class="event-mobile-meta-item"><span class="event-mobile-label">واحد</span>' +
-          '<span>' + Events.escape(department) + '</span></div></div>' +
-          '<div class="event-mobile-card-footer"><span class="event-mobile-id">شناسه: ' +
-          Events.escape(event.ID || '-') + '</span>' +
-          '<button type="button" class="btn btn-secondary event-details-button" ' +
-          'data-event-id="' + eventId + '">مشاهده جزئیات <span aria-hidden="true">←</span></button>' +
-          '</div></article>';
-      });
-
-      tableHtml += '</tbody></table></div>';
-      mobileHtml += '</div>';
-
-      container.innerHTML = tableHtml + mobileHtml;
+      container.innerHTML = '<div class="event-history-card-grid" aria-label="فهرست رویدادهای ثبت‌شده">' + cards + '</div>';
       container.hidden = false;
     },
 
