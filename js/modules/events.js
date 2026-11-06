@@ -629,6 +629,11 @@
       function fillSelect(select, label, items) {
         if (!select) return;
 
+        const signature = JSON.stringify([label, items.map(function (item) {
+          return [String(item.value), String(item.label)];
+        })]);
+        if (select.dataset.pmsOptionsSignature === signature) return;
+
         const previous = select.value;
         const fragment = document.createDocumentFragment();
 
@@ -645,6 +650,7 @@
         });
 
         select.replaceChildren(fragment);
+        select.dataset.pmsOptionsSignature = signature;
 
         if (Array.from(select.options).some(function (option) {
           return option.value === previous;
@@ -705,12 +711,13 @@
         return id && (!query || label.includes(query));
       }).slice(0, 12);
       if (!projects.length) {
-        container.innerHTML = '<p class="event-queue-empty">' +
+        const emptyMarkup = '<p class="event-queue-empty">' +
           Events.escape(query ? 'پروژه‌ای با این مشخصات پیدا نشد.' : 'پروژه‌ای برای نمایش در دسترس نیست.') +
           '</p>';
+        if (container.innerHTML !== emptyMarkup) container.innerHTML = emptyMarkup;
         return;
       }
-      container.innerHTML = projects.map(function (project) {
+      const markup = projects.map(function (project) {
         const id = Events.idOf(project);
         const code = project.ProjectCode || id;
         const title = project.Title || project.Name || project.ProjectName || 'بدون عنوان';
@@ -724,6 +731,7 @@
           '</div><button type="button" class="btn btn-primary event-recent-project-action" data-project-id="' +
           Events.escape(id) + '">ادامه و ثبت رویداد</button></article>';
       }).join('');
+      if (container.innerHTML !== markup) container.innerHTML = markup;
     },
 
     uniqueValues: function (items) {

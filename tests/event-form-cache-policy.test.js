@@ -46,3 +46,15 @@ test('event form prefetch never blocks selection and retains the per-type API fa
   assert.match(events, /eventFormDefinitionCacheGeneration/);
   assert.match(events, /eventFormDefinitionsPrefetchToken/);
 });
+
+
+test('event filter controls skip DOM replacement when their option data is unchanged', () => {
+  assert.match(events, /const signature = JSON\.stringify\(\[label, items\.map\(function \(item\)/);
+  assert.match(events, /if \(select\.dataset\.pmsOptionsSignature === signature\) return/);
+  assert.match(events, /select\.dataset\.pmsOptionsSignature = signature/);
+});
+
+test('recent project picker preserves existing DOM when rendered content is unchanged', () => {
+  assert.match(events, /if \(container\.innerHTML !== emptyMarkup\) container\.innerHTML = emptyMarkup/);
+  assert.match(events, /if \(container\.innerHTML !== markup\) container\.innerHTML = markup/);
+});
