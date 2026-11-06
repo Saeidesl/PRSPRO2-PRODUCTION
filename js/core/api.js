@@ -519,7 +519,7 @@
       const data = this.extractData(response);
 
       if (window.PMS && window.PMS.Cache) {
-        window.PMS.Cache.set(cacheKey, data);
+        window.PMS.Cache.set(cacheKey, data, cacheOptions);
       }
 
       return {
