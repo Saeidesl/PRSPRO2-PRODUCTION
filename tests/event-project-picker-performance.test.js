@@ -1,0 +1,24 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const test = require('node:test');
+
+const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'modules', 'events.js'), 'utf8');
+
+test('event page requests the lightweight project picker view instead of the full project-card payload', () => {
+  assert.match(source, /PMS\.Api\.get\('\/projects', \{[\s\S]*?query: \{ view: 'event-picker' \}/);
+  assert.match(source, /projectOptionsToken/);
+  assert.match(source, /Events\.projectOptionsToken = currentToken/);
+});
+
+test('project options are not reused across different authenticated sessions', () => {
+  assert.match(source, /const currentToken = PMS\.Api\.getToken\(\) \|\| ''/);
+  assert.match(source, /if \(this\.projectOptionsToken !== currentToken\)/);
+  assert.match(source, /this\.projects = \[\];[\s\S]*?this\.projectsLoaded = false/);
+});
+
+test('event creation invalidates the in-memory project picker data', () => {
+  assert.match(source, /this\.projectOptionsToken = ''[\s\S]*?PMS\.Api\.invalidateMany\(\[/);
+});
