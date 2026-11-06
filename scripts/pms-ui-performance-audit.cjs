@@ -407,6 +407,7 @@ const visible = el => {
               modalReadyMs: modalOpenedAt - modalOpenStartedAt,
               projectWorkflowReadyMs: null,
               formDefinitionsReadyMs: null,
+              warmFormDefinitionsRequestMs: null,
               projectOptions: 0,
               eligibleEventTypes: 0,
               configuredFormControls: 0,
@@ -446,6 +447,13 @@ const visible = el => {
                     return !!container && !container.textContent.includes('در حال دریافت فرم‌های متصل');
                   }, null, { timeout: 25000 });
                   benchmark.formDefinitionsReadyMs = Date.now() - modalOpenedAt;
+                  benchmark.warmFormDefinitionsRequestMs = await page.evaluate(async () => {
+                    const typeId = String((document.getElementById('event-form-type') || {}).value || '');
+                    if (!typeId || !window.PMS || !window.PMS.Api || typeof window.PMS.Api.get !== 'function') return null;
+                    const startedAt = performance.now();
+                    await window.PMS.Api.get('/event-types/' + encodeURIComponent(typeId) + '/forms');
+                    return Math.round(performance.now() - startedAt);
+                  });
                   benchmark.configuredFormControls = await page.locator('#event-configured-forms').locator('input,select,textarea').count();
                   if (diagnosticsEnabled) {
                     benchmark.diagnosticEndpoints = await page.locator('#pms-performance-diagnostics-table tr').evaluateAll(rows =>
@@ -616,6 +624,7 @@ function renderMarkdown(report) {
       '- Modal readiness: ' + (report.eventFormDiagnostics && report.eventFormDiagnostics.modalReadyMs !== undefined ? report.eventFormDiagnostics.modalReadyMs + ' ms' : 'n/a'),
       '- Project/workflow readiness: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.projectWorkflowReadyMs === 'number' ? report.eventFormDiagnostics.projectWorkflowReadyMs + ' ms' : 'n/a'),
       '- Form definitions readiness: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.formDefinitionsReadyMs === 'number' ? report.eventFormDiagnostics.formDefinitionsReadyMs + ' ms' : 'n/a'),
+      '- Warm backend form-definition request: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.warmFormDefinitionsRequestMs === 'number' ? report.eventFormDiagnostics.warmFormDefinitionsRequestMs + ' ms' : 'n/a'),
       '- Project options: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.projectOptions : 0),
       '- Eligible event types: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.eligibleEventTypes : 0),
       '- Visible controls after selecting the event type: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.configuredFormControls : 0),
