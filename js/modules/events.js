@@ -1650,7 +1650,8 @@
         '<div class="event-field"><label for="event-project-picker-trigger">پروژه <span class="event-required">*</span></label>' +
         '<select id="event-form-project" name="ProjectID" class="event-project-native-select" tabindex="-1" aria-hidden="true"><option value="">انتخاب پروژه</option></select><div class="event-project-picker" id="event-project-picker"><button type="button" class="event-project-picker-trigger" id="event-project-picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="event-project-picker-panel"><span class="event-project-picker-value" id="event-project-picker-value"><span class="event-project-picker-placeholder">برای ادامه، پروژه را انتخاب کنید</span></span><span class="event-project-picker-chevron" aria-hidden="true">⌄</span></button><div class="event-project-picker-panel" id="event-project-picker-panel" hidden><div class="event-project-picker-search-wrap"><span aria-hidden="true">⌕</span><input type="search" id="event-project-picker-search" placeholder="جست‌وجوی نام یا کد پروژه..." autocomplete="off" aria-label="جست‌وجوی پروژه"></div><div class="event-project-picker-list" id="event-project-picker-list" role="listbox" aria-label="فهرست پروژه‌ها"></div></div></div></div>' +
         '<div class="event-field"><label for="event-form-type">نوع رویداد <span class="event-required">*</span></label>' +
-        '<select id="event-form-type" name="EventTypeID" required><option value="">انتخاب نوع رویداد</option></select></div>' +
+        '<div class="event-type-control"><select id="event-form-type" name="EventTypeID" required><option value="">انتخاب نوع رویداد</option></select>' +
+        '<div id="event-type-loading" class="event-type-loading" hidden></div></div></div>' +
         '<div class="event-field"><label for="event-form-date">تاریخ و زمان وقوع <span class="event-required">*</span></label>' +
         '<input id="event-form-date" name="OccurredAt" type="datetime-local" required></div>' +
         '<div class="event-field event-field-wide"><label for="event-form-description">شرح رویداد</label>' +
@@ -2020,6 +2021,47 @@
       }
     },
 
+    setEventTypeLoadingState: function (isLoading, projectId) {
+      const typeSelect = document.getElementById('event-form-type');
+      const loading = document.getElementById('event-type-loading');
+      if (!typeSelect || !loading) return;
+
+      if (isLoading && projectId) {
+        typeSelect.disabled = true;
+        typeSelect.hidden = true;
+        loading.hidden = false;
+        const projectKey = String(projectId);
+        if (loading.dataset.projectId !== projectKey || !loading.querySelector('.loading-state')) {
+          if (window.PMS && PMS.Loading && typeof PMS.Loading.show === 'function') {
+            PMS.Loading.show(loading, 'در حال آماده‌سازی فهرست رویدادها...');
+          } else {
+            loading.textContent = 'در حال آماده‌سازی فهرست رویدادها...';
+          }
+          const state = loading.querySelector('.loading-state');
+          if (state) {
+            const hint = document.createElement('small');
+            hint.textContent = 'اطلاعات گردش‌کار پروژه در حال دریافت است.';
+            state.appendChild(hint);
+          }
+          loading.dataset.projectId = projectKey;
+        }
+        loading.dataset.state = 'loading';
+        return;
+      }
+
+      typeSelect.disabled = false;
+      typeSelect.hidden = false;
+      if (window.PMS && PMS.Loading && typeof PMS.Loading.hide === 'function') {
+        PMS.Loading.hide(loading);
+      } else {
+        loading.replaceChildren();
+        loading.removeAttribute('aria-busy');
+      }
+      loading.hidden = true;
+      delete loading.dataset.projectId;
+      loading.dataset.state = 'ready';
+    },
+
     refreshEventTypeOptions: function () {
       const typeSelect = document.getElementById('event-form-type');
       const projectSelect = document.getElementById('event-form-project');
@@ -2028,6 +2070,20 @@
       const previousValue = String(typeSelect.value || '');
       const project = this.findById(this.projects, projectSelect.value);
       const projectId = String(projectSelect.value || '');
+      const workflowPending = !!projectId && (
+        this.workflowProgressProjectId !== projectId || this.workflowProgressLoading
+      );
+      if (workflowPending) {
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'در حال آماده‌سازی فهرست رویدادها...';
+        typeSelect.replaceChildren(placeholder);
+        typeSelect.value = '';
+        this.setEventTypeLoadingState(true, projectId);
+        this.updateSubmitAvailability();
+        return;
+      }
+      this.setEventTypeLoadingState(false, projectId);
       const isDraftProject = !!project &&
         String(project.RecordState || 'ACTIVE').toUpperCase() === 'DRAFT';
       const progress = this.workflowProgress && this.workflowProgressProjectId === projectId
