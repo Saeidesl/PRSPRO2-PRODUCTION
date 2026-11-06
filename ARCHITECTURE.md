@@ -499,3 +499,26 @@
 - Taskهای 1 تا 8 پذیرفته و تکمیل شدند.
 - TODO5.md در هر دو مخزن برای فاز بعدی به `Ready for the next feature` بازنشانی شد.
 - هیچ کار ناتمام این فاز به‌عنوان تکمیل‌شده یا منتشرشده گزارش نشده است.
+
+
+## فاز تکمیل‌شده: پنل اطلاعات کمکی و تقویم شمسی با انتخاب ساعت (2026-11-06)
+
+### محدوده و تصمیم معماری
+- اسکرول مستقل پنل اطلاعات کمکی فرم رویداد، هماهنگی تقویم شمسی با تم روشن/تاریک و انتخاب ساعت/دقیقه برای ورودی‌های datetime-local تکمیل شد.
+- تقویم مشترک موجود توسعه یافت؛ مسیر موازی، API جدید، تغییر permission، Sheet یا schema ایجاد نشد.
+- قرارداد داده حفظ شد: datetime-local با قالب محلی `YYYY-MM-DDTHH:mm` و date-only با قالب `YYYY-MM-DD`. مسیر `POST /events` و ستون `13_Events.OccurredAt` بدون تغییر ماند.
+
+### فایل‌ها و پیاده‌سازی Frontend
+- `css/event-context.css`: محدودسازی ارتفاع workspace و اسکرول مستقل فرم و پنل؛ drawer موبایل حفظ شد.
+- `css/jalali-calendar.css`: استفاده از توکن‌های معنایی تم برای رنگ‌ها و وضعیت‌های تعاملی؛ استایل مرحله انتخاب زمان.
+- `js/components/jalali-calendar.js`: جریان دو مرحله‌ای تاریخ و زمان، ساعت 00–23، دقیقه 00–59، بازگشت به تاریخ، تأیید مقدار، رندر deferred با `Promise.resolve().then(render)` و محافظ outside-click با `e.composedPath()`.
+- `index.html`: نسخه CSS برابر `20261106-date-then-time-2` و نسخه JS برابر `20261106-date-then-time-3` برای cache-busting.
+- تست‌ها: `tests/event-context-panel-scroll.test.js`، `tests/jalali-calendar-datetime.test.js` و `tests/jalali-calendar-datetime.browser.cjs`؛ تست Chromium انتخاب روز، نمایش گزینه‌های زمان، انتخاب 08:45، ثبت مقدار و حفظ رفتار date-only را پوشش می‌دهد.
+
+### ادغام، QA و پذیرش
+- Frontend PR #19 و PRهای #20 تا #24 و #26 در main ادغام شدند؛ PR #26 با SHA `7e09cd3c16b75b01d04132dcf836a6fbfea770b9` ادغام شد.
+- تست‌های Frontend checks، agent suite، cross-repository QA، comprehensive UI performance audit و تست مرورگر Chromium موفق شدند.
+- انتشار اختصاصی GitHub Pages در Run `42134933236` موفق بود.
+- مالک محصول تست نهایی را در 2026-11-06 موفق اعلام کرد.
+- Backend runtime، API، permission و Google Sheets تغییر نکردند؛ قراردادهای `POST /events` و `13_Events.OccurredAt` حفظ شدند.
+- نتیجه: تمام Macro-Taskهای فاز پذیرفته و فاز بسته شد.
