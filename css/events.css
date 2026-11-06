@@ -1624,3 +1624,34 @@
   #event-create-modal .event-project-picker-trigger,
   #event-create-modal .event-project-picker-option { transition: none; }
 }
+
+
+/* Wait for project workflow data before exposing event types in native pickers. */
+#event-create-modal .event-type-control { min-width: 0; }
+#event-create-modal .event-type-control select[hidden] { display: none !important; }
+#event-create-modal .event-type-loading {
+  min-height: 104px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-alt);
+}
+#event-create-modal .event-type-loading .loading-state {
+  min-height: 102px;
+  gap: 8px;
+  padding: 10px 14px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+#event-create-modal .event-type-loading .loading-spinner {
+  width: 30px;
+  height: 30px;
+}
+#event-create-modal .event-type-loading .loading-state small {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+@media (prefers-reduced-motion: reduce) {
+  #event-create-modal .event-type-loading .loading-spinner { animation: none; }
+}
