@@ -29,6 +29,7 @@
   const EVENT_WORKFLOW_CACHE_TTL_MS = 15000;
   const eventDependentDataCache = new Map();
   const eventDependentDataRequests = new Map();
+  let eventDependentDataCacheGeneration = 0;
 
   function eventDependentCacheKey(kind, parts) {
     const token = PMS.Api && typeof PMS.Api.getToken === 'function'
@@ -38,6 +39,7 @@
   }
 
   function clearEventDependentDataCache(projectId) {
+    eventDependentDataCacheGeneration++;
     const token = PMS.Api && typeof PMS.Api.getToken === 'function'
       ? PMS.Api.getToken() || ''
       : '';
@@ -56,8 +58,9 @@
     const cached = eventDependentDataCache.get(key);
     if (cached && cached.expiresAt > now) return Promise.resolve(cached.value);
     if (eventDependentDataRequests.has(key)) return eventDependentDataRequests.get(key);
+    const generation = eventDependentDataCacheGeneration;
     const request = Promise.resolve().then(loader).then(value => {
-      eventDependentDataCache.set(key, {
+      if (generation === eventDependentDataCacheGeneration) eventDependentDataCache.set(key, {
         value: value,
         expiresAt: Date.now() + Math.max(1000, Number(ttlMs) || EVENT_DEPENDENT_CACHE_TTL_MS)
       });
@@ -119,7 +122,7 @@
         this.formDefinitionCacheInvalidationBound = true;
         window.addEventListener('hashchange', function () {
           const route = String(window.location.hash || '').replace(/^#/, '').split('/')[0];
-          if (['forms', 'event-types', 'information-types'].indexOf(route) !== -1) {
+          if (['forms', 'event-types', 'information-types', 'projects'].indexOf(route) !== -1) {
             clearEventFormDefinitionCache();
             clearEventDependentDataCache();
           }
@@ -2540,6 +2543,7 @@
           status.textContent = 'فرم «' + (definition.Name || definition.Code || 'فرم تعیین‌شده') + '» به‌صورت خودکار از ' + eventName + ' پیدا شد.';
         }
       } catch (error) {
+        if (requestId !== this.amendmentSourceRequestId) return;
         if (status) status.textContent = 'دریافت پاسخ قبلی ناموفق بود.';
         this.showFormError('یافتن فرم ثبت‌شده برای اصلاح ناموفق بود: ' + this.errorMessage(error));
       }
@@ -3463,6 +3467,7 @@
             ExpectedUpdatedAt: this.amendmentSourceUpdatedAt,
             Values: formValues.Values
           });
+          clearEventDependentDataCache();
         }
         const procurementIntegration = eventResult.procurementIntegration || {};
         // procurementIntegration.status can be FAILED; the result panel below exposes recovery.
