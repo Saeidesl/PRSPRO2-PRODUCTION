@@ -5,6 +5,19 @@
   const CACHE_KEY = PMS.Cache.keys.EVENTS;
   const PROJECTS_CACHE_KEY = PMS.Cache.keys.PROJECTS;
   const EVENT_TYPES_CACHE_KEY = PMS.Cache.keys.EVENT_TYPES;
+  const EVENT_FORM_DEFINITION_CACHE_TTL_MS = 30000;
+  const eventFormDefinitionCache = new Map();
+
+  function eventFormDefinitionCacheKey(eventTypeId) {
+    const token = PMS.Api && typeof PMS.Api.getToken === 'function'
+      ? PMS.Api.getToken() || ''
+      : '';
+    return String(token) + '\\n' + String(eventTypeId || '');
+  }
+
+  function clearEventFormDefinitionCache() {
+    eventFormDefinitionCache.clear();
+  }
 
   const Events = {
     events: [],
@@ -12,6 +25,7 @@
     eventsLoaded: false,
     projectsLoaded: false,
     projectOptionsToken: '',
+    formDefinitionCacheInvalidationBound: false,
     workflowProgress: null,
     workflowProgressRequestId: 0,
     workflowProgressProjectId: '',
@@ -50,6 +64,16 @@
 
     init: function () {
       this.bindEvents();
+      if (!this.formDefinitionCacheInvalidationBound && typeof window.addEventListener === 'function') {
+        this.formDefinitionCacheInvalidationBound = true;
+        window.addEventListener('hashchange', function () {
+          const route = String(window.location.hash || '').replace(/^#/, '').split('/')[0];
+          if (['forms', 'event-types', 'information-types'].indexOf(route) !== -1) {
+            clearEventFormDefinitionCache();
+          }
+        });
+        window.addEventListener('pms:auth-expired', clearEventFormDefinitionCache);
+      }
       this.activateQueue('progress');
 
       const permissions = PMS.Router && Array.isArray(PMS.Router.permissions)
@@ -2618,6 +2642,17 @@
         this.updateSubmitAvailability();
         return;
       }
+      const cacheKey = eventFormDefinitionCacheKey(eventTypeId);
+      const cachedDefinition = eventFormDefinitionCache.get(cacheKey);
+      if (cachedDefinition && Date.now() - cachedDefinition.cachedAt < EVENT_FORM_DEFINITION_CACHE_TTL_MS) {
+        this.formDefinitions = cachedDefinition.data;
+        this.renderConfiguredForms();
+        this.formsReady = true;
+        this.updateSubmitAvailability();
+        return;
+      }
+      if (cachedDefinition) eventFormDefinitionCache.delete(cacheKey);
+
       section.hidden = false;
       container.innerHTML = '<p class="event-muted">در حال دریافت فرم‌های متصل…</p>';
       try {
@@ -2633,10 +2668,19 @@
           else break;
         }
         this.formDefinitions = Array.isArray(data) ? data : [];
+        eventFormDefinitionCache.set(cacheKey, {
+          data: this.formDefinitions,
+          cachedAt: Date.now()
+        });
+        if (eventFormDefinitionCache.size > 50) {
+          const oldestKey = eventFormDefinitionCache.keys().next().value;
+          eventFormDefinitionCache.delete(oldestKey);
+        }
         this.renderConfiguredForms();
         this.formsReady = true;
       } catch (error) {
         if (requestId !== this.formsRequestId) return;
+        eventFormDefinitionCache.delete(cacheKey);
         this.formDefinitions = [];
         container.innerHTML = '';
         this.showFormError('دریافت فرم‌های متصل ناموفق بود: ' + this.errorMessage(error));
