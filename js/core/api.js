@@ -297,7 +297,7 @@
       try {
         const params = new URLSearchParams();
         params.set('path', path || '/');
-        const diagnosticPath = /^\/(dashboard|projects(?:\/|$)|project-dashboard\/lookups|workflows(?:\/|$)|events(?:\/|$)|procurement(?:\/|$))/.test(String(path || '/'));
+        const diagnosticPath = /^\/(dashboard|projects(?:\/|$)|project-dashboard\/lookups|workflows(?:\/|$)|events(?:\/|$)|event-types(?:\\/|$)|procurement(?:\/|$))/.test(String(path || '/'));
         if (diagnosticsEnabled && diagnosticPath && (actualMethod === 'GET' || actualMethod === 'HEAD')) params.set('_diagnostics', '1');
         if (options.query && typeof options.query === 'object') {
           Object.keys(options.query).forEach((key) => {
