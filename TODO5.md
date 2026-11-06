@@ -222,3 +222,6 @@
 - نتایج این اجرا: Modal `2919ms`؛ پروژه/Workflow `6892ms`؛ فرم‌های متصل `11326ms`؛ درخواست تکراری Backend `5501ms`؛ `49` درخواست شبکه؛ `0` درخواست ناموفق؛ `0` خطای Console/Page؛ بدون overflow موبایل و بدون submit.
 - اختلاف زمان با اجرای قبلی نشان‌دهنده نوسان محیط Staging است؛ چون Backend cache هنوز deploy نشده، این نتایج اثر نسخه جدید را اثبات نمی‌کنند. مقدار warm `5501ms` نیز هنوز از حد مطلوب بیشتر است.
 - تست‌های Browser Audit، Frontend checks، Frontend agent suite و Cross-repository QA روی HEAD فعلی موفق هستند. PR #37 باز و ادغام‌نشده باقی مانده است.
+
+
+- آخرین تکرار Browser Audit روی HEAD مستندات `bb5b5ca01a32241362276a380f9adeec8dbdf736`: Run `42278976712` / Artifact `13534356871` موفق؛ Modal `2418ms`، پروژه/Workflow `3491ms`، فرم‌های متصل `11692ms` و درخواست warm endpoint برابر `5202ms`. تعداد درخواست `51`، خطای شبکه/Console/Page برابر صفر و بدون submit. این سنجش همچنان روی Backend Staging پیش از انتشار کش جدید انجام شده و اثر کش جدید را ثابت نمی‌کند.
