@@ -158,7 +158,7 @@
 - Task 1 تکمیل و Task 2 در وضعیت IN PROGRESS قرار گرفت.
 - تا این نقطه فقط مستندات TODO5 به‌روزرسانی می‌شود؛ هیچ تغییر اجرایی، انتشار یا مهاجرت داده انجام نشده است.
 
-#### Task 2 — Implementation progress (تکمیل‌نشده؛ در انتظار baseline احراز هویت‌شده)
+#### Task 2 — Implementation progress (در انتظار تکمیل ارزیابی و پذیرش؛ baseline احراز هویت‌شده تهیه شد)
 
 - `js/modules/events.js`:
   - دریافت پروژه‌ها برای صفحه رویداد از همان `GET /projects` با query برابر `view=event-picker` انجام می‌شود؛ دیگر payload کامل CardInformation برای فهرست انتخاب پروژه دریافت نمی‌شود.
@@ -179,3 +179,16 @@
 - اصلاح ابزار Browser Audit پس از کشف عدم تطابق با UI عملیاتی: دکمه قدیمی `event-create-button` در مسیر فعلی وجود ندارد؛ آزمون اکنون از ورودی واقعی پروژه با `data-event-entry="project"` وارد پنل انتخاب پروژه شده و اولین اقدام `.event-recent-project-action` را برای بازکردن فرم دنبال می‌کند. تست `tests/event-form-performance-audit.test.js` نیز این مسیر واقعی را بررسی می‌کند.
 - Commitهای اصلاح ابزار و تست: `a960e1e81c622ef03b14f87c5d8dd8f1f01ac27a` و `17612424f7b91e26d0b5d32f6e177d995194a8c8`. Frontend checks، Frontend agent suite و Cross-repository QA روی commit دوم موفق شدند.
 - اجرای Browser Audit روی commit دوم با شناسه `42274108059` آغاز شده است؛ آخرین وضعیت ثبت‌شده هنوز در مرحله نصب Playwright/Chromium است و artifact گزارش هنوز تولید نشده. بنابراین زمان‌های واقعی Modal، workflow و فرم‌های متصل هنوز تأیید نشده‌اند و Task 2 باز می‌ماند.
+
+
+#### Task 2 — گزارش سنجش احراز هویت‌شده و کنترل‌های تکمیلی (2026-11-06)
+
+- اجرای مرورگر واقعی روی Staging احراز هویت‌شده با Run شماره `42277205597` و Artifact شماره `13532194544` تکمیل شد؛ حالت اجرا `authenticated-read-only` و وضعیت `authenticated-audit-complete` بود.
+- نتایج فرم ثبت رویداد: آماده‌شدن Modal برابر `1409ms`؛ آماده‌شدن پروژه و Workflow برابر `3723ms`؛ آماده‌شدن تعریف فرم‌های متصل برابر `9207ms`؛ تعداد گزینه پروژه `2`؛ انواع رویداد مجاز `10`؛ کنترل‌های فرم متصل `2`.
+- سلامت مرورگر: `47` درخواست شبکه؛ `0` درخواست ناموفق؛ `0` خطای Console؛ `0` خطای Page؛ بدون سرریز افقی در viewport موبایل `390px`. هیچ مقداری وارد و هیچ رویدادی ثبت نشد.
+- گزارش، زمان مرورگر برای endpointهای نمونه را نیز ثبت کرده است: `GET /event-types/:id/forms = 5332ms`، `GET /projects/:id/information = 4443ms` و `GET /projects/:id/workflow-progress = 3594ms`. این اعداد زمان مشاهده‌شده در مرورگرند و به‌دلیل نبود جدول diagnostics مدیریتی، زمان خالص Backend/Google Sheets محسوب نمی‌شوند.
+- baseline قبل از تغییرات در دسترس نیست؛ بنابراین درصد بهبود یا کاهش قطعی زمان ادعا نمی‌شود. زمان `9207ms` برای تعریف فرم‌ها هنوز زیاد است و نقطه تمرکز ادامه Task 2 خواهد بود.
+- کنترل Backend روی HEAD شاخه PR #17: Backend source checks و PMS agent suite هر دو موفق؛ `179/179` تست Backend پاس، `85` فایل منبع JavaScript و manifest بررسی شدند؛ Domain Contract و QA/Release Safety بدون finding بحرانی موفق شدند. Runها: `42277904168` و `42277903928`.
+- کنترل Frontend روی HEAD شاخه PR #37: Frontend checks، frontend agent suite و Cross-repository QA موفق؛ Browser Audit احراز هویت‌شده نیز بدون خطای مرورگر تکمیل شد.
+- PRها همچنان باز و ادغام‌نشده‌اند؛ هیچ Backend deployment، Frontend deployment یا live verification بعد از ادغام انجام نشده است.
+- وضعیت Task 2: `IN PROGRESS`؛ بهینه‌سازی‌های اولیه پیاده‌سازی و تست خودکار شده‌اند، اما کاهش زمان آماده‌شدن تعریف فرم‌ها باید با سنجش تکراری/تشخیصی و سپس پذیرش عملیاتی تأیید شود.
