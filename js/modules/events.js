@@ -398,6 +398,7 @@
           resultKeys.push('events');
           requests.push(
             PMS.Api.getCached('/events', CACHE_KEY, {
+              cacheTtl: 15000,
               onRefresh: function (data) {
                 Events.events = Events.normalize(data);
                 Events.eventsLoaded = true;
@@ -430,6 +431,7 @@
           resultKeys.push('types');
           requests.push(
             PMS.Api.getCached('/event-types', EVENT_TYPES_CACHE_KEY, {
+              cacheTtl: 60000,
               onRefresh: function (data) {
                 Events.eventTypes = Events.normalize(data);
                 Events.scheduleRefreshRender();
