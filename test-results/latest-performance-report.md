@@ -1,6 +1,6 @@
 # PMS UI and Performance Audit
 
-- Generated: 2026-11-06T00:18:44.335Z
+- Generated: 2026-11-06T00:26:35.783Z
 - Base URL: http://127.0.0.1:4173/PRSPRO2/
 - Mode: public-login-and-shell-only
 - Overall: **blocked-no-staging-api**
@@ -34,7 +34,7 @@
 
 | Route | Status | Ready ms | Settled ms | Forms | Buttons | Controls | Mobile overflow |
 |---|---|---:|---:|---:|---:|---:|---|
-| login | loaded | 154 | 777 | 1 | 2 | 2 | no |
+| login | loaded | 204 | 830 | 1 | 2 | 2 | no |
 
 ## Coverage gaps
 
