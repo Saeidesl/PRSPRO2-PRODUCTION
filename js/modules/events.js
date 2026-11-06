@@ -1804,14 +1804,14 @@
       }
       if (typePickerSearch) {
         typePickerSearch.addEventListener('input', () => this.renderEventTypePicker());
-        typePickerSearch.addEventListener('keydown', (event) => {
+      }
+      if (typePicker) {
+        typePicker.addEventListener('keydown', (event) => {
           if (event.key === 'Escape') {
             this.setEventTypePickerOpen(false);
             typePickerTrigger.focus();
           }
         });
-      }
-      if (typePicker) {
         typePicker.addEventListener('click', (event) => {
           const option = event.target.closest('[data-event-type-id]');
           if (!option || option.disabled) return;
@@ -2060,6 +2060,8 @@
         const section = document.createElement('section');
         section.className = 'event-type-picker-group' +
           (group.label.indexOf('سایر') !== -1 ? ' is-restricted' : '');
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-label', group.label);
         const heading = document.createElement('div');
         heading.className = 'event-type-picker-group-title';
         heading.textContent = group.label;
