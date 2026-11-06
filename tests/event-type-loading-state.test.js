@@ -15,7 +15,8 @@ test('project event type picker is replaced by the existing loading animation wh
   assert.match(source, /workflowPending = !!projectId && \([\s\S]*?workflowProgressProjectId !== projectId \|\| this\.workflowProgressLoading/);
   assert.match(source, /this\.setEventTypeLoadingState\(true, projectId\)/);
   assert.match(source, /typeSelect\.disabled = true/);
-  assert.match(source, /typeSelect\.hidden = true/);
+  assert.match(source, /pickerTrigger\.disabled = true/);
+  assert.match(source, /event-type-native-select \{ display: none !important; \}/);
   assert.match(source, /typeSelect\.dataset\.pendingValue = previousValue/);
   assert.match(source, /PMS\.Loading\.show\(loading, 'در حال آماده‌سازی فهرست رویدادها\.\.\.'/);
   assert.match(loading, /class="loading-spinner"/);
