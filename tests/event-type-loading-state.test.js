@@ -15,7 +15,8 @@ test('project event type picker is replaced by the existing loading animation wh
   assert.match(source, /workflowPending = !!projectId && \([\s\S]*?workflowProgressProjectId !== projectId \|\| this\.workflowProgressLoading/);
   assert.match(source, /this\.setEventTypeLoadingState\(true, projectId\)/);
   assert.match(source, /typeSelect\.disabled = true/);
-  assert.match(source, /typeSelect\.hidden = true/);
+  assert.match(source, /pickerTrigger\.disabled = true/);
+  assert.match(styles, /event-type-native-select \{ display: none !important; \}/);
   assert.match(source, /typeSelect\.dataset\.pendingValue = previousValue/);
   assert.match(source, /PMS\.Loading\.show\(loading, 'در حال آماده‌سازی فهرست رویدادها\.\.\.'/);
   assert.match(loading, /class="loading-spinner"/);
@@ -39,6 +40,6 @@ test('workflow failure retains retry handling and stale requests cannot replace 
 test('event type loading state is responsive, theme-aware, and uses the refreshed frontend assets', () => {
   assert.match(styles, /var\(--color-surface-alt\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
-  assert.match(index, /events\.css\?v=20261106-event-history-cards-1/);
-  assert.match(index, /events\.js\?v=20261106-event-history-cards-1/);
+  assert.match(index, /events\.css\?v=20261106-event-type-picker-cards-1/);
+  assert.match(index, /events\.js\?v=20261106-event-type-picker-cards-1/);
 });

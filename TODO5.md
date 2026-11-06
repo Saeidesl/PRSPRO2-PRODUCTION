@@ -1,4 +1,7 @@
 ## 🎯 Current Objective
+بازطراحی رابط انتخاب نوع رویداد در فرم ثبت رویداد؛ جایگزینی پنجره انتخاب رادیویی/native موبایل با فهرست سفارشی، حرفه‌ای، RTL و واکنش‌گرا، با حفظ کامل قواعد دسترسی و گردش‌کار و قرارداد EventTypeID.
+
+## 🎯 Current Objective
 یکپارچه‌سازی ظاهر فهرست «رویدادهای ثبت‌شده» با کارت‌های فهرست پروژه‌ها؛ حفظ کامل اطلاعات، فیلترها، مرتب‌سازی، مشاهده جزئیات و رفتار واکنش‌گرای موجود.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
@@ -39,3 +42,21 @@
   - *Log:* در `js/modules/events.js`، متد `Events.render(events)` از جدول دسکتاپ/کارت موبایل جداگانه به یک grid مشترک با کارت‌های `.event-list-card` تغییر کرد؛ مقادیر از همان `events`, `projects` و `eventTypes` خوانده می‌شوند و دکمه `event-details-button[data-event-id]` بدون تغییر مسیر بازکردن جزئیات حفظ شد. `Events.applyFilters()`، جستجو، scope مجاز، فیلترهای تاریخ، مرتب‌سازی `CreatedAt` و جریان ثبت دست‌نخورده ماندند. در `css/events.css` استایل کارت‌ها، توکن‌های تم، شبکه دو ستونه و موبایل تک‌ستونه، وضعیت‌ها، focus و reduced-motion افزوده شد. در `index.html` نسخه CSS/JS به `20261106-event-history-cards-1` تغییر کرد. تست جدید `tests/event-history-project-cards.test.js` افزوده شد و تست‌های `event-queue-project-cards.test.js`, `event-type-loading-state.test.js`, `project-picker.test.js`, `workflow-management.test.js` با نسخه asset جدید هماهنگ شدند. Frontend Checks run `42140394052`، PMS frontend agent suite run `42140394076`، cross-repository QA run `42140394226` و comprehensive UI performance audit run `42140394067` همگی success شدند. هیچ API، permission، Sheet، schema یا Backend runtime تغییر نکرد.
 - [x] **Task 3 — تأیید نهایی و تست در محیط عملیاتی:** تست نهایی کارت‌های تاریخچه رویدادها در نسخه عملیاتی توسط مالک محصول با موفقیت تأیید شد.
   - *Log:* مالک محصول در 2026-11-06 موفقیت تست عملیاتی را اعلام کرد. PR #31 با عنوان `feat: align event history cards with project list` در مخزن `Saeidesl/PRSPRO2-PRODUCTION` به `main` ادغام شد؛ Merge Commit: `3cde2b5174622c3e9eba971bbb49828d075f93df`. فایل‌های اجرایی تغییرکرده: `js/modules/events.js` (رندر مشترک کارت‌های تاریخچه رویدادها در `Events.render(events)` با حفظ دکمه جزئیات و مسیرهای موجود)، `css/events.css` (چیدمان شبکه، کارت‌ها، تم روشن/تاریک، حالت‌های focus و واکنش‌گرایی)، `index.html` (نسخه‌گذاری cache-busting با کلید `20261106-event-history-cards-1`). تست جدید `tests/event-history-project-cards.test.js` افزوده شد و تست‌های مرتبط `tests/event-queue-project-cards.test.js`، `tests/event-type-loading-state.test.js`، `tests/project-picker.test.js` و `tests/workflow-management.test.js` هماهنگ شدند. Frontend checks و agent/cross-repository QA موفق بودند. GitHub Pages workflow run `42140866218` با نتیجه `success` تکمیل شد. کاربر تست نسخه منتشرشده را موفق اعلام کرد. Backend runtime، APIها، مجوزها، Google Sheets و schema تغییری نکردند؛ بنابراین deployment جدید Backend لازم نبود.
+
+
+### تسک جدید در فاز باز (2026-11-06): بازطراحی انتخاب نوع رویداد
+
+#### تکمیل نقشه فنی این تسک
+- شاخه کاری: `feature/event-type-picker-cards-20261106` در هر دو مخزن؛ مبنای Frontend main: `3c1ad10d9b7f0c32f7a53d201e5f05fa6d0cfef9`؛ مبنای Backend main: `881663232a51aa457c5717bfaf956aeca3a11af0`.
+- Frontend: `js/modules/events.js`؛ ساخت فیلد انتخاب در `Events.openForm()` و به‌روزرسانی گزینه‌ها در `Events.refreshEventTypeOptions()`؛ بارگذاری قواعد در `Events.loadWorkflowProgress()`؛ نمایش انتظار در `Events.setEventTypeLoadingState()`.
+- فیلد مرجع `#event-form-type[name="EventTypeID"]` منبع حقیقت و مقدار ارسالی فرم باقی می‌ماند. تغییر انتخاب باید رویداد `change` همین فیلد را اجرا کند تا amendment mode، فیلد مقدار، فرم‌های متصل و اطلاعات کمکی از مسیر موجود به‌روز شوند.
+- گزینه‌ها بر اساس منطق فعلی `available` و `restricted`، قواعد گردش‌کار، پروژه Draft، اتصال PROJECT/INDEPENDENT، ترتیب رویداد و تعداد ثبت تکراری ساخته می‌شوند. ظاهر جدید باید علت محدودیت گزینه‌های غیرفعال را قابل‌فهم نمایش دهد.
+- استایل در `css/events.css`؛ نسخه‌گذاری asset در `index.html`؛ تست‌های Node در `tests/*.test.js` و تست مرورگر در صورت وجود harness مناسب.
+- Backend: هیچ endpoint، مجوز، Sheet یا schema جدیدی لازم نیست؛ `POST /events` و قرارداد `EventTypeID` بدون تغییر می‌مانند.
+
+#### صف تسک‌های کلان
+- [x] **Task 1 — Discovery & Planning:** بررسی مستندات، شاخه‌ها، commitهای اصلی، فیلد انتخاب فعلی، منطق دسترس‌پذیری گزینه‌ها و جریان‌های وابسته.
+  - *Log:* در Frontend، آخرین commit مبنا `3c1ad10d9b7f0c32f7a53d201e5f05fa6d0cfef9` و در Backend `881663232a51aa457c5717bfaf956aeca3a11af0` بررسی شد. `TODO5.md` و `ARCHITECTURE.md` هر دو مخزن خوانده شدند. مشخص شد انتخاب فعلی در `Events.openForm()` یک `select#event-form-type` استاندارد است و به همین علت در Android به پنجره native رادیویی تبدیل می‌شود. `Events.refreshEventTypeOptions()` گروه‌های مجاز/محدود، وضعیت گردش‌کار، ترتیب و تکرار را محاسبه می‌کند؛ `Events.loadWorkflowProgress()` داده مرجع را بارگذاری می‌کند و `Events.setEventTypeLoadingState()` وضعیت انتظار را مدیریت می‌کند. رویداد `change` نوع رویداد به فرم‌های متصل، حالت اصلاح، مقدار تولید و پنل اطلاعات کمکی متصل است. شاخه کاری هم‌نام از main در هر دو مخزن ساخته شد. دامنه تغییر Frontend-only است و Backend/API/Sheet/schema تغییر نمی‌کند.
+- [ ] **Task 2 — اجرای انتخاب‌گر سفارشی نوع رویداد (IN PROGRESS):** جایگزینی تجربه native/radio با پنل فهرست سفارشی و کارت‌های انتخابی؛ تفکیک بصری گزینه‌های قابل ثبت و محدود، نمایش عنوان و توضیح وضعیت، حالت انتخاب‌شده، RTL، تم روشن/تاریک، موبایل و صفحه‌کلید؛ حفظ select مرجع، مقدار EventTypeID و رویداد change.
+- [ ] **Task 3 — تست و کنترل سازگاری:** تست قواعد گزینه‌های مجاز/غیرمجاز، پروژه‌های Draft و Independent، بارگذاری/خطای گردش‌کار و retry، انتخاب قبلی، فرم‌های متصل، ثبت رویداد و رگرسیون‌های موجود؛ آماده‌سازی PR پس از موفقیت CI.
+- [ ] **Task 4 — انتشار و پذیرش عملیاتی:** ادغام PR پس از کنترل‌ها، انتشار GitHub Pages و دریافت تأیید تست مالک محصول در موبایل و دسکتاپ.
