@@ -214,3 +214,11 @@
 - مقایسه با اجرای قبلی Run `42278302128` نشان می‌دهد زمان‌ها نوسان دارند؛ در هر دو اجرا diagnostics مدیریتی Backend خالی بود. این اختلاف به‌عنوان بهبود یا پسرفت قطعی تفسیر نمی‌شود.
 - API مقصد، Staging احراز هویت‌شده است؛ اما deployment شاخه Backend PR #17 روی آن مستقلاً تأیید نشده. workflow موجود `.github/workflows/sync-apps-script.yml` فقط `main` و Secrets محیط Production را هدف می‌گیرد؛ از آن برای انتشار Staging یا feature branch استفاده نخواهد شد.
 - وضعیت Task 2 همچنان `IN PROGRESS` است. برای اثبات اثر بهینه‌سازی Backend، باید مسیر مجزای امن Staging مشخص/تأیید شود، Backend branch روی همان محیط منتشر شود و audit مجدداً اجرا گردد. هیچ merge یا Production deployment انجام نشده است.
+
+
+#### Task 2 — تکرار سنجش cold/warm روی HEAD فعلی (2026-11-06)
+
+- Run `42278648501` / Artifact `13534980965` روی commit `85d9dd54dd1aa52107e713f4a3024c1197bd3aea` با وضعیت `authenticated-audit-complete` موفق شد.
+- نتایج این اجرا: Modal `2919ms`؛ پروژه/Workflow `6892ms`؛ فرم‌های متصل `11326ms`؛ درخواست تکراری Backend `5501ms`؛ `49` درخواست شبکه؛ `0` درخواست ناموفق؛ `0` خطای Console/Page؛ بدون overflow موبایل و بدون submit.
+- اختلاف زمان با اجرای قبلی نشان‌دهنده نوسان محیط Staging است؛ چون Backend cache هنوز deploy نشده، این نتایج اثر نسخه جدید را اثبات نمی‌کنند. مقدار warm `5501ms` نیز هنوز از حد مطلوب بیشتر است.
+- تست‌های Browser Audit، Frontend checks، Frontend agent suite و Cross-repository QA روی HEAD فعلی موفق هستند. PR #37 باز و ادغام‌نشده باقی مانده است.
