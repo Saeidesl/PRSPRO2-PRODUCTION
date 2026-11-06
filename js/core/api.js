@@ -465,10 +465,20 @@
     getCached: async function (path, cacheKey, options) {
       options = options || {};
 
-      const cached =
+      let cached =
         window.PMS && window.PMS.Cache
           ? window.PMS.Cache.get(cacheKey)
           : null;
+      const cacheTtl = Number(options.cacheTtl || 0);
+      const cacheOptions = cacheTtl > 0 ? { ttl: cacheTtl } : undefined;
+
+      // When a TTL is requested, do not keep trusting older cache entries
+      // that were written without an expiry timestamp.
+      if (cached !== null && cacheTtl > 0 && window.PMS && window.PMS.Cache &&
+          typeof window.PMS.Cache.getMeta === 'function') {
+        const metadata = window.PMS.Cache.getMeta(cacheKey);
+        if (!metadata || !metadata.expiresAt) cached = null;
+      }
 
       const freshPromise = this.get(path, options);
 
@@ -480,7 +490,7 @@
             const data = Api.extractData(response);
 
             if (window.PMS && window.PMS.Cache) {
-              window.PMS.Cache.set(cacheKey, data);
+              window.PMS.Cache.set(cacheKey, data, cacheOptions);
             }
 
             if (typeof options.onRefresh === 'function') {
