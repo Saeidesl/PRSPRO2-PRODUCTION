@@ -2067,13 +2067,14 @@
       const projectSelect = document.getElementById('event-form-project');
       if (!typeSelect || !projectSelect) return;
 
-      const previousValue = String(typeSelect.value || '');
+      const previousValue = String(typeSelect.dataset.pendingValue || typeSelect.value || '');
       const project = this.findById(this.projects, projectSelect.value);
       const projectId = String(projectSelect.value || '');
       const workflowPending = !!projectId && (
         this.workflowProgressProjectId !== projectId || this.workflowProgressLoading
       );
       if (workflowPending) {
+        if (previousValue) typeSelect.dataset.pendingValue = previousValue;
         const placeholder = document.createElement('option');
         placeholder.value = '';
         placeholder.textContent = 'در حال آماده‌سازی فهرست رویدادها...';
@@ -2084,6 +2085,7 @@
         return;
       }
       this.setEventTypeLoadingState(false, projectId);
+      delete typeSelect.dataset.pendingValue;
       const isDraftProject = !!project &&
         String(project.RecordState || 'ACTIVE').toUpperCase() === 'DRAFT';
       const progress = this.workflowProgress && this.workflowProgressProjectId === projectId
