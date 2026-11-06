@@ -1546,7 +1546,7 @@
       const selectedName = selected && (selected.Title || selected.Name) || '';
       const selectedCode = selected && (selected.ProjectCode || this.idOf(selected)) || '';
       value.innerHTML = selected
-        ? '<strong>' + this.escape(selectedName || 'بدون عنوان') + '</strong><small>' + this.escape(selectedCode) + '</small>'
+        ? '<strong class="event-project-picker-code">' + this.escape(selectedCode) + '</strong><small class="event-project-picker-name">' + this.escape(selectedName || 'بدون عنوان') + '</small>'
         : '<span class="event-project-picker-placeholder">برای ادامه، پروژه را انتخاب کنید</span>';
       trigger.classList.toggle('has-selection', !!selected);
       trigger.setAttribute('aria-label', selected
@@ -1580,11 +1580,13 @@
         item.dataset.projectId = id;
         const copy = document.createElement('span');
         copy.className = 'event-project-picker-option-copy';
-        const name = document.createElement('strong');
-        name.textContent = title;
-        const projectCode = document.createElement('small');
-        projectCode.textContent = 'کد پروژه: ' + code;
-        copy.append(name, projectCode);
+        const projectCode = document.createElement('strong');
+        projectCode.className = 'event-project-picker-option-code';
+        projectCode.textContent = code;
+        const projectName = document.createElement('small');
+        projectName.className = 'event-project-picker-option-name';
+        projectName.textContent = title;
+        copy.append(projectCode, projectName);
         const check = document.createElement('span');
         check.className = 'event-project-picker-check';
         check.setAttribute('aria-hidden', 'true');
