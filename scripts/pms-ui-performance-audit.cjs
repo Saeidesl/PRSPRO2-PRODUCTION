@@ -376,6 +376,7 @@ const visible = el => {
             continue;
           }
           const before = await inventoryDialogForms(page);
+          const modalOpenStartedAt = Date.now();
           await opener.evaluate(el => el.click());
           await page.waitForFunction((baselineCount) => {
             const visible = el => { const rect = el.getBoundingClientRect(); if (rect.width <= 0 || rect.height <= 0) return false; for (let node = el; node && node !== document.documentElement; node = node.parentElement) { const style = getComputedStyle(node); if (node.hidden || node.getAttribute('aria-hidden') === 'true' || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false; } return true; };
@@ -391,7 +392,7 @@ const visible = el => {
           if (route === 'events' && openerId === 'event-create-button') {
             const modalOpenedAt = Date.now();
             const benchmark = {
-              modalReadyMs: modalOpenedAt - start,
+              modalReadyMs: modalOpenedAt - modalOpenStartedAt,
               projectWorkflowReadyMs: null,
               formDefinitionsReadyMs: null,
               projectOptions: 0,
@@ -433,8 +434,7 @@ const visible = el => {
                     return !!container && !container.textContent.includes('در حال دریافت فرم‌های متصل');
                   }, null, { timeout: 25000 });
                   benchmark.formDefinitionsReadyMs = Date.now() - modalOpenedAt;
-                  const finalInventory = await inventoryDialogForms(page);
-                  benchmark.configuredFormControls = finalInventory.visibleControls;
+                  benchmark.configuredFormControls = await page.locator('#event-configured-forms').locator('input,select,textarea').count();
                   if (diagnosticsEnabled) {
                     benchmark.diagnosticEndpoints = await page.locator('#pms-performance-diagnostics-table tr').evaluateAll(rows =>
                       rows.slice(1).map(row => Array.from(row.cells).map(cell => String(cell.textContent || '').trim()))
