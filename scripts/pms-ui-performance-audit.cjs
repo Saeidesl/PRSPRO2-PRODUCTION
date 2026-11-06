@@ -387,6 +387,74 @@ const visible = el => {
           // Include every form visible after the opener click, including templates that
           // are already present in the DOM but only become relevant within this dialog.
           snapshot.dynamicFormInventory.push({ openerId, opened: inventory.dialogVisible || inventory.forms.length > 0 || inventory.visibleControls > before.visibleControls, baselineFormCount: before.forms.length, baselineVisibleControls: before.visibleControls, visibleControls: inventory.visibleControls, forms: inventory.forms });
+
+          if (route === 'events' && openerId === 'event-create-button') {
+            const modalOpenedAt = Date.now();
+            const benchmark = {
+              modalReadyMs: modalOpenedAt - start,
+              projectWorkflowReadyMs: null,
+              formDefinitionsReadyMs: null,
+              projectOptions: 0,
+              eligibleEventTypes: 0,
+              configuredFormControls: 0,
+              diagnosticEndpoints: []
+            };
+            try {
+              const projectResult = await page.evaluate(() => {
+                const select = document.getElementById('event-form-project');
+                if (!select) return { count: 0, selected: false };
+                const options = Array.from(select.options).filter(option => option.value);
+                if (!options.length) return { count: 0, selected: false };
+                select.value = options[0].value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                return { count: options.length, selected: true };
+              });
+              benchmark.projectOptions = projectResult.count;
+              if (projectResult.selected) {
+                await page.waitForFunction(() => {
+                  const select = document.getElementById('event-form-type');
+                  const loading = document.getElementById('event-type-loading');
+                  return !!select && !select.disabled && (!loading || loading.hidden) && select.options.length > 1;
+                }, null, { timeout: 20000 });
+                benchmark.projectWorkflowReadyMs = Date.now() - modalOpenedAt;
+                const typeResult = await page.evaluate(() => {
+                  const select = document.getElementById('event-form-type');
+                  if (!select) return { count: 0, selected: false };
+                  const options = Array.from(select.options).filter(option => option.value && !option.disabled);
+                  if (!options.length) return { count: 0, selected: false };
+                  select.value = options[0].value;
+                  select.dispatchEvent(new Event('change', { bubbles: true }));
+                  return { count: options.length, selected: true };
+                });
+                benchmark.eligibleEventTypes = typeResult.count;
+                if (typeResult.selected) {
+                  await page.waitForFunction(() => {
+                    const container = document.getElementById('event-configured-forms');
+                    return !!container && !container.textContent.includes('در حال دریافت فرم‌های متصل');
+                  }, null, { timeout: 25000 });
+                  benchmark.formDefinitionsReadyMs = Date.now() - modalOpenedAt;
+                  const finalInventory = await inventoryDialogForms(page);
+                  benchmark.configuredFormControls = finalInventory.visibleControls;
+                  if (diagnosticsEnabled) {
+                    benchmark.diagnosticEndpoints = await page.locator('#pms-performance-diagnostics-table tr').evaluateAll(rows =>
+                      rows.slice(1).map(row => Array.from(row.cells).map(cell => String(cell.textContent || '').trim()))
+                        .filter(row => (row[0] || '').indexOf('/api/') === 0 &&
+                          /events|projects|event-types/.test(row[0]))
+                        .map(row => ({ endpoint: row[0], browserMs: row[1] || '', backendMs: row[2] || '', details: row[3] || '' }))
+                    );
+                  }
+                } else {
+                  results.coverageGaps.push('Event-form benchmark: no eligible event type was available for the selected staging user/project.');
+                }
+              } else {
+                results.coverageGaps.push('Event-form benchmark: no project option was available for the selected staging user.');
+              }
+            } catch (benchmarkError) {
+              benchmark.error = String(benchmarkError.message || benchmarkError).slice(0, 300);
+              results.coverageGaps.push('Event-form benchmark did not reach readiness: ' + benchmark.error);
+            }
+            results.eventFormDiagnostics = benchmark;
+          }
         } catch (error) {
           snapshot.dynamicFormInventory.push({ openerId, opened: false, error: String(error.message || error).slice(0, 1000), forms: [] });
         }
