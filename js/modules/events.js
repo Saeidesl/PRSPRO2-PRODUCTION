@@ -11,6 +11,7 @@
     projects: [],
     eventsLoaded: false,
     projectsLoaded: false,
+    projectOptionsToken: '',
     workflowProgress: null,
     workflowProgressRequestId: 0,
     workflowProgressProjectId: '',
@@ -343,9 +344,15 @@
         permissions.indexOf('EVENT_CREATE') !== -1 ||
         permissions.indexOf('EVENT_TYPE_MANAGE') !== -1;
 
+      const currentToken = PMS.Api.getToken() || '';
+      if (this.projectOptionsToken !== currentToken) {
+        this.projects = [];
+        this.projectsLoaded = false;
+      }
       const cachedEvents = canViewEvents ? PMS.Cache.get(CACHE_KEY) : null;
-      const cachedProjects = canLoadProjectOptions
-        ? PMS.Cache.get(PROJECTS_CACHE_KEY)
+      const cachedProjects = canLoadProjectOptions &&
+        this.projectOptionsToken === currentToken && this.projectsLoaded
+        ? this.projects
         : null;
       const cachedTypes = canLoadEventTypes
         ? PMS.Cache.get(EVENT_TYPES_CACHE_KEY)
@@ -357,6 +364,8 @@
       }
       if (!canLoadProjectOptions) {
         this.projects = [];
+        this.projectsLoaded = false;
+        this.projectOptionsToken = '';
         PMS.Cache.remove(PROJECTS_CACHE_KEY);
       }
       if (!canLoadEventTypes) {
@@ -406,12 +415,13 @@
         if (canLoadProjectOptions) {
           resultKeys.push('projects');
           requests.push(
-            PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY, {
-              onRefresh: function (data) {
-                Events.projects = Events.normalize(data);
-                Events.projectsLoaded = true;
-                Events.scheduleRefreshRender();
-              }
+            PMS.Api.get('/projects', {
+              query: { view: 'event-picker' }
+            }).then(function (response) {
+              return {
+                data: PMS.Api.extractData(response),
+                cached: false
+              };
             })
           );
         }
@@ -436,7 +446,11 @@
           hasFreshResult = true;
           const key = resultKeys[index];
           if (key === 'events') { Events.events = Events.normalize(result.data); Events.eventsLoaded = true; }
-          if (key === 'projects') { Events.projects = Events.normalize(result.data); Events.projectsLoaded = true; }
+          if (key === 'projects') {
+            Events.projects = Events.normalize(result.data);
+            Events.projectsLoaded = true;
+            Events.projectOptionsToken = currentToken;
+          }
           if (key === 'types') Events.eventTypes = Events.normalize(result.data);
         });
 
