@@ -11,7 +11,8 @@ const username = process.env.PMS_TEST_USERNAME || '';
 const password = process.env.PMS_TEST_PASSWORD || '';
 const stagingApiBaseURL = String(process.env.PMS_STAGING_API_BASE_URL || '').trim();
 const stagingApiConfigured = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec\/?$/.test(stagingApiBaseURL);
-const auditScope = String(process.env.PMS_AUDIT_SCOPE || 'all').trim().toLowerCase() === 'procurement' ? 'procurement' : 'all';
+const requestedAuditScope = String(process.env.PMS_AUDIT_SCOPE || 'all').trim().toLowerCase();
+const auditScope = ['procurement', 'events'].includes(requestedAuditScope) ? requestedAuditScope : 'all';
 const diagnosticsEnabled = process.env.PMS_PERFORMANCE_DIAGNOSTICS === '1';
 
 function withQueryParam(rawUrl, key, value) {
