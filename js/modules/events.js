@@ -7,6 +7,9 @@
   const EVENT_TYPES_CACHE_KEY = PMS.Cache.keys.EVENT_TYPES;
   const EVENT_FORM_DEFINITION_CACHE_TTL_MS = 30000;
   const eventFormDefinitionCache = new Map();
+  let eventFormDefinitionsPrefetchPromise = null;
+  let eventFormDefinitionsPrefetchToken = '';
+  let eventFormDefinitionCacheGeneration = 0;
 
   function eventFormDefinitionCacheKey(eventTypeId) {
     const token = PMS.Api && typeof PMS.Api.getToken === 'function'
@@ -17,6 +20,9 @@
 
   function clearEventFormDefinitionCache() {
     eventFormDefinitionCache.clear();
+    eventFormDefinitionCacheGeneration++;
+    eventFormDefinitionsPrefetchPromise = null;
+    eventFormDefinitionsPrefetchToken = '';
   }
 
   const Events = {
@@ -160,6 +166,7 @@
         const projectEntry = target.closest('[data-event-entry="project"]');
         if (projectEntry) {
           event.preventDefault();
+          Events.prefetchEventFormDefinitions();
           const panel = document.getElementById('events-project-entry-panel');
           if (panel) {
             panel.hidden = false;
@@ -1631,6 +1638,11 @@
       if (!this.canCreateEvents || this.modalOpen || this.submitting) return;
       if (this.preselectedProjectId) this.entryMode = 'project';
 
+      // Start fetching all visible event-type form definitions in parallel
+      // with project/workflow selection. The existing per-type endpoint remains
+      // the fallback if prefetch is unavailable or a definition is invalid.
+      this.prefetchEventFormDefinitions();
+
       this.modalOpen = true;
       this.formDefinitions = [];
       this.formMode = 'quick';
@@ -2538,6 +2550,60 @@
       container.appendChild(wrapper);
     },
 
+    prefetchEventFormDefinitions: function () {
+      const token = PMS.Api && typeof PMS.Api.getToken === 'function'
+        ? PMS.Api.getToken() || ''
+        : '';
+      if (!token || !this.eventTypes.length) return Promise.resolve(false);
+      if (eventFormDefinitionsPrefetchPromise &&
+          eventFormDefinitionsPrefetchToken === token) {
+        return eventFormDefinitionsPrefetchPromise;
+      }
+
+      const generation = eventFormDefinitionCacheGeneration;
+      const promise = PMS.Api.get('/event-types', {
+        query: { includeFormDefinitions: true }
+      }).then((response) => {
+        if (generation !== eventFormDefinitionCacheGeneration ||
+            token !== (PMS.Api.getToken() || '')) return false;
+        const types = this.normalize(PMS.Api.extractData(response));
+        let cachedCount = 0;
+        types.forEach((type) => {
+          const eventTypeId = this.idOf(type);
+          if (!eventTypeId || type.FormDefinitionsLoadFailed ||
+              !Array.isArray(type.FormDefinitions)) return;
+          const cacheKey = eventFormDefinitionCacheKey(eventTypeId);
+          const existing = eventFormDefinitionCache.get(cacheKey);
+          if (!existing || Date.now() - existing.cachedAt >= EVENT_FORM_DEFINITION_CACHE_TTL_MS) {
+            eventFormDefinitionCache.set(cacheKey, {
+              data: type.FormDefinitions,
+              cachedAt: Date.now()
+            });
+          }
+          cachedCount++;
+        });
+        while (eventFormDefinitionCache.size > 50) {
+          const oldestKey = eventFormDefinitionCache.keys().next().value;
+          eventFormDefinitionCache.delete(oldestKey);
+        }
+        return cachedCount > 0;
+      }).catch((error) => {
+        // Prefetch is an optimization only. The existing per-type request below
+        // remains authoritative and reports its normal validation errors.
+        console.warn('Event form definitions prefetch failed:', error);
+        return false;
+      }).finally(() => {
+        if (eventFormDefinitionsPrefetchPromise === promise) {
+          eventFormDefinitionsPrefetchPromise = null;
+          eventFormDefinitionsPrefetchToken = '';
+        }
+      });
+
+      eventFormDefinitionsPrefetchPromise = promise;
+      eventFormDefinitionsPrefetchToken = token;
+      return promise;
+    },
+
     loadEventForms: async function (eventTypeId) {
       const requestId = ++this.eventFormsLoadRequestId;
       const selectedTypeId = String(eventTypeId || '');
@@ -2644,6 +2710,9 @@
       }
       const cacheKey = eventFormDefinitionCacheKey(eventTypeId);
       const cachedDefinition = eventFormDefinitionCache.get(cacheKey);
+      // Do not block the selected event type on an unfinished prefetch. If the
+      // batch has not completed yet, use the existing per-type endpoint now;
+      // the background prefetch remains available for the next selection.
       if (cachedDefinition && Date.now() - cachedDefinition.cachedAt < EVENT_FORM_DEFINITION_CACHE_TTL_MS) {
         this.formDefinitions = cachedDefinition.data;
         this.renderConfiguredForms();

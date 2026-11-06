@@ -68,7 +68,7 @@ jobs:
 
 
       - name: Serve the checked-out frontend
-        if: ${{ !inputs.base_url && !vars.PMS_BASE_URL }}
+        if: ${{ !inputs.base_url && (github.event_name == 'pull_request' || !vars.PMS_BASE_URL) }}
         run: |
           node scripts/serve-pms-audit.cjs > /tmp/pms-audit-server.log 2>&1 &
           for attempt in $(seq 1 30); do
@@ -83,8 +83,8 @@ jobs:
 
       - name: Run UI inventory and performance audit
         env:
-          PMS_BASE_URL: ${{ inputs.base_url || vars.PMS_STAGING_BASE_URL || vars.PMS_BASE_URL || 'http://127.0.0.1:4173/PRSPRO2/' }}
-          PMS_AUDIT_SCOPE: ${{ inputs.scope || (github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feat/event-form-performance' && 'events' || 'all') }}
+          PMS_BASE_URL: ${{ inputs.base_url || (github.event_name == 'pull_request' && 'http://127.0.0.1:4173/PRSPRO2/') || vars.PMS_STAGING_BASE_URL || vars.PMS_BASE_URL || 'http://127.0.0.1:4173/PRSPRO2/' }}
+          PMS_AUDIT_SCOPE: ${{ inputs.scope || (github.event_name == 'pull_request' && contains(github.event.pull_request.head.ref, 'event-form') && 'events' || 'all') }}
           PMS_PERFORMANCE_DIAGNOSTICS: ${{ ((github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.scope == 'procurement' || inputs.scope == 'events' || github.event_name == 'pull_request') && '1' || '0' }}
           PMS_STAGING_API_BASE_URL: ${{ secrets.PMS_STAGING_API_BASE_URL }}
           PMS_TEST_USERNAME: ${{ secrets.PMS_TEST_USERNAME }}
