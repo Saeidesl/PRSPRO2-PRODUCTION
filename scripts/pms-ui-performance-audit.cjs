@@ -55,7 +55,9 @@ let browser;
 const formOpenersByRoute = {
   projects: ['project-create-button'],
   // Project-detail dialogs require a selected project and are not tested context-free.
-  events: ['event-create-button'],
+  // The operational event page starts project-based registration from its entry card.
+  // Follow the real project-entry flow instead of relying on the legacy hidden button.
+  events: ['event-project-entry'],
   workflows: ['workflow-create-button'],
   'project-statuses': ['project-status-create'],
   'event-types': ['event-type-create-button'],
@@ -370,14 +372,24 @@ const visible = el => {
           try { await page.locator('#page-content').waitFor({ state: 'visible', timeout: 8000 }); } catch (_) {}
           try { await page.waitForLoadState('networkidle', { timeout: 2500 }); } catch (_) {}
           await page.waitForTimeout(250);
-          const opener = page.locator('[id="' + openerId + '"]').first();
+          const opener = openerId === 'event-project-entry'
+            ? page.locator('[data-event-entry="project"]').first()
+            : page.locator('[id="' + openerId + '"]').first();
           if (!(await opener.count()) || !(await opener.isVisible()) || !(await opener.isEnabled())) {
             snapshot.dynamicFormInventory.push({ openerId, opened: false, reason: 'opener-not-visible-or-enabled', forms: [] });
             continue;
           }
           const before = await inventoryDialogForms(page);
           const modalOpenStartedAt = Date.now();
-          await opener.evaluate(el => el.click());
+          if (route === 'events' && openerId === 'event-project-entry') {
+            await opener.click();
+            await page.locator('#events-project-entry-panel:not([hidden])').waitFor({ state: 'visible', timeout: 8000 });
+            const projectAction = page.locator('.event-recent-project-action').first();
+            await projectAction.waitFor({ state: 'visible', timeout: 12000 });
+            await projectAction.click();
+          } else {
+            await opener.click();
+          }
           await page.waitForFunction((baselineCount) => {
             const visible = el => { const rect = el.getBoundingClientRect(); if (rect.width <= 0 || rect.height <= 0) return false; for (let node = el; node && node !== document.documentElement; node = node.parentElement) { const style = getComputedStyle(node); if (node.hidden || node.getAttribute('aria-hidden') === 'true' || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false; } return true; };
             const formCount = Array.from(document.querySelectorAll('form')).filter(visible).length;
