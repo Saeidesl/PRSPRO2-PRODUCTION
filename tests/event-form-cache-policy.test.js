@@ -19,3 +19,13 @@ test('event list and event type reference data use bounded cache lifetimes', () 
   assert.match(events, /getCached\('\/events', CACHE_KEY, \{\s*cacheTtl: 15000/);
   assert.match(events, /getCached\('\/event-types', EVENT_TYPES_CACHE_KEY, \{\s*cacheTtl: 60000/);
 });
+
+test('event form definitions use a short-lived authenticated-session cache', () => {
+  assert.match(events, /EVENT_FORM_DEFINITION_CACHE_TTL_MS = 30000/);
+  assert.match(events, /const eventFormDefinitionCache = new Map\(\)/);
+  assert.match(events, /eventFormDefinitionCacheKey\(eventTypeId\)/);
+  assert.match(events, /eventFormDefinitionCache\.get\(cacheKey\)/);
+  assert.match(events, /eventFormDefinitionCache\.set\(cacheKey/);
+  assert.match(events, /\['forms', 'event-types', 'information-types'\]/);
+  assert.match(events, /pms:auth-expired/);
+});
