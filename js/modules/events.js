@@ -3268,6 +3268,7 @@
         const procurementIntegration = eventResult.procurementIntegration || {};
         // procurementIntegration.status can be FAILED; the result panel below exposes recovery.
 
+        this.projectOptionsToken = '';
         PMS.Api.invalidateMany([
           CACHE_KEY,
           PROJECTS_CACHE_KEY,
