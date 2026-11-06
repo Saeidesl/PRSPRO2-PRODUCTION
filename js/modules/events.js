@@ -1533,6 +1533,83 @@
       }
     },
 
+    renderProjectPicker: function () {
+      const select = document.getElementById('event-form-project');
+      const root = document.getElementById('event-project-picker');
+      const trigger = document.getElementById('event-project-picker-trigger');
+      const value = document.getElementById('event-project-picker-value');
+      const list = document.getElementById('event-project-picker-list');
+      const search = document.getElementById('event-project-picker-search');
+      if (!select || !root || !trigger || !value || !list || !search) return;
+
+      const selected = this.findById(this.projects, select.value);
+      const selectedName = selected && (selected.Title || selected.Name) || '';
+      const selectedCode = selected && (selected.ProjectCode || this.idOf(selected)) || '';
+      value.innerHTML = selected
+        ? '<strong>' + this.escape(selectedName || 'بدون عنوان') + '</strong><small>' + this.escape(selectedCode) + '</small>'
+        : '<span class="event-project-picker-placeholder">برای ادامه، پروژه را انتخاب کنید</span>';
+      trigger.classList.toggle('has-selection', !!selected);
+      trigger.setAttribute('aria-label', selected
+        ? 'پروژه انتخاب‌شده: ' + (selectedName || 'بدون عنوان') + '، کد ' + selectedCode
+        : 'انتخاب پروژه');
+
+      const query = String(search.value || '').trim().toLocaleLowerCase('fa');
+      const filtered = this.projects.filter(function (project) {
+        const title = String(project.Title || project.Name || '').toLocaleLowerCase('fa');
+        const code = String(project.ProjectCode || '').toLocaleLowerCase('fa');
+        return !query || title.includes(query) || code.includes(query);
+      });
+      list.innerHTML = '';
+      if (!filtered.length) {
+        const empty = document.createElement('div');
+        empty.className = 'event-project-picker-empty';
+        empty.textContent = 'پروژه‌ای با این مشخصات پیدا نشد.';
+        list.appendChild(empty);
+        return;
+      }
+      filtered.forEach((project) => {
+        const id = this.idOf(project);
+        if (!id) return;
+        const title = String(project.Title || project.Name || 'بدون عنوان');
+        const code = String(project.ProjectCode || id);
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'event-project-picker-option' + (String(select.value) === String(id) ? ' is-selected' : '');
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', String(String(select.value) === String(id)));
+        item.dataset.projectId = id;
+        const copy = document.createElement('span');
+        copy.className = 'event-project-picker-option-copy';
+        const name = document.createElement('strong');
+        name.textContent = title;
+        const projectCode = document.createElement('small');
+        projectCode.textContent = 'کد پروژه: ' + code;
+        copy.append(name, projectCode);
+        const check = document.createElement('span');
+        check.className = 'event-project-picker-check';
+        check.setAttribute('aria-hidden', 'true');
+        check.textContent = String(select.value) === String(id) ? '✓' : '';
+        item.append(copy, check);
+        list.appendChild(item);
+      });
+    },
+
+    setProjectPickerOpen: function (open) {
+      const root = document.getElementById('event-project-picker');
+      const trigger = document.getElementById('event-project-picker-trigger');
+      const panel = document.getElementById('event-project-picker-panel');
+      const search = document.getElementById('event-project-picker-search');
+      if (!root || !trigger || !panel) return;
+      root.classList.toggle('is-open', !!open);
+      trigger.setAttribute('aria-expanded', String(!!open));
+      panel.hidden = !open;
+      if (open && search) {
+        search.value = '';
+        this.renderProjectPicker();
+        window.setTimeout(function () { search.focus(); }, 0);
+      }
+    },
+
     openForm: async function () {
       if (!this.canCreateEvents || this.modalOpen || this.submitting) return;
       if (this.preselectedProjectId) this.entryMode = 'project';
@@ -1569,7 +1646,7 @@
         '<section class="event-form-section"><h4 class="event-section-title">اطلاعات اصلی</h4>' +
         '<div class="event-dynamic-grid">' +
         '<div class="event-field"><label for="event-form-project">پروژه <span class="event-required">*</span></label>' +
-        '<select id="event-form-project" name="ProjectID"><option value="">انتخاب پروژه</option></select></div>' +
+        '<select id="event-form-project" name="ProjectID" class="event-project-native-select" tabindex="-1" aria-hidden="true"><option value="">انتخاب پروژه</option></select><div class="event-project-picker" id="event-project-picker"><button type="button" class="event-project-picker-trigger" id="event-project-picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="event-project-picker-panel"><span class="event-project-picker-value" id="event-project-picker-value"><span class="event-project-picker-placeholder">برای ادامه، پروژه را انتخاب کنید</span></span><span class="event-project-picker-chevron" aria-hidden="true">⌄</span></button><div class="event-project-picker-panel" id="event-project-picker-panel" hidden><div class="event-project-picker-search-wrap"><span aria-hidden="true">⌕</span><input type="search" id="event-project-picker-search" placeholder="جست‌وجوی نام یا کد پروژه..." autocomplete="off" aria-label="جست‌وجوی پروژه"></div><div class="event-project-picker-list" id="event-project-picker-list" role="listbox" aria-label="فهرست پروژه‌ها"></div></div></div></div>' +
         '<div class="event-field"><label for="event-form-type">نوع رویداد <span class="event-required">*</span></label>' +
         '<select id="event-form-type" name="EventTypeID" required><option value="">انتخاب نوع رویداد</option></select></div>' +
         '<div class="event-field"><label for="event-form-date">تاریخ و زمان وقوع <span class="event-required">*</span></label>' +
@@ -1603,6 +1680,9 @@
 
       document.body.appendChild(modal);
       modal.addEventListener('click', (event) => {
+        if (!event.target.closest('#event-project-picker')) {
+          this.setProjectPickerOpen(false);
+        }
         const contextTrigger = event.target.closest('#event-context-mobile-trigger');
         if (contextTrigger) {
           const panel = document.getElementById('event-context-panel');
@@ -1659,6 +1739,8 @@
         this.preselectedProjectId = '';
       }
 
+      this.renderProjectPicker();
+
       this.refreshEventTypeOptions();
 
       const now = new Date();
@@ -1702,7 +1784,37 @@
         this.loadEventForms(typeSelect.value).then(() => this.loadEventContext(projectSelect.value, typeSelect.value));
       });
 
+      const projectPicker = document.getElementById('event-project-picker');
+      const projectPickerTrigger = document.getElementById('event-project-picker-trigger');
+      const projectPickerSearch = document.getElementById('event-project-picker-search');
+      if (projectPickerTrigger) {
+        projectPickerTrigger.addEventListener('click', () => {
+          this.setProjectPickerOpen(!projectPicker.classList.contains('is-open'));
+        });
+      }
+      if (projectPickerSearch) {
+        projectPickerSearch.addEventListener('input', () => this.renderProjectPicker());
+        projectPickerSearch.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            this.setProjectPickerOpen(false);
+            projectPickerTrigger.focus();
+          }
+        });
+      }
+      if (projectPicker) {
+        projectPicker.addEventListener('click', (event) => {
+          const option = event.target.closest('[data-project-id]');
+          if (!option) return;
+          projectSelect.value = option.dataset.projectId;
+          projectSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          this.setProjectPickerOpen(false);
+          this.renderProjectPicker();
+          projectPickerTrigger.focus();
+        });
+      }
+
       projectSelect.addEventListener('change', () => {
+        this.renderProjectPicker();
         this.loadWorkflowProgress(projectSelect.value);
         if (this.amendmentMode) this.loadAmendmentSourceEvents(projectSelect.value);
         this.updateSubmitAvailability();
