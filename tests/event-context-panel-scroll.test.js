@@ -18,7 +18,7 @@ test('event context drawer remains independently scrollable on mobile', () => {
   const css = read('css/event-context.css');
   assert.match(css, /@media\s*\(max-width:\s*820px\)/);
   assert.match(css, /\.event-context-panel\s*\{[\s\S]*?max-height:\s*100dvh;[\s\S]*?overflow-y:\s*auto;[\s\S]*?overscroll-behavior:\s*contain;/);
-  assert.match(css, /(?:#event-create-modal\s+)?\.event-context-panel\.is-open\s*\{\s*display:\s*block;/);
+  assert.ok(css.includes('#event-create-modal .event-context-panel.is-open{display:block}'));
 });
 
 
