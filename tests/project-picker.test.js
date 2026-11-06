@@ -15,6 +15,14 @@ test('project picker displays project title and code while retaining ProjectID s
   assert.match(source, /selected.ProjectCode \|\| this.idOf\(selected\)/);
   assert.match(source, /id="event-project-picker-trigger"/);
   assert.match(source, /id="event-project-picker-search"/);
+  assert.match(source, /event-project-picker-code/);
+  assert.match(source, /event-project-picker-name/);
+  assert.match(source, /event-project-picker-option-code/);
+  assert.match(source, /event-project-picker-option-name/);
+  assert.match(source, /copy\.append\(projectCode, projectName\)/);
+  assert.match(styles, /event-project-picker-option-code[\s\S]*?font-size: 21px/);
+  assert.match(styles, /event-project-picker-option-name[\s\S]*?font-size: 12px/);
+
   assert.match(source, /projectSelect\.dispatchEvent\(new Event\('change', \{ bubbles: true \}\)\)/);
 });
 
@@ -31,6 +39,6 @@ test('project picker supports filtering, empty state, accessibility, and respons
   assert.match(source, /aria-expanded/);
   assert.match(styles, /\.event-project-picker-panel/);
   assert.match(styles, /@media \(max-width: 640px\)/);
-  assert.match(index, /events\.css\?v=20261106-project-picker-1/);
-  assert.match(index, /events\.js\?v=20261106-project-picker-1/);
+  assert.match(index, /events\.css\?v=20261106-project-code-order-1/);
+  assert.match(index, /events\.js\?v=20261106-project-code-order-1/);
 });
