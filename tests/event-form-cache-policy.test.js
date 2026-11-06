@@ -26,7 +26,7 @@ test('event form definitions use a short-lived authenticated-session cache', () 
   assert.match(events, /eventFormDefinitionCacheKey\(eventTypeId\)/);
   assert.match(events, /eventFormDefinitionCache\.get\(cacheKey\)/);
   assert.match(events, /eventFormDefinitionCache\.set\(cacheKey/);
-  assert.match(events, /\['forms', 'event-types', 'information-types'\]/);
+  assert.match(events, /\['forms', 'event-types', 'information-types', 'projects'\]/);
   assert.match(events, /pms:auth-expired/);
 });
 
