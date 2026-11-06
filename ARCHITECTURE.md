@@ -522,3 +522,14 @@
 - مالک محصول تست نهایی را در 2026-11-06 موفق اعلام کرد.
 - Backend runtime، API، permission و Google Sheets تغییر نکردند؛ قراردادهای `POST /events` و `13_Events.OccurredAt` حفظ شدند.
 - نتیجه: تمام Macro-Taskهای فاز پذیرفته و فاز بسته شد.
+
+
+## فاز تکمیل‌شده: بازگردانی رابط انتخاب نوع رویداد (2026-11-06)
+- به درخواست مالک محصول، رابط انتخاب سفارشی معرفی‌شده در PR #33 پذیرفته نشد و رابط قبلی بازیابی شد.
+- Frontend PR #34 در main ادغام شد؛ Merge Commit: `e7bab337c8e68b88f7286859e9309146bac44e0a`.
+- فایل‌های بازیابی‌شده: `js/modules/events.js`، `css/events.css`، `index.html` و تست‌های قبلی مرتبط. تست مخصوص رابط سفارشی حذف شد.
+- فیلد `#event-form-type[name="EventTypeID"]`، منطق `Events.refreshEventTypeOptions()`، محدودیت‌ها، گردش‌کار، پروژه‌های Draft/Independent و مسیر ثبت حفظ شدند.
+- `Events.setEventTypeLoadingState()` و انیمیشن `PMS.Loading.show/hide` حفظ شدند.
+- هیچ تغییر Backend، API، permission، Sheet، schema یا داده‌ای انجام نشد.
+- کنترل‌های Frontend و QA برای PR #34 موفق شدند. GitHub Pages run `42262303293` با نتیجه success تکمیل و تست نسخه منتشرشده توسط مالک محصول تأیید شد.
+- نتیجه: انتخاب سفارشی باقی نماند و فاز بسته شد.
