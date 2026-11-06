@@ -40,3 +40,10 @@ test('event-form diagnostics are restricted to safe endpoint summaries', () => {
   assert.match(script, /safeRequestPath/);
   assert.match(script, /never the full query string/);
 });
+
+
+test('event-form pull request audits use the checked-out frontend and focused event scope', () => {
+  assert.match(workflow, /github\.event_name == 'pull_request' \|\| !vars\.PMS_BASE_URL/);
+  assert.match(workflow, /github\.event_name == 'pull_request' && 'http:\/\/127\.0\.0\.1:4173\/PRSPRO2\//);
+  assert.match(workflow, /contains\(github\.event\.pull_request\.head\.ref, 'event-form'\) && 'events'/);
+});
