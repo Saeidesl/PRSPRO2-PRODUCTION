@@ -29,3 +29,18 @@ test('event form definitions use a short-lived authenticated-session cache', () 
   assert.match(events, /\['forms', 'event-types', 'information-types'\]/);
   assert.match(events, /pms:auth-expired/);
 });
+
+
+test('opening the registration modal starts a read-only batched form-definition prefetch', () => {
+  assert.match(events, /this\.prefetchEventFormDefinitions\(\)/);
+  assert.match(events, /PMS\.Api\.get\('\/event-types', \{\s*query: \{ includeFormDefinitions: true \} \}/);
+  assert.match(events, /FormDefinitionsLoadFailed/);
+});
+
+test('event form loading reuses an in-flight prefetch and retains the per-type API fallback', () => {
+  assert.match(events, /eventFormDefinitionsPrefetchPromise/);
+  assert.match(events, /await eventFormDefinitionsPrefetchPromise/);
+  assert.match(events, /PMS\.Api\.get\('\/event-types\/' \+ encodeURIComponent\(eventTypeId\) \+ '\/forms'\)/);
+  assert.match(events, /eventFormDefinitionCacheGeneration/);
+  assert.match(events, /eventFormDefinitionsPrefetchToken/);
+});
