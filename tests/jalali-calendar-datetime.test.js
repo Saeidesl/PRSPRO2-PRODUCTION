@@ -42,7 +42,7 @@ test('time step retains themed styling and cache busting', () => {
  assert.match(css,/\.pms-jalali-time-picker/);
  assert.match(css,/\.pms-jalali-time-head/);
  const index=read('index.html');
- assert.match(index,/jalali-calendar\.css\?v=20261106-date-then-time-1/);
+ assert.match(index,/jalali-calendar\.css\?v=20261106-date-then-time-2/);
 });
 
 test('date-to-time transition renders after click propagation completes', () => {
