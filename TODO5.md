@@ -157,3 +157,71 @@
 - شروع فاز: 2026-11-06.
 - Task 1 تکمیل و Task 2 در وضعیت IN PROGRESS قرار گرفت.
 - تا این نقطه فقط مستندات TODO5 به‌روزرسانی می‌شود؛ هیچ تغییر اجرایی، انتشار یا مهاجرت داده انجام نشده است.
+
+#### Task 2 — Implementation progress (در انتظار تکمیل ارزیابی و پذیرش؛ baseline احراز هویت‌شده تهیه شد)
+
+- `js/modules/events.js`:
+  - دریافت پروژه‌ها برای صفحه رویداد از همان `GET /projects` با query برابر `view=event-picker` انجام می‌شود؛ دیگر payload کامل CardInformation برای فهرست انتخاب پروژه دریافت نمی‌شود.
+  - نتیجه picker فقط در حافظه همان نشست و با scope توکن نگه داشته می‌شود؛ با تغییر توکن پاک می‌شود. بعد از ثبت رویداد، مقدار حافظه invalidate می‌شود.
+  - cache فهرست رویدادها 15 ثانیه و cache انواع رویداد 60 ثانیه TTL دارند.
+- `js/core/api.js`:
+  - `Api.getCached` گزینه `cacheTtl` را می‌پذیرد؛ cacheهای قدیمی بدون expiry هنگام درخواست TTL به‌عنوان cache معتبر پذیرفته نمی‌شوند و پاسخ تازه با همان TTL ذخیره می‌شود. رفتار فراخوانی‌های قدیمی بدون TTL حفظ شد.
+- `js/modules/projects.js:loadProjects`:
+  - پس از دریافت تازه فهرست پروژه‌ها، cache حافظه‌ای picker رویداد invalidate می‌شود.
+- `scripts/pms-ui-performance-audit.cjs` و `.github/workflows/pms-ui-performance-audit.yml`:
+  - scope مستقل `events` افزوده شد؛ audit مرورگر بدون ثبت داده، پروژه و نوع رویداد مجاز را انتخاب می‌کند و زمان بازشدن Modal، آماده‌شدن workflow و آماده‌شدن تعریف فرم را اندازه می‌گیرد.
+  - خلاصه diagnostics مرورگر/Backend فقط برای endpointهای مرتبط ثبت می‌شود؛ شناسه‌ها و query stringهای حاوی token ذخیره نمی‌شوند.
+- تست‌های جدید: `tests/event-form-performance-audit.test.js`, `tests/event-project-picker-performance.test.js`, `tests/event-form-cache-policy.test.js`; تست قبلی `tests/draft-event-type-visibility.test.js` با قرارداد جدید query-view هماهنگ شد.
+- CI Frontend و Cross-repository QA در commit `2131d6e7f4ec3d02d1831a7b60f068e5b8df4302` موفق شدند؛ commit جدیدتر شامل فعال‌سازی diagnostics در PR audit است و در حال بررسی است.
+- PR عملیاتی Frontend: #37، شاخه `feat/event-form-performance`. PR عملیاتی Backend: #17، شاخه `feat/event-form-performance`. هنوز merge/deployment انجام نشده است.
+- محدودیت baseline: audit مرورگر در PR با وضعیت `blocked-no-staging-api` اجرا شد؛ فقط login عمومی با زمان 199ms اندازه‌گیری شد؛ 0 خطای Console و 0 خطای Page ثبت شد. چون `PMS_STAGING_API_BASE_URL` و اعتبارنامه تست در GitHub Actions تنظیم نشده‌اند، فرم ثبت رویداد و endpointهای محافظت‌شده قابل اندازه‌گیری نبودند. هیچ login یا درخواست تستی به API تولید ارسال نشد.
+
+- اصلاح ابزار Browser Audit پس از کشف عدم تطابق با UI عملیاتی: دکمه قدیمی `event-create-button` در مسیر فعلی وجود ندارد؛ آزمون اکنون از ورودی واقعی پروژه با `data-event-entry="project"` وارد پنل انتخاب پروژه شده و اولین اقدام `.event-recent-project-action` را برای بازکردن فرم دنبال می‌کند. تست `tests/event-form-performance-audit.test.js` نیز این مسیر واقعی را بررسی می‌کند.
+- Commitهای اصلاح ابزار و تست: `a960e1e81c622ef03b14f87c5d8dd8f1f01ac27a` و `17612424f7b91e26d0b5d32f6e177d995194a8c8`. Frontend checks، Frontend agent suite و Cross-repository QA روی commit دوم موفق شدند.
+- اجرای Browser Audit روی commit دوم با شناسه `42274108059` آغاز شده است؛ آخرین وضعیت ثبت‌شده هنوز در مرحله نصب Playwright/Chromium است و artifact گزارش هنوز تولید نشده. بنابراین زمان‌های واقعی Modal، workflow و فرم‌های متصل هنوز تأیید نشده‌اند و Task 2 باز می‌ماند.
+
+
+#### Task 2 — گزارش سنجش احراز هویت‌شده و کنترل‌های تکمیلی (2026-11-06)
+
+- اجرای مرورگر واقعی روی Staging احراز هویت‌شده با Run شماره `42277205597` و Artifact شماره `13532194544` تکمیل شد؛ حالت اجرا `authenticated-read-only` و وضعیت `authenticated-audit-complete` بود.
+- نتایج فرم ثبت رویداد: آماده‌شدن Modal برابر `1409ms`؛ آماده‌شدن پروژه و Workflow برابر `3723ms`؛ آماده‌شدن تعریف فرم‌های متصل برابر `9207ms`؛ تعداد گزینه پروژه `2`؛ انواع رویداد مجاز `10`؛ کنترل‌های فرم متصل `2`.
+- سلامت مرورگر: `47` درخواست شبکه؛ `0` درخواست ناموفق؛ `0` خطای Console؛ `0` خطای Page؛ بدون سرریز افقی در viewport موبایل `390px`. هیچ مقداری وارد و هیچ رویدادی ثبت نشد.
+- گزارش، زمان مرورگر برای endpointهای نمونه را نیز ثبت کرده است: `GET /event-types/:id/forms = 5332ms`، `GET /projects/:id/information = 4443ms` و `GET /projects/:id/workflow-progress = 3594ms`. این اعداد زمان مشاهده‌شده در مرورگرند و به‌دلیل نبود جدول diagnostics مدیریتی، زمان خالص Backend/Google Sheets محسوب نمی‌شوند.
+- baseline قبل از تغییرات در دسترس نیست؛ بنابراین درصد بهبود یا کاهش قطعی زمان ادعا نمی‌شود. زمان `9207ms` برای تعریف فرم‌ها هنوز زیاد است و نقطه تمرکز ادامه Task 2 خواهد بود.
+- کنترل Backend روی HEAD شاخه PR #17: Backend source checks و PMS agent suite هر دو موفق؛ `179/179` تست Backend پاس، `85` فایل منبع JavaScript و manifest بررسی شدند؛ Domain Contract و QA/Release Safety بدون finding بحرانی موفق شدند. Runها: `42277904168` و `42277903928`.
+- کنترل Frontend روی HEAD شاخه PR #37: Frontend checks، frontend agent suite و Cross-repository QA موفق؛ Browser Audit احراز هویت‌شده نیز بدون خطای مرورگر تکمیل شد.
+- PRها همچنان باز و ادغام‌نشده‌اند؛ هیچ Backend deployment، Frontend deployment یا live verification بعد از ادغام انجام نشده است.
+- وضعیت Task 2: `IN PROGRESS`؛ بهینه‌سازی‌های اولیه پیاده‌سازی و تست خودکار شده‌اند، اما کاهش زمان آماده‌شدن تعریف فرم‌ها باید با سنجش تکراری/تشخیصی و سپس پذیرش عملیاتی تأیید شود.
+
+
+#### Task 2 — کش نشست فرم‌ها و سنجش warm endpoint (2026-11-06)
+
+- `js/modules/events.js`: تعریف فرم‌های متصل در حافظه همان نشست با TTL برابر `30000ms` نگهداری می‌شود؛ کلید بر اساس token نشست و EventTypeID است، حداکثر 50 ورودی نگهداری می‌شود و با ورود به مسیرهای `forms`, `event-types`, `information-types` یا رویداد `pms:auth-expired` پاک می‌شود. داده فرم در localStorage ذخیره نمی‌شود.
+- `js/core/api.js`: مسیرهای `/event-types` و زیرمسیرهای آن به فهرست درخواست‌های مجاز برای diagnostics مدیریتی اضافه شد؛ این داده همچنان فقط با مجوز Admin از Backend برمی‌گردد.
+- `tests/event-form-cache-policy.test.js` و `tests/event-form-performance-audit.test.js` سیاست cache و مسیر diagnostics را پوشش می‌دهند. Frontend checks، frontend agent suite و Cross-repository QA روی commit `9d517bddf8edc62b4e41cef87a615618ef0c26ab` موفق شدند.
+- ابزار Browser Audit علاوه بر زمان اولین بارگذاری، یک درخواست دوم مستقیم به همان endpoint برای سنجش warm backend cache انجام می‌دهد؛ هیچ submit یا تغییری در داده انجام نمی‌دهد.
+- Run `42278302128` / Artifact `13534865891` با وضعیت `authenticated-audit-complete` موفق شد: Modal `1922ms`؛ پروژه/Workflow `4747ms`؛ فرم‌های متصل `10806ms`؛ درخواست تکراری endpoint برابر `7634ms`؛ `52` درخواست شبکه؛ `0` درخواست ناموفق؛ `0` Console error و `0` Page error؛ `2` پروژه و `10` نوع رویداد؛ بدون ثبت رویداد.
+- پاسخ diagnostics مدیریتی در این حساب تست خالی بود؛ بنابراین زمان داخلی Router/Google Sheets به تفکیک قابل مشاهده نشد. زمان‌های بالا، زمان مشاهده‌شده در مرورگر هستند.
+- Backend cache با TTL شصت ثانیه در GitHub آماده است اما هنوز روی Staging deploy نشده؛ بنابراین درخواست دوم `7634ms` اثر نسخه جدید Backend را اندازه نمی‌گیرد. برای مقایسه واقعی، ابتدا Backend شاخه عملیاتی باید روی Staging منتشر و سپس همین audit تکرار شود.
+- وضعیت Task 2: همچنان `IN PROGRESS`؛ بهینه‌سازی‌ها در GitHub و تست‌های خودکار موفق‌اند، اما کاهش زمان عملیاتی تا پس از Staging deployment و سنجش مجدد تأیید نشده است.
+
+
+#### Task 2 — تکرار سنجش مرورگر و نتیجه warm probe محدودشده (2026-11-06)
+
+- Browser Audit Run `42278648501` / Artifact `13534980965` روی commit Frontend `85d9dd54dd1aa52107e713f4a3024c1197bd3aea` با وضعیت `authenticated-audit-complete` موفق شد.
+- نتایج: Modal `2919ms`؛ پروژه/Workflow `6892ms`؛ تعریف فرم‌های متصل `11326ms`؛ درخواست مستقیم warm به همان endpoint `5501ms`؛ timeout رخ نداد.
+- سلامت آزمون: `49` درخواست شبکه، `0` خطای شبکه، `0` خطای Console/Page، بدون overflow موبایل؛ `2` پروژه، `10` نوع رویداد مجاز و `2` کنترل فرم متصل. هیچ فرم submit نشد.
+- مقایسه با اجرای قبلی Run `42278302128` نشان می‌دهد زمان‌ها نوسان دارند؛ در هر دو اجرا diagnostics مدیریتی Backend خالی بود. این اختلاف به‌عنوان بهبود یا پسرفت قطعی تفسیر نمی‌شود.
+- API مقصد، Staging احراز هویت‌شده است؛ اما deployment شاخه Backend PR #17 روی آن مستقلاً تأیید نشده. workflow موجود `.github/workflows/sync-apps-script.yml` فقط `main` و Secrets محیط Production را هدف می‌گیرد؛ از آن برای انتشار Staging یا feature branch استفاده نخواهد شد.
+- وضعیت Task 2 همچنان `IN PROGRESS` است. برای اثبات اثر بهینه‌سازی Backend، باید مسیر مجزای امن Staging مشخص/تأیید شود، Backend branch روی همان محیط منتشر شود و audit مجدداً اجرا گردد. هیچ merge یا Production deployment انجام نشده است.
+
+
+#### Task 2 — تکرار سنجش cold/warm روی HEAD فعلی (2026-11-06)
+
+- Run `42278648501` / Artifact `13534980965` روی commit `85d9dd54dd1aa52107e713f4a3024c1197bd3aea` با وضعیت `authenticated-audit-complete` موفق شد.
+- نتایج این اجرا: Modal `2919ms`؛ پروژه/Workflow `6892ms`؛ فرم‌های متصل `11326ms`؛ درخواست تکراری Backend `5501ms`؛ `49` درخواست شبکه؛ `0` درخواست ناموفق؛ `0` خطای Console/Page؛ بدون overflow موبایل و بدون submit.
+- اختلاف زمان با اجرای قبلی نشان‌دهنده نوسان محیط Staging است؛ چون Backend cache هنوز deploy نشده، این نتایج اثر نسخه جدید را اثبات نمی‌کنند. مقدار warm `5501ms` نیز هنوز از حد مطلوب بیشتر است.
+- تست‌های Browser Audit، Frontend checks، Frontend agent suite و Cross-repository QA روی HEAD فعلی موفق هستند. PR #37 باز و ادغام‌نشده باقی مانده است.
+
+
+- آخرین تکرار Browser Audit روی HEAD مستندات `bb5b5ca01a32241362276a380f9adeec8dbdf736`: Run `42278976712` / Artifact `13534356871` موفق؛ Modal `2418ms`، پروژه/Workflow `3491ms`، فرم‌های متصل `11692ms` و درخواست warm endpoint برابر `5202ms`. تعداد درخواست `51`، خطای شبکه/Console/Page برابر صفر و بدون submit. این سنجش همچنان روی Backend Staging پیش از انتشار کش جدید انجام شده و اثر کش جدید را ثابت نمی‌کند.

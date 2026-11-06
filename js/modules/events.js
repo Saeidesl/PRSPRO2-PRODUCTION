@@ -5,12 +5,27 @@
   const CACHE_KEY = PMS.Cache.keys.EVENTS;
   const PROJECTS_CACHE_KEY = PMS.Cache.keys.PROJECTS;
   const EVENT_TYPES_CACHE_KEY = PMS.Cache.keys.EVENT_TYPES;
+  const EVENT_FORM_DEFINITION_CACHE_TTL_MS = 30000;
+  const eventFormDefinitionCache = new Map();
+
+  function eventFormDefinitionCacheKey(eventTypeId) {
+    const token = PMS.Api && typeof PMS.Api.getToken === 'function'
+      ? PMS.Api.getToken() || ''
+      : '';
+    return String(token) + '\\n' + String(eventTypeId || '');
+  }
+
+  function clearEventFormDefinitionCache() {
+    eventFormDefinitionCache.clear();
+  }
 
   const Events = {
     events: [],
     projects: [],
     eventsLoaded: false,
     projectsLoaded: false,
+    projectOptionsToken: '',
+    formDefinitionCacheInvalidationBound: false,
     workflowProgress: null,
     workflowProgressRequestId: 0,
     workflowProgressProjectId: '',
@@ -49,6 +64,16 @@
 
     init: function () {
       this.bindEvents();
+      if (!this.formDefinitionCacheInvalidationBound && typeof window.addEventListener === 'function') {
+        this.formDefinitionCacheInvalidationBound = true;
+        window.addEventListener('hashchange', function () {
+          const route = String(window.location.hash || '').replace(/^#/, '').split('/')[0];
+          if (['forms', 'event-types', 'information-types'].indexOf(route) !== -1) {
+            clearEventFormDefinitionCache();
+          }
+        });
+        window.addEventListener('pms:auth-expired', clearEventFormDefinitionCache);
+      }
       this.activateQueue('progress');
 
       const permissions = PMS.Router && Array.isArray(PMS.Router.permissions)
@@ -343,9 +368,15 @@
         permissions.indexOf('EVENT_CREATE') !== -1 ||
         permissions.indexOf('EVENT_TYPE_MANAGE') !== -1;
 
+      const currentToken = PMS.Api.getToken() || '';
+      if (this.projectOptionsToken !== currentToken) {
+        this.projects = [];
+        this.projectsLoaded = false;
+      }
       const cachedEvents = canViewEvents ? PMS.Cache.get(CACHE_KEY) : null;
-      const cachedProjects = canLoadProjectOptions
-        ? PMS.Cache.get(PROJECTS_CACHE_KEY)
+      const cachedProjects = canLoadProjectOptions &&
+        this.projectOptionsToken === currentToken && this.projectsLoaded
+        ? this.projects
         : null;
       const cachedTypes = canLoadEventTypes
         ? PMS.Cache.get(EVENT_TYPES_CACHE_KEY)
@@ -357,6 +388,8 @@
       }
       if (!canLoadProjectOptions) {
         this.projects = [];
+        this.projectsLoaded = false;
+        this.projectOptionsToken = '';
         PMS.Cache.remove(PROJECTS_CACHE_KEY);
       }
       if (!canLoadEventTypes) {
@@ -389,6 +422,7 @@
           resultKeys.push('events');
           requests.push(
             PMS.Api.getCached('/events', CACHE_KEY, {
+              cacheTtl: 15000,
               onRefresh: function (data) {
                 Events.events = Events.normalize(data);
                 Events.eventsLoaded = true;
@@ -406,12 +440,13 @@
         if (canLoadProjectOptions) {
           resultKeys.push('projects');
           requests.push(
-            PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY, {
-              onRefresh: function (data) {
-                Events.projects = Events.normalize(data);
-                Events.projectsLoaded = true;
-                Events.scheduleRefreshRender();
-              }
+            PMS.Api.get('/projects', {
+              query: { view: 'event-picker' }
+            }).then(function (response) {
+              return {
+                data: PMS.Api.extractData(response),
+                cached: false
+              };
             })
           );
         }
@@ -420,6 +455,7 @@
           resultKeys.push('types');
           requests.push(
             PMS.Api.getCached('/event-types', EVENT_TYPES_CACHE_KEY, {
+              cacheTtl: 60000,
               onRefresh: function (data) {
                 Events.eventTypes = Events.normalize(data);
                 Events.scheduleRefreshRender();
@@ -436,7 +472,11 @@
           hasFreshResult = true;
           const key = resultKeys[index];
           if (key === 'events') { Events.events = Events.normalize(result.data); Events.eventsLoaded = true; }
-          if (key === 'projects') { Events.projects = Events.normalize(result.data); Events.projectsLoaded = true; }
+          if (key === 'projects') {
+            Events.projects = Events.normalize(result.data);
+            Events.projectsLoaded = true;
+            Events.projectOptionsToken = currentToken;
+          }
           if (key === 'types') Events.eventTypes = Events.normalize(result.data);
         });
 
@@ -2602,6 +2642,17 @@
         this.updateSubmitAvailability();
         return;
       }
+      const cacheKey = eventFormDefinitionCacheKey(eventTypeId);
+      const cachedDefinition = eventFormDefinitionCache.get(cacheKey);
+      if (cachedDefinition && Date.now() - cachedDefinition.cachedAt < EVENT_FORM_DEFINITION_CACHE_TTL_MS) {
+        this.formDefinitions = cachedDefinition.data;
+        this.renderConfiguredForms();
+        this.formsReady = true;
+        this.updateSubmitAvailability();
+        return;
+      }
+      if (cachedDefinition) eventFormDefinitionCache.delete(cacheKey);
+
       section.hidden = false;
       container.innerHTML = '<p class="event-muted">در حال دریافت فرم‌های متصل…</p>';
       try {
@@ -2617,10 +2668,19 @@
           else break;
         }
         this.formDefinitions = Array.isArray(data) ? data : [];
+        eventFormDefinitionCache.set(cacheKey, {
+          data: this.formDefinitions,
+          cachedAt: Date.now()
+        });
+        if (eventFormDefinitionCache.size > 50) {
+          const oldestKey = eventFormDefinitionCache.keys().next().value;
+          eventFormDefinitionCache.delete(oldestKey);
+        }
         this.renderConfiguredForms();
         this.formsReady = true;
       } catch (error) {
         if (requestId !== this.formsRequestId) return;
+        eventFormDefinitionCache.delete(cacheKey);
         this.formDefinitions = [];
         container.innerHTML = '';
         this.showFormError('دریافت فرم‌های متصل ناموفق بود: ' + this.errorMessage(error));
@@ -3254,6 +3314,7 @@
         const procurementIntegration = eventResult.procurementIntegration || {};
         // procurementIntegration.status can be FAILED; the result panel below exposes recovery.
 
+        this.projectOptionsToken = '';
         PMS.Api.invalidateMany([
           CACHE_KEY,
           PROJECTS_CACHE_KEY,

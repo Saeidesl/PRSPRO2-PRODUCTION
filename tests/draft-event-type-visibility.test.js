@@ -13,7 +13,8 @@ test('project creators can load their own draft projects without PROJECT_VIEW', 
   assert.ok(source.includes("permissions.indexOf('PROJECT_VIEW') !== -1 ||"));
   assert.ok(source.includes("permissions.indexOf('PROJECT_CREATE') !== -1;"));
   assert.ok(source.includes("if (canLoadProjectOptions) {"));
-  assert.ok(source.includes("PMS.Api.getCached('/projects'"));
+  assert.ok(source.includes("PMS.Api.get('/projects'"));
+  assert.ok(source.includes("query: { view: 'event-picker' }"));
 });
 
 test('project event types remain selectable for users who can create projects', () => {

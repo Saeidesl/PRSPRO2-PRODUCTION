@@ -11,7 +11,8 @@ const username = process.env.PMS_TEST_USERNAME || '';
 const password = process.env.PMS_TEST_PASSWORD || '';
 const stagingApiBaseURL = String(process.env.PMS_STAGING_API_BASE_URL || '').trim();
 const stagingApiConfigured = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec\/?$/.test(stagingApiBaseURL);
-const auditScope = String(process.env.PMS_AUDIT_SCOPE || 'all').trim().toLowerCase() === 'procurement' ? 'procurement' : 'all';
+const requestedAuditScope = String(process.env.PMS_AUDIT_SCOPE || 'all').trim().toLowerCase();
+const auditScope = ['procurement', 'events'].includes(requestedAuditScope) ? requestedAuditScope : 'all';
 const diagnosticsEnabled = process.env.PMS_PERFORMANCE_DIAGNOSTICS === '1';
 
 function withQueryParam(rawUrl, key, value) {
@@ -27,7 +28,7 @@ const routes = [
 const dangerousAction = /ثبت|ذخیره|حذف|پاک.?کردن|ارسال|تحویل|تأیید|تایید|ایجاد|افزودن|ویرایش|آپلود|بارگذاری فایل|خروج|ورود|لغو سفارش|اعمال تغییر|انتشار|دریافت فایل|دانلود/i;
 const results = {
   schemaVersion: 1,
-  suite: auditScope === 'procurement' ? 'PMS Procurement Performance Audit' : 'PMS Comprehensive UI and Performance Audit',
+  suite: auditScope === 'procurement' ? 'PMS Procurement Performance Audit' : (auditScope === 'events' ? 'PMS Event Form Performance Audit' : 'PMS Comprehensive UI and Performance Audit'),
   scope: auditScope,
   generatedAt: new Date().toISOString(),
   baseURL,
@@ -54,7 +55,9 @@ let browser;
 const formOpenersByRoute = {
   projects: ['project-create-button'],
   // Project-detail dialogs require a selected project and are not tested context-free.
-  events: ['event-create-button'],
+  // The operational event page starts project-based registration from its entry card.
+  // Follow the real project-entry flow instead of relying on the legacy hidden button.
+  events: ['event-project-entry'],
   workflows: ['workflow-create-button'],
   'project-statuses': ['project-status-create'],
   'event-types': ['event-type-create-button'],
@@ -215,7 +218,7 @@ async function main() {
     results.coverageGaps.push(note);
   }
 
-  const routeList = authenticated ? (auditScope === 'procurement' ? ['procurement'] : routes.filter(route => route !== 'login')) : ['login'];
+  const routeList = authenticated ? (auditScope === 'procurement' ? ['procurement'] : (auditScope === 'events' ? ['events'] : routes.filter(route => route !== 'login'))) : ['login'];
   for (const route of routeList) {
     const start = Date.now();
     // Load each route in a fresh document so dialogs from previous routes cannot leak.
@@ -369,13 +372,24 @@ const visible = el => {
           try { await page.locator('#page-content').waitFor({ state: 'visible', timeout: 8000 }); } catch (_) {}
           try { await page.waitForLoadState('networkidle', { timeout: 2500 }); } catch (_) {}
           await page.waitForTimeout(250);
-          const opener = page.locator('[id="' + openerId + '"]').first();
+          const opener = openerId === 'event-project-entry'
+            ? page.locator('[data-event-entry="project"]').first()
+            : page.locator('[id="' + openerId + '"]').first();
           if (!(await opener.count()) || !(await opener.isVisible()) || !(await opener.isEnabled())) {
             snapshot.dynamicFormInventory.push({ openerId, opened: false, reason: 'opener-not-visible-or-enabled', forms: [] });
             continue;
           }
           const before = await inventoryDialogForms(page);
-          await opener.evaluate(el => el.click());
+          const modalOpenStartedAt = Date.now();
+          if (route === 'events' && openerId === 'event-project-entry') {
+            await opener.click();
+            await page.locator('#events-project-entry-panel:not([hidden])').waitFor({ state: 'visible', timeout: 8000 });
+            const projectAction = page.locator('.event-recent-project-action').first();
+            await projectAction.waitFor({ state: 'visible', timeout: 12000 });
+            await projectAction.click();
+          } else {
+            await opener.click();
+          }
           await page.waitForFunction((baselineCount) => {
             const visible = el => { const rect = el.getBoundingClientRect(); if (rect.width <= 0 || rect.height <= 0) return false; for (let node = el; node && node !== document.documentElement; node = node.parentElement) { const style = getComputedStyle(node); if (node.hidden || node.getAttribute('aria-hidden') === 'true' || style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false; } return true; };
             const formCount = Array.from(document.querySelectorAll('form')).filter(visible).length;
@@ -386,6 +400,89 @@ const visible = el => {
           // Include every form visible after the opener click, including templates that
           // are already present in the DOM but only become relevant within this dialog.
           snapshot.dynamicFormInventory.push({ openerId, opened: inventory.dialogVisible || inventory.forms.length > 0 || inventory.visibleControls > before.visibleControls, baselineFormCount: before.forms.length, baselineVisibleControls: before.visibleControls, visibleControls: inventory.visibleControls, forms: inventory.forms });
+
+          if (route === 'events' && openerId === 'event-project-entry') {
+            const modalOpenedAt = Date.now();
+            const benchmark = {
+              modalReadyMs: modalOpenedAt - modalOpenStartedAt,
+              projectWorkflowReadyMs: null,
+              formDefinitionsReadyMs: null,
+              warmFormDefinitionsRequestMs: null,
+              warmFormDefinitionsTimedOut: false,
+              projectOptions: 0,
+              eligibleEventTypes: 0,
+              configuredFormControls: 0,
+              diagnosticEndpoints: []
+            };
+            try {
+              const projectResult = await page.evaluate(() => {
+                const select = document.getElementById('event-form-project');
+                if (!select) return { count: 0, selected: false };
+                const options = Array.from(select.options).filter(option => option.value);
+                if (!options.length) return { count: 0, selected: false };
+                select.value = options[0].value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                return { count: options.length, selected: true };
+              });
+              benchmark.projectOptions = projectResult.count;
+              if (projectResult.selected) {
+                await page.waitForFunction(() => {
+                  const select = document.getElementById('event-form-type');
+                  const loading = document.getElementById('event-type-loading');
+                  return !!select && !select.disabled && (!loading || loading.hidden) && select.options.length > 1;
+                }, null, { timeout: 20000 });
+                benchmark.projectWorkflowReadyMs = Date.now() - modalOpenedAt;
+                const typeResult = await page.evaluate(() => {
+                  const select = document.getElementById('event-form-type');
+                  if (!select) return { count: 0, selected: false };
+                  const options = Array.from(select.options).filter(option => option.value && !option.disabled);
+                  if (!options.length) return { count: 0, selected: false };
+                  select.value = options[0].value;
+                  select.dispatchEvent(new Event('change', { bubbles: true }));
+                  return { count: options.length, selected: true };
+                });
+                benchmark.eligibleEventTypes = typeResult.count;
+                if (typeResult.selected) {
+                  await page.waitForFunction(() => {
+                    const container = document.getElementById('event-configured-forms');
+                    return !!container && !container.textContent.includes('در حال دریافت فرم‌های متصل');
+                  }, null, { timeout: 25000 });
+                  benchmark.formDefinitionsReadyMs = Date.now() - modalOpenedAt;
+                  const warmCacheMeasurement = await page.evaluate(async () => {
+                    const typeId = String((document.getElementById('event-form-type') || {}).value || '');
+                    if (!typeId || !window.PMS || !window.PMS.Api || typeof window.PMS.Api.get !== 'function') {
+                      return { elapsedMs: null, timedOut: false };
+                    }
+                    const startedAt = performance.now();
+                    const request = window.PMS.Api.get('/event-types/' + encodeURIComponent(typeId) + '/forms')
+                      .then(() => ({ elapsedMs: Math.round(performance.now() - startedAt), timedOut: false }))
+                      .catch(() => ({ elapsedMs: null, timedOut: false }));
+                    const timeout = new Promise(resolve => setTimeout(() => resolve({ elapsedMs: null, timedOut: true }), 12000));
+                    return await Promise.race([request, timeout]);
+                  });
+                  benchmark.warmFormDefinitionsRequestMs = warmCacheMeasurement.elapsedMs;
+                  benchmark.warmFormDefinitionsTimedOut = warmCacheMeasurement.timedOut;
+                  benchmark.configuredFormControls = await page.locator('#event-configured-forms').locator('input,select,textarea').count();
+                  if (diagnosticsEnabled) {
+                    benchmark.diagnosticEndpoints = await page.locator('#pms-performance-diagnostics-table tr').evaluateAll(rows =>
+                      rows.slice(1).map(row => Array.from(row.cells).map(cell => String(cell.textContent || '').trim()))
+                        .filter(row => (row[0] || '').indexOf('/api/') === 0 &&
+                          /events|projects|event-types/.test(row[0]))
+                        .map(row => ({ endpoint: row[0], browserMs: row[1] || '', backendMs: row[2] || '', details: row[3] || '' }))
+                    );
+                  }
+                } else {
+                  results.coverageGaps.push('Event-form benchmark: no eligible event type was available for the selected staging user/project.');
+                }
+              } else {
+                results.coverageGaps.push('Event-form benchmark: no project option was available for the selected staging user.');
+              }
+            } catch (benchmarkError) {
+              benchmark.error = String(benchmarkError.message || benchmarkError).slice(0, 300);
+              results.coverageGaps.push('Event-form benchmark did not reach readiness: ' + benchmark.error);
+            }
+            results.eventFormDiagnostics = benchmark;
+          }
         } catch (error) {
           snapshot.dynamicFormInventory.push({ openerId, opened: false, error: String(error.message || error).slice(0, 1000), forms: [] });
         }
@@ -529,6 +626,26 @@ function renderMarkdown(report) {
     '|---|---|---:|---:|---:|---:|---:|---|',
     ...report.routes.map(route => '| ' + route.requestedRoute + ' | ' + route.status + ' | ' + (typeof route.routeReadyMs === 'number' ? route.routeReadyMs : 'n/a') + ' | ' + route.navigationMs + ' | ' + route.forms.length + ' | ' + route.buttons.length + ' | ' + route.visibleControlCount + ' | ' + (route.mobileLayout && route.mobileLayout.horizontalOverflow ? 'YES' : 'no') + ' |'),
     '',
+    ...(report.scope === 'events' ? [
+      '## Event form performance baseline',
+      '',
+      '- Modal readiness: ' + (report.eventFormDiagnostics && report.eventFormDiagnostics.modalReadyMs !== undefined ? report.eventFormDiagnostics.modalReadyMs + ' ms' : 'n/a'),
+      '- Project/workflow readiness: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.projectWorkflowReadyMs === 'number' ? report.eventFormDiagnostics.projectWorkflowReadyMs + ' ms' : 'n/a'),
+      '- Form definitions readiness: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.formDefinitionsReadyMs === 'number' ? report.eventFormDiagnostics.formDefinitionsReadyMs + ' ms' : 'n/a'),
+      '- Warm backend form-definition request: ' + (report.eventFormDiagnostics && typeof report.eventFormDiagnostics.warmFormDefinitionsRequestMs === 'number' ? report.eventFormDiagnostics.warmFormDefinitionsRequestMs + ' ms' : 'n/a'),
+      '- Warm backend request timed out: ' + (report.eventFormDiagnostics && report.eventFormDiagnostics.warmFormDefinitionsTimedOut ? 'yes (12s limit)' : 'no'),
+      '- Project options: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.projectOptions : 0),
+      '- Eligible event types: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.eligibleEventTypes : 0),
+      '- Visible controls after selecting the event type: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.configuredFormControls : 0),
+      '- No form values were entered and no event was submitted.',
+      '',
+      '| Endpoint | Browser | Backend | Repository / sheet details |',
+      '|---|---:|---:|---|',
+      ...((report.eventFormDiagnostics && report.eventFormDiagnostics.diagnosticEndpoints || []).length
+        ? report.eventFormDiagnostics.diagnosticEndpoints.map(item => '| ' + item.endpoint + ' | ' + item.browserMs + ' | ' + item.backendMs + ' | ' + item.details.replace(/\\|/g, '/') + ' |')
+        : ['| No admin-only endpoint diagnostics captured | n/a | n/a | n/a |']),
+      ''
+    ] : []),
     ...(report.scope === 'procurement' ? [
       '## Procurement API timings',
       '',

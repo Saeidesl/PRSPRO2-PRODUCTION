@@ -787,6 +787,7 @@
           {
             onRefresh: (data) => {
               this.projects = this.normalizeProjects(data);
+              if (window.PMS && window.PMS.Events) window.PMS.Events.projectOptionsToken = '';
               this.applyFilters();
               this.loadStageLookups();
             },
@@ -801,6 +802,7 @@
 
         if (result && result.cached === false) {
           this.projects = this.normalizeProjects(result.data);
+          if (window.PMS && window.PMS.Events) window.PMS.Events.projectOptionsToken = '';
           this.applyFilters();
           this.loadStageLookups();
         }

@@ -20,6 +20,7 @@ on:
         type: choice
         options:
           - procurement
+          - events
           - all
 
 permissions:
@@ -45,10 +46,19 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Remove stale audit reports
+        run: rm -f test-results/latest-performance-report.json test-results/latest-performance-report.md
+
+      - name: Cache Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-1.64.1-chromium
+
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.64.1
-          npx playwright install --with-deps chromium
+          npx playwright install chromium
 
       - name: Run real-browser project modal keyboard tests
         run: node tests/project-modal-accessibility.browser.cjs
@@ -74,8 +84,8 @@ jobs:
       - name: Run UI inventory and performance audit
         env:
           PMS_BASE_URL: ${{ inputs.base_url || vars.PMS_STAGING_BASE_URL || vars.PMS_BASE_URL || 'http://127.0.0.1:4173/PRSPRO2/' }}
-          PMS_AUDIT_SCOPE: ${{ inputs.scope || 'all' }}
-          PMS_PERFORMANCE_DIAGNOSTICS: ${{ ((github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.scope == 'procurement') && '1' || '0' }}
+          PMS_AUDIT_SCOPE: ${{ inputs.scope || (github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'feat/event-form-performance' && 'events' || 'all') }}
+          PMS_PERFORMANCE_DIAGNOSTICS: ${{ ((github.event_name == 'push' && github.ref == 'refs/heads/main') || inputs.scope == 'procurement' || inputs.scope == 'events' || github.event_name == 'pull_request') && '1' || '0' }}
           PMS_STAGING_API_BASE_URL: ${{ secrets.PMS_STAGING_API_BASE_URL }}
           PMS_TEST_USERNAME: ${{ secrets.PMS_TEST_USERNAME }}
           PMS_TEST_PASSWORD: ${{ secrets.PMS_TEST_PASSWORD }}
