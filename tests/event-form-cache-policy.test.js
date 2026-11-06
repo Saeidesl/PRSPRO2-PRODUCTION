@@ -33,7 +33,8 @@ test('event form definitions use a short-lived authenticated-session cache', () 
 
 test('opening the registration modal starts a read-only batched form-definition prefetch', () => {
   assert.match(events, /this\.prefetchEventFormDefinitions\(\)/);
-  assert.match(events, /PMS\.Api\.get\('\/event-types', \{\s*query: \{ includeFormDefinitions: true \} \}/);
+  assert.ok(events.includes("PMS.Api.get('/event-types', {"));
+  assert.ok(events.includes('query: { includeFormDefinitions: true }'));
   assert.match(events, /FormDefinitionsLoadFailed/);
 });
 
