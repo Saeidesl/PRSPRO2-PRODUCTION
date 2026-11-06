@@ -25,8 +25,9 @@ const assert = require('node:assert/strict');
 
     const dateTrigger = page.locator('#date-only-jalali').locator('xpath=following-sibling::button[contains(@class,"pms-jalali-calendar-trigger")]');
     await dateTrigger.click();
-    await page.locator('.pms-jalali-calendar button.is-selected').click();
-    assert.equal(await page.locator('.pms-jalali-time-picker').count(), 0, 'date-only fields must not show time controls');
+    const dateOnlyPopup = page.locator('.pms-jalali-calendar').last();
+    await dateOnlyPopup.locator('button.is-selected').click();
+    assert.equal(await dateOnlyPopup.locator('.pms-jalali-time-picker').count(), 0, 'date-only fields must not show time controls');
     assert.equal(await page.locator('#date-only').inputValue(), '2026-11-06');
     console.log('Jalali datetime browser test passed (mobile viewport, date-to-time transition, hour/minute commit, date-only compatibility).');
   } finally {
