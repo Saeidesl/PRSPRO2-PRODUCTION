@@ -18,6 +18,7 @@ test('event-form benchmark only selects existing options and never submits', () 
   assert.match(script, /event-project-entry/);
   assert.match(script, /data-event-entry="project"/);
   assert.match(script, /event-recent-project-action/);
+  assert.match(script, /route === 'events' && openerId === 'event-project-entry'/);
   assert.match(script, /event-form-project/);
   assert.match(script, /event-form-type/);
   assert.match(script, /formDefinitionsReadyMs/);
