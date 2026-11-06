@@ -192,3 +192,15 @@
 - کنترل Frontend روی HEAD شاخه PR #37: Frontend checks، frontend agent suite و Cross-repository QA موفق؛ Browser Audit احراز هویت‌شده نیز بدون خطای مرورگر تکمیل شد.
 - PRها همچنان باز و ادغام‌نشده‌اند؛ هیچ Backend deployment، Frontend deployment یا live verification بعد از ادغام انجام نشده است.
 - وضعیت Task 2: `IN PROGRESS`؛ بهینه‌سازی‌های اولیه پیاده‌سازی و تست خودکار شده‌اند، اما کاهش زمان آماده‌شدن تعریف فرم‌ها باید با سنجش تکراری/تشخیصی و سپس پذیرش عملیاتی تأیید شود.
+
+
+#### Task 2 — کش نشست فرم‌ها و سنجش warm endpoint (2026-11-06)
+
+- `js/modules/events.js`: تعریف فرم‌های متصل در حافظه همان نشست با TTL برابر `30000ms` نگهداری می‌شود؛ کلید بر اساس token نشست و EventTypeID است، حداکثر 50 ورودی نگهداری می‌شود و با ورود به مسیرهای `forms`, `event-types`, `information-types` یا رویداد `pms:auth-expired` پاک می‌شود. داده فرم در localStorage ذخیره نمی‌شود.
+- `js/core/api.js`: مسیرهای `/event-types` و زیرمسیرهای آن به فهرست درخواست‌های مجاز برای diagnostics مدیریتی اضافه شد؛ این داده همچنان فقط با مجوز Admin از Backend برمی‌گردد.
+- `tests/event-form-cache-policy.test.js` و `tests/event-form-performance-audit.test.js` سیاست cache و مسیر diagnostics را پوشش می‌دهند. Frontend checks، frontend agent suite و Cross-repository QA روی commit `9d517bddf8edc62b4e41cef87a615618ef0c26ab` موفق شدند.
+- ابزار Browser Audit علاوه بر زمان اولین بارگذاری، یک درخواست دوم مستقیم به همان endpoint برای سنجش warm backend cache انجام می‌دهد؛ هیچ submit یا تغییری در داده انجام نمی‌دهد.
+- Run `42278302128` / Artifact `13534865891` با وضعیت `authenticated-audit-complete` موفق شد: Modal `1922ms`؛ پروژه/Workflow `4747ms`؛ فرم‌های متصل `10806ms`؛ درخواست تکراری endpoint برابر `7634ms`؛ `52` درخواست شبکه؛ `0` درخواست ناموفق؛ `0` Console error و `0` Page error؛ `2` پروژه و `10` نوع رویداد؛ بدون ثبت رویداد.
+- پاسخ diagnostics مدیریتی در این حساب تست خالی بود؛ بنابراین زمان داخلی Router/Google Sheets به تفکیک قابل مشاهده نشد. زمان‌های بالا، زمان مشاهده‌شده در مرورگر هستند.
+- Backend cache با TTL شصت ثانیه در GitHub آماده است اما هنوز روی Staging deploy نشده؛ بنابراین درخواست دوم `7634ms` اثر نسخه جدید Backend را اندازه نمی‌گیرد. برای مقایسه واقعی، ابتدا Backend شاخه عملیاتی باید روی Staging منتشر و سپس همین audit تکرار شود.
+- وضعیت Task 2: همچنان `IN PROGRESS`؛ بهینه‌سازی‌ها در GitHub و تست‌های خودکار موفق‌اند، اما کاهش زمان عملیاتی تا پس از Staging deployment و سنجش مجدد تأیید نشده است.
