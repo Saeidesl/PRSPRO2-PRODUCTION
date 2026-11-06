@@ -25,6 +25,50 @@
     eventFormDefinitionsPrefetchToken = '';
   }
 
+  const EVENT_DEPENDENT_CACHE_TTL_MS = 60000;
+  const EVENT_WORKFLOW_CACHE_TTL_MS = 15000;
+  const eventDependentDataCache = new Map();
+  const eventDependentDataRequests = new Map();
+
+  function eventDependentCacheKey(kind, parts) {
+    const token = PMS.Api && typeof PMS.Api.getToken === 'function'
+      ? PMS.Api.getToken() || ''
+      : '';
+    return [token, kind].concat((parts || []).map(value => String(value || ''))).join('\\n');
+  }
+
+  function clearEventDependentDataCache(projectId) {
+    const token = PMS.Api && typeof PMS.Api.getToken === 'function'
+      ? PMS.Api.getToken() || ''
+      : '';
+    const prefix = String(token) + '\\n';
+    const project = projectId ? String(projectId) : '';
+    [eventDependentDataCache, eventDependentDataRequests].forEach(map => {
+      Array.from(map.keys()).forEach(key => {
+        if (key.indexOf(prefix) !== 0) return;
+        if (!project || key.indexOf('\\n' + project) !== -1) map.delete(key);
+      });
+    });
+  }
+
+  function getEventDependentData(key, loader, ttlMs) {
+    const now = Date.now();
+    const cached = eventDependentDataCache.get(key);
+    if (cached && cached.expiresAt > now) return Promise.resolve(cached.value);
+    if (eventDependentDataRequests.has(key)) return eventDependentDataRequests.get(key);
+    const request = Promise.resolve().then(loader).then(value => {
+      eventDependentDataCache.set(key, {
+        value: value,
+        expiresAt: Date.now() + Math.max(1000, Number(ttlMs) || EVENT_DEPENDENT_CACHE_TTL_MS)
+      });
+      return value;
+    }).finally(() => {
+      if (eventDependentDataRequests.get(key) === request) eventDependentDataRequests.delete(key);
+    });
+    eventDependentDataRequests.set(key, request);
+    return request;
+  }
+
   const Events = {
     events: [],
     projects: [],
@@ -34,6 +78,7 @@
     formDefinitionCacheInvalidationBound: false,
     workflowProgress: null,
     workflowProgressRequestId: 0,
+    amendmentSourceRequestId: 0,
     workflowProgressProjectId: '',
     workflowProgressLoading: false,
     workflowProgressError: false,
@@ -76,9 +121,13 @@
           const route = String(window.location.hash || '').replace(/^#/, '').split('/')[0];
           if (['forms', 'event-types', 'information-types'].indexOf(route) !== -1) {
             clearEventFormDefinitionCache();
+            clearEventDependentDataCache();
           }
         });
-        window.addEventListener('pms:auth-expired', clearEventFormDefinitionCache);
+        window.addEventListener('pms:auth-expired', function () {
+          clearEventFormDefinitionCache();
+          clearEventDependentDataCache();
+        });
       }
       this.activateQueue('progress');
 
@@ -1912,7 +1961,12 @@
       panel.classList.add('has-project-context');
       content.innerHTML = '<div class="event-context-loading"><span class="event-spinner" aria-hidden="true"></span><span>در حال دریافت اطلاعات مرتبط...</span></div>';
       try {
-        const response = await PMS.Api.get('/projects/' + encodeURIComponent(projectKey) + '/information');
+        const informationKey = eventDependentCacheKey('project-information', [projectKey]);
+        const response = await getEventDependentData(
+          informationKey,
+          () => PMS.Api.get('/projects/' + encodeURIComponent(projectKey) + '/information'),
+          EVENT_DEPENDENT_CACHE_TTL_MS
+        );
         if (requestId !== this.eventContextRequestId || !document.getElementById('event-context-panel')) return;
         const rows = this.normalize(PMS.Api.extractData(response));
         const definitions = (this.formDefinitions || []).reduce(function (all, item) {
@@ -1944,7 +1998,11 @@
         }).slice(0, 4);
         const relatedFormResponses = await Promise.all(relatedEvents.slice(0, 3).map(async (item) => {
           try {
-            const response = await PMS.Api.get('/events/' + encodeURIComponent(item.ID) + '/forms');
+            const response = await getEventDependentData(
+              eventDependentCacheKey('event-forms', [projectKey, item.ID]),
+              () => PMS.Api.get('/events/' + encodeURIComponent(item.ID) + '/forms'),
+              EVENT_DEPENDENT_CACHE_TTL_MS
+            );
             return { event: item, forms: this.normalize(PMS.Api.extractData(response)) };
           } catch (error) {
             return { event: item, forms: [] };
@@ -2287,7 +2345,11 @@
       section.hidden = false;
       container.textContent = 'در حال بررسی قواعد و پیشرفت مرحله...';
       try {
-        const response = await PMS.Api.get('/projects/' + encodeURIComponent(selectedProjectId) + '/workflow-progress');
+        const response = await getEventDependentData(
+          eventDependentCacheKey('workflow-progress', [selectedProjectId]),
+          () => PMS.Api.get('/projects/' + encodeURIComponent(selectedProjectId) + '/workflow-progress'),
+          EVENT_WORKFLOW_CACHE_TTL_MS
+        );
         if (requestId !== this.workflowProgressRequestId ||
             !document.getElementById('event-create-modal')) return;
         const data = PMS.Api.extractData(response) || {};
@@ -2323,6 +2385,7 @@
                 completeButton.textContent = 'در حال ثبت...';
                 try {
                   await PMS.Api.post('/projects/' + encodeURIComponent(selectedProjectId) + '/complete-step', {});
+                  clearEventDependentDataCache(selectedProjectId);
                   status.textContent = 'پایان مرحله ثبت شد؛ ثبت رویدادهای این مرحله بسته است.';
                   this.workflowProgress = Object.assign({}, this.workflowProgress, {
                     stepClosed: true,
@@ -2387,6 +2450,8 @@
       const sourceForm = document.getElementById('event-amendment-source-form');
       const status = document.getElementById('event-amendment-status');
       if (!sourceEvent || !sourceForm || !this.amendmentMode) return;
+      const requestId = ++this.amendmentSourceRequestId;
+      const projectKey = String(projectId || '');
       this.amendmentSourceEventId = '';
       this.amendmentSourceFormId = '';
       this.amendmentSourceVersion = 0;
@@ -2407,6 +2472,7 @@
       if (status) status.textContent = 'در حال جست‌وجوی پاسخ‌های قبلی...';
       try {
         const response = await PMS.Api.get('/projects/' + encodeURIComponent(projectId) + '/events');
+        if (requestId !== this.amendmentSourceRequestId) return;
         const events = this.normalize(PMS.Api.extractData(response)).filter(item => String(item.ID || item.EventID || ''));
         events.sort((a, b) => {
           const left = new Date(a.OccurredAt || a.CreatedAt || 0).getTime() || 0;
@@ -2414,20 +2480,37 @@
           return right - left;
         });
         let match = null;
-        for (const event of events) {
-          const eventId = String(event.ID || event.EventID || '');
-          const formsResponse = await PMS.Api.get('/events/' + encodeURIComponent(eventId) + '/forms');
-          const forms = this.normalize(PMS.Api.extractData(formsResponse));
-          const candidate = forms.find(item => {
-            const definition = item.Definition || {};
-            const formId = String(item.FormID || definition.ID || '');
-            return formId && (!explicitAllowList || allowedFormIds.indexOf(formId) !== -1);
-          });
-          if (candidate) {
-            match = { event, form: candidate, eventId };
-            break;
+        const batchSize = 4;
+        for (let offset = 0; offset < events.length && !match; offset += batchSize) {
+          const batch = events.slice(offset, offset + batchSize);
+          const responses = await Promise.all(batch.map(async event => {
+            const eventId = String(event.ID || event.EventID || '');
+            try {
+              const formsResponse = await getEventDependentData(
+                eventDependentCacheKey('event-forms', [projectKey, eventId]),
+                () => PMS.Api.get('/events/' + encodeURIComponent(eventId) + '/forms'),
+                EVENT_DEPENDENT_CACHE_TTL_MS
+              );
+              return { event, eventId, forms: this.normalize(PMS.Api.extractData(formsResponse)) };
+            } catch (error) {
+              return { event, eventId, forms: [] };
+            }
+          }));
+          if (requestId !== this.amendmentSourceRequestId) return;
+          // Keep newest-first precedence even though each small batch is fetched concurrently.
+          for (const result of responses) {
+            const candidate = result.forms.find(item => {
+              const definition = item.Definition || {};
+              const formId = String(item.FormID || definition.ID || '');
+              return formId && (!explicitAllowList || allowedFormIds.indexOf(formId) !== -1);
+            });
+            if (candidate) {
+              match = { event: result.event, form: candidate, eventId: result.eventId };
+              break;
+            }
           }
         }
+        if (requestId !== this.amendmentSourceRequestId) return;
         if (!match) {
           if (status) status.textContent = 'برای این پروژه هنوز پاسخی از فرم تعیین‌شده ثبت نشده است؛ ابتدا رویداد ثبت‌کننده آن فرم را ایجاد کنید.';
           return;
@@ -3356,6 +3439,7 @@
         } else {
           const eventResponse = await PMS.Api.post('/events', payload);
           eventResult = PMS.Api.extractData(eventResponse) || {};
+          clearEventDependentDataCache();
         }
         if (this.amendmentMode) {
           const amendmentEvent = eventResult.event || eventResult.Event || eventResult;
