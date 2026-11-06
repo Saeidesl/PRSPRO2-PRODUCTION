@@ -15,7 +15,9 @@ test('performance audit supports a focused event-form scope', () => {
 });
 
 test('event-form benchmark only selects existing options and never submits', () => {
-  assert.match(script, /event-create-button/);
+  assert.match(script, /event-project-entry/);
+  assert.match(script, /data-event-entry="project"/);
+  assert.match(script, /event-recent-project-action/);
   assert.match(script, /event-form-project/);
   assert.match(script, /event-form-type/);
   assert.match(script, /formDefinitionsReadyMs/);
