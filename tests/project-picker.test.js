@@ -12,7 +12,7 @@ const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 test('project picker displays project title and code while retaining ProjectID select', () => {
   assert.match(source, /id="event-form-project" name="ProjectID"/);
   assert.match(source, /project\.Title \|\| project\.Name/);
-  assert.match(source, /project\.ProjectCode \|\| this\.idOf\(project\)/);
+  assert.match(source, /selected.ProjectCode \|\| this.idOf\(selected\)/);
   assert.match(source, /id="event-project-picker-trigger"/);
   assert.match(source, /id="event-project-picker-search"/);
   assert.match(source, /projectSelect\.dispatchEvent\(new Event\('change', \{ bubbles: true \}\)\)/);
