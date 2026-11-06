@@ -157,3 +157,21 @@
 - شروع فاز: 2026-11-06.
 - Task 1 تکمیل و Task 2 در وضعیت IN PROGRESS قرار گرفت.
 - تا این نقطه فقط مستندات TODO5 به‌روزرسانی می‌شود؛ هیچ تغییر اجرایی، انتشار یا مهاجرت داده انجام نشده است.
+
+#### Task 2 — Implementation progress (تکمیل‌نشده؛ در انتظار baseline احراز هویت‌شده)
+
+- `js/modules/events.js`:
+  - دریافت پروژه‌ها برای صفحه رویداد از همان `GET /projects` با query برابر `view=event-picker` انجام می‌شود؛ دیگر payload کامل CardInformation برای فهرست انتخاب پروژه دریافت نمی‌شود.
+  - نتیجه picker فقط در حافظه همان نشست و با scope توکن نگه داشته می‌شود؛ با تغییر توکن پاک می‌شود. بعد از ثبت رویداد، مقدار حافظه invalidate می‌شود.
+  - cache فهرست رویدادها 15 ثانیه و cache انواع رویداد 60 ثانیه TTL دارند.
+- `js/core/api.js`:
+  - `Api.getCached` گزینه `cacheTtl` را می‌پذیرد؛ cacheهای قدیمی بدون expiry هنگام درخواست TTL به‌عنوان cache معتبر پذیرفته نمی‌شوند و پاسخ تازه با همان TTL ذخیره می‌شود. رفتار فراخوانی‌های قدیمی بدون TTL حفظ شد.
+- `js/modules/projects.js:loadProjects`:
+  - پس از دریافت تازه فهرست پروژه‌ها، cache حافظه‌ای picker رویداد invalidate می‌شود.
+- `scripts/pms-ui-performance-audit.cjs` و `.github/workflows/pms-ui-performance-audit.yml`:
+  - scope مستقل `events` افزوده شد؛ audit مرورگر بدون ثبت داده، پروژه و نوع رویداد مجاز را انتخاب می‌کند و زمان بازشدن Modal، آماده‌شدن workflow و آماده‌شدن تعریف فرم را اندازه می‌گیرد.
+  - خلاصه diagnostics مرورگر/Backend فقط برای endpointهای مرتبط ثبت می‌شود؛ شناسه‌ها و query stringهای حاوی token ذخیره نمی‌شوند.
+- تست‌های جدید: `tests/event-form-performance-audit.test.js`, `tests/event-project-picker-performance.test.js`, `tests/event-form-cache-policy.test.js`; تست قبلی `tests/draft-event-type-visibility.test.js` با قرارداد جدید query-view هماهنگ شد.
+- CI Frontend و Cross-repository QA در commit `2131d6e7f4ec3d02d1831a7b60f068e5b8df4302` موفق شدند؛ commit جدیدتر شامل فعال‌سازی diagnostics در PR audit است و در حال بررسی است.
+- PR عملیاتی Frontend: #37، شاخه `feat/event-form-performance`. PR عملیاتی Backend: #17، شاخه `feat/event-form-performance`. هنوز merge/deployment انجام نشده است.
+- محدودیت baseline: audit مرورگر در PR با وضعیت `blocked-no-staging-api` اجرا شد؛ فقط login عمومی با زمان 151ms اندازه‌گیری شد. چون `PMS_STAGING_API_BASE_URL` و اعتبارنامه تست در GitHub Actions تنظیم نشده‌اند، فرم ثبت رویداد و endpointهای محافظت‌شده قابل اندازه‌گیری نبودند. هیچ login یا درخواست تستی به API تولید ارسال نشد.
