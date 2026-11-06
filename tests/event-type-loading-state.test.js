@@ -39,6 +39,6 @@ test('workflow failure retains retry handling and stale requests cannot replace 
 test('event type loading state is responsive, theme-aware, and uses the refreshed frontend assets', () => {
   assert.match(styles, /var\(--color-surface-alt\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
-  assert.match(index, /events\.css\?v=20261106-event-history-cards-1/);
-  assert.match(index, /events\.js\?v=20261106-event-history-cards-1/);
+  assert.match(index, /events\.css\?v=20261106-event-type-picker-cards-1/);
+  assert.match(index, /events\.js\?v=20261106-event-type-picker-cards-1/);
 });
