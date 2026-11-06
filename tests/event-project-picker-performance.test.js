@@ -6,6 +6,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'modules', 'events.js'), 'utf8');
+const projects = fs.readFileSync(path.join(__dirname, '..', 'js', 'modules', 'projects.js'), 'utf8');
 
 test('event page requests the lightweight project picker view instead of the full project-card payload', () => {
   assert.match(source, /PMS\.Api\.get\('\/projects', \{[\s\S]*?query: \{ view: 'event-picker' \}/);
@@ -21,4 +22,8 @@ test('project options are not reused across different authenticated sessions', (
 
 test('event creation invalidates the in-memory project picker data', () => {
   assert.match(source, /this\.projectOptionsToken = ''[\s\S]*?PMS\.Api\.invalidateMany\(\[/);
+});
+
+test('fresh project-list data invalidates the in-memory event picker projection', () => {
+  assert.match(projects, /PMS\.Events\.projectOptionsToken = ''/);
 });
