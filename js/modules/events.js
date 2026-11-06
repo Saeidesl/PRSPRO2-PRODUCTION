@@ -1625,7 +1625,7 @@
         '<div class="event-field"><label for="event-project-picker-trigger">پروژه <span class="event-required">*</span></label>' +
         '<select id="event-form-project" name="ProjectID" class="event-project-native-select" tabindex="-1" aria-hidden="true"><option value="">انتخاب پروژه</option></select><div class="event-project-picker" id="event-project-picker"><button type="button" class="event-project-picker-trigger" id="event-project-picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="event-project-picker-panel"><span class="event-project-picker-value" id="event-project-picker-value"><span class="event-project-picker-placeholder">برای ادامه، پروژه را انتخاب کنید</span></span><span class="event-project-picker-chevron" aria-hidden="true">⌄</span></button><div class="event-project-picker-panel" id="event-project-picker-panel" hidden><div class="event-project-picker-search-wrap"><span aria-hidden="true">⌕</span><input type="search" id="event-project-picker-search" placeholder="جست‌وجوی نام یا کد پروژه..." autocomplete="off" aria-label="جست‌وجوی پروژه"></div><div class="event-project-picker-list" id="event-project-picker-list" role="listbox" aria-label="فهرست پروژه‌ها"></div></div></div></div>' +
         '<div class="event-field"><label for="event-form-type">نوع رویداد <span class="event-required">*</span></label>' +
-        '<div class="event-type-control"><select id="event-form-type" name="EventTypeID" required><option value="">انتخاب نوع رویداد</option></select>' +
+        '<div class="event-type-control"><select id="event-form-type" name="EventTypeID" class="event-type-native-select" tabindex="-1" aria-hidden="true" required><option value="">انتخاب نوع رویداد</option></select><div class="event-type-picker" id="event-type-picker"><button type="button" class="event-type-picker-trigger" id="event-type-picker-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="event-type-picker-panel"><span class="event-type-picker-value" id="event-type-picker-value"><span class="event-type-picker-placeholder">برای ادامه، نوع رویداد را انتخاب کنید</span></span><span class="event-type-picker-chevron" aria-hidden="true">⌄</span></button><div class="event-type-picker-panel" id="event-type-picker-panel" hidden><div class="event-type-picker-search-wrap"><span aria-hidden="true">⌕</span><input type="search" id="event-type-picker-search" placeholder="جست‌وجوی نوع رویداد..." autocomplete="off" aria-label="جست‌وجوی نوع رویداد"></div><div class="event-type-picker-list" id="event-type-picker-list" role="listbox" aria-label="فهرست انواع رویداد"></div></div></div>' +
         '<div id="event-type-loading" class="event-type-loading" hidden></div></div></div>' +
         '<div class="event-field"><label for="event-form-date">تاریخ و زمان وقوع <span class="event-required">*</span></label>' +
         '<input id="event-form-date" name="OccurredAt" type="datetime-local" required></div>' +
@@ -1660,6 +1660,9 @@
       modal.addEventListener('click', (event) => {
         if (!event.target.closest('#event-project-picker')) {
           this.setProjectPickerOpen(false);
+        }
+        if (!event.target.closest('#event-type-picker')) {
+          this.setEventTypePickerOpen(false);
         }
         const contextTrigger = event.target.closest('#event-context-mobile-trigger');
         if (contextTrigger) {
@@ -1736,6 +1739,7 @@
 
 
       typeSelect.addEventListener('change', () => {
+        this.renderEventTypePicker();
         const selectedType = this.findById(this.eventTypes, typeSelect.value);
         this.setAmendmentMode(!!selectedType && (selectedType.IsFormAmendment === true || String(selectedType.IsFormAmendment).toLowerCase() === 'true' || /(EDIT|UPDATE|AMEND|ویرایش|اصلاح)/i.test(String(selectedType.Code || '')+' '+String(selectedType.Name || ''))), projectSelect.value);
         const selectedProject = this.findById(this.projects, projectSelect.value);
@@ -1788,6 +1792,34 @@
           this.setProjectPickerOpen(false);
           this.renderProjectPicker();
           projectPickerTrigger.focus();
+        });
+      }
+      const typePicker = document.getElementById('event-type-picker');
+      const typePickerTrigger = document.getElementById('event-type-picker-trigger');
+      const typePickerSearch = document.getElementById('event-type-picker-search');
+      if (typePickerTrigger) {
+        typePickerTrigger.addEventListener('click', () => {
+          this.setEventTypePickerOpen(!typePicker.classList.contains('is-open'));
+        });
+      }
+      if (typePickerSearch) {
+        typePickerSearch.addEventListener('input', () => this.renderEventTypePicker());
+        typePickerSearch.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            this.setEventTypePickerOpen(false);
+            typePickerTrigger.focus();
+          }
+        });
+      }
+      if (typePicker) {
+        typePicker.addEventListener('click', (event) => {
+          const option = event.target.closest('[data-event-type-id]');
+          if (!option || option.disabled) return;
+          typeSelect.value = option.dataset.eventTypeId;
+          typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          this.setEventTypePickerOpen(false);
+          this.renderEventTypePicker();
+          typePickerTrigger.focus();
         });
       }
 
@@ -1996,6 +2028,129 @@
       }
     },
 
+    renderEventTypePicker: function () {
+      const select = document.getElementById('event-form-type');
+      const root = document.getElementById('event-type-picker');
+      const trigger = document.getElementById('event-type-picker-trigger');
+      const value = document.getElementById('event-type-picker-value');
+      const list = document.getElementById('event-type-picker-list');
+      const search = document.getElementById('event-type-picker-search');
+      if (!select || !root || !trigger || !value || !list || !search) return;
+
+      const selected = Array.from(select.options).find(function (option) {
+        return option.value && option.value === select.value;
+      });
+      value.innerHTML = selected
+        ? '<strong class="event-type-picker-selected-name">' + this.escape(selected.dataset.eventName || selected.textContent) + '</strong>' +
+          (selected.dataset.eventCode ? '<small class="event-type-picker-selected-code">' + this.escape(selected.dataset.eventCode) + '</small>' : '')
+        : '<span class="event-type-picker-placeholder">' +
+          (select.disabled ? 'در حال آماده‌سازی انواع رویداد...' : 'برای ادامه، نوع رویداد را انتخاب کنید') +
+          '</span>';
+
+      list.replaceChildren();
+      const groups = Array.from(select.children).filter(function (node) {
+        return node.tagName === 'OPTGROUP';
+      });
+      let optionCount = 0;
+      groups.forEach((group) => {
+        const groupOptions = Array.from(group.children).filter(function (option) {
+          return !!option.value;
+        });
+        if (!groupOptions.length) return;
+        const section = document.createElement('section');
+        section.className = 'event-type-picker-group' +
+          (group.label.indexOf('سایر') !== -1 ? ' is-restricted' : '');
+        const heading = document.createElement('div');
+        heading.className = 'event-type-picker-group-title';
+        heading.textContent = group.label;
+        section.appendChild(heading);
+
+        groupOptions.forEach((option) => {
+          optionCount++;
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'event-type-picker-option' +
+            (option.disabled ? ' is-restricted' : '') +
+            (option.value === select.value ? ' is-selected' : '');
+          item.dataset.eventTypeId = option.value;
+          item.disabled = !!option.disabled || !!select.disabled;
+          item.setAttribute('role', 'option');
+          item.setAttribute('aria-selected', String(option.value === select.value));
+          item.setAttribute('aria-disabled', String(item.disabled));
+
+          const copy = document.createElement('span');
+          copy.className = 'event-type-picker-option-copy';
+          const name = document.createElement('strong');
+          name.className = 'event-type-picker-option-name';
+          name.textContent = option.dataset.eventName || option.textContent.split(' — ')[0];
+          copy.appendChild(name);
+          if (option.dataset.eventCode) {
+            const code = document.createElement('small');
+            code.className = 'event-type-picker-option-code';
+            code.textContent = option.dataset.eventCode;
+            copy.appendChild(code);
+          }
+          if (option.dataset.eventCount) {
+            const count = document.createElement('small');
+            count.className = 'event-type-picker-option-count';
+            count.textContent = 'تعداد ثبت: ' + option.dataset.eventCount;
+            copy.appendChild(count);
+          }
+
+          const status = document.createElement('span');
+          status.className = 'event-type-picker-option-status';
+          status.textContent = option.disabled
+            ? (option.dataset.restrictionReason || 'در حال حاضر قابل ثبت نیست')
+            : (option.dataset.eventCount ? 'قابل ثبت مجدد' : 'قابل ثبت');
+          const check = document.createElement('span');
+          check.className = 'event-type-picker-check';
+          check.setAttribute('aria-hidden', 'true');
+          check.textContent = option.value === select.value ? '✓' : '';
+          item.append(copy, status, check);
+          section.appendChild(item);
+        });
+        list.appendChild(section);
+      });
+
+      if (!optionCount) {
+        const empty = document.createElement('div');
+        empty.className = 'event-type-picker-empty';
+        empty.textContent = select.disabled
+          ? 'در حال دریافت اطلاعات گردش‌کار...'
+          : 'در حال حاضر نوع رویداد قابل انتخابی وجود ندارد.';
+        list.appendChild(empty);
+      }
+
+      const query = String(search.value || '').trim().toLocaleLowerCase('fa');
+      const options = Array.from(list.querySelectorAll('[data-event-type-id]'));
+      options.forEach(function (item) {
+        const text = item.textContent.toLocaleLowerCase('fa');
+        item.hidden = !!query && text.indexOf(query) === -1;
+      });
+      Array.from(list.querySelectorAll('.event-type-picker-group')).forEach(function (section) {
+        const visible = section.querySelector('[data-event-type-id]:not([hidden])');
+        section.hidden = !visible;
+      });
+      trigger.disabled = !!select.disabled;
+      root.classList.toggle('is-disabled', !!select.disabled);
+    },
+
+    setEventTypePickerOpen: function (open) {
+      const root = document.getElementById('event-type-picker');
+      const trigger = document.getElementById('event-type-picker-trigger');
+      const panel = document.getElementById('event-type-picker-panel');
+      const search = document.getElementById('event-type-picker-search');
+      if (!root || !trigger || !panel || trigger.disabled) return;
+      root.classList.toggle('is-open', !!open);
+      trigger.setAttribute('aria-expanded', String(!!open));
+      panel.hidden = !open;
+      if (open && search) {
+        search.value = '';
+        this.renderEventTypePicker();
+        window.setTimeout(function () { search.focus(); }, 0);
+      }
+    },
+
     setEventTypeLoadingState: function (isLoading, projectId) {
       const typeSelect = document.getElementById('event-form-type');
       const loading = document.getElementById('event-type-loading');
@@ -2003,7 +2158,10 @@
 
       if (isLoading && projectId) {
         typeSelect.disabled = true;
-        typeSelect.hidden = true;
+        const pickerTrigger = document.getElementById('event-type-picker-trigger');
+        if (pickerTrigger) pickerTrigger.disabled = true;
+        const pickerRoot = document.getElementById('event-type-picker');
+        if (pickerRoot) this.setEventTypePickerOpen(false);
         loading.hidden = false;
         const projectKey = String(projectId);
         if (loading.dataset.projectId !== projectKey || !loading.querySelector('.loading-state')) {
@@ -2025,7 +2183,10 @@
       }
 
       typeSelect.disabled = false;
-      typeSelect.hidden = false;
+      const pickerTrigger = document.getElementById('event-type-picker-trigger');
+      if (pickerTrigger) pickerTrigger.disabled = false;
+      const pickerRoot = document.getElementById('event-type-picker');
+      if (pickerRoot) pickerRoot.classList.remove('is-disabled');
       if (window.PMS && PMS.Loading && typeof PMS.Loading.hide === 'function') {
         PMS.Loading.hide(loading);
       } else {
@@ -2056,6 +2217,7 @@
         typeSelect.replaceChildren(placeholder);
         typeSelect.value = '';
         this.setEventTypeLoadingState(true, projectId);
+        this.renderEventTypePicker();
         this.updateSubmitAvailability();
         return;
       }
@@ -2127,12 +2289,16 @@
 
         const option = document.createElement('option');
         option.value = id;
+        option.dataset.eventName = String(type.Name || type.Code || id);
+        option.dataset.eventCode = String(type.Code || '');
+        option.dataset.restrictionReason = reason;
         option.dataset.connectionType = isProjectEvent ? 'PROJECT' : 'INDEPENDENT';
         option.dataset.allowOnDraft = String(type.AllowOnDraft === true || String(type.AllowOnDraft).toLowerCase() === 'true');
         const repeatRule = progress && Array.isArray(progress.rules)
           ? progress.rules.find(function(item) { return String(item.eventTypeId || '') === id; }) : null;
         const repeatSuffix = repeatRule && repeatRule.allowRepeat
           ? ' · تعداد ثبت: ' + Number(repeatRule.eventCount || 0) : '';
+        option.dataset.eventCount = repeatRule && repeatRule.allowRepeat ? String(Number(repeatRule.eventCount || 0)) : '';
         option.textContent = (type.Name || type.Code || id) + repeatSuffix + (reason ? ' — ' + reason : '');
         option.disabled = !!reason;
         (reason ? restricted : available).push(option);
@@ -2194,6 +2360,7 @@
           this.renderEventQuantityField();
         }
       }
+      this.renderEventTypePicker();
       this.updateSubmitAvailability();
     },
 
