@@ -34,6 +34,14 @@ jobs:
       - name: Run frontend regression tests
         run: node --test tests/*.test.js
 
+      - name: Install Chromium for calendar browser regression
+        run: |
+          npm install --no-save playwright@1.64.1
+          npx playwright install --with-deps chromium
+
+      - name: Run Jalali date-time picker in real Chromium
+        run: node tests/jalali-calendar-datetime.browser.cjs
+
       - name: Verify local assets and CSS block balance
         shell: bash
         run: |
