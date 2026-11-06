@@ -166,6 +166,7 @@
         const projectEntry = target.closest('[data-event-entry="project"]');
         if (projectEntry) {
           event.preventDefault();
+          Events.prefetchEventFormDefinitions();
           const panel = document.getElementById('events-project-entry-panel');
           if (panel) {
             panel.hidden = false;
@@ -2571,10 +2572,14 @@
           const eventTypeId = this.idOf(type);
           if (!eventTypeId || type.FormDefinitionsLoadFailed ||
               !Array.isArray(type.FormDefinitions)) return;
-          eventFormDefinitionCache.set(eventFormDefinitionCacheKey(eventTypeId), {
-            data: type.FormDefinitions,
-            cachedAt: Date.now()
-          });
+          const cacheKey = eventFormDefinitionCacheKey(eventTypeId);
+          const existing = eventFormDefinitionCache.get(cacheKey);
+          if (!existing || Date.now() - existing.cachedAt >= EVENT_FORM_DEFINITION_CACHE_TTL_MS) {
+            eventFormDefinitionCache.set(cacheKey, {
+              data: type.FormDefinitions,
+              cachedAt: Date.now()
+            });
+          }
           cachedCount++;
         });
         while (eventFormDefinitionCache.size > 50) {
@@ -2704,17 +2709,10 @@
         return;
       }
       const cacheKey = eventFormDefinitionCacheKey(eventTypeId);
-      let cachedDefinition = eventFormDefinitionCache.get(cacheKey);
-      const currentToken = PMS.Api && typeof PMS.Api.getToken === 'function'
-        ? PMS.Api.getToken() || ''
-        : '';
-      if (!cachedDefinition && eventFormDefinitionsPrefetchPromise &&
-          eventFormDefinitionsPrefetchToken === currentToken) {
-        await eventFormDefinitionsPrefetchPromise;
-        if (requestId !== this.formsRequestId ||
-            !document.getElementById('event-create-modal')) return;
-        cachedDefinition = eventFormDefinitionCache.get(cacheKey);
-      }
+      const cachedDefinition = eventFormDefinitionCache.get(cacheKey);
+      // Do not block the selected event type on an unfinished prefetch. If the
+      // batch has not completed yet, use the existing per-type endpoint now;
+      // the background prefetch remains available for the next selection.
       if (cachedDefinition && Date.now() - cachedDefinition.cachedAt < EVENT_FORM_DEFINITION_CACHE_TTL_MS) {
         this.formDefinitions = cachedDefinition.data;
         this.renderConfiguredForms();
