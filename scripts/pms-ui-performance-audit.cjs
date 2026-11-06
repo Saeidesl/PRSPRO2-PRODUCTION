@@ -598,6 +598,24 @@ function renderMarkdown(report) {
     '|---|---|---:|---:|---:|---:|---:|---|',
     ...report.routes.map(route => '| ' + route.requestedRoute + ' | ' + route.status + ' | ' + (typeof route.routeReadyMs === 'number' ? route.routeReadyMs : 'n/a') + ' | ' + route.navigationMs + ' | ' + route.forms.length + ' | ' + route.buttons.length + ' | ' + route.visibleControlCount + ' | ' + (route.mobileLayout && route.mobileLayout.horizontalOverflow ? 'YES' : 'no') + ' |'),
     '',
+    ...(report.scope === 'events' ? [
+      '## Event form performance baseline',
+      '',
+      '- Modal readiness: ' + (report.eventFormDiagnostics && report.eventFormDiagnostics.modalReadyMs !== undefined ? report.eventFormDiagnostics.modalReadyMs + ' ms' : 'n/a'),
+      '- Project/workflow readiness: ' + (report.eventFormDiagnostics && report.eventFormDiagnostics.projectWorkflowReadyMs !== null ? report.eventFormDiagnostics.projectWorkflowReadyMs + ' ms' : 'n/a'),
+      '- Form definitions readiness: ' + (report.eventFormDiagnostics && report.eventFormDiagnostics.formDefinitionsReadyMs !== null ? report.eventFormDiagnostics.formDefinitionsReadyMs + ' ms' : 'n/a'),
+      '- Project options: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.projectOptions : 0),
+      '- Eligible event types: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.eligibleEventTypes : 0),
+      '- Visible controls after selecting the event type: ' + (report.eventFormDiagnostics ? report.eventFormDiagnostics.configuredFormControls : 0),
+      '- No form values were entered and no event was submitted.',
+      '',
+      '| Endpoint | Browser | Backend | Repository / sheet details |',
+      '|---|---:|---:|---|',
+      ...((report.eventFormDiagnostics && report.eventFormDiagnostics.diagnosticEndpoints || []).length
+        ? report.eventFormDiagnostics.diagnosticEndpoints.map(item => '| ' + item.endpoint + ' | ' + item.browserMs + ' | ' + item.backendMs + ' | ' + item.details.replace(/\\|/g, '/') + ' |')
+        : ['| No admin-only endpoint diagnostics captured | n/a | n/a | n/a |']),
+      ''
+    ] : []),
     ...(report.scope === 'procurement' ? [
       '## Procurement API timings',
       '',
