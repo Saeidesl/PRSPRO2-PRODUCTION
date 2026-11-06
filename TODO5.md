@@ -204,3 +204,13 @@
 - پاسخ diagnostics مدیریتی در این حساب تست خالی بود؛ بنابراین زمان داخلی Router/Google Sheets به تفکیک قابل مشاهده نشد. زمان‌های بالا، زمان مشاهده‌شده در مرورگر هستند.
 - Backend cache با TTL شصت ثانیه در GitHub آماده است اما هنوز روی Staging deploy نشده؛ بنابراین درخواست دوم `7634ms` اثر نسخه جدید Backend را اندازه نمی‌گیرد. برای مقایسه واقعی، ابتدا Backend شاخه عملیاتی باید روی Staging منتشر و سپس همین audit تکرار شود.
 - وضعیت Task 2: همچنان `IN PROGRESS`؛ بهینه‌سازی‌ها در GitHub و تست‌های خودکار موفق‌اند، اما کاهش زمان عملیاتی تا پس از Staging deployment و سنجش مجدد تأیید نشده است.
+
+
+#### Task 2 — تکرار سنجش مرورگر و نتیجه warm probe محدودشده (2026-11-06)
+
+- Browser Audit Run `42278648501` / Artifact `13534980965` روی commit Frontend `85d9dd54dd1aa52107e713f4a3024c1197bd3aea` با وضعیت `authenticated-audit-complete` موفق شد.
+- نتایج: Modal `2919ms`؛ پروژه/Workflow `6892ms`؛ تعریف فرم‌های متصل `11326ms`؛ درخواست مستقیم warm به همان endpoint `5501ms`؛ timeout رخ نداد.
+- سلامت آزمون: `49` درخواست شبکه، `0` خطای شبکه، `0` خطای Console/Page، بدون overflow موبایل؛ `2` پروژه، `10` نوع رویداد مجاز و `2` کنترل فرم متصل. هیچ فرم submit نشد.
+- مقایسه با اجرای قبلی Run `42278302128` نشان می‌دهد زمان‌ها نوسان دارند؛ در هر دو اجرا diagnostics مدیریتی Backend خالی بود. این اختلاف به‌عنوان بهبود یا پسرفت قطعی تفسیر نمی‌شود.
+- API مقصد، Staging احراز هویت‌شده است؛ اما deployment شاخه Backend PR #17 روی آن مستقلاً تأیید نشده. workflow موجود `.github/workflows/sync-apps-script.yml` فقط `main` و Secrets محیط Production را هدف می‌گیرد؛ از آن برای انتشار Staging یا feature branch استفاده نخواهد شد.
+- وضعیت Task 2 همچنان `IN PROGRESS` است. برای اثبات اثر بهینه‌سازی Backend، باید مسیر مجزای امن Staging مشخص/تأیید شود، Backend branch روی همان محیط منتشر شود و audit مجدداً اجرا گردد. هیچ merge یا Production deployment انجام نشده است.
