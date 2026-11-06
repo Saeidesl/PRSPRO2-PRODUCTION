@@ -175,3 +175,7 @@
 - CI Frontend و Cross-repository QA در commit `2131d6e7f4ec3d02d1831a7b60f068e5b8df4302` موفق شدند؛ commit جدیدتر شامل فعال‌سازی diagnostics در PR audit است و در حال بررسی است.
 - PR عملیاتی Frontend: #37، شاخه `feat/event-form-performance`. PR عملیاتی Backend: #17، شاخه `feat/event-form-performance`. هنوز merge/deployment انجام نشده است.
 - محدودیت baseline: audit مرورگر در PR با وضعیت `blocked-no-staging-api` اجرا شد؛ فقط login عمومی با زمان 199ms اندازه‌گیری شد؛ 0 خطای Console و 0 خطای Page ثبت شد. چون `PMS_STAGING_API_BASE_URL` و اعتبارنامه تست در GitHub Actions تنظیم نشده‌اند، فرم ثبت رویداد و endpointهای محافظت‌شده قابل اندازه‌گیری نبودند. هیچ login یا درخواست تستی به API تولید ارسال نشد.
+
+- اصلاح ابزار Browser Audit پس از کشف عدم تطابق با UI عملیاتی: دکمه قدیمی `event-create-button` در مسیر فعلی وجود ندارد؛ آزمون اکنون از ورودی واقعی پروژه با `data-event-entry="project"` وارد پنل انتخاب پروژه شده و اولین اقدام `.event-recent-project-action` را برای بازکردن فرم دنبال می‌کند. تست `tests/event-form-performance-audit.test.js` نیز این مسیر واقعی را بررسی می‌کند.
+- Commitهای اصلاح ابزار و تست: `a960e1e81c622ef03b14f87c5d8dd8f1f01ac27a` و `17612424f7b91e26d0b5d32f6e177d995194a8c8`. Frontend checks، Frontend agent suite و Cross-repository QA روی commit دوم موفق شدند.
+- اجرای Browser Audit روی commit دوم با شناسه `42274108059` آغاز شده است؛ آخرین وضعیت ثبت‌شده هنوز در مرحله نصب Playwright/Chromium است و artifact گزارش هنوز تولید نشده. بنابراین زمان‌های واقعی Modal، workflow و فرم‌های متصل هنوز تأیید نشده‌اند و Task 2 باز می‌ماند.
