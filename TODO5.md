@@ -57,7 +57,9 @@
 - به‌روزرسانی نسخه asset و اجرای تست‌های مرتبط.
 - خروجی قابل آزمون: فرم ثبت رویداد تنها یک حالت داشته باشد و همه فیلدهای مجاز فرم کامل را نمایش دهد.
 
-### Task 3 — Regression، سازگاری و آماده‌سازی ادغام (IN PROGRESS)
+### Task 3 — Regression، سازگاری و آماده‌سازی ادغام [x]
+- *Log:* `tests/event-form-single-mode.test.js` و تست به‌روزشده در `tests/reusable-forms.test.js` به‌همراه تست‌های asset در `tests/event-history-project-cards.test.js`, `tests/event-queue-project-cards.test.js`, `tests/event-type-loading-state.test.js`, `tests/project-picker.test.js` و `tests/workflow-management.test.js` اجرا شدند. Frontend checks Run `42362016241` با `183/183` تست موفق؛ Frontend Agent Suite Run `42362016244` موفق؛ Cross-repository QA Run `42362016270` موفق. در Browser Audit Run `42362016246` آزمون‌های مرورگر Modal و تقویم جلالی موفق شدند؛ مرحله inventory/performance audit به‌دلیل لغو اجرای workflow تکمیل نشد و مبنای پذیرش این تغییر نیست. بررسی syntax، ساختار CSS و سازگاری Backend موفق بود. PR #41 باز است؛ هنوز merge یا deployment انجام نشده است.
+
 - افزودن/به‌روزرسانی تست‌های رگرسیون برای نبود quick/full و نمایش همیشگی فیلدهای اختیاری.
 - اجرای تست‌های کامل Frontend، بررسی syntax و تست‌های مرتبط با ثبت رویداد.
 - بررسی عدم تغییر قرارداد `POST /events`، payload، Backend، مجوزها و ساختار داده.
