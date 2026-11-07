@@ -1816,8 +1816,8 @@
         '<section class="event-form-section" id="event-configured-forms-section" hidden><div class="event-configured-forms-heading"><h4 class="event-section-title">فرم‌های اطلاعات تکمیلی</h4></div>' +
         '<div id="event-configured-forms" class="event-dynamic-grid" aria-live="polite"></div></section>' +
         '<div id="event-submit-progress" class="event-submit-progress" hidden role="status" aria-live="polite">' +
-        '<span class="event-spinner" aria-hidden="true"></span><div><strong>در حال ثبت رویداد</strong>' +
-        '<p>اطلاعات در حال ارسال و ذخیره‌سازی است؛ لطفاً این پنجره را نبندید.</p></div></div>' +
+        '<span class="event-spinner" aria-hidden="true"></span><div><strong>در حال آماده‌سازی و ثبت رویداد</strong>' +
+        '<p>فایل‌ها و اطلاعات فرم در حال آماده‌سازی و ارسال هستند؛ لطفاً این پنجره را نبندید.</p></div></div>' +
         '<div class="event-modal-actions">' +
         '<button type="submit" id="event-form-submit" class="event-modal-button event-modal-button-primary" disabled aria-disabled="true">' +
         '<span class="event-submit-button-text">ثبت رویداد</span><span class="event-button-spinner" aria-hidden="true" hidden></span></button>' +
@@ -3072,7 +3072,7 @@
               files.forEach(file => {
                 const item = document.createElement('span'); item.className = 'event-image-selection-item'; item.style.cssText = 'display:inline-flex;flex-direction:column;gap:4px;align-items:center;width:112px;padding:6px;border:1px solid var(--color-border,#d1d5db);border-radius:8px;margin:4px';
                 if (isImage && file.type.indexOf('image/') === 0) {
-                  const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
+                  this.getConfiguredFormFileData(file, input).then(dataUrl => { if (!Array.from(input.files || []).includes(file)) return; const img = document.createElement('img'); img.alt = file.name; img.src = dataUrl; img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }).catch(() => {});
                 }
                 const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
                 const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
@@ -3170,7 +3170,7 @@
           files.forEach(file => {
             const item = document.createElement('span'); item.className = 'event-image-selection-item';
             if (type === 'image' && file.type.indexOf('image/') === 0) {
-              const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
+              this.getConfiguredFormFileData(file, input).then(dataUrl => { if (!Array.from(input.files || []).includes(file)) return; const img = document.createElement('img'); img.alt = file.name; img.src = dataUrl; img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }).catch(() => {});
             }
             const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
                 const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
@@ -3320,22 +3320,46 @@
     uploadConfiguredFormImages: async function (files, projectId, input) {
       const selected = Array.from(files || []);
       if (selected.length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.');
-      const uploaded = [];
+      const uploaded = new Array(selected.length);
       const profileToggle = input && input.parentElement && input.parentElement.querySelector('[data-profile-image-toggle]');
       const useProfileForFirst = !!(profileToggle && profileToggle.checked);
-      try {
-        for (let index = 0; index < selected.length; index += 1) {
-          if (profileToggle && index > 0) profileToggle.checked = false;
-          uploaded.push(await this.uploadConfiguredFormFile(selected[index], 'image', projectId, input));
-        }
-      } finally {
-        if (profileToggle) profileToggle.checked = useProfileForFirst;
+      const concurrency = 3;
+      for (let offset = 0; offset < selected.length; offset += concurrency) {
+        const batch = selected.slice(offset, offset + concurrency);
+        const results = await Promise.all(batch.map((file, batchIndex) => {
+          const selectedIndex = offset + batchIndex;
+          const attachmentType = selectedIndex === 0 && useProfileForFirst ? 'PROFILE' : 'INFORMATION';
+          return this.uploadConfiguredFormFile(file, 'image', projectId, input, attachmentType);
+        }));
+        results.forEach((value, batchIndex) => {
+          uploaded[offset + batchIndex] = value;
+        });
       }
       if (input) input.dataset.uploadedAttachment = JSON.stringify(uploaded);
       return uploaded;
     },
 
-    uploadConfiguredFormFile: async function (file, dataType, projectId, input) {
+    getConfiguredFormFileData: function (file, input) {
+      if (input && input._pmsFileDataPromises && input._pmsFileDataPromises.has(file)) {
+        return input._pmsFileDataPromises.get(file);
+      }
+      const readPromise = new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('خواندن فایل ناموفق بود.'));
+        reader.readAsDataURL(file);
+      });
+      if (input) {
+        if (!input._pmsFileDataPromises) input._pmsFileDataPromises = new Map();
+        input._pmsFileDataPromises.set(file, readPromise);
+      }
+      // The preview listener also consumes this promise; attach a handler so a
+      // read error before submit does not become an unhandled rejection.
+      readPromise.catch(() => {});
+      return readPromise;
+    },
+
+    uploadConfiguredFormFile: async function (file, dataType, projectId, input, attachmentTypeOverride) {
       // Reuse an upload only when it belongs to this exact File object.
       // A previously saved attachment may have the same name/size as a newly
       // selected replacement; metadata equality must never suppress that upload.
@@ -3349,11 +3373,9 @@
       if (!mimeByExtension[extension] || mimeByExtension[extension] !== mime || file.size < 1 || file.size > maxBytes || (dataType === 'image' && mime.indexOf('image/') !== 0)) {
         throw new Error(dataType === 'image' ? 'فقط تصویر JPEG، PNG، WebP یا GIF تا ۱۰ مگابایت مجاز است.' : 'فقط تصویر، PDF، Word یا Excel تا ۱۰ مگابایت مجاز است.');
       }
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader(); reader.onload = () => resolve(String(reader.result || '')); reader.onerror = () => reject(new Error('خواندن فایل ناموفق بود.')); reader.readAsDataURL(file);
-      });
+      const dataUrl = await this.getConfiguredFormFileData(file, input);
       const profileToggle = input && input.parentElement && input.parentElement.querySelector('[data-profile-image-toggle]');
-      const attachmentType = dataType === 'image' && profileToggle && profileToggle.checked ? 'PROFILE' : 'INFORMATION';
+      const attachmentType = attachmentTypeOverride || (dataType === 'image' && profileToggle && profileToggle.checked ? 'PROFILE' : 'INFORMATION');
       const response = await PMS.Api.post('/projects/' + encodeURIComponent(projectId) + '/attachments', {FileName:file.name,MimeType:mime,Base64:dataUrl.split(',')[1] || '',AttachmentType:attachmentType}, {trackSync:false});
       const result = PMS.Api.extractData ? PMS.Api.extractData(response) : (response && response.data) || response;
       const attachment = result && (result.attachment || result.Attachment);
@@ -3500,12 +3522,19 @@
 
       if (!form.reportValidity()) return;
 
+      this.submitting = true;
+      this.setSubmitState(true);
+
       const projectId = projectInput.value;
       const typeId = typeInput.value;
       const occurredAt = dateInput.value;
       const description = descriptionInput.value.trim();
       const formResponses = await this.collectConfiguredFormResponses(projectId);
-      if (formResponses === null) return;
+      if (formResponses === null) {
+        this.submitting = false;
+        this.setSubmitState(false);
+        return;
+      }
       this.amendmentPendingValues = this.amendmentMode ? formResponses : null;
 
       const type = this.findById(this.eventTypes, typeId);
@@ -3513,6 +3542,8 @@
 
       if (isNaN(date.getTime())) {
         this.showFormError('تاریخ و زمان واردشده معتبر نیست.');
+        this.submitting = false;
+        this.setSubmitState(false);
         return;
       }
 
@@ -3540,9 +3571,6 @@
         this.pendingIdempotencyFingerprint = requestFingerprint;
       }
       payload.IdempotencyKey = this.pendingIdempotencyKey;
-
-      this.submitting = true;
-      this.setSubmitState(true);
 
       try {
         let eventResult = {};
