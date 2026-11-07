@@ -162,13 +162,20 @@
       if (!this.escapeHandlerBound) {
         this.escapeHandlerBound = true;
         document.addEventListener('keydown', function (event) {
-          if (!Events.modalOpen) return;
+          const progressOverlay = document.getElementById('event-submit-progress-modal');
+          if (!Events.modalOpen && !progressOverlay) return;
           if (event.key === 'Escape') {
+            if (progressOverlay) {
+              if (Events.submitProgressState && Events.submitProgressState.finished) {
+                Events.closeSubmitProgressModal();
+              }
+              return;
+            }
             if (!Events.submitting) Events.closeModal();
             return;
           }
           if (event.key !== 'Tab') return;
-          const overlay = document.getElementById('event-create-modal') ||
+          const overlay = progressOverlay || document.getElementById('event-create-modal') ||
             document.getElementById('event-details-modal');
           const dialog = overlay && overlay.querySelector('[role="dialog"]');
           const focusable = dialog ? Array.from(dialog.querySelectorAll(
