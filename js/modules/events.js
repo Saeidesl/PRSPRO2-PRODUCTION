@@ -3195,6 +3195,14 @@
       tbody.appendChild(row);
     },
 
+    hasStoredFormAttachment: function (input) {
+      if (!input || !input.dataset.uploadedAttachment) return false;
+      try {
+        const saved = JSON.parse(input.dataset.uploadedAttachment);
+        return Array.isArray(saved) ? saved.length > 0 : !!(saved && typeof saved === 'object' && (saved.AttachmentID || saved.ID));
+      } catch (error) { return false; }
+    },
+
     collectConfiguredFormResponses: async function (projectId) {
       const responses = [];
       const container = document.getElementById('event-configured-forms');
@@ -3233,7 +3241,9 @@
                   const selectedFiles = Array.from(input.files || []);
                   if (dataType === 'image' && selectedFiles.length) { item = await this.uploadConfiguredFormImages(selectedFiles, projectId, input); hasAnyValue = true; }
                   else if (selectedFiles.length) { item = await this.uploadConfiguredFormFile(selectedFiles[0], dataType, projectId, input); hasAnyValue = true; }
-                  else if (input.dataset.uploadedAttachment) { try { item = JSON.parse(input.dataset.uploadedAttachment); hasAnyValue = true; } catch (error) {} }
+                  else if (input.dataset.uploadedAttachment) {
+                    try { item = JSON.parse(input.dataset.uploadedAttachment); hasAnyValue = Array.isArray(item) ? item.length > 0 : !!item; } catch (error) {}
+                  }
                 } else {
                   item = input.type === 'checkbox' ? input.checked : input.value;
                   if (input.type === 'checkbox' ? input.checked : (item !== '' && item !== null && item !== undefined)) hasAnyValue = true;
@@ -3244,7 +3254,7 @@
               }
               if (hasAnyValue) {
                 const missing = inputs.find(input => input.dataset.columnRequired === 'true' &&
-                  (input.type === 'file' ? !(input.files && input.files.length) && !input.dataset.uploadedAttachment : (input.value === '' || input.value === null || input.value === undefined)));
+                  (input.type === 'file' ? !(input.files && input.files.length) && !this.hasStoredFormAttachment(input) : (input.value === '' || input.value === null || input.value === undefined)));
                 if (missing) { this.showFormError('ستون «' + (missing.getAttribute('aria-label') || missing.dataset.columnCode) + '» الزامی است.'); missing.focus(); return null; }
                 valueRows.push(value);
               }
@@ -3266,7 +3276,12 @@
               if (input.dataset.formDataType === 'boolean' && value !== '') value = String(value).toLowerCase() === 'true';
               if (input.type === 'number' && String(value).trim() !== '') value = Number(value);
             }
-            if (required && (value === '' || value === null || value === undefined)) { input.reportValidity(); input.focus(); return null; }
+            if (required && (value === '' || value === null || value === undefined || (String(info.DataType || '').toLowerCase() === 'image' && Array.isArray(value) && value.length === 0))) {
+              if (input.type === 'file') this.showFormError('برای «' + (field.LabelOverride || info.Name || 'تصویر') + '» حداقل یک تصویر انتخاب کنید.');
+              else input.reportValidity();
+              input.focus();
+              return null;
+            }
             values[typeId] = value;
           }
         }
