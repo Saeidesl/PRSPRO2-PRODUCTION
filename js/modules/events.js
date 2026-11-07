@@ -2321,9 +2321,6 @@
       const previousValue = String(typeSelect.dataset.pendingValue || typeSelect.value || '');
       const project = this.findById(this.projects, projectSelect.value);
       const projectId = String(projectSelect.value || '');
-      const workflowPending = !!projectId && (
-        this.workflowProgressProjectId !== projectId || this.workflowProgressLoading
-      );
       // Event types are independent of workflow progress. Render them immediately;
       // workflowRestriction below keeps project-bound options disabled until the
       // selected project's rules have been loaded and checked.
