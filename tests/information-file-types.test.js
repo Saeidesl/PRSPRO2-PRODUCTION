@@ -30,3 +30,24 @@ test('reusable event forms upload image and file values to the selected project 
   assert.match(module,/: 'INFORMATION'/);
   assert.match(module,/بارگذاری فایل در رویداد مستقل امکان‌پذیر نیست/);
 });
+
+
+test('event form image fields support multiple selections for standalone and table-column image data',()=>{
+  const module=read('js/modules/events.js');
+  assert.match(module,/input\.multiple = true/);
+  assert.match(module,/uploadConfiguredFormImages: async function/);
+  assert.match(module,/await this\.uploadConfiguredFormImages\(selectedFiles, projectId, input\)/);
+  assert.match(module,/dataType === 'image' && selectedFiles\.length/);
+  assert.match(module,/حداکثر ۲۰ تصویر برای هر فیلد مجاز است/);
+  assert.match(module,/new DataTransfer\(\)/);
+  assert.match(module,/renderEventInformationValue: function/);
+  assert.match(module,/renderEventFormValue\(row\[String\(column\.Code\)\], column\.DataType\)/);
+  assert.match(module,/openEventImageAttachment: async function/);
+});
+
+test('project views render image arrays and table image-cell arrays',()=>{
+  const module=read('js/modules/project-detail.js');
+  assert.match(module,/type === 'image' && Array\.isArray\(value\)/);
+  assert.match(module,/Array\.isArray\(cell\) \? cell : \[cell\]/);
+  assert.match(module,/project-form-image-gallery/);
+});

@@ -1489,7 +1489,7 @@
                   html += '</tr></thead><tbody>';
                   dataRows.forEach(function (row) {
                     html += '<tr>';
-                    columns.forEach(function (column) { html += '<td>' + Events.escape(Events.displayValue(row[String(column.Code)])) + '</td>'; });
+                    columns.forEach(function (column) { html += '<td>' + Events.renderEventFormValue(row[String(column.Code)], column.DataType) + '</td>'; });
                     html += '</tr>';
                   });
                   html += '</tbody></table></div>';
@@ -1497,7 +1497,7 @@
                   html += '<p class="event-muted">ردیفی ثبت نشده است.</p>';
                 }
               } else {
-                html += '<div>' + Events.escape(Events.displayValue(value)) + '</div>';
+                html += '<div>' + Events.renderEventFormValue(value, info.DataType) + '</div>';
               }
               html += '</div>';
             });
@@ -1506,7 +1506,12 @@
         }
 
         const content = document.getElementById('event-details-content');
-        if (content) content.innerHTML = html;
+        if (content) {
+          content.innerHTML = html;
+          content.querySelectorAll('[data-event-image-attachment]').forEach(button => {
+            button.addEventListener('click', () => this.openEventImageAttachment(button.dataset.eventImageAttachment));
+          });
+        }
       } catch (error) {
         const content = document.getElementById('event-details-content');
 
@@ -1585,6 +1590,66 @@
 
         return [key, Events.displayValue(value)];
       });
+    },
+
+    renderEventInformationValue: function (value, info) {
+      info = info || {};
+      const columns = Array.isArray(info.Columns) ? info.Columns.filter(column => String(column.Status || 'ACTIVE') === 'ACTIVE') : [];
+      if (!columns.length) return this.renderEventFormValue(value, info.DataType);
+      const rows = String(info.Cardinality || 'SINGLE').toUpperCase() === 'MULTIPLE'
+        ? (Array.isArray(value) ? value : [])
+        : (value && typeof value === 'object' ? [value] : []);
+      if (!rows.length) return '<span>-</span>';
+      return '<div class="event-modal-table-wrap"><table class="event-modal-table"><thead><tr>' +
+        columns.map(column => '<th>' + this.escape(column.Name || column.Code) + '</th>').join('') +
+        '</tr></thead><tbody>' + rows.map(row => '<tr>' + columns.map(column =>
+          '<td>' + this.renderEventFormValue(row && row[String(column.Code)], column.DataType) + '</td>'
+        ).join('') + '</tr>').join('') + '</tbody></table></div>';
+    },
+
+    renderEventFormValue: function (value, dataType) {
+      const type = String(dataType || '').toLowerCase();
+      if (type === 'image') {
+        const images = Array.isArray(value) ? value : (value && typeof value === 'object' ? [value] : []);
+        if (!images.length) return '<span>-</span>';
+        const canView = PMS.Router && ((typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin()) ||
+          (Array.isArray(PMS.Router.permissions) && PMS.Router.permissions.indexOf('ATTACHMENT_VIEW') !== -1));
+        return '<div class="event-image-gallery">' + images.map(image => {
+          const id = image && (image.AttachmentID || image.ID || image.Id);
+          const name = image && (image.FileName || image.Name) || 'تصویر';
+          return '<span class="event-image-gallery-item">' +
+            (canView && id ? '<button type="button" class="event-image-preview-button" data-event-image-attachment="' + this.escape(id) + '">' + this.escape(name) + '</button>' : this.escape(name)) +
+            '</span>';
+        }).join('') + '</div>';
+      }
+      return this.escape(this.displayValue(value));
+    },
+
+    openEventImageAttachment: async function (attachmentId) {
+      const router = PMS.Router;
+      const canView = router && ((typeof router.isAdmin === 'function' && router.isAdmin()) ||
+        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1));
+      if (!canView || !attachmentId) return;
+      try {
+        const response = await PMS.Api.get('/attachments/' + encodeURIComponent(attachmentId) + '/download', {trackSync:false});
+        const data = PMS.Api.extractData(response) || {};
+        if (!data.Base64 || String(data.MimeType || '').toLowerCase().indexOf('image/') !== 0) throw new Error('تصویر قابل دریافت نیست.');
+        const binary = atob(data.Base64), bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const url = URL.createObjectURL(new Blob([bytes], {type:data.MimeType}));
+        const old = document.getElementById('event-image-preview-modal');
+        if (old) old.remove();
+        const modal = document.createElement('div');
+        modal.id = 'event-image-preview-modal';
+        modal.className = 'event-modal-overlay';
+        modal.innerHTML = '<div class="event-modal-panel" style="max-width:900px"><div class="event-modal-heading"><h3>' + this.escape(data.FileName || 'پیش‌نمایش تصویر') + '</h3><button type="button" class="event-modal-close" aria-label="بستن">×</button></div><div style="padding:16px;text-align:center"><img alt="' + this.escape(data.FileName || 'تصویر') + '" src="' + url + '" style="max-width:100%;max-height:75vh;object-fit:contain"></div></div>';
+        document.body.appendChild(modal);
+        const close = () => { modal.remove(); URL.revokeObjectURL(url); };
+        modal.querySelector('.event-modal-close').addEventListener('click', close);
+        modal.addEventListener('click', event => { if (event.target === modal) close(); });
+      } catch (error) {
+        this.showNotice('پیش‌نمایش تصویر ناموفق بود: ' + this.errorMessage(error), 'warning');
+      }
     },
 
     displayValue: function (value) {
@@ -1780,6 +1845,11 @@
           const trigger = document.getElementById('event-context-mobile-trigger');
           if (panel) panel.classList.remove('is-open');
           if (trigger) trigger.setAttribute('aria-expanded', 'false');
+          return;
+        }
+        const imageButton = event.target.closest('[data-event-image-attachment]');
+        if (imageButton) {
+          this.openEventImageAttachment(imageButton.dataset.eventImageAttachment);
           return;
         }
         const historyButton = event.target.closest('[data-context-history]');
@@ -2021,7 +2091,7 @@
             const source = row.SourceEventID ? 'رویداد ' + row.SourceEventID : 'ثبت مستقیم';
             return '<article class="event-context-info-card"><div class="event-context-info-title">' +
               this.escape(info.Name || info.Code || 'اطلاعات') + '</div><div class="event-context-info-value">' +
-              this.escape(this.displayValue(value)) + '</div><div class="event-context-meta">' +
+              this.renderEventInformationValue(value, Object.assign({}, info, {Columns: row.Columns || info.Columns || []})) + '</div><div class="event-context-meta">' +
               this.escape(source) + (row.UpdatedBy ? ' · ثبت‌کننده ' + this.escape(row.UpdatedBy) : '') + (row.UpdatedAt ? ' · ' + this.escape(this.formatDate(row.UpdatedAt)) : '') +
               '</div><button type="button" class="event-context-history-button" data-context-history="' +
               this.escape(id) + '">مشاهده تاریخچه</button><div class="event-context-history" data-context-history-content="' +
@@ -2588,7 +2658,7 @@
               if (!input) return;
               const item = rowValue[code];
               if (input.type === 'file') {
-                if (item && typeof item === 'object') input.dataset.uploadedAttachment = JSON.stringify(item);
+                if (item && typeof item === 'object') { input.dataset.uploadedAttachment = JSON.stringify(item); input.required = false; }
               } else if (input.type === 'checkbox') input.checked = item === true || String(item) === 'true';
               else input.value = item === null || item === undefined ? '' : String(item);
             });
@@ -2597,7 +2667,7 @@
         } else {
           const input = wrapper.querySelector('[data-form-value]');
           if (!input) return;
-          if (input.type === 'file') { if (value && typeof value === 'object') input.dataset.uploadedAttachment = JSON.stringify(value); }
+          if (input.type === 'file') { if (value && typeof value === 'object') { input.dataset.uploadedAttachment = JSON.stringify(value); input.required = false; } }
           else if (input.type === 'checkbox') input.checked = value === true || String(value) === 'true';
           else input.value = value === null || value === undefined ? '' : String(value);
         }
@@ -2993,16 +3063,27 @@
           }
           wrapper.querySelectorAll('input[type="file"]').forEach(input => {
             input.addEventListener('change', () => {
-              const file = input.files && input.files[0];
-              if (!file) return;
+              const files = Array.from(input.files || []);
+              const isImage = String(input.dataset.formDataType || info.DataType || '').toLowerCase() === 'image';
+              if (isImage && files.length > 20) { input.value = ''; this.showFormError('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.'); return; }
               let preview = wrapper.querySelector('[data-event-file-preview]');
-              if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; wrapper.appendChild(preview); }
+              if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; preview.className = 'event-image-selection-preview'; wrapper.appendChild(preview); }
               preview.replaceChildren();
-              if (String(info.DataType || '').toLowerCase() === 'image' && file.type.indexOf('image/') === 0) {
-                const reader = new FileReader();
-                reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'max-width:160px;max-height:120px;object-fit:contain'; preview.appendChild(img); };
-                reader.readAsDataURL(file);
-              } else preview.textContent = file.name;
+              files.forEach(file => {
+                const item = document.createElement('span'); item.className = 'event-image-selection-item'; item.style.cssText = 'display:inline-flex;flex-direction:column;gap:4px;align-items:center;width:112px;padding:6px;border:1px solid var(--color-border,#d1d5db);border-radius:8px;margin:4px';
+                if (isImage && file.type.indexOf('image/') === 0) {
+                  const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
+                }
+                const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
+                const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
+                remove.addEventListener('click', () => {
+                  const transfer = new DataTransfer();
+                  Array.from(input.files || []).forEach(selected => { if (selected !== file) transfer.items.add(selected); });
+                  input.files = transfer.files;
+                  input.dispatchEvent(new Event('change', {bubbles:true}));
+                });
+                item.appendChild(remove); preview.appendChild(item);
+              });
             });
           });
           groupContainer.appendChild(wrapper);
@@ -3080,7 +3161,28 @@
         input.dataset.columnCode = String(column.Code);
         input.dataset.columnType = type;
         input.dataset.formDataType = type;
-        if (input.type === 'file') input.addEventListener('change', () => { let preview=cell.querySelector('[data-event-file-preview]'); if(!preview){preview=document.createElement('div');preview.dataset.eventFilePreview='true';cell.appendChild(preview);} preview.textContent=(input.files&&input.files[0])?input.files[0].name:''; });
+        if (input.type === 'file') input.addEventListener('change', () => {
+          const files = Array.from(input.files || []);
+          if (type === 'image' && files.length > 20) { input.value = ''; this.showFormError('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.'); return; }
+          let preview = cell.querySelector('[data-event-file-preview]');
+          if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; preview.className = 'event-image-selection-preview'; cell.appendChild(preview); }
+          preview.replaceChildren();
+          files.forEach(file => {
+            const item = document.createElement('span'); item.className = 'event-image-selection-item';
+            if (type === 'image' && file.type.indexOf('image/') === 0) {
+              const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
+            }
+            const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
+                const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
+                remove.addEventListener('click', () => {
+                  const transfer = new DataTransfer();
+                  Array.from(input.files || []).forEach(selected => { if (selected !== file) transfer.items.add(selected); });
+                  input.files = transfer.files;
+                  input.dispatchEvent(new Event('change', {bubbles:true}));
+                });
+                item.appendChild(remove); preview.appendChild(item);
+          });
+        });
         input.dataset.columnType = type;
         input.dataset.columnRequired = String(column.IsRequired === true || String(column.IsRequired).toLowerCase() === 'true');
         input.required = input.dataset.columnRequired === 'true';
@@ -3111,6 +3213,14 @@
         row.appendChild(actionCell);
       }
       tbody.appendChild(row);
+    },
+
+    hasStoredFormAttachment: function (input) {
+      if (!input || !input.dataset.uploadedAttachment) return false;
+      try {
+        const saved = JSON.parse(input.dataset.uploadedAttachment);
+        return Array.isArray(saved) ? saved.length > 0 : !!(saved && typeof saved === 'object' && (saved.AttachmentID || saved.ID));
+      } catch (error) { return false; }
     },
 
     collectConfiguredFormResponses: async function (projectId) {
@@ -3148,9 +3258,12 @@
                 const dataType = String(input.dataset.columnType || '').toLowerCase();
                 let item = '';
                 if (input.type === 'file') {
-                  const selected = input.files && input.files[0];
-                  if (selected) { item = await this.uploadConfiguredFormFile(selected, dataType, projectId, input); hasAnyValue = true; }
-                  else if (input.dataset.uploadedAttachment) { try { item = JSON.parse(input.dataset.uploadedAttachment); hasAnyValue = true; } catch (error) {} }
+                  const selectedFiles = Array.from(input.files || []);
+                  if (dataType === 'image' && selectedFiles.length) { item = await this.uploadConfiguredFormImages(selectedFiles, projectId, input); hasAnyValue = true; }
+                  else if (selectedFiles.length) { item = await this.uploadConfiguredFormFile(selectedFiles[0], dataType, projectId, input); hasAnyValue = true; }
+                  else if (input.dataset.uploadedAttachment) {
+                    try { item = JSON.parse(input.dataset.uploadedAttachment); hasAnyValue = Array.isArray(item) ? item.length > 0 : !!item; } catch (error) {}
+                  }
                 } else {
                   item = input.type === 'checkbox' ? input.checked : input.value;
                   if (input.type === 'checkbox' ? input.checked : (item !== '' && item !== null && item !== undefined)) hasAnyValue = true;
@@ -3161,7 +3274,7 @@
               }
               if (hasAnyValue) {
                 const missing = inputs.find(input => input.dataset.columnRequired === 'true' &&
-                  (input.type === 'file' ? !(input.files && input.files[0]) && !input.dataset.uploadedAttachment : (input.value === '' || input.value === null || input.value === undefined)));
+                  (input.type === 'file' ? !(input.files && input.files.length) && !this.hasStoredFormAttachment(input) : (input.value === '' || input.value === null || input.value === undefined)));
                 if (missing) { this.showFormError('ستون «' + (missing.getAttribute('aria-label') || missing.dataset.columnCode) + '» الزامی است.'); missing.focus(); return null; }
                 valueRows.push(value);
               }
@@ -3173,15 +3286,22 @@
             if (!input) continue;
             let value = '';
             if (input.type === 'file') {
-              const selected = input.files && input.files[0];
-              if (selected) value = await this.uploadConfiguredFormFile(selected, String(info.DataType || 'file').toLowerCase(), projectId, input);
+              const dataType = String(info.DataType || 'file').toLowerCase();
+              const selectedFiles = Array.from(input.files || []);
+              if (dataType === 'image' && selectedFiles.length) value = await this.uploadConfiguredFormImages(selectedFiles, projectId, input);
+              else if (selectedFiles.length) value = await this.uploadConfiguredFormFile(selectedFiles[0], dataType, projectId, input);
               else if (input.dataset.uploadedAttachment) { try { value = JSON.parse(input.dataset.uploadedAttachment); } catch (error) {} }
             } else {
               value = input.type === 'checkbox' ? input.checked : input.value;
               if (input.dataset.formDataType === 'boolean' && value !== '') value = String(value).toLowerCase() === 'true';
               if (input.type === 'number' && String(value).trim() !== '') value = Number(value);
             }
-            if (required && (value === '' || value === null || value === undefined)) { input.reportValidity(); input.focus(); return null; }
+            if (required && (value === '' || value === null || value === undefined || (String(info.DataType || '').toLowerCase() === 'image' && Array.isArray(value) && value.length === 0))) {
+              if (input.type === 'file') this.showFormError('برای «' + (field.LabelOverride || info.Name || 'تصویر') + '» حداقل یک تصویر انتخاب کنید.');
+              else input.reportValidity();
+              input.focus();
+              return null;
+            }
             values[typeId] = value;
           }
         }
@@ -3197,13 +3317,30 @@
       return responses;
     },
 
+    uploadConfiguredFormImages: async function (files, projectId, input) {
+      const selected = Array.from(files || []);
+      if (selected.length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.');
+      const uploaded = [];
+      const profileToggle = input && input.parentElement && input.parentElement.querySelector('[data-profile-image-toggle]');
+      const useProfileForFirst = !!(profileToggle && profileToggle.checked);
+      try {
+        for (let index = 0; index < selected.length; index += 1) {
+          if (profileToggle && index > 0) profileToggle.checked = false;
+          uploaded.push(await this.uploadConfiguredFormFile(selected[index], 'image', projectId, input));
+        }
+      } finally {
+        if (profileToggle) profileToggle.checked = useProfileForFirst;
+      }
+      if (input) input.dataset.uploadedAttachment = JSON.stringify(uploaded);
+      return uploaded;
+    },
+
     uploadConfiguredFormFile: async function (file, dataType, projectId, input) {
       // Reuse an upload only when it belongs to this exact File object.
       // A previously saved attachment may have the same name/size as a newly
       // selected replacement; metadata equality must never suppress that upload.
-      if (input && input._pmsUploadedFile === file && input._pmsUploadedAttachment) {
-        return input._pmsUploadedAttachment;
-      }
+      if (input && input._pmsUploadedAttachments && input._pmsUploadedAttachments.has(file)) return input._pmsUploadedAttachments.get(file);
+      if (input && input._pmsUploadedFile === file && input._pmsUploadedAttachment) return input._pmsUploadedAttachment;
       if (!projectId) throw new Error('بارگذاری فایل در رویداد مستقل امکان‌پذیر نیست؛ این فرم باید به پروژه متصل باشد.');
       const maxBytes = 10 * 1024 * 1024;
       const extension = String(file.name || '').split('.').pop().toLowerCase();
@@ -3224,6 +3361,8 @@
       const value = {AttachmentID:attachment.ID || attachment.Id,FileName:attachment.FileName || file.name,MimeType:attachment.MimeType || mime,FileSize:Number(attachment.FileSize || file.size),AttachmentType:attachmentType};
       if (input) {
         input.dataset.uploadedAttachment = JSON.stringify(value);
+        if (!input._pmsUploadedAttachments) input._pmsUploadedAttachments = new Map();
+        input._pmsUploadedAttachments.set(file, value);
         input._pmsUploadedFile = file;
         input._pmsUploadedAttachment = value;
       }
@@ -3263,7 +3402,7 @@
         };
 
         input.type = type === 'image' || type === 'file' ? 'file' : (types[type] || 'text');
-        if (type === 'image') input.accept = 'image/jpeg,image/png,image/webp,image/gif';
+        if (type === 'image') { input.accept = 'image/jpeg,image/png,image/webp,image/gif'; input.multiple = true; }
         if (type === 'file') input.accept = '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         if (type === 'number') input.step = 'any';
       }
