@@ -3270,7 +3270,16 @@
       const selected = Array.from(files || []);
       if (selected.length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.');
       const uploaded = [];
-      for (const file of selected) uploaded.push(await this.uploadConfiguredFormFile(file, 'image', projectId, input));
+      const profileToggle = input && input.parentElement && input.parentElement.querySelector('[data-profile-image-toggle]');
+      const useProfileForFirst = !!(profileToggle && profileToggle.checked);
+      try {
+        for (let index = 0; index < selected.length; index += 1) {
+          if (profileToggle && index > 0) profileToggle.checked = false;
+          uploaded.push(await this.uploadConfiguredFormFile(selected[index], 'image', projectId, input));
+        }
+      } finally {
+        if (profileToggle) profileToggle.checked = useProfileForFirst;
+      }
       if (input) input.dataset.uploadedAttachment = JSON.stringify(uploaded);
       return uploaded;
     },
