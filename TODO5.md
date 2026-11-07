@@ -48,7 +48,8 @@
 - تعریف Taskهای اجرایی و آزمون.
 - *Log:* Frontend main HEAD=`33383e8472ab60e524896bd22ba7eed069ed7809` و Backend main HEAD=`ccf8dae0a816212b2e612a9f05254481f8b4569e` بررسی شد؛ هر دو TODO5 روی Ready for the next feature بودند. شاخه کاری هم‌نام در هر دو مخزن از همین HEADها ایجاد شد. نقاط اجرایی: `js/modules/events.js: Events.openForm, renderConfiguredForms, updateFormMode, applyConfiguredFormVisibility`؛ `css/events.css: .event-form-mode*`؛ `index.html` برای cache-busting. مسیر ثبت `POST /events` و سرویس‌های Backend خارج از محدوده تغییر هستند.
 
-### Task 2 — حذف حالت سریع و تثبیت ثبت کامل (IN PROGRESS)
+### Task 2 — حذف حالت سریع و تثبیت ثبت کامل [x]
+- *Log:* در `js/modules/events.js` state و مقداردهی `formMode`، دکمه‌های `data-form-mode`، listener، تابع `updateFormMode` و فیلتر `quickHidden` حذف شد؛ `renderConfiguredForms` همه فیلدهای مجاز را نمایش می‌دهد و `applyConfiguredFormVisibility` فقط VisibilityRule را اعمال می‌کند. `css/events.css` استایل‌های mode را حذف و استایل جدول چندردیفی را حفظ کرد. `index.html` نسخه asset را به `20261107-single-full-event-form-1` تغییر داد. تست‌های `tests/event-form-single-mode.test.js` و `tests/reusable-forms.test.js` رفتار تک‌حالته را پوشش می‌دهند؛ پنج تست asset نیز نسخه جدید را بررسی می‌کنند. Frontend checks Run `42362016241` با 183/183 تست موفق، Cross-repository QA Run `42362016270` و Frontend Agent Suite Run `42362016244` موفق شدند. مسیر `POST /events`، payload، API، Backend، مجوزها و Sheetها بدون تغییر ماندند.
 - حذف انتخاب‌گر quick/full و متن راهنما از HTML مودال ساخته‌شده در `Events.openForm`.
 - حذف state، listener و منطق مخفی‌سازی اختصاصی quick/full؛ نمایش پیش‌فرض همه فیلدها.
 - حفظ VisibilityRule و requiredness واقعی هر فیلد.
@@ -56,7 +57,7 @@
 - به‌روزرسانی نسخه asset و اجرای تست‌های مرتبط.
 - خروجی قابل آزمون: فرم ثبت رویداد تنها یک حالت داشته باشد و همه فیلدهای مجاز فرم کامل را نمایش دهد.
 
-### Task 3 — Regression، سازگاری و آماده‌سازی ادغام
+### Task 3 — Regression، سازگاری و آماده‌سازی ادغام (IN PROGRESS)
 - افزودن/به‌روزرسانی تست‌های رگرسیون برای نبود quick/full و نمایش همیشگی فیلدهای اختیاری.
 - اجرای تست‌های کامل Frontend، بررسی syntax و تست‌های مرتبط با ثبت رویداد.
 - بررسی عدم تغییر قرارداد `POST /events`، payload، Backend، مجوزها و ساختار داده.
