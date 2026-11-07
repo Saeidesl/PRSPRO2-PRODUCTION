@@ -34,16 +34,18 @@
 - تصمیم: پیاده‌سازی Frontend-only با استفاده از فیلتر فعلی؛ Backend بدون تغییر runtime.
 - *Log:* FE: `pages/project-detail.html:#project-add-event-button`، `js/modules/project-detail.js:ProjectDetail.bindEvents/load/applyEventDetailsBundle`، `pages/events.html:#events-filter-content/#event-project-filter/#event-history-scope/#events-table-container`، `js/modules/events.js:Events.init/load/renderFilters/applyFilters/clearHistoryFilters`، `index.html` و تست `tests/event-history-project-cards.test.js`. BE: `Router.js` و قرارداد `GET /events`؛ هیچ endpoint یا ساختار داده جدید لازم نیست. مبنای شاخه‌ها: FE `1126b6be3908ae0ddf590747586b78c53bbeb53f`، BE `5838f1ccca5959d87fbdfe8dbb7561ef7414400e`.
 
-### Task 2 — پیاده‌سازی محل صحیح دکمه تاریخچه پروژه [ ] (IN PROGRESS)
+### Task 2 — پیاده‌سازی محل صحیح دکمه تاریخچه پروژه [x]
 - حذف دکمه تاریخچه از صفحه جزئیات پروژه؛ دکمه اصلی «ثبت رویداد» و رفتار آن بدون تغییر بماند.
 - افزودن دکمه تاریخچه به کارت پروژه‌های صف در صفحه رویدادها، کنار CTA موجود؛ نمایش آن فقط برای کاربران دارای `EVENT_VIEW` یا مدیر.
 - کلیک دکمه باید تاریخچه همان صفحه را با `ProjectID` پروژه انتخاب‌شده فیلتر کند؛ scope=`all` و پاک‌سازی فیلترهای مزاحم؛ امکان پاک‌کردن فیلتر برای بازگشت به فهرست عادی حفظ شود.
 - دکمه تاریخچه برای کارت‌های تکمیل‌شده نیز در کنار عملیات موجود قابل مشاهده باشد؛ CTA فعلی «درخواست ثبت تغییرات» حفظ شود.
 - عدم تغییر Backend runtime و حفظ API/Sheet/permissionهای موجود.
- 
-### Task 3 — Regression، QA، ادغام و انتشار [ ]
+- *Log:* `js/modules/events.js`: افزودن کنترل مجوز `EVENT_VIEW`، ساخت دکمه `.event-queue-history-button` روی کارت‌های پروژه و handler اجرای مستقیم `Events.applyProjectHistoryFilter(projectId)` در همان صفحه؛ CTA ثبت رویداد و CTA درخواست تغییرات حفظ شدند. `pages/project-detail.html` و `js/modules/project-detail.js`: حذف دکمه/handler تاریخچه از صفحه جزئیات و حفظ ثبت رویداد موجود. `css/events.css`: چیدمان واکنش‌گرای گروه دکمه‌ها. `index.html`: cache-busting نسخه `20261107-project-event-history-shortcut-placement-1`. تست‌های `tests/project-event-history-shortcut.test.js` و assertionهای asset در تست‌های وابسته به‌روزرسانی شدند. API، Backend runtime، Sheet، schema و داده تغییر نکردند.
+
+### Task 3 — Regression، QA، ادغام و انتشار [x]
 - *اصلاح دامنه:* درخواست مالک محصول مربوط به کارت‌های پروژه در صفحه رویدادهاست، نه صفحه جزئیات پروژه. دکمه قبلی در محل اشتباه قرار گرفته بود؛ این Task محل را اصلاح می‌کند.
 - تست رگرسیون برای وجود دکمه در کارت پروژه، اتصال به همان projectId، اجرای فیلتر در همان صفحه، مجوز `EVENT_VIEW`، حفظ CTA ثبت رویداد و حذف دکمه از صفحه جزئیات.
 - بررسی کارت‌های pending/progress/completed، حالت بدون رویداد، پاک‌کردن فیلتر، فیلترهای قبلی، cache و واکنش‌گرایی.
 - اجرای CI و Cross-repository QA؛ ادغام و انتشار Frontend پس از موفقیت کنترل‌ها؛ Backend deployment لازم نیست چون تغییری در runtime یا قرارداد API وجود ندارد.
 - ارائه مراحل تست نسخه عملیاتی به مالک محصول و توقف تا تأیید.
+- *Log:* Frontend PR #49 با squash در commit `9c0bed3be00e265d361b446129614a1f21945b45` روی `main` ادغام شد. CI شامل ۲۰۸ تست Frontend، Agent Suite و Cross-repository QA موفق بود؛ Browser/Performance audit پیش از ادغام موفق شد. GitHub Pages deployment موفق و نسخه عملیاتی در `https://saeidesl.github.io/PRSPRO2-PRODUCTION/` منتشر شد. مالک محصول در 2026-11-07 تست عملیاتی را موفق تأیید کرد. Backend PR #26 فقط مستندات سازگاری بود و ادغام شد؛ چون runtime تغییر نکرد، Apps Script deployment لازم نبود. تست پذیرش شامل محل دکمه در صفحه رویدادها، فیلتر پروژه در همان صفحه، نمایش رویدادهای مجاز، پاک‌کردن فیلتر و حفظ CTA ثبت رویداد بود.
