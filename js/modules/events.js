@@ -3790,15 +3790,27 @@
         const detail = prepare.querySelector('[data-progress-detail]');
         const fill = prepare.querySelector('[data-progress-fill]');
         if (detail) {
-          detail.textContent = state.uploadTotal
-            ? 'تصاویر و فایل‌ها: ' + state.uploadDone + ' از ' + state.uploadTotal + ' بارگذاری شده'
-            : (state.steps.prepare === 'active' ? 'در حال آماده‌سازی اطلاعات فرم...' : 'فایل جدیدی برای بارگذاری وجود نداشت.');
+          if (state.steps.prepare === 'error') {
+            detail.textContent = 'بارگذاری متوقف شد: ' + state.uploadDone + ' از ' + state.uploadTotal + ' فایل تکمیل شد.';
+          } else if (state.uploadTotal && state.steps.prepare === 'active') {
+            detail.textContent = state.uploadDone < state.uploadTotal
+              ? 'در حال آپلود تصاویر و فایل‌ها: ' + state.uploadDone + ' از ' + state.uploadTotal
+              : 'آپلود تصاویر و فایل‌ها تکمیل شد؛ در حال نهایی‌سازی اطلاعات فرم...';
+          } else if (state.uploadTotal) {
+            detail.textContent = 'آپلود تصاویر و فایل‌ها تکمیل شد: ' + state.uploadDone + ' از ' + state.uploadTotal;
+          } else {
+            detail.textContent = state.steps.prepare === 'active'
+              ? 'در حال آماده‌سازی اطلاعات فرم؛ فایل جدیدی برای آپلود انتخاب نشده است.'
+              : 'اطلاعات فرم آماده شد؛ فایل جدیدی برای بارگذاری وجود نداشت.';
+          }
         }
         if (fill) fill.style.width = state.uploadTotal
           ? Math.min(100, Math.round((state.uploadDone / state.uploadTotal) * 100)) + '%'
           : (state.steps.prepare === 'success' ? '100%' : '0%');
       }
 
+      overlay.classList.toggle('is-error', state.finished === 'error');
+      overlay.classList.toggle('is-complete', state.finished === 'success');
       const title = overlay.querySelector('.event-submit-progress-title');
       const badge = overlay.querySelector('.event-submit-progress-badge');
       const description = overlay.querySelector('.event-submit-progress-description');
