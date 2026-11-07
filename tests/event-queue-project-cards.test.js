@@ -111,7 +111,7 @@ test('project queue cards color the actual project status instead of the queue l
 test('event module asset version changes after queue image preview', () => {
   const html = read('index.html');
 
-  assert.match(html, /js\/modules\/events\.js\?v=20261107-single-full-event-form-1/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261107-free-event-display-order-1/);
   assert.doesNotMatch(html, /js\/modules\/events\.js\?v=20261106-event-queue-card-1/);
 });
 
