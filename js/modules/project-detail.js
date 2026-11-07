@@ -134,8 +134,7 @@
         router &&
         ((typeof router.isAdmin === 'function' && router.isAdmin()) ||
           (Array.isArray(router.permissions) &&
-            (router.permissions.indexOf('EVENT_VIEW') !== -1 ||
-              router.permissions.indexOf('EVENT_CREATE') !== -1)))
+            router.permissions.indexOf('EVENT_VIEW') !== -1))
       );
       if (viewEventsButton) viewEventsButton.hidden = !canViewEvents;
       if (viewEventsButton && !viewEventsButton.dataset.projectDetailBound) {
