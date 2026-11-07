@@ -1817,3 +1817,27 @@
   }
   .event-submit-progress-track span { transition: none; }
 }
+
+
+#event-submit-progress-modal.is-error .event-submit-progress-badge {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+#event-submit-progress-modal.is-complete .event-submit-progress-badge {
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.event-submit-step.is-error .event-submit-step-icon {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.event-submit-step.is-error .event-submit-step-state {
+  color: var(--color-danger);
+  font-weight: 700;
+}
