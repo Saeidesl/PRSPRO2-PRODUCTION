@@ -25,6 +25,7 @@
 
 - [x] **Task 1 — Discovery & Planning:** بررسی مخازن عملیاتی، شاخه‌ها، TODO5 و ARCHITECTURE؛ ردیابی زنجیره نمایش فهرست رویدادها و تشخیص خواندن مجدد شیت انواع رویداد در دو مسیر پرتکرار.
 - [ ] **Task 2 — بهینه‌سازی کش خواندن انواع رویداد (IN PROGRESS):** کش مشترک کوتاه‌مدت ScriptCache برای داده خام انواع رویداد؛ استفاده مجدد در مسیرهای فهرست و پیشرفت گردش‌کار؛ بی‌اعتبارسازی پس از create/update/delete؛ حفظ کامل فیلتر tenant/permission و قراردادهای فعلی.
+  - *Implementation Log (pending validation):* تغییرات صرفاً در Backend انجام شد: `EventTypeRepository.getAllCached/invalidateReadCache` برای کش ۶۰ ثانیه‌ای شیت `11_EventTypes`، invalidation پس از create/update/delete، و استفاده از کش در `EventTypeService.list` و `EventService.workflowProgress`. رفتار و کد Frontend، انتخاب‌گر و فرم ثبت رویداد به نسخه قبلی بازگردانده شده‌اند.
 - [ ] **Task 3 — آزمون و سنجش عملیاتی:** بررسی سازگاری پاسخ‌ها، invalidation، جداسازی tenant، رفتار فرم و قواعد گردش‌کار؛ اجرای تست‌های در دسترس؛ مقایسه زمان مسیرهای `/event-types` و `/projects/:id/workflow-progress`؛ انتشار فقط پس از تأیید صحت.
 
 ### معیارهای پذیرش
