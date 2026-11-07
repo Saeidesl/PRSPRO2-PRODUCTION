@@ -1186,14 +1186,13 @@
       const required = column.IsRequired === true || String(column.IsRequired).toLowerCase() === 'true';
       const raw = value === null || value === undefined ? '' : value;
       if (type === 'image' || type === 'file') {
-        const currentItems = type === 'image' ? (Array.isArray(raw) ? raw : (raw && typeof raw === 'object' ? [raw] : [])) : [];
-        const current = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : null;
+        const current = raw && typeof raw === 'object' ? raw : null;
         const currentId = current && (current.AttachmentID || current.ID);
         const accept = type === 'image' ? 'image/jpeg,image/png,image/webp,image/gif' :
           '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         return '<div class="form-group information-file-field"><label>' + label + (required ? ' *' : '') +
           '<input type="file" name="' + this.escape(fieldName) + '" data-information-file-input data-file-data-type="' + type +
-          '" data-current-attachment="' + this.escape(current ? JSON.stringify(current) : JSON.stringify(currentItems)) + '" accept="' + accept + '' +
+          '" data-current-attachment="' + this.escape(current ? JSON.stringify(current) : '') + '" accept="' + accept + '"' +
           (required && !currentId ? ' required' : '') + (this.canUploadInformationFiles() ? '' : ' disabled') + '></label>' +
           (currentId ? '<div class="information-file-current"><span>' + this.escape(current.FileName || 'فایل ثبت‌شده') + '</span>' +
             (this.canViewInformationFiles() ? '<button type="button" class="btn btn-sm btn-light" data-information-attachment="' + this.escape(currentId) +
