@@ -39,6 +39,8 @@ test('event form image fields support multiple selections for standalone and tab
   assert.match(module,/await this\.uploadConfiguredFormImages\(selectedFiles, projectId, input\)/);
   assert.match(module,/dataType === 'image' && selectedFiles\.length/);
   assert.match(module,/حداکثر ۲۰ تصویر برای هر فیلد مجاز است/);
+  assert.match(module,/new DataTransfer\(\)/);
+  assert.match(module,/renderEventInformationValue: function/);
   assert.match(module,/renderEventFormValue\(row\[String\(column\.Code\)\], column\.DataType\)/);
   assert.match(module,/openEventImageAttachment: async function/);
 });
