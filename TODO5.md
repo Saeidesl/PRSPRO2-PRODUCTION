@@ -55,7 +55,8 @@
 - خطاها در مرحله مربوطه نمایش داده می‌شوند؛ بستن مودال خطا کاربر را به فرم موجود برای retry بازمی‌گرداند و idempotency فعلی حفظ می‌شود.
 - فوکوس صفحه‌کلید، Escape فقط پس از پایان/خطا، RTL، موبایل، تم روشن/تاریک و `prefers-reduced-motion` پوشش داده شدند.
 - *Log:* `js/modules/events.js`: `bindEvents`، `submitForm`، `openSubmitProgressModal`، `renderSubmitProgressModal`، `setSubmitProgressStep`، `recordSubmitProgressUpload`، `completeSubmitProgress`، `failSubmitProgress`، `closeSubmitProgressModal`، `uploadConfiguredFormFile`، `reloadEvents` و focus trap سراسری؛ `css/events.css`: استایل overlay، مراحل، progress bar، حالت‌های موفق/خطا، موبایل و reduced-motion؛ `index.html`: cache-busting برای CSS و JS؛ تست جدید `tests/event-submit-progress-modal.test.js` و به‌روزرسانی نسخه asset در تست‌های رویداد/پروژه/workflow. CI روی commit `17cdcbb2ea36034e3ce1b30f87292f2c6c274367`: syntax، asset/CSS و regression موفق؛ ۲۰۱ تست Frontend از ۲۰۱ موفق؛ Cross-repository QA و Frontend agent suite موفق.
-### Task 3 — Regression، QA، ادغام و انتشار Frontend
+
+### Task 3 — Regression، QA، ادغام و انتشار Frontend (IN PROGRESS)
 - تست‌های خودکار برای no-file، single/multiple image، multi-row image/file، upload failure، POST failure، amendment PUT، refresh failure و جلوگیری از submit تکراری.
 - بررسی accessibility، RTL، موبایل، تم روشن/تاریک، reduced-motion، console و network errors.
 - اجرای CI و QA؛ بازبینی diff و سازگاری با Backend؛ ادغام فقط پس از موفقیت کنترل‌ها.
