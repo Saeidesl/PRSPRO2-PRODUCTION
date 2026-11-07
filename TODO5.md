@@ -48,13 +48,13 @@
 - تصمیم: پیاده‌سازی Frontend-only؛ Backend runtime و قراردادهای API بدون تغییر.
 - *Log:* Frontend: `pages/events.html`, `js/modules/events.js:openForm`, `bindEvents`, `submitForm`, `collectConfiguredFormResponses`, `uploadConfiguredFormImages`, `uploadConfiguredFormFile`, `getConfiguredFormFileData`, `setSubmitState`, `reloadEvents`, `showRefreshNotice`, `showEventSubmissionResult`, `closeForm`; `css/events.css`; `index.html`. Backend: `Router.js`, `EventService.js:create/_createUnlocked_`, `AttachmentService.js` و APIهای موجود. مبنای شاخه‌ها: FE `e44defc54d365cfeb592192052c3dc3423ae3d10`، BE `776b2e75848d5d74201607191499a2f2c1bd6ad5`.
 
-### Task 2 — پیاده‌سازی مودال پیشرفت واقعی و اتصال به جریان ثبت (IN PROGRESS)
-- ساخت overlay مستقل و responsive با سه مرحله و حالت‌های pending/active/success/skipped/error.
-- اتصال شمارنده آپلود به موفقیت واقعی هر فایل در مسیر موجود؛ حفظ concurrency، ترتیب، cache و AttachmentType.
-- اتصال مرحله ثبت به پاسخ واقعی POST/PUT و مرحله refresh به `reloadEvents()`؛ تفکیک شکست refresh از شکست ثبت.
-- حفظ خطا، retry، idempotency، فرم اصلاحی، رویداد مستقل و نتیجه فعلی؛ حذف یا جایگزینی spinner عمومی فقط در صورت پوشش کامل رفتار.
-- خروجی قابل آزمون: انیمیشن مودال بلافاصله پس از submit معتبر نمایش داده شود و هر مرحله فقط بر اساس نتیجه واقعی جلو برود.
-
+### Task 2 — پیاده‌سازی مودال پیشرفت واقعی و اتصال به جریان ثبت [x]
+- overlay مستقل و responsive با سه مرحله و حالت‌های pending/active/success/warning/error پیاده‌سازی شد؛ در نبود فایل جدید، مرحله آماده‌سازی توضیح «فایل جدیدی برای بارگذاری وجود نداشت» نشان می‌دهد.
+- شمارنده آپلود از تعداد فایل‌های انتخاب‌شده و پاسخ موفق واقعی Attachment API تغذیه می‌شود؛ فایل‌های cache‌شده دوباره آپلود یا دوباره شمرده نمی‌شوند.
+- مرحله ثبت پس از پاسخ موفق POST/PUT تکمیل می‌شود؛ مرحله refresh به نتیجه واقعی `reloadEvents()` متصل است و شکست refresh با موفقیت ثبت اشتباه نمی‌شود.
+- خطاها در مرحله مربوطه نمایش داده می‌شوند؛ بستن مودال خطا کاربر را به فرم موجود برای retry بازمی‌گرداند و idempotency فعلی حفظ می‌شود.
+- فوکوس صفحه‌کلید، Escape فقط پس از پایان/خطا، RTL، موبایل، تم روشن/تاریک و `prefers-reduced-motion` پوشش داده شدند.
+- *Log:* `js/modules/events.js`: `bindEvents`، `submitForm`، `openSubmitProgressModal`، `renderSubmitProgressModal`، `setSubmitProgressStep`، `recordSubmitProgressUpload`، `completeSubmitProgress`، `failSubmitProgress`، `closeSubmitProgressModal`، `uploadConfiguredFormFile`، `reloadEvents` و focus trap سراسری؛ `css/events.css`: استایل overlay، مراحل، progress bar، حالت‌های موفق/خطا، موبایل و reduced-motion؛ `index.html`: cache-busting برای CSS و JS؛ تست جدید `tests/event-submit-progress-modal.test.js` و به‌روزرسانی نسخه asset در تست‌های رویداد/پروژه/workflow. CI روی commit `17cdcbb2ea36034e3ce1b30f87292f2c6c274367`: syntax، asset/CSS و regression موفق؛ ۲۰۱ تست Frontend از ۲۰۱ موفق؛ Cross-repository QA و Frontend agent suite موفق.
 ### Task 3 — Regression، QA، ادغام و انتشار Frontend
 - تست‌های خودکار برای no-file، single/multiple image، multi-row image/file، upload failure، POST failure، amendment PUT، refresh failure و جلوگیری از submit تکراری.
 - بررسی accessibility، RTL، موبایل، تم روشن/تاریک، reduced-motion، console و network errors.
