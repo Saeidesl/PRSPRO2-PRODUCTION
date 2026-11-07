@@ -2091,7 +2091,7 @@
             const source = row.SourceEventID ? 'رویداد ' + row.SourceEventID : 'ثبت مستقیم';
             return '<article class="event-context-info-card"><div class="event-context-info-title">' +
               this.escape(info.Name || info.Code || 'اطلاعات') + '</div><div class="event-context-info-value">' +
-              this.renderEventInformationValue(value, info) + '</div><div class="event-context-meta">' +
+              this.renderEventInformationValue(value, Object.assign({}, info, {Columns: row.Columns || info.Columns || []})) + '</div><div class="event-context-meta">' +
               this.escape(source) + (row.UpdatedBy ? ' · ثبت‌کننده ' + this.escape(row.UpdatedBy) : '') + (row.UpdatedAt ? ' · ' + this.escape(this.formatDate(row.UpdatedAt)) : '') +
               '</div><button type="button" class="event-context-history-button" data-context-history="' +
               this.escape(id) + '">مشاهده تاریخچه</button><div class="event-context-history" data-context-history-content="' +
