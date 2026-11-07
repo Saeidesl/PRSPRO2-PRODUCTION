@@ -1592,6 +1592,21 @@
       });
     },
 
+    renderEventInformationValue: function (value, info) {
+      info = info || {};
+      const columns = Array.isArray(info.Columns) ? info.Columns.filter(column => String(column.Status || 'ACTIVE') === 'ACTIVE') : [];
+      if (!columns.length) return this.renderEventFormValue(value, info.DataType);
+      const rows = String(info.Cardinality || 'SINGLE').toUpperCase() === 'MULTIPLE'
+        ? (Array.isArray(value) ? value : [])
+        : (value && typeof value === 'object' ? [value] : []);
+      if (!rows.length) return '<span>-</span>';
+      return '<div class="event-modal-table-wrap"><table class="event-modal-table"><thead><tr>' +
+        columns.map(column => '<th>' + this.escape(column.Name || column.Code) + '</th>').join('') +
+        '</tr></thead><tbody>' + rows.map(row => '<tr>' + columns.map(column =>
+          '<td>' + this.renderEventFormValue(row && row[String(column.Code)], column.DataType) + '</td>'
+        ).join('') + '</tr>').join('') + '</tbody></table></div>';
+    },
+
     renderEventFormValue: function (value, dataType) {
       const type = String(dataType || '').toLowerCase();
       if (type === 'image') {
@@ -1830,6 +1845,11 @@
           const trigger = document.getElementById('event-context-mobile-trigger');
           if (panel) panel.classList.remove('is-open');
           if (trigger) trigger.setAttribute('aria-expanded', 'false');
+          return;
+        }
+        const imageButton = event.target.closest('[data-event-image-attachment]');
+        if (imageButton) {
+          this.openEventImageAttachment(imageButton.dataset.eventImageAttachment);
           return;
         }
         const historyButton = event.target.closest('[data-context-history]');
@@ -2071,7 +2091,7 @@
             const source = row.SourceEventID ? 'رویداد ' + row.SourceEventID : 'ثبت مستقیم';
             return '<article class="event-context-info-card"><div class="event-context-info-title">' +
               this.escape(info.Name || info.Code || 'اطلاعات') + '</div><div class="event-context-info-value">' +
-              this.escape(this.displayValue(value)) + '</div><div class="event-context-meta">' +
+              this.renderEventInformationValue(value, info) + '</div><div class="event-context-meta">' +
               this.escape(source) + (row.UpdatedBy ? ' · ثبت‌کننده ' + this.escape(row.UpdatedBy) : '') + (row.UpdatedAt ? ' · ' + this.escape(this.formatDate(row.UpdatedAt)) : '') +
               '</div><button type="button" class="event-context-history-button" data-context-history="' +
               this.escape(id) + '">مشاهده تاریخچه</button><div class="event-context-history" data-context-history-content="' +
