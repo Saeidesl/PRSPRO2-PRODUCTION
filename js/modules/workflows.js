@@ -877,6 +877,7 @@
               <option value="GROUPED">ترکیبی؛ گروه‌ها به‌ترتیب و رویدادهای هر گروه آزاد</option>
             </select>
             <small>در هر مرحله فقط یک روش ترتیب قابل استفاده است.</small>
+            <small>در حالت آزاد، ترتیب نمایش فقط فهرست را مرتب می‌کند و ثبت رویدادها همچنان بدون ترتیب اجباری است.</small>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 10px">
             <h4 style="margin:0">رویدادهای این مرحله</h4>
@@ -906,7 +907,10 @@
           const sequence = modalOverlay.querySelector('#workflow-rule-sequence');
           if (!rows || !sequence) return;
           try {
-            appendRuleRow(rows, {}, sequence.value, rows.querySelectorAll('.workflow-event-rule-row').length + 1);
+            const nextDisplayOrder = Array.from(rows.querySelectorAll('[data-field="display-order"]')).reduce(function(maximum, input) {
+              return Math.max(maximum, Number(input.value) || 0);
+            }, 0) + 1;
+            appendRuleRow(rows, {}, sequence.value, nextDisplayOrder);
             const message = modalOverlay.querySelector('#workflow-rule-message');
             if (message) message.hidden = true;
           } catch (error) {
