@@ -66,6 +66,6 @@ test('progress modal keeps keyboard focus contained and allows Escape only after
 });
 
 test('event progress assets use refreshed cache-busting versions', () => {
-  assert.match(index, /events\.css\?v=20261107-project-event-history-shortcut-placement-1/);
-  assert.match(index, /js\/modules\/events\.js\?v=20261107-project-event-history-shortcut-placement-1/);
+  assert.match(index, /events\.css\?v=20261107-event-type-picker-fast-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261107-event-type-picker-fast-1/);
 });
