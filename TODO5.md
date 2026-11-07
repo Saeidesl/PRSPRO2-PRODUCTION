@@ -33,12 +33,13 @@
 - تصمیم: پیاده‌سازی Frontend-only با استفاده از فیلتر فعلی؛ Backend بدون تغییر runtime.
 - *Log:* FE: `pages/project-detail.html:#project-add-event-button`، `js/modules/project-detail.js:ProjectDetail.bindEvents/load/applyEventDetailsBundle`، `pages/events.html:#events-filter-content/#event-project-filter/#event-history-scope/#events-table-container`، `js/modules/events.js:Events.init/load/renderFilters/applyFilters/clearHistoryFilters`، `index.html` و تست `tests/event-history-project-cards.test.js`. BE: `Router.js` و قرارداد `GET /events`؛ هیچ endpoint یا ساختار داده جدید لازم نیست. مبنای شاخه‌ها: FE `1126b6be3908ae0ddf590747586b78c53bbeb53f`، BE `5838f1ccca5959d87fbdfe8dbb7561ef7414400e`.
 
-### Task 2 — پیاده‌سازی دکمه و فیلتر مستقیم تاریخچه پروژه (IN PROGRESS)
+### Task 2 — پیاده‌سازی دکمه و فیلتر مستقیم تاریخچه پروژه [x]
 - افزودن دکمه کنار «ثبت رویداد» با رعایت مجوز مشاهده رویدادها.
 - انتقال شناسه پروژه به صفحه موجود رویدادها و اعمال فیلتر اجباری ProjectID؛ scope برابر all و پاک‌سازی فیلترهای قبلی.
 - بازکردن بخش فیلترها/نمایش تاریخچه و حفظ امکان پاک‌کردن فیلتر برای بازگشت به فهرست عادی.
 - عدم تغییر Backend runtime و حفظ مسیر ثبت رویداد فعلی.
-
+- *Log:* `pages/project-detail.html`: افزودن `#project-view-events-button` کنار `#project-add-event-button`. `js/modules/project-detail.js:ProjectDetail.bindEvents`: کنترل مجوز `EVENT_VIEW`/ادمین و انتقال `ProjectDetail.projectId` در `Events.pendingProjectHistoryId` به route موجود `#events`. `js/modules/events.js:Events.init`: مصرف شناسه پس از پایان `load()`؛ `applyProjectHistoryFilter(projectId)`: پاک‌سازی فیلترهای قبلی، انتخاب پروژه، scope=`all`، بازکردن `#events-filter-content` و اسکرول به تاریخچه؛ `applyFilters()` و `clearHistoryFilters()` همچنان مسیر استاندارد فیلتر/پاک‌سازی را اجرا می‌کنند. `index.html`: cache-busting هر دو ماژول به `20261107-project-event-history-shortcut-1`. تست جدید `tests/project-event-history-shortcut.test.js`.
+ 
 ### Task 3 — Regression، QA، ادغام و انتشار
 - تست خودکار برای دکمه، انتقال projectId، فیلتر فقط همان پروژه، نمایش رویدادهای ثبت‌شده توسط دیگر کاربرانِ مجاز و پاک‌کردن فیلتر.
 - بررسی مجوزها، حالت بدون رویداد، فیلترهای قبلی، cache و واکنش‌گرایی.
