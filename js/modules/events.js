@@ -2588,7 +2588,7 @@
               if (!input) return;
               const item = rowValue[code];
               if (input.type === 'file') {
-                if (item && typeof item === 'object') input.dataset.uploadedAttachment = JSON.stringify(item);
+                if (item && typeof item === 'object') { input.dataset.uploadedAttachment = JSON.stringify(item); input.required = false; }
               } else if (input.type === 'checkbox') input.checked = item === true || String(item) === 'true';
               else input.value = item === null || item === undefined ? '' : String(item);
             });
@@ -2597,7 +2597,7 @@
         } else {
           const input = wrapper.querySelector('[data-form-value]');
           if (!input) return;
-          if (input.type === 'file') { if (value && typeof value === 'object') input.dataset.uploadedAttachment = JSON.stringify(value); }
+          if (input.type === 'file') { if (value && typeof value === 'object') { input.dataset.uploadedAttachment = JSON.stringify(value); input.required = false; } }
           else if (input.type === 'checkbox') input.checked = value === true || String(value) === 'true';
           else input.value = value === null || value === undefined ? '' : String(value);
         }
@@ -2993,16 +2993,19 @@
           }
           wrapper.querySelectorAll('input[type="file"]').forEach(input => {
             input.addEventListener('change', () => {
-              const file = input.files && input.files[0];
-              if (!file) return;
+              const files = Array.from(input.files || []);
+              const isImage = String(input.dataset.formDataType || info.DataType || '').toLowerCase() === 'image';
+              if (isImage && files.length > 20) { input.value = ''; this.showFormError('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.'); return; }
               let preview = wrapper.querySelector('[data-event-file-preview]');
-              if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; wrapper.appendChild(preview); }
+              if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; preview.className = 'event-image-selection-preview'; wrapper.appendChild(preview); }
               preview.replaceChildren();
-              if (String(info.DataType || '').toLowerCase() === 'image' && file.type.indexOf('image/') === 0) {
-                const reader = new FileReader();
-                reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'max-width:160px;max-height:120px;object-fit:contain'; preview.appendChild(img); };
-                reader.readAsDataURL(file);
-              } else preview.textContent = file.name;
+              files.forEach(file => {
+                const item = document.createElement('span'); item.className = 'event-image-selection-item';
+                if (isImage && file.type.indexOf('image/') === 0) {
+                  const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); item.appendChild(img); }; reader.readAsDataURL(file);
+                }
+                const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name); preview.appendChild(item);
+              });
             });
           });
           groupContainer.appendChild(wrapper);
@@ -3080,7 +3083,20 @@
         input.dataset.columnCode = String(column.Code);
         input.dataset.columnType = type;
         input.dataset.formDataType = type;
-        if (input.type === 'file') input.addEventListener('change', () => { let preview=cell.querySelector('[data-event-file-preview]'); if(!preview){preview=document.createElement('div');preview.dataset.eventFilePreview='true';cell.appendChild(preview);} preview.textContent=(input.files&&input.files[0])?input.files[0].name:''; });
+        if (input.type === 'file') input.addEventListener('change', () => {
+          const files = Array.from(input.files || []);
+          if (type === 'image' && files.length > 20) { input.value = ''; this.showFormError('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.'); return; }
+          let preview = cell.querySelector('[data-event-file-preview]');
+          if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; preview.className = 'event-image-selection-preview'; cell.appendChild(preview); }
+          preview.replaceChildren();
+          files.forEach(file => {
+            const item = document.createElement('span'); item.className = 'event-image-selection-item';
+            if (type === 'image' && file.type.indexOf('image/') === 0) {
+              const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); item.appendChild(img); }; reader.readAsDataURL(file);
+            }
+            const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name); preview.appendChild(item);
+          });
+        });
         input.dataset.columnType = type;
         input.dataset.columnRequired = String(column.IsRequired === true || String(column.IsRequired).toLowerCase() === 'true');
         input.required = input.dataset.columnRequired === 'true';
@@ -3148,8 +3164,9 @@
                 const dataType = String(input.dataset.columnType || '').toLowerCase();
                 let item = '';
                 if (input.type === 'file') {
-                  const selected = input.files && input.files[0];
-                  if (selected) { item = await this.uploadConfiguredFormFile(selected, dataType, projectId, input); hasAnyValue = true; }
+                  const selectedFiles = Array.from(input.files || []);
+                  if (dataType === 'image' && selectedFiles.length) { item = await this.uploadConfiguredFormImages(selectedFiles, projectId, input); hasAnyValue = true; }
+                  else if (selectedFiles.length) { item = await this.uploadConfiguredFormFile(selectedFiles[0], dataType, projectId, input); hasAnyValue = true; }
                   else if (input.dataset.uploadedAttachment) { try { item = JSON.parse(input.dataset.uploadedAttachment); hasAnyValue = true; } catch (error) {} }
                 } else {
                   item = input.type === 'checkbox' ? input.checked : input.value;
@@ -3161,7 +3178,7 @@
               }
               if (hasAnyValue) {
                 const missing = inputs.find(input => input.dataset.columnRequired === 'true' &&
-                  (input.type === 'file' ? !(input.files && input.files[0]) && !input.dataset.uploadedAttachment : (input.value === '' || input.value === null || input.value === undefined)));
+                  (input.type === 'file' ? !(input.files && input.files.length) && !input.dataset.uploadedAttachment : (input.value === '' || input.value === null || input.value === undefined)));
                 if (missing) { this.showFormError('ستون «' + (missing.getAttribute('aria-label') || missing.dataset.columnCode) + '» الزامی است.'); missing.focus(); return null; }
                 valueRows.push(value);
               }
@@ -3173,8 +3190,10 @@
             if (!input) continue;
             let value = '';
             if (input.type === 'file') {
-              const selected = input.files && input.files[0];
-              if (selected) value = await this.uploadConfiguredFormFile(selected, String(info.DataType || 'file').toLowerCase(), projectId, input);
+              const dataType = String(info.DataType || 'file').toLowerCase();
+              const selectedFiles = Array.from(input.files || []);
+              if (dataType === 'image' && selectedFiles.length) value = await this.uploadConfiguredFormImages(selectedFiles, projectId, input);
+              else if (selectedFiles.length) value = await this.uploadConfiguredFormFile(selectedFiles[0], dataType, projectId, input);
               else if (input.dataset.uploadedAttachment) { try { value = JSON.parse(input.dataset.uploadedAttachment); } catch (error) {} }
             } else {
               value = input.type === 'checkbox' ? input.checked : input.value;
@@ -3197,13 +3216,21 @@
       return responses;
     },
 
+    uploadConfiguredFormImages: async function (files, projectId, input) {
+      const selected = Array.from(files || []);
+      if (selected.length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.');
+      const uploaded = [];
+      for (const file of selected) uploaded.push(await this.uploadConfiguredFormFile(file, 'image', projectId, input));
+      if (input) input.dataset.uploadedAttachment = JSON.stringify(uploaded);
+      return uploaded;
+    },
+
     uploadConfiguredFormFile: async function (file, dataType, projectId, input) {
       // Reuse an upload only when it belongs to this exact File object.
       // A previously saved attachment may have the same name/size as a newly
       // selected replacement; metadata equality must never suppress that upload.
-      if (input && input._pmsUploadedFile === file && input._pmsUploadedAttachment) {
-        return input._pmsUploadedAttachment;
-      }
+      if (input && input._pmsUploadedAttachments && input._pmsUploadedAttachments.has(file)) return input._pmsUploadedAttachments.get(file);
+      if (input && input._pmsUploadedFile === file && input._pmsUploadedAttachment) return input._pmsUploadedAttachment;
       if (!projectId) throw new Error('بارگذاری فایل در رویداد مستقل امکان‌پذیر نیست؛ این فرم باید به پروژه متصل باشد.');
       const maxBytes = 10 * 1024 * 1024;
       const extension = String(file.name || '').split('.').pop().toLowerCase();
@@ -3224,6 +3251,8 @@
       const value = {AttachmentID:attachment.ID || attachment.Id,FileName:attachment.FileName || file.name,MimeType:attachment.MimeType || mime,FileSize:Number(attachment.FileSize || file.size),AttachmentType:attachmentType};
       if (input) {
         input.dataset.uploadedAttachment = JSON.stringify(value);
+        if (!input._pmsUploadedAttachments) input._pmsUploadedAttachments = new Map();
+        input._pmsUploadedAttachments.set(file, value);
         input._pmsUploadedFile = file;
         input._pmsUploadedAttachment = value;
       }
@@ -3263,7 +3292,7 @@
         };
 
         input.type = type === 'image' || type === 'file' ? 'file' : (types[type] || 'text');
-        if (type === 'image') input.accept = 'image/jpeg,image/png,image/webp,image/gif';
+        if (type === 'image') { input.accept = 'image/jpeg,image/png,image/webp,image/gif'; input.multiple = true; }
         if (type === 'file') input.accept = '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         if (type === 'number') input.step = 'any';
       }
