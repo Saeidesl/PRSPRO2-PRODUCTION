@@ -74,14 +74,14 @@ test('free workflow event rules expose and persist a separate display order', ()
   const source = read('js/modules/workflows.js');
   assert.match(source, /workflow-rule-display-order/);
   assert.match(source, /data-field="display-order"/);
-  assert.match(source, /DisplayOrder:\\s*Number\\(row\\.querySelector/);
+  assert.ok(source.includes('DisplayOrder: Number(row.querySelector'));
   assert.match(source, /const free = sequenceMode === 'FREE'/);
-  assert.match(source, /appendRuleRow\\(rows, rule, sequence\\.value, index \\+ 1\\)/);
+  assert.ok(source.includes('appendRuleRow(rows, rule, sequence.value, index + 1)'));
 });
 
 test('event type picker sorts free workflow events by display order without enforcing execution order', () => {
   const source = read('js/modules/events.js');
-  assert.match(source, /ruleA\\.displayOrder/);
+  assert.ok(source.includes('ruleA.displayOrder'));
   assert.match(source, /sequenceMode === 'STRICT'/);
   assert.match(source, /sequenceMode === 'GROUPED'/);
   assert.match(source, /sequenceMode === 'STRICT' && requiredIncomplete/);
