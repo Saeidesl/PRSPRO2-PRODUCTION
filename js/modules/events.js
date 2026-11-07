@@ -103,6 +103,7 @@
     searchTimer: null,
     historySortOrder: 'desc',
     preselectedProjectId: '',
+    pendingProjectHistoryId: '',
     entryMode: 'all',
     amendmentMode: false,
     amendmentSourceEventId: '',
@@ -151,6 +152,12 @@
       if (workEntry) workEntry.hidden = !this.canAccessProjectOptions;
 
       this.load().then(function () {
+        if (Events.pendingProjectHistoryId) {
+          const projectId = Events.pendingProjectHistoryId;
+          Events.pendingProjectHistoryId = '';
+          Events.applyProjectHistoryFilter(projectId);
+          return;
+        }
         if (Events.preselectedProjectId) {
           Events.entryMode = 'project';
           Events.openForm();
@@ -762,6 +769,51 @@
         .sort(function (a, b) {
           return a.label.localeCompare(b.label, 'fa');
         });
+    },
+
+    applyProjectHistoryFilter: function (projectId) {
+      const id = String(projectId || '').trim();
+      if (!id) return;
+      const resetIds = [
+        'event-type-filter', 'event-status-filter', 'event-creator-filter',
+        'event-department-filter', 'event-occurred-from', 'event-occurred-to',
+        'event-created-from', 'event-created-to', 'event-search'
+      ];
+      resetIds.forEach(function (fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = '';
+      });
+
+      const scope = document.getElementById('event-history-scope');
+      if (scope) scope.value = 'all';
+
+      const projectFilter = document.getElementById('event-project-filter');
+      if (projectFilter) {
+        if (!Array.from(projectFilter.options).some(function (option) { return option.value === id; })) {
+          const project = Events.findById(Events.projects, id);
+          const option = document.createElement('option');
+          option.value = id;
+          option.textContent = project
+            ? (project.ProjectCode || project.Title || project.Name || id)
+            : id;
+          projectFilter.appendChild(option);
+        }
+        projectFilter.value = id;
+      }
+
+      const content = document.getElementById('events-filter-content');
+      const toggle = document.getElementById('events-filter-toggle');
+      const arrow = document.getElementById('events-filter-arrow');
+      if (content) content.hidden = false;
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.classList.add('is-expanded');
+      }
+      if (arrow) arrow.textContent = '⌃';
+
+      this.applyFilters();
+      const history = document.querySelector('.events-history-section');
+      if (history) history.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
 
     applyFilters: function () {

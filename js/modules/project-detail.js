@@ -91,6 +91,9 @@
       const addEventButton = document.getElementById(
         'project-add-event-button'
       );
+      const viewEventsButton = document.getElementById(
+        'project-view-events-button'
+      );
 
       if (backButton && !backButton.dataset.projectDetailBound) {
         backButton.dataset.projectDetailBound = '1';
@@ -120,8 +123,28 @@
 
           if (window.PMS.Events) {
             window.PMS.Events.preselectedProjectId = ProjectDetail.projectId;
+            window.PMS.Events.pendingProjectHistoryId = '';
           }
 
+          window.location.hash = '#events';
+        });
+      }
+
+      const canViewEvents = !!(
+        router &&
+        ((typeof router.isAdmin === 'function' && router.isAdmin()) ||
+          (Array.isArray(router.permissions) &&
+            router.permissions.indexOf('EVENT_VIEW') !== -1))
+      );
+      if (viewEventsButton) viewEventsButton.hidden = !canViewEvents;
+      if (viewEventsButton && !viewEventsButton.dataset.projectDetailBound) {
+        viewEventsButton.dataset.projectDetailBound = '1';
+        viewEventsButton.addEventListener('click', function () {
+          if (!ProjectDetail.projectId || !canViewEvents) return;
+          if (window.PMS.Events) {
+            window.PMS.Events.preselectedProjectId = '';
+            window.PMS.Events.pendingProjectHistoryId = ProjectDetail.projectId;
+          }
           window.location.hash = '#events';
         });
       }
