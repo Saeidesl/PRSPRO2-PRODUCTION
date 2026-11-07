@@ -1489,7 +1489,7 @@
                   html += '</tr></thead><tbody>';
                   dataRows.forEach(function (row) {
                     html += '<tr>';
-                    columns.forEach(function (column) { html += '<td>' + Events.escape(Events.displayValue(row[String(column.Code)])) + '</td>'; });
+                    columns.forEach(function (column) { html += '<td>' + Events.renderEventFormValue(row[String(column.Code)], column.DataType) + '</td>'; });
                     html += '</tr>';
                   });
                   html += '</tbody></table></div>';
@@ -1497,7 +1497,7 @@
                   html += '<p class="event-muted">ردیفی ثبت نشده است.</p>';
                 }
               } else {
-                html += '<div>' + Events.escape(Events.displayValue(value)) + '</div>';
+                html += '<div>' + Events.renderEventFormValue(value, info.DataType) + '</div>';
               }
               html += '</div>';
             });
@@ -1506,7 +1506,12 @@
         }
 
         const content = document.getElementById('event-details-content');
-        if (content) content.innerHTML = html;
+        if (content) {
+          content.innerHTML = html;
+          content.querySelectorAll('[data-event-image-attachment]').forEach(button => {
+            button.addEventListener('click', () => this.openEventImageAttachment(button.dataset.eventImageAttachment));
+          });
+        }
       } catch (error) {
         const content = document.getElementById('event-details-content');
 
@@ -1585,6 +1590,51 @@
 
         return [key, Events.displayValue(value)];
       });
+    },
+
+    renderEventFormValue: function (value, dataType) {
+      const type = String(dataType || '').toLowerCase();
+      if (type === 'image') {
+        const images = Array.isArray(value) ? value : (value && typeof value === 'object' ? [value] : []);
+        if (!images.length) return '<span>-</span>';
+        const canView = PMS.Router && ((typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin()) ||
+          (Array.isArray(PMS.Router.permissions) && PMS.Router.permissions.indexOf('ATTACHMENT_VIEW') !== -1));
+        return '<div class="event-image-gallery">' + images.map(image => {
+          const id = image && (image.AttachmentID || image.ID || image.Id);
+          const name = image && (image.FileName || image.Name) || 'تصویر';
+          return '<span class="event-image-gallery-item">' +
+            (canView && id ? '<button type="button" class="event-image-preview-button" data-event-image-attachment="' + this.escape(id) + '">' + this.escape(name) + '</button>' : this.escape(name)) +
+            '</span>';
+        }).join('') + '</div>';
+      }
+      return this.escape(this.displayValue(value));
+    },
+
+    openEventImageAttachment: async function (attachmentId) {
+      const router = PMS.Router;
+      const canView = router && ((typeof router.isAdmin === 'function' && router.isAdmin()) ||
+        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1));
+      if (!canView || !attachmentId) return;
+      try {
+        const response = await PMS.Api.get('/attachments/' + encodeURIComponent(attachmentId) + '/download', {trackSync:false});
+        const data = PMS.Api.extractData(response) || {};
+        if (!data.Base64 || String(data.MimeType || '').toLowerCase().indexOf('image/') !== 0) throw new Error('تصویر قابل دریافت نیست.');
+        const binary = atob(data.Base64), bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const url = URL.createObjectURL(new Blob([bytes], {type:data.MimeType}));
+        const old = document.getElementById('event-image-preview-modal');
+        if (old) old.remove();
+        const modal = document.createElement('div');
+        modal.id = 'event-image-preview-modal';
+        modal.className = 'event-modal-overlay';
+        modal.innerHTML = '<div class="event-modal-panel" style="max-width:900px"><div class="event-modal-heading"><h3>' + this.escape(data.FileName || 'پیش‌نمایش تصویر') + '</h3><button type="button" class="event-modal-close" aria-label="بستن">×</button></div><div style="padding:16px;text-align:center"><img alt="' + this.escape(data.FileName || 'تصویر') + '" src="' + url + '" style="max-width:100%;max-height:75vh;object-fit:contain"></div></div>';
+        document.body.appendChild(modal);
+        const close = () => { modal.remove(); URL.revokeObjectURL(url); };
+        modal.querySelector('.event-modal-close').addEventListener('click', close);
+        modal.addEventListener('click', event => { if (event.target === modal) close(); });
+      } catch (error) {
+        this.showNotice('پیش‌نمایش تصویر ناموفق بود: ' + this.errorMessage(error), 'warning');
+      }
     },
 
     displayValue: function (value) {
