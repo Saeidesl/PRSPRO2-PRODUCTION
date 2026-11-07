@@ -47,7 +47,7 @@ test('clearing history filters removes the selected project filter', () => {
 
 test('project and events modules use refreshed production assets', () => {
   const index = read('index.html');
-  assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-1/);
+  assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-2/);
   assert.match(index, /events\.js\?v=20261107-project-event-history-shortcut-1/);
 });
 
