@@ -940,3 +940,47 @@
 - Backend انتشار جدید لازم نداشت، زیرا هیچ کد اجرایی Backend تغییر نکرد.
 - مالک محصول تست عملیاتی نسخه منتشرشده را موفق اعلام کرد.
 - ممیزی جامع UI در Run `42397792911` در زمان بستن فاز هنوز در حال اجرا بود؛ این ممیزی عمومی UI مانع پذیرش عملیاتی این تغییر ثبت رویداد نشد.
+
+
+## 2026-11-07 — مودال مرحله‌به‌مرحله پیشرفت ثبت رویداد
+
+### هدف و نتیجه پذیرش
+- هدف: نمایش وضعیت واقعی عملیات ثبت رویداد پس از کلیک روی دکمه ثبت؛ شامل آماده‌سازی فرم/پیوست‌ها، ثبت رویداد در سرور و تازه‌سازی فهرست.
+- مودال به جریان موجود ثبت رویداد متصل شد؛ هیچ فرم، مسیر ثبت، endpoint یا workflow موازی ایجاد نشد.
+- مالک محصول نسخه عملیاتی منتشرشده را تست و موفقیت آن را تأیید کرد؛ فاز در تاریخ 2026-11-07 بسته شد.
+
+### نقشه Frontend و پیاده‌سازی
+- `pages/events.html`: همچنان میزبان صفحه موجود ثبت رویداد است؛ markup مودال پیشرفت به‌صورت پویا از ماژول Events ساخته می‌شود.
+- `js/modules/events.js`:
+  - `Events.submitForm`: پس از اعتبارسنجی همگام، وضعیت submit و مودال پیشرفت را پیش از `collectConfiguredFormResponses` فعال می‌کند؛ در صورت invalid بودن پاسخ‌ها، مودال پاک‌سازی می‌شود.
+  - `openSubmitProgressModal`: overlay دسترس‌پذیر RTL را ایجاد می‌کند، فایل‌های انتخاب‌شده و فایل‌های cache‌شده را شناسایی می‌کند و وضعیت اولیه مراحل را تنظیم می‌کند.
+  - `renderSubmitProgressModal`: مراحل و شمارنده واقعی آپلود، وضعیت موفق/هشدار/خطا و پیام پایان را رندر می‌کند.
+  - `setSubmitProgressStep`: وضعیت هر مرحله را به رویداد واقعی جریان ثبت متصل می‌کند.
+  - `recordSubmitProgressUpload`: شمارنده را فقط پس از پاسخ موفق Attachment API به‌روزرسانی می‌کند و با Set از شمارش دوباره فایل‌های cache‌شده جلوگیری می‌کند.
+  - `completeSubmitProgress`, `failSubmitProgress`, `closeSubmitProgressModal`: پایان موفق، خطای قابل مشاهده و بازگشت به فرم موجود برای retry را مدیریت می‌کنند.
+  - `uploadConfiguredFormFile`: پس از موفقیت واقعی upload، پیشرفت فایل را ثبت می‌کند؛ مسیر API و cache قبلی حفظ شده‌اند.
+  - focus trap سراسری: تمرکز صفحه‌کلید را در مودال نگه می‌دارد؛ Escape فقط پس از پایان/خطا مودال را می‌بندد.
+  - مراحل UI: آماده‌سازی و آپلود پیوست‌ها؛ ثبت رویداد از مسیر POST موجود یا اصلاح فرم از مسیر PUT موجود؛ تازه‌سازی فهرست از طریق `reloadEvents()`.
+  - شکست refresh از موفقیت ثبت رویداد جدا نمایش داده می‌شود و `showRefreshNotice()` حفظ شده است.
+- `css/events.css`: استایل overlay و dialog، حالت‌های pending/active/success/warning/error، progress bar، انیمیشن، breakpoint موبایل، رنگ‌های سازگار با theme و `prefers-reduced-motion`.
+- `index.html`: cache-busting فایل‌های CSS و JS برای نسخه مودال به `20261107-event-submit-progress-1` به‌روزرسانی شد.
+- تست جدید `tests/event-submit-progress-modal.test.js` اضافه شد. assertionهای نسخه asset در تست‌های `event-submit-latency.test.js`, `event-history-project-cards.test.js`, `event-queue-project-cards.test.js`, `event-type-loading-state.test.js`, `project-picker.test.js`, `workflow-management.test.js` با نسخه جدید همگام شدند.
+
+### قرارداد Backend، API و داده
+- Backend runtime هیچ تغییری نکرد؛ این قابلیت فقط در Frontend پیاده‌سازی شد.
+- قراردادهای موجود حفظ شدند:
+  - `POST /projects/:projectId/attachments` با مجوز `ATTACHMENT_UPLOAD`.
+  - `POST /events` با مجوز `EVENT_CREATE`.
+  - مسیر اصلاح پاسخ فرم `PUT /events/:eventId/forms/:formId`.
+  - منطق idempotency در `EventService.js:create/_createUnlocked_` و کنترل tenant/مالکیت در `AttachmentService.js`.
+- هیچ endpoint، Sheet، ستون، schema، permission، migration یا داده عملیاتی تغییر نکرد. هیچ deployment جدیدی برای Backend لازم نبود.
+
+### آزمون، ادغام و انتشار
+- Frontend: PR #45 با squash در commit `4a34154b857b06345c923d8b1ec69937a8db1209` روی `main` ادغام شد.
+- Backend: PR #23 صرفاً تغییر مستندات داشت و با squash در commit `12e463dc6123e6d005a6efbd7fa5ca58637324af` روی `main` ادغام شد.
+- Frontend checks، PMS cross-repository QA و PMS frontend agent suite روی commit نهایی موفق شدند.
+- مجموعه تست Frontend شامل ۲۰۱ تست بود و هر ۲۰۱ تست موفق شدند.
+- بررسی syntax، قراردادها و diff، asset/CSS QA و آزمون‌های مرورگر مربوط به keyboard/date-picker موفق شدند.
+- GitHub Pages deployment در Run `42400576366` موفق شد؛ artifact آپلود و publish گزارش موفقیت داد. URL عملیاتی: `https://saeidesl.github.io/PRSPRO2-PRODUCTION/`.
+- مالک محصول نسخه زنده را تست کرد و صریحاً موفقیت را تأیید کرد.
+- هیچ تغییر اجرایی Backend یا انتشار Apps Script برای این فاز لازم نبود.
