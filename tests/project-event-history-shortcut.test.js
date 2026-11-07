@@ -33,7 +33,7 @@ test('project history shortcut applies the project filter across all permitted e
   assert.match(method, /projectFilter\.value = id/);
   assert.match(method, /events-filter-content/);
   assert.match(method, /this\.applyFilters\(\)/);
-  assert.match(source, /project: this\.projectHistoryFilterId \|\| get\('event-project-filter'\)/);
+  assert.match(source, /project: get\('event-project-filter'\)/);
 });
 
 test('clearing history filters also removes the forced project filter', () => {
