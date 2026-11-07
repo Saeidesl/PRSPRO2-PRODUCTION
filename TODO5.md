@@ -29,6 +29,8 @@
 
 - [x] **Task 1 — Discovery & Planning**: بررسی صفحه ثبت، submit، upload و قرارداد API انجام شد.
   - *Log:* `pages/events.html` میزبان فرم موجود است؛ `js/modules/events.js:Events.submitForm` پاسخ‌ها را با `collectConfiguredFormResponses` جمع می‌کند و فایل‌ها را از مسیرهای موجود بارگذاری می‌کند؛ `js/core/api.js:PMS.Api` transport واحد است. اعلان از Backend انجام می‌شود و به تغییر UI یا ارسال جداگانه Frontend نیاز ندارد. شاخه کاری فاز از baseline عملیاتی ساخته شد.
-- [ ] **Task 2 — بررسی سازگاری Frontend با رویداد مستقل و payloadهای موجود (IN PROGRESS)**: اطمینان از اینکه فرم ثبت، ارسال رویداد مستقل را با همان API موجود پشتیبانی می‌کند و پاسخ‌های چندردیفی/تصویری بدون تغییر قرارداد در payload موجود باقی می‌مانند؛ فقط در صورت کشف نقص واقعی اصلاح شود.
-- [ ] **Task 3 — آزمون یکپارچه Frontend/Backend**: بررسی payloadهای پروژه‌ای و مستقل، idempotency، پاسخ فرم‌ها و پیوست‌ها در کنار Backend؛ عدم ارسال اعلان از Frontend.
-- [ ] **Task 4 — همگام‌سازی و انتشار Frontend در صورت نیاز**: اگر هیچ تغییر اجرایی Frontend لازم نبود، فقط ثبت سازگاری در PR انجام شود و انتشار Frontend بی‌دلیل اجرا نشود؛ در غیر این صورت تست، PR و GitHub Pages طبق workflow موجود.
+- [x] **Task 2 — بررسی سازگاری Frontend با رویداد مستقل و payloadهای موجود**: بررسی شد؛ Frontend از قبل برای `ConnectionType=INDEPENDENT` مقدار `ProjectID` خالی می‌فرستد و از همان `POST /events` استفاده می‌کند؛ پاسخ فرم‌ها و فایل‌ها نیز در مسیرهای موجود آماده می‌شوند. تغییر اجرایی Frontend لازم نیست.
+  - *Log:* `js/modules/events.js:Events.submitForm` نوع مستقل را تشخیص می‌دهد و `ProjectID: ''` را همراه `EventTypeID`, `OccurredAt`, `Description`, `FormResponses` و `IdempotencyKey` در payload موجود می‌فرستد؛ upload همچنان از مسیر موجود و transport از `PMS.Api` انجام می‌شود. هیچ اعلان سمت Frontend یا مسیر موازی اضافه نشد.
+- [x] **Task 3 — آزمون یکپارچه Frontend/Backend**: سازگاری payload با Backend و عدم نیاز به تغییر Frontend تأیید شد.
+  - *Log:* Backend `EventService._createUnlocked_` اکنون اعلان را بعد از تکمیل ذخیره نهایی برای رویدادهای پروژه‌ای و مستقل فراخوانی می‌کند؛ Frontend همچنان فقط یک `POST /events` ارسال می‌کند. PR Frontend #52 فقط TODO5 و ثبت معماری فاز را دارد و تغییر اجرایی/asset لازم نیست.
+- [ ] **Task 4 — همگام‌سازی و تحویل عملیاتی (IN PROGRESS)**: PR مستندات Frontend بازبینی شود؛ ادغام فقط در صورت نیاز و با مجوز؛ هیچ انتشار Frontend بدون تغییر اجرایی لازم نیست.
