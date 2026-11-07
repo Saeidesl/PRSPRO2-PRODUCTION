@@ -104,7 +104,6 @@
     historySortOrder: 'desc',
     preselectedProjectId: '',
     pendingProjectHistoryId: '',
-    projectHistoryFilterId: '',
     entryMode: 'all',
     amendmentMode: false,
     amendmentSourceEventId: '',
@@ -775,8 +774,6 @@
     applyProjectHistoryFilter: function (projectId) {
       const id = String(projectId || '').trim();
       if (!id) return;
-      this.projectHistoryFilterId = id;
-
       const resetIds = [
         'event-type-filter', 'event-status-filter', 'event-creator-filter',
         'event-department-filter', 'event-occurred-from', 'event-occurred-to',
@@ -826,7 +823,7 @@
       };
 
       const filters = {
-        project: this.projectHistoryFilterId || get('event-project-filter'),
+        project: get('event-project-filter'),
         type: get('event-type-filter'),
         scope: get('event-history-scope') || 'mine',
         creator: get('event-creator-filter'),
@@ -995,7 +992,6 @@
     },
 
     clearHistoryFilters: function () {
-      this.projectHistoryFilterId = '';
       const ids = [
         'event-history-scope', 'event-project-filter', 'event-creator-filter',
         'event-department-filter', 'event-type-filter', 'event-status-filter',
