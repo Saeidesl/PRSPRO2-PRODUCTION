@@ -39,7 +39,7 @@ test('draft restrictions, independent events, and stale workflow requests are ha
 test('event creation controls are hidden or blocked without EVENT_CREATE permission', () => {
   assert.match(source, /this\.canCreateEvents = isAdmin \|\| permissions\.indexOf\('EVENT_CREATE'\) !== -1/);
   assert.match(source, /if \(!this\.canCreateEvents \|\| this\.modalOpen \|\| this\.submitting\) return/);
-  assert.match(source, /Events\\.canCreateEvents\\s*\\?/);
+  assert.match(source, /Events\.canCreateEvents\s*\?/);
 });
 
 test('disabled event types cannot enable event submission', () => {
