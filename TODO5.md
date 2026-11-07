@@ -33,4 +33,5 @@
   - *Log:* `js/modules/events.js:Events.submitForm` نوع مستقل را تشخیص می‌دهد و `ProjectID: ''` را همراه `EventTypeID`, `OccurredAt`, `Description`, `FormResponses` و `IdempotencyKey` در payload موجود می‌فرستد؛ upload همچنان از مسیر موجود و transport از `PMS.Api` انجام می‌شود. هیچ اعلان سمت Frontend یا مسیر موازی اضافه نشد.
 - [x] **Task 3 — آزمون یکپارچه Frontend/Backend**: سازگاری payload با Backend و عدم نیاز به تغییر Frontend تأیید شد.
   - *Log:* Backend `EventService._createUnlocked_` اکنون اعلان را بعد از تکمیل ذخیره نهایی برای رویدادهای پروژه‌ای و مستقل فراخوانی می‌کند؛ Frontend همچنان فقط یک `POST /events` ارسال می‌کند. PR Frontend #52 فقط TODO5 و ثبت معماری فاز را دارد و تغییر اجرایی/asset لازم نیست.
-- [ ] **Task 4 — همگام‌سازی و تحویل عملیاتی (IN PROGRESS)**: PR مستندات Frontend بازبینی شود؛ ادغام فقط در صورت نیاز و با مجوز؛ هیچ انتشار Frontend بدون تغییر اجرایی لازم نیست.
+- [x] **Task 4 — همگام‌سازی و تحویل Frontend**: PR مستندات Frontend ادغام شد؛ به‌دلیل نبود تغییر اجرایی در Frontend، انتشار جدید لازم نیست.
+  - *Log:* PR Frontend #52 با روش squash در `main` ادغام شد (merge commit: `42fbe4a32f54e247a487dc6d3d8016ad55ef5119`). هیچ فایل اجرایی یا asset فرانت‌اند تغییر نکرد؛ فقط TODO5 به‌روزرسانی شد. Frontend موجود با قرارداد فعلی `POST /events` سازگار است.
