@@ -229,20 +229,15 @@ test('project detail replaces scattered information panel with event-backed reus
 });
 
 
-test('event form supports quick and full display modes without discarding optional values',()=>{
+test('event form exposes all configured fields in one complete mode while preserving visibility and repeatable rows',()=>{
   const events=read('js/modules/events.js');
   const css=read('css/events.css');
-  assert.match(events,/data-form-mode="quick"/);
-  assert.match(events,/data-form-mode="full"/);
-  assert.match(events,/updateFormMode: function/);
-  assert.match(events,/dataset\.quickHidden/);
-  assert.match(events,/dataset\.visibilityHidden === 'true'/);
-  assert.match(events,/wrapper\.dataset\.formRequired = String\(required\)/);
-  assert.doesNotMatch(events,/wrapper\.dataset\.formRequired = String\(required \|\| mappingRequired \|\| hasRequiredColumns\)/);
-  assert.match(events,/تکمیل این فرم برای ثبت رویداد الزامی است/);
-  assert.match(events,/اطلاعات واردشده پاک نمی‌شود/);
-  assert.match(css,/content: attr\(data-label\)/);
-  assert.match(css,/\.event-modal-table tr\[data-form-row\] td::before/);
+  assert.doesNotMatch(events,/data-form-mode|updateFormMode|quickHidden|ثبت سریع/);
+  assert.ok(events.includes('wrapper.dataset.visibilityRule = JSON.stringify(visibilityRule || {})'));
+  assert.ok(events.includes('wrapper.hidden = !visible;'));
+  assert.ok(events.includes("input.required = visible && input.dataset.baseRequired === 'true';"));
+  assert.ok(css.includes('content: attr(data-label)'));
+  assert.ok(css.includes('.event-modal-table tr[data-form-row] td::before'));
 });
 
 
