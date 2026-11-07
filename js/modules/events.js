@@ -90,6 +90,7 @@
     eventContextHistoryRequests: {},
     eventTypes: [],
     canCreateEvents: false,
+    canViewEventHistory: false,
     canAccessProjectOptions: false,
     formDefinitions: [],
     formsReady: true,
@@ -103,7 +104,6 @@
     searchTimer: null,
     historySortOrder: 'desc',
     preselectedProjectId: '',
-    pendingProjectHistoryId: '',
     entryMode: 'all',
     amendmentMode: false,
     amendmentSourceEventId: '',
@@ -138,6 +138,7 @@
         ? PMS.Router.permissions : [];
       const isAdmin = !!(PMS.Router && typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin());
       this.canCreateEvents = isAdmin || permissions.indexOf('EVENT_CREATE') !== -1;
+      this.canViewEventHistory = isAdmin || permissions.indexOf('EVENT_VIEW') !== -1;
       this.canAccessProjectOptions = isAdmin ||
         permissions.indexOf('PROJECT_VIEW') !== -1 ||
         permissions.indexOf('PROJECT_CREATE') !== -1;
@@ -152,12 +153,6 @@
       if (workEntry) workEntry.hidden = !this.canAccessProjectOptions;
 
       this.load().then(function () {
-        if (Events.pendingProjectHistoryId) {
-          const projectId = Events.pendingProjectHistoryId;
-          Events.pendingProjectHistoryId = '';
-          Events.applyProjectHistoryFilter(projectId);
-          return;
-        }
         if (Events.preselectedProjectId) {
           Events.entryMode = 'project';
           Events.openForm();
@@ -310,6 +305,15 @@
           if (PMS.Alert && typeof PMS.Alert.info === 'function') {
             PMS.Alert.info('این امکان فعلاً در دسترس نیست و به‌زودی فعال می‌شود');
           }
+          return;
+        }
+
+        const queueHistoryAction = target.closest('.event-queue-history-button');
+        if (queueHistoryAction) {
+          event.preventDefault();
+          if (!Events.canViewEventHistory) return;
+          const projectId = String(queueHistoryAction.dataset.projectId || '').trim();
+          if (projectId) Events.applyProjectHistoryFilter(projectId);
           return;
         }
 
@@ -1146,6 +1150,15 @@
           const eventDate = latestEvent
             ? Events.formatDate(latestEvent.CreatedAt || latestEvent.OccurredAt)
             : '';
+          const primaryAction = definition.key === 'completed'
+            ? '<button type="button" class="btn btn-secondary event-queue-change-request-button">درخواست ثبت تغییرات</button>'
+            : (Events.canCreateEvents
+              ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '">ثبت رویداد برای این پروژه</button>'
+              : '');
+          const historyAction = Events.canViewEventHistory
+            ? '<button type="button" class="btn btn-secondary event-queue-history-button" data-project-id="' + Events.escape(id) + '">رویدادهای ثبت‌شده برای این پروژه</button>'
+            : '';
+          const queueActions = [primaryAction, historyAction].filter(Boolean).join('');
           return '<article class="event-queue-project queue-' + definition.key + '" data-queue="' + definition.key + '" data-event-project-card="' + Events.escape(id) + '">' +
             '<div class="event-queue-project-main">' +
               '<div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
@@ -1162,9 +1175,9 @@
                 '<strong>' + Events.escape(eventType) + '</strong>' +
                 '<span>' + Events.escape(eventCreator) + (eventDate ? ' · ' + Events.escape(eventDate) : '') + '</span></div>'
               : '<div class="event-queue-latest-event is-empty"><span class="event-queue-latest-label">آخرین رویداد</span><span>هنوز رویدادی ثبت نشده است.</span></div>') +
-            (definition.key === 'completed'
-              ? '<button type="button" class="btn btn-secondary event-queue-change-request-button">درخواست ثبت تغییرات</button>'
-              : (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '">ثبت رویداد برای این پروژه</button>' : '')) +
+            (queueActions
+              ? '<div class="event-queue-project-actions">' + queueActions + '</div>'
+              : '') +
             '</article>';
         }).join('');
       });
