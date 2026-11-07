@@ -3070,9 +3070,10 @@
               if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; preview.className = 'event-image-selection-preview'; wrapper.appendChild(preview); }
               preview.replaceChildren();
               files.forEach(file => {
+                const fileDataPromise = this.getConfiguredFormFileData(file, input);
                 const item = document.createElement('span'); item.className = 'event-image-selection-item'; item.style.cssText = 'display:inline-flex;flex-direction:column;gap:4px;align-items:center;width:112px;padding:6px;border:1px solid var(--color-border,#d1d5db);border-radius:8px;margin:4px';
                 if (isImage && file.type.indexOf('image/') === 0) {
-                  this.getConfiguredFormFileData(file, input).then(dataUrl => { if (!Array.from(input.files || []).includes(file)) return; const img = document.createElement('img'); img.alt = file.name; img.src = dataUrl; img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }).catch(() => {});
+                  fileDataPromise.then(dataUrl => { if (!Array.from(input.files || []).includes(file)) return; const img = document.createElement('img'); img.alt = file.name; img.src = dataUrl; img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }).catch(() => {});
                 }
                 const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
                 const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
@@ -3168,9 +3169,10 @@
           if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; preview.className = 'event-image-selection-preview'; cell.appendChild(preview); }
           preview.replaceChildren();
           files.forEach(file => {
+            const fileDataPromise = this.getConfiguredFormFileData(file, input);
             const item = document.createElement('span'); item.className = 'event-image-selection-item';
             if (type === 'image' && file.type.indexOf('image/') === 0) {
-              this.getConfiguredFormFileData(file, input).then(dataUrl => { if (!Array.from(input.files || []).includes(file)) return; const img = document.createElement('img'); img.alt = file.name; img.src = dataUrl; img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }).catch(() => {});
+              fileDataPromise.then(dataUrl => { if (!Array.from(input.files || []).includes(file)) return; const img = document.createElement('img'); img.alt = file.name; img.src = dataUrl; img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }).catch(() => {});
             }
             const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
                 const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
