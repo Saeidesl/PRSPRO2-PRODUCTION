@@ -7,23 +7,31 @@ const test = require('node:test');
 
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 
-test('project detail exposes the registered-events shortcut beside event creation', () => {
+test('project cards on the events page expose history beside project event registration', () => {
+  const source = read('js/modules/events.js');
+  assert.match(source, /event-queue-project-actions/);
+  assert.match(source, /event-queue-register-button/);
+  assert.match(source, /event-queue-history-button/);
+  assert.match(source, /رویدادهای ثبت‌شده برای این پروژه/);
+  assert.match(source, /data-project-id=.*Events\.escape\(id\)/);
+});
+
+test('history action filters the selected project in the existing events page', () => {
+  const source = read('js/modules/events.js');
+  assert.match(source, /target\.closest\('\.event-queue-history-button'\)/);
+  assert.match(source, /Events\.applyProjectHistoryFilter\(projectId\)/);
+  assert.match(source, /canViewEventHistory = isAdmin \|\| permissions\.indexOf\('EVENT_VIEW'\) !== -1/);
+});
+
+test('project detail retains event registration but no longer hosts the history shortcut', () => {
   const page = read('pages/project-detail.html');
-  const actions = page.slice(page.indexOf('class="page-header-actions"'), page.indexOf('</div>', page.indexOf('class="page-header-actions"')));
-  assert.match(actions, /id="project-add-event-button"/);
-  assert.match(actions, /id="project-view-events-button"/);
-  assert.match(actions, /رویدادهای ثبت‌شده برای این پروژه/);
-});
-
-test('project detail opens the existing events route with the current project context', () => {
   const source = read('js/modules/project-detail.js');
-  assert.match(source, /project-view-events-button/);
-  assert.match(source, /router\.hasRouteAccess\('events'\)/);
-  assert.match(source, /pendingProjectHistoryId = ProjectDetail\.projectId/);
-  assert.match(source, /window\.location\.hash = '#events'/);
+  assert.match(page, /id="project-add-event-button"/);
+  assert.doesNotMatch(page, /project-view-events-button|رویدادهای ثبت‌شده برای این پروژه/);
+  assert.doesNotMatch(source, /project-view-events-button|pendingProjectHistoryId/);
 });
 
-test('project history shortcut applies the project filter across all permitted events', () => {
+test('project history action applies the selected project across all permitted events', () => {
   const source = read('js/modules/events.js');
   const start = source.indexOf('applyProjectHistoryFilter: function');
   const end = source.indexOf('applyFilters: function', start);
@@ -47,8 +55,8 @@ test('clearing history filters removes the selected project filter', () => {
 
 test('project and events modules use refreshed production assets', () => {
   const index = read('index.html');
-  assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-2/);
-  assert.match(index, /events\.js\?v=20261107-project-event-history-shortcut-1/);
+  assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-placement-1/);
+  assert.match(index, /events\.js\?v=20261107-project-event-history-shortcut-placement-1/);
 });
 
 test('events route grants access to users who can view or create events', () => {
