@@ -36,7 +36,7 @@ test('workflow editor supports strict, free, grouped order and publication', () 
 
 test('workflow module cache version is refreshed', () => {
   const html = read('index.html');
-  assert.match(html, /js\/modules\/workflows\.js\?v=20261105-repeatable-workflow-rules-1/);
+  assert.match(html, /js\/modules\/workflows\.js\?v=20261107-free-event-display-order-1/);
 });
 
 test('event registration displays current workflow step requirements', () => {
@@ -49,7 +49,7 @@ test('event registration displays current workflow step requirements', () => {
 
 test('event module cache version is refreshed for workflow progress', () => {
   const html = read('index.html');
-  assert.match(html, /js\/modules\/events\.js\?v=20261107-single-full-event-form-1/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261107-free-event-display-order-1/);
 });
 
 
