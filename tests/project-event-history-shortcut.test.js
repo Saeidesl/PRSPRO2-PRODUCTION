@@ -18,7 +18,7 @@ test('project detail exposes the registered-events shortcut beside event creatio
 test('project detail opens the existing events route with the current project context', () => {
   const source = read('js/modules/project-detail.js');
   assert.match(source, /project-view-events-button/);
-  assert.match(source, /permissions\.indexOf\('EVENT_VIEW'\)/);
+  assert.match(source, /router\.hasRouteAccess\('events'\)/);
   assert.match(source, /pendingProjectHistoryId = ProjectDetail\.projectId/);
   assert.match(source, /window\.location\.hash = '#events'/);
 });
@@ -47,6 +47,11 @@ test('clearing history filters removes the selected project filter', () => {
 
 test('project and events modules use refreshed production assets', () => {
   const index = read('index.html');
-  assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-1/);
+  assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-2/);
   assert.match(index, /events\.js\?v=20261107-project-event-history-shortcut-1/);
+});
+
+test('events route grants access to users who can view or create events', () => {
+  const router = read('js/core/router.js');
+  assert.match(router, /events:\s*\['EVENT_VIEW',\s*'EVENT_CREATE'\]/);
 });

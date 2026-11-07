@@ -5,7 +5,7 @@
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 
 ### مخازن و شاخه‌های عملیاتی
-- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `feat/project-registered-events-button-20261107`، شاخه از main با مبنای آخرین commit `1126b6be3908ae0ddf590747586b78c53bbeb53f`.
+- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `fix/project-event-history-button-permission-20261107`، شاخه از main پس از ادغام قابلیت با مبنای `60c6ff4908d1e22f3a5eacbeb814b1cae8cad708`.
 - Backend: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`، شاخه `feat/project-registered-events-button-20261107`، شاخه از main با مبنای آخرین commit `5838f1ccca5959d87fbdfe8dbb7561ef7414400e`.
 - هر دو مخزن عملیاتی، TODO5 و ARCHITECTURE بررسی شدند؛ فاز قبلی مودال پیشرفت ثبت رویداد بسته و TODO5 پاک‌سازی شده بود. مخازن توسعه و main نباید تغییر کنند.
 
@@ -41,6 +41,8 @@
 - *Log:* `pages/project-detail.html`: افزودن `#project-view-events-button` کنار `#project-add-event-button`. `js/modules/project-detail.js:ProjectDetail.bindEvents`: کنترل مجوز `EVENT_VIEW`/ادمین و انتقال `ProjectDetail.projectId` در `Events.pendingProjectHistoryId` به route موجود `#events`. `js/modules/events.js:Events.init`: مصرف شناسه پس از پایان `load()`؛ `applyProjectHistoryFilter(projectId)`: پاک‌سازی فیلترهای قبلی، انتخاب پروژه، scope=`all`، بازکردن `#events-filter-content` و اسکرول به تاریخچه؛ `applyFilters()` و `clearHistoryFilters()` همچنان مسیر استاندارد فیلتر/پاک‌سازی را اجرا می‌کنند. `index.html`: cache-busting هر دو ماژول به `20261107-project-event-history-shortcut-1`. تست جدید `tests/project-event-history-shortcut.test.js`.
  
 ### Task 3 — Regression، QA، ادغام و انتشار
+- *یافته رفع باگ:* انتشار GitHub Pages پس از ادغام PR #47 با موفقیت اجرا شد. شرط نمایش دکمه فقط `EVENT_VIEW` را می‌پذیرفت، درحالی‌که route موجود رویدادها `EVENT_VIEW` یا `EVENT_CREATE` را می‌پذیرد؛ این ناهماهنگی باعث مخفی‌شدن دکمه برای کاربران دارای فقط مجوز ثبت رویداد می‌شد.
+- *اقدام اصلاحی:* شرط نمایش/کلیک دکمه به `Router.hasRouteAccess('events')` متصل می‌شود تا دقیقاً از همان قواعد دسترسی route موجود استفاده کند؛ نسخه `project-detail.js` در `index.html` نیز cache-bust می‌شود.
 - تست خودکار برای دکمه، انتقال projectId، فیلتر فقط همان پروژه، نمایش رویدادهای ثبت‌شده توسط دیگر کاربرانِ مجاز و پاک‌کردن فیلتر.
 - بررسی مجوزها، حالت بدون رویداد، فیلترهای قبلی، cache و واکنش‌گرایی.
 - اجرای CI و Cross-repository QA؛ ادغام شاخه‌های عملیاتی و انتشار Frontend پس از موفقیت کنترل‌ها؛ Backend deployment لازم نیست مگر تغییر runtime اثبات شود.
