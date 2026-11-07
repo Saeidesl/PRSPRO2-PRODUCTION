@@ -36,9 +36,13 @@ test('project history shortcut applies the project filter across all permitted e
   assert.match(source, /project: get\('event-project-filter'\)/);
 });
 
-test('clearing history filters also removes the forced project filter', () => {
+test('clearing history filters removes the selected project filter', () => {
   const source = read('js/modules/events.js');
-  assert.match(source, /clearHistoryFilters: function \(\) \{\s*this\.projectHistoryFilterId = '';/);
+  const start = source.indexOf('clearHistoryFilters: function');
+  const end = source.indexOf('activateQueue: function', start);
+  const method = source.slice(start, end);
+  assert.match(method, /'event-project-filter'/);
+  assert.match(method, /element\.value = id === 'event-history-scope' \? 'mine' : ''/);
 });
 
 test('project and events modules use refreshed production assets', () => {
