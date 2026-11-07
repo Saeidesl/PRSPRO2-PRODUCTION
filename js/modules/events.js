@@ -3050,9 +3050,9 @@
               if (!preview) { preview = document.createElement('div'); preview.dataset.eventFilePreview = 'true'; preview.className = 'event-image-selection-preview'; wrapper.appendChild(preview); }
               preview.replaceChildren();
               files.forEach(file => {
-                const item = document.createElement('span'); item.className = 'event-image-selection-item';
+                const item = document.createElement('span'); item.className = 'event-image-selection-item'; item.style.cssText = 'display:inline-flex;flex-direction:column;gap:4px;align-items:center;width:112px;padding:6px;border:1px solid var(--color-border,#d1d5db);border-radius:8px;margin:4px'; item.style.cssText = 'display:inline-flex;flex-direction:column;gap:4px;align-items:center;width:112px;padding:6px;border:1px solid var(--color-border,#d1d5db);border-radius:8px;margin:4px';
                 if (isImage && file.type.indexOf('image/') === 0) {
-                  const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); item.appendChild(img); }; reader.readAsDataURL(file);
+                  const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
                 }
                 const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name); preview.appendChild(item);
               });
@@ -3142,7 +3142,7 @@
           files.forEach(file => {
             const item = document.createElement('span'); item.className = 'event-image-selection-item';
             if (type === 'image' && file.type.indexOf('image/') === 0) {
-              const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); item.appendChild(img); }; reader.readAsDataURL(file);
+              const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
             }
             const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name); preview.appendChild(item);
           });
