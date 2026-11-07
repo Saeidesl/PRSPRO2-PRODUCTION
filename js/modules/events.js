@@ -537,6 +537,9 @@
               onRefresh: function (data) {
                 Events.eventTypes = Events.normalize(data);
                 Events.scheduleRefreshRender();
+                if (document.getElementById('event-create-modal')) {
+                  Events.refreshEventTypeOptions();
+                }
               }
             })
           );
@@ -555,7 +558,12 @@
             Events.projectsLoaded = true;
             Events.projectOptionsToken = currentToken;
           }
-          if (key === 'types') Events.eventTypes = Events.normalize(result.data);
+          if (key === 'types') {
+            Events.eventTypes = Events.normalize(result.data);
+            if (document.getElementById('event-create-modal')) {
+              Events.refreshEventTypeOptions();
+            }
+          }
         });
 
         // Cache hits were already rendered above. Only render here when this
@@ -2306,17 +2314,9 @@
       const workflowPending = !!projectId && (
         this.workflowProgressProjectId !== projectId || this.workflowProgressLoading
       );
-      if (workflowPending) {
-        if (previousValue) typeSelect.dataset.pendingValue = previousValue;
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'در حال آماده‌سازی فهرست رویدادها...';
-        typeSelect.replaceChildren(placeholder);
-        typeSelect.value = '';
-        this.setEventTypeLoadingState(true, projectId);
-        this.updateSubmitAvailability();
-        return;
-      }
+      // Event types are independent of workflow progress. Render them immediately;
+      // workflowRestriction below keeps project-bound options disabled until the
+      // selected project's rules have been loaded and checked.
       this.setEventTypeLoadingState(false, projectId);
       delete typeSelect.dataset.pendingValue;
       const isDraftProject = !!project &&
