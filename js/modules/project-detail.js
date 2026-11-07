@@ -874,8 +874,10 @@
             if (Array.isArray(info.Columns) && entry && typeof entry === 'object') info.Columns.forEach(col => {
               if (String(col.DataType || '').toLowerCase() !== 'image') return;
               const cell = entry[String(col.Code)];
-              const id = cell && typeof cell === 'object' && (cell.AttachmentID || cell.ID);
-              if (id && !this.projectFormImageUrls[String(id)]) ids.add(String(id));
+              (Array.isArray(cell) ? cell : [cell]).forEach(image => {
+                const id = image && typeof image === 'object' && (image.AttachmentID || image.ID);
+                if (id && !this.projectFormImageUrls[String(id)]) ids.add(String(id));
+              });
             });
           });
         });
@@ -894,6 +896,9 @@
     renderProjectFormValue: function (value, dataType) {
       if (value === null || value === undefined || value === '') return '<span>-</span>';
       const type = String(dataType || '').toLowerCase();
+      if (type === 'image' && Array.isArray(value)) {
+        return '<div class="project-form-image-gallery">' + value.map(item => this.renderProjectFormValue(item, 'image')).join('') + '</div>';
+      }
       if (type === 'image') {
         const attachmentId = value && typeof value === 'object' ? (value.AttachmentID || value.ID) : '';
         const url = attachmentId && this.projectFormImageUrls ? this.projectFormImageUrls[String(attachmentId)] :
@@ -1060,6 +1065,9 @@
 
     renderInformationValue: function (value, dataType) {
       const type = String(dataType || '').toLowerCase();
+      if (type === 'image' && Array.isArray(value)) {
+        return '<div class="project-form-image-gallery">' + value.map(item => this.renderInformationValue(item, 'image')).join('') + '</div>';
+      }
       if ((type === 'image' || type === 'file') && value && typeof value === 'object') {
         const id = value.AttachmentID || value.ID;
         if (!id) return '<span>-</span>';
@@ -1142,7 +1150,7 @@
       if (document.getElementById('project-information-styles')) return;
       const style = document.createElement('style');
       style.id = 'project-information-styles';
-      style.textContent = '.project-form-card{border:1px solid var(--color-border);border-radius:10px;margin:14px 0;overflow:hidden}.project-form-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px;background:var(--color-background)}.project-form-card-header h4{margin:0;color:var(--color-text);font-size:14px}.project-form-card-header p{margin:5px 0 0;color:var(--color-text-secondary);font-size:11px}.project-form-event-ref{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}.project-form-card-body{padding:4px 14px}.project-form-field{padding:12px 0;border-bottom:1px solid var(--color-border)}.project-form-field:last-child{border-bottom:0}.project-form-field h4{margin:0 0 8px;font-size:12px;color:var(--color-text-secondary)}.project-form-field-value{font-size:13px;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere}.project-form-empty{color:var(--color-text-secondary);font-size:12px}.project-form-table{min-width:0}.project-form-value-list{margin:0;padding-right:20px}.project-forms-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:12px;background:var(--color-background);font-size:11px}.project-information-item{padding:14px 0;border-bottom:1px solid var(--color-border)}.project-information-item:last-child{border-bottom:0}.project-information-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.project-information-item-head strong{display:block;color:var(--color-text);font-size:13px}.project-information-item-head small{display:block;color:var(--color-text-secondary);font-size:11px;margin-top:4px}.project-information-actions{display:flex;gap:6px;flex-wrap:wrap}.project-information-item-content{margin-top:10px}.information-file-field input{display:block;width:100%;margin-top:6px}.information-file-current{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px}.information-file-preview img{display:block;max-width:180px;max-height:140px;object-fit:contain;margin-top:8px;border-radius:8px}.information-image-preview img{display:block;max-width:100%;max-height:70vh;object-fit:contain;margin:auto}.project-information-value{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--color-text);font-size:13px}.project-information-empty{font-size:12px;color:var(--color-text-secondary)}.project-information-modal .modal{max-width:760px;max-height:90vh;overflow:auto}.project-information-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:12px;margin:10px 0;border:1px solid var(--color-border);border-radius:8px}.project-information-row-actions{display:flex;justify-content:flex-end}.project-information-history-row{padding:12px 0;border-bottom:1px solid var(--color-border);font-size:12px;line-height:1.9}.project-information-history-row strong{color:var(--color-text)}.project-information-history-row pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--color-background);padding:8px;border-radius:6px;direction:ltr;text-align:left}@media(max-width:600px){.project-form-card-header{flex-direction:column}.project-information-item-head{align-items:flex-start;flex-direction:column}.project-information-actions{width:100%}.project-information-actions button{flex:1}}';
+      style.textContent = '.project-form-card{border:1px solid var(--color-border);border-radius:10px;margin:14px 0;overflow:hidden}.project-form-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px;background:var(--color-background)}.project-form-card-header h4{margin:0;color:var(--color-text);font-size:14px}.project-form-card-header p{margin:5px 0 0;color:var(--color-text-secondary);font-size:11px}.project-form-event-ref{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}.project-form-card-body{padding:4px 14px}.project-form-field{padding:12px 0;border-bottom:1px solid var(--color-border)}.project-form-field:last-child{border-bottom:0}.project-form-field h4{margin:0 0 8px;font-size:12px;color:var(--color-text-secondary)}.project-form-field-value{font-size:13px;color:var(--color-text);white-space:pre-wrap;overflow-wrap:anywhere}.project-form-empty{color:var(--color-text-secondary);font-size:12px}.project-form-table{min-width:0}.project-form-value-list{margin:0;padding-right:20px}.project-form-image-gallery{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}.project-form-image-gallery .project-form-inline-image{max-width:160px;max-height:120px;object-fit:contain;border:1px solid var(--color-border);border-radius:8px;padding:3px}.project-forms-count{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:12px;background:var(--color-background);font-size:11px}.project-information-item{padding:14px 0;border-bottom:1px solid var(--color-border)}.project-information-item:last-child{border-bottom:0}.project-information-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.project-information-item-head strong{display:block;color:var(--color-text);font-size:13px}.project-information-item-head small{display:block;color:var(--color-text-secondary);font-size:11px;margin-top:4px}.project-information-actions{display:flex;gap:6px;flex-wrap:wrap}.project-information-item-content{margin-top:10px}.information-file-field input{display:block;width:100%;margin-top:6px}.information-file-current{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px}.information-file-preview img{display:block;max-width:180px;max-height:140px;object-fit:contain;margin-top:8px;border-radius:8px}.information-image-preview img{display:block;max-width:100%;max-height:70vh;object-fit:contain;margin:auto}.project-information-value{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--color-text);font-size:13px}.project-information-empty{font-size:12px;color:var(--color-text-secondary)}.project-information-modal .modal{max-width:760px;max-height:90vh;overflow:auto}.project-information-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:12px;margin:10px 0;border:1px solid var(--color-border);border-radius:8px}.project-information-row-actions{display:flex;justify-content:flex-end}.project-information-history-row{padding:12px 0;border-bottom:1px solid var(--color-border);font-size:12px;line-height:1.9}.project-information-history-row strong{color:var(--color-text)}.project-information-history-row pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--color-background);padding:8px;border-radius:6px;direction:ltr;text-align:left}@media(max-width:600px){.project-form-card-header{flex-direction:column}.project-information-item-head{align-items:flex-start;flex-direction:column}.project-information-actions{width:100%}.project-information-actions button{flex:1}}';
       document.head.appendChild(style);
     },
 
@@ -1178,13 +1186,14 @@
       const required = column.IsRequired === true || String(column.IsRequired).toLowerCase() === 'true';
       const raw = value === null || value === undefined ? '' : value;
       if (type === 'image' || type === 'file') {
-        const current = raw && typeof raw === 'object' ? raw : null;
+        const currentItems = type === 'image' ? (Array.isArray(raw) ? raw : (raw && typeof raw === 'object' ? [raw] : [])) : [];
+        const current = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : null;
         const currentId = current && (current.AttachmentID || current.ID);
         const accept = type === 'image' ? 'image/jpeg,image/png,image/webp,image/gif' :
           '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         return '<div class="form-group information-file-field"><label>' + label + (required ? ' *' : '') +
           '<input type="file" name="' + this.escape(fieldName) + '" data-information-file-input data-file-data-type="' + type +
-          '" data-current-attachment="' + this.escape(current ? JSON.stringify(current) : '') + '" accept="' + accept + '"' +
+          '" data-current-attachment="' + this.escape(current ? JSON.stringify(current) : JSON.stringify(currentItems)) + '" accept="' + accept + '"' + (type === 'image' ? ' multiple' : '') +
           (required && !currentId ? ' required' : '') + (this.canUploadInformationFiles() ? '' : ' disabled') + '></label>' +
           (currentId ? '<div class="information-file-current"><span>' + this.escape(current.FileName || 'فایل ثبت‌شده') + '</span>' +
             (this.canViewInformationFiles() ? '<button type="button" class="btn btn-sm btn-light" data-information-attachment="' + this.escape(currentId) +
