@@ -2261,13 +2261,15 @@
         available.sort(function(a, b) {
           const ruleA = ruleFor(a);
           const ruleB = ruleFor(b);
-          const grouped = String(ruleA.sequenceMode || 'STRICT').toUpperCase() === 'GROUPED' ||
-            String(ruleB.sequenceMode || 'STRICT').toUpperCase() === 'GROUPED';
-          if (grouped) {
+          const sequenceMode = String(ruleA.sequenceMode || ruleB.sequenceMode || 'STRICT').toUpperCase();
+          if (sequenceMode === 'GROUPED') {
             const groupDifference = Number(ruleA.groupOrder || 0) - Number(ruleB.groupOrder || 0);
             if (groupDifference) return groupDifference;
           }
-          return Number(ruleA.eventOrder || 0) - Number(ruleB.eventOrder || 0);
+          if (sequenceMode === 'STRICT') {
+            return Number(ruleA.eventOrder || 0) - Number(ruleB.eventOrder || 0);
+          }
+          return Number(ruleA.displayOrder || 0) - Number(ruleB.displayOrder || 0);
         });
       }
 
