@@ -50,3 +50,8 @@ test('project and events modules use refreshed production assets', () => {
   assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-1/);
   assert.match(index, /events\.js\?v=20261107-project-event-history-shortcut-1/);
 });
+
+test('events route grants access to users who can view or create events', () => {
+  const router = read('js/core/router.js');
+  assert.match(router, /events:\s*\['EVENT_VIEW',\s*'EVENT_CREATE'\]/);
+});
