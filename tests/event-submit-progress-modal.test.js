@@ -59,6 +59,12 @@ test('progress modal is accessible, responsive, theme-aware, and respects reduce
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
 
+test('progress modal keeps keyboard focus contained and allows Escape only after completion', () => {
+  assert.match(source, /const progressOverlay = document\.getElementById\('event-submit-progress-modal'\)/);
+  assert.match(source, /Events\.submitProgressState && Events\.submitProgressState\.finished/);
+  assert.match(source, /overlay\.getAttribute\('role'\) === 'dialog' \? overlay/);
+});
+
 test('event progress assets use refreshed cache-busting versions', () => {
   assert.match(index, /events\.css\?v=20261107-event-submit-progress-1/);
   assert.match(index, /js\/modules\/events\.js\?v=20261107-event-submit-progress-1/);
