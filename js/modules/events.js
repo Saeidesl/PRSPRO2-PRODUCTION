@@ -537,20 +537,7 @@
               onRefresh: function (data) {
                 Events.eventTypes = Events.normalize(data);
                 Events.scheduleRefreshRender();
-                if (document.getElementById('event-create-modal')) {
-                  Events.refreshEventTypeOptions();
-                }
               }
-            }).then(function (result) {
-              // Do not make the event-type picker wait for slower /events or
-              // /projects requests in the shared initial-load Promise.all.
-              if (result && result.cached === false) {
-                Events.eventTypes = Events.normalize(result.data);
-                if (document.getElementById('event-create-modal')) {
-                  Events.refreshEventTypeOptions();
-                }
-              }
-              return result;
             })
           );
         }
@@ -568,12 +555,7 @@
             Events.projectsLoaded = true;
             Events.projectOptionsToken = currentToken;
           }
-          if (key === 'types') {
-            Events.eventTypes = Events.normalize(result.data);
-            if (document.getElementById('event-create-modal')) {
-              Events.refreshEventTypeOptions();
-            }
-          }
+          if (key === 'types') Events.eventTypes = Events.normalize(result.data);
         });
 
         // Cache hits were already rendered above. Only render here when this
@@ -2321,9 +2303,20 @@
       const previousValue = String(typeSelect.dataset.pendingValue || typeSelect.value || '');
       const project = this.findById(this.projects, projectSelect.value);
       const projectId = String(projectSelect.value || '');
-      // Event types are independent of workflow progress. Render them immediately;
-      // workflowRestriction below keeps project-bound options disabled until the
-      // selected project's rules have been loaded and checked.
+      const workflowPending = !!projectId && (
+        this.workflowProgressProjectId !== projectId || this.workflowProgressLoading
+      );
+      if (workflowPending) {
+        if (previousValue) typeSelect.dataset.pendingValue = previousValue;
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'در حال آماده‌سازی فهرست رویدادها...';
+        typeSelect.replaceChildren(placeholder);
+        typeSelect.value = '';
+        this.setEventTypeLoadingState(true, projectId);
+        this.updateSubmitAvailability();
+        return;
+      }
       this.setEventTypeLoadingState(false, projectId);
       delete typeSelect.dataset.pendingValue;
       const isDraftProject = !!project &&
