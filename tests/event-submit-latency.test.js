@@ -36,5 +36,5 @@ test('multiple images upload in bounded batches and preserve selection order', (
 });
 
 test('event submit asset cache-busting version is refreshed', () => {
-  assert.match(index, /js\/modules\/events\.js\?v=20261107-project-event-history-shortcut-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261107-project-event-history-shortcut-placement-1/);
 });
