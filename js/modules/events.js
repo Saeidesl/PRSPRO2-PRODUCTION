@@ -3054,7 +3054,15 @@
                 if (isImage && file.type.indexOf('image/') === 0) {
                   const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
                 }
-                const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name); preview.appendChild(item);
+                const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
+                const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
+                remove.addEventListener('click', () => {
+                  const transfer = new DataTransfer();
+                  Array.from(input.files || []).forEach(selected => { if (selected !== file) transfer.items.add(selected); });
+                  input.files = transfer.files;
+                  input.dispatchEvent(new Event('change', {bubbles:true}));
+                });
+                item.appendChild(remove); preview.appendChild(item);
               });
             });
           });
@@ -3144,7 +3152,15 @@
             if (type === 'image' && file.type.indexOf('image/') === 0) {
               const reader = new FileReader(); reader.onload = () => { const img = document.createElement('img'); img.alt = file.name; img.src = String(reader.result || ''); img.style.cssText = 'width:96px;height:76px;object-fit:contain;border-radius:5px'; item.appendChild(img); }; reader.readAsDataURL(file);
             }
-            const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name); preview.appendChild(item);
+            const name = document.createElement('small'); name.textContent = file.name; item.appendChild(name);
+                const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'حذف تصویر'; remove.style.cssText = 'font-size:11px;padding:3px 7px';
+                remove.addEventListener('click', () => {
+                  const transfer = new DataTransfer();
+                  Array.from(input.files || []).forEach(selected => { if (selected !== file) transfer.items.add(selected); });
+                  input.files = transfer.files;
+                  input.dispatchEvent(new Event('change', {bubbles:true}));
+                });
+                item.appendChild(remove); preview.appendChild(item);
           });
         });
         input.dataset.columnType = type;
