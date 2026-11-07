@@ -62,3 +62,14 @@
 - بررسی عدم تغییر قرارداد `POST /events`، payload، Backend، مجوزها و ساختار داده.
 - اجرای کنترل‌های CI و QA بین‌مخزنی؛ بررسی diff و انتشار فقط طبق گردش‌کار عملیاتی.
 - خروجی قابل آزمون: تنها یک حالت «ثبت کامل»، بدون رگرسیون در جریان‌های موجود.
+
+
+#### Task 2 — Implementation progress (پیاده‌سازی اولیه؛ در انتظار CI و regression)
+
+- `js/modules/events.js`: state مربوط به `formMode`، مقداردهی اولیه quick، دکمه‌های `data-form-mode`، listener انتخاب حالت، `updateFormMode` و منطق `quickHidden` حذف شد. `renderConfiguredForms` دیگر فیلد اختیاری را به دلیل حالت quick مخفی نمی‌کند؛ `applyConfiguredFormVisibility` فقط VisibilityRule واقعی را اعمال می‌کند.
+- `#event-configured-forms-section` اکنون فقط عنوان فرم‌های اطلاعات تکمیلی و محتوای فرم را دارد؛ همه فیلدهای مجاز در حالت واحد نمایش داده می‌شوند.
+- `css/events.css`: استایل انتخاب‌گر حالت حذف شد و استایل responsive جدول چندردیفی و دکمه‌های افزودن/حذف ردیف حفظ شد.
+- `index.html`: cache-busting ماژول رویداد به `20261107-single-full-event-form-1` تغییر کرد.
+- تست جدید `tests/event-form-single-mode.test.js` نبود حالت quick/full و نمایش فیلدها با حفظ VisibilityRule را بررسی می‌کند.
+- اعتبارسنجی ایستای اولیه: هیچ reference به `formMode`, `updateFormMode`, `data-form-mode`, `quickHidden` یا متن «ثبت سریع» در ماژول باقی نماند؛ CSS انتخاب‌گر mode ندارد و تعداد آکولادهای CSS برابر است. اجرای CI و تست‌های کامل هنوز باید تأیید شود.
+- Backend: هیچ فایل runtime، API، Router، permission، Sheet یا schema تغییر نکرده است.
