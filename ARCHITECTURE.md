@@ -984,3 +984,35 @@
 - GitHub Pages deployment در Run `42400576366` موفق شد؛ artifact آپلود و publish گزارش موفقیت داد. URL عملیاتی: `https://saeidesl.github.io/PRSPRO2-PRODUCTION/`.
 - مالک محصول نسخه زنده را تست کرد و صریحاً موفقیت را تأیید کرد.
 - هیچ تغییر اجرایی Backend یا انتشار Apps Script برای این فاز لازم نبود.
+
+
+## 2026-11-07 — میانبر تاریخچه رویدادهای هر پروژه در صفحه رویدادها
+
+### هدف و نتیجه پذیرش
+- افزودن دکمه «رویدادهای ثبت‌شده برای این پروژه» کنار دکمه «ثبت رویداد برای این پروژه» روی کارت پروژه در صفحه «رویدادها».
+- با کلیک، کاربر در همان صفحه باقی می‌ماند و تاریخچه با شناسه همان پروژه فیلتر می‌شود؛ scope تاریخچه روی `all` قرار می‌گیرد تا همه رویدادهای مجاز قابل مشاهده باشند.
+- دکمه تاریخچه از صفحه جزئیات پروژه حذف شد؛ مسیر فعلی ثبت رویداد از جزئیات پروژه حفظ شد.
+- مالک محصول در 2026-11-07 تست نسخه منتشرشده را موفق تأیید کرد.
+
+### نقشه Frontend و نقاط اتصال
+- `js/modules/events.js`:
+  - وضعیت مجوز `EVENT_VIEW` برای نمایش کنترل تاریخچه محاسبه می‌شود؛ مدیر نیز مجاز است.
+  - رندر کارت‌های صف پروژه دکمه `.event-queue-history-button` را با `data-project-id` تولید می‌کند.
+  - handler واگذارشده کلیک، `Events.applyProjectHistoryFilter(projectId)` را در همان صفحه اجرا می‌کند؛ فیلتر موجود پروژه، scope=`all` و پاک‌سازی فیلترهای مزاحم را به‌کار می‌گیرد.
+  - CTA ثبت رویداد برای کارت‌های فعال و CTA «درخواست ثبت تغییرات» برای کارت‌های تکمیل‌شده بدون تغییر حفظ شده‌اند.
+- `pages/project-detail.html` و `js/modules/project-detail.js`: دکمه و handler تاریخچه اشتباه از صفحه جزئیات حذف شدند؛ دکمه ثبت رویداد فعلی حفظ شد.
+- `css/events.css`: گروه دکمه‌های کارت با چیدمان واکنش‌گرا و stacking در عرض کم تنظیم شد.
+- `index.html`: cache-busting فایل‌های مرتبط به `20261107-project-event-history-shortcut-placement-1` به‌روزرسانی شد.
+- `tests/project-event-history-shortcut.test.js`: محل دکمه، projectId، مجوز، فیلتر همان صفحه و حذف دکمه از جزئیات را پوشش می‌دهد؛ assertionهای نسخه asset در تست‌های وابسته نیز همگام شدند.
+
+### قرارداد Backend و داده
+- Frontend از API موجود `GET /events` استفاده می‌کند و رویدادهای دریافتی را بر اساس فیلد `ProjectID` در فیلتر تاریخچه محدود می‌کند.
+- مجوز `EVENT_VIEW`، tenant scoping و محدودیت دسترسی سرور مرجع نهایی باقی می‌مانند.
+- هیچ endpoint، permission، Sheet، ستون، schema، migration یا داده عملیاتی جدید/تغییریافته‌ای وجود ندارد؛ Backend runtime و Google Apps Script deploy نیاز نداشت.
+
+### آزمون، ادغام و انتشار
+- Frontend PR #49 با squash در commit `9c0bed3be00e265d361b446129614a1f21945b45` روی `main` ادغام شد.
+- ۲۰۸ تست Frontend، Frontend checks، Agent Suite و Cross-repository QA موفق شدند؛ Browser/Performance audit پیش از ادغام موفق بود.
+- GitHub Pages deployment موفق شد؛ URL عملیاتی: `https://saeidesl.github.io/PRSPRO2-PRODUCTION/`.
+- Backend PR #26 صرفاً مستندات سازگاری بود و در commit merge شده ادغام شد؛ چون runtime تغییر نکرد، Apps Script deployment لازم نبود.
+- مالک محصول تست عملیاتی شامل نمایش دکمه در کارت پروژه، فیلتر تاریخچه همان پروژه، نمایش رویدادهای مجاز، پاک‌کردن فیلتر و حفظ CTA ثبت رویداد را موفق تأیید کرد.
