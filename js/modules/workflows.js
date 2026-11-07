@@ -786,7 +786,7 @@
     }).join('');
   }
 
-  function appendRuleRow(container, rule, sequenceMode) {
+  function appendRuleRow(container, rule, sequenceMode, displayOrder) {
     rule = rule || {};
     const requirement = String(getValue(rule, 'RequirementMode', 'requirementMode') || 'REQUIRED').toUpperCase();
     const row = document.createElement('div');
@@ -805,6 +805,11 @@
           <option value="REFERENCE" ${requirement === 'REFERENCE' ? 'selected' : ''}>از پروژه مرجع</option>
           <option value="NOT_REQUIRED" ${requirement === 'NOT_REQUIRED' ? 'selected' : ''}>غیرضروری</option>
         </select>
+      </div>
+      <div class="form-group workflow-rule-display-order" style="margin:0">
+        <label>ترتیب نمایش</label>
+        <input class="form-control" data-field="display-order" type="number" min="1" step="1"
+               value="${escapeAttribute(getValue(rule, 'DisplayOrder', 'displayOrder') || displayOrder || '')}" placeholder="۱">
       </div>
       <div class="form-group workflow-rule-strict" style="margin:0">
         <label>ترتیب</label>
@@ -836,6 +841,8 @@
   function updateRuleSequenceVisibility(container, sequenceMode) {
     const strict = sequenceMode === 'STRICT';
     const grouped = sequenceMode === 'GROUPED';
+    const free = sequenceMode === 'FREE';
+    container.querySelectorAll('.workflow-rule-display-order').forEach(function(el) { el.hidden = !free; });
     container.querySelectorAll('.workflow-rule-strict').forEach(function(el) { el.hidden = !strict; });
     container.querySelectorAll('.workflow-rule-grouped').forEach(function(el) { el.hidden = !grouped; });
   }
@@ -870,6 +877,7 @@
               <option value="GROUPED">ترکیبی؛ گروه‌ها به‌ترتیب و رویدادهای هر گروه آزاد</option>
             </select>
             <small>در هر مرحله فقط یک روش ترتیب قابل استفاده است.</small>
+            <small>در حالت آزاد، ترتیب نمایش فقط فهرست را مرتب می‌کند و ثبت رویدادها همچنان بدون ترتیب اجباری است.</small>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 10px">
             <h4 style="margin:0">رویدادهای این مرحله</h4>
@@ -899,7 +907,10 @@
           const sequence = modalOverlay.querySelector('#workflow-rule-sequence');
           if (!rows || !sequence) return;
           try {
-            appendRuleRow(rows, {}, sequence.value);
+            const nextDisplayOrder = Array.from(rows.querySelectorAll('[data-field="display-order"]')).reduce(function(maximum, input) {
+              return Math.max(maximum, Number(input.value) || 0);
+            }, 0) + 1;
+            appendRuleRow(rows, {}, sequence.value, nextDisplayOrder);
             const message = modalOverlay.querySelector('#workflow-rule-message');
             if (message) message.hidden = true;
           } catch (error) {
@@ -927,6 +938,7 @@
               DataSource: requirementMode === 'REFERENCE' ? 'SOURCE_PROJECT' :
                 requirementMode === 'NOT_REQUIRED' ? 'NONE' : 'NEW_EVENT',
               SequenceMode: sequence.value,
+              DisplayOrder: Number(row.querySelector('[data-field="display-order"]').value || payloadRules.length + 1),
               EventOrder: sequence.value === 'STRICT' ?
                 Number(row.querySelector('[data-field="event-order"]').value || 0) : 0,
               GroupKey: sequence.value === 'GROUPED' ?
@@ -984,7 +996,7 @@
       const message = overlay.querySelector('#workflow-rule-message');
 
       sequence.value = sequenceMode;
-      loadedRules.forEach(function(rule) { appendRuleRow(rows, rule, sequence.value); });
+      loadedRules.forEach(function(rule, index) { appendRuleRow(rows, rule, sequence.value, index + 1); });
       sequence.addEventListener('change', function() {
         updateRuleSequenceVisibility(rows, sequence.value);
       });
