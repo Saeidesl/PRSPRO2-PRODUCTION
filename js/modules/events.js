@@ -162,15 +162,24 @@
       if (!this.escapeHandlerBound) {
         this.escapeHandlerBound = true;
         document.addEventListener('keydown', function (event) {
-          if (!Events.modalOpen) return;
+          const progressOverlay = document.getElementById('event-submit-progress-modal');
+          if (!Events.modalOpen && !progressOverlay) return;
           if (event.key === 'Escape') {
+            if (progressOverlay) {
+              if (Events.submitProgressState && Events.submitProgressState.finished) {
+                Events.closeSubmitProgressModal();
+              }
+              return;
+            }
             if (!Events.submitting) Events.closeModal();
             return;
           }
           if (event.key !== 'Tab') return;
-          const overlay = document.getElementById('event-create-modal') ||
+          const overlay = progressOverlay || document.getElementById('event-create-modal') ||
             document.getElementById('event-details-modal');
-          const dialog = overlay && overlay.querySelector('[role="dialog"]');
+          const dialog = overlay && (
+            overlay.getAttribute('role') === 'dialog' ? overlay : overlay.querySelector('[role="dialog"]')
+          );
           const focusable = dialog ? Array.from(dialog.querySelectorAll(
             'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )).filter(function (element) { return !element.hidden && element.getAttribute('aria-hidden') !== 'true'; }) : [];
@@ -1992,6 +2001,7 @@
             this.showFormError(
               'آماده‌سازی یا ثبت رویداد با مشکل مواجه شد: ' + this.errorMessage(error)
             );
+            this.failSubmitProgress(error);
             this.setSubmitState(false);
           });
         });
@@ -3383,6 +3393,7 @@
       const attachment = result && (result.attachment || result.Attachment);
       if (!attachment || !(attachment.ID || attachment.Id)) throw new Error('اطلاعات فایل بارگذاری‌شده دریافت نشد.');
       const value = {AttachmentID:attachment.ID || attachment.Id,FileName:attachment.FileName || file.name,MimeType:attachment.MimeType || mime,FileSize:Number(attachment.FileSize || file.size),AttachmentType:attachmentType};
+      this.recordSubmitProgressUpload(file);
       if (input) {
         input.dataset.uploadedAttachment = JSON.stringify(value);
         if (!input._pmsUploadedAttachments) input._pmsUploadedAttachments = new Map();
@@ -3526,6 +3537,7 @@
 
       this.submitting = true;
       this.setSubmitState(true);
+      this.openSubmitProgressModal();
 
       const projectId = projectInput.value;
       const typeId = typeInput.value;
@@ -3534,6 +3546,7 @@
       const formResponses = await this.collectConfiguredFormResponses(projectId);
       if (formResponses === null) {
         this.submitting = false;
+        this.closeSubmitProgressModal();
         this.setSubmitState(false);
         return;
       }
@@ -3545,9 +3558,16 @@
       if (isNaN(date.getTime())) {
         this.showFormError('تاریخ و زمان واردشده معتبر نیست.');
         this.submitting = false;
+        this.closeSubmitProgressModal();
         this.setSubmitState(false);
         return;
       }
+
+      this.setSubmitProgressStep('prepare', 'success',
+        this.submitProgressState && this.submitProgressState.uploadTotal
+          ? 'اطلاعات فرم آماده شد و ' + this.submitProgressState.uploadDone + ' از ' + this.submitProgressState.uploadTotal + ' فایل بارگذاری شد.'
+          : 'اطلاعات فرم آماده شد؛ فایل جدیدی برای بارگذاری وجود نداشت.'
+      );
 
       const isIndependent = !!type &&
         String(type.ConnectionType || 'PROJECT').toUpperCase() === 'INDEPENDENT';
@@ -3576,6 +3596,7 @@
 
       try {
         let eventResult = {};
+        this.setSubmitProgressStep('event', 'active', 'در حال ارسال اطلاعات به سرور...');
         if (this.amendmentMode && this.amendmentEventId) {
           // اگر ایجاد رویداد قبلاً موفق شده و فقط اصلاح پاسخ شکست خورده باشد،
           // تلاش مجدد باید فقط PUT را اجرا کند و رویداد تکراری نسازد.
@@ -3609,6 +3630,9 @@
           });
           clearEventDependentDataCache();
         }
+        this.setSubmitProgressStep('event', 'success',
+          this.amendmentMode ? 'اطلاعات رویداد با موفقیت به‌روزرسانی شد.' : 'رویداد با موفقیت در سیستم ثبت شد.'
+        );
         const procurementIntegration = eventResult.procurementIntegration || {};
         // procurementIntegration.status can be FAILED; the result panel below exposes recovery.
 
@@ -3637,11 +3661,16 @@
 
         // موفقیت ثبت را از موفقیت تازه‌سازی فهرست جدا نگه می‌داریم.
         this.closeForm(true);
+        this.setSubmitProgressStep('refresh', 'active', 'در حال دریافت فهرست به‌روز رویدادها...');
 
         try {
           await this.reloadEvents();
+          this.setSubmitProgressStep('refresh', 'success', 'فهرست رویدادها با موفقیت به‌روز شد.');
+          this.completeSubmitProgress('رویداد ثبت شد و فهرست نیز به‌روز شد.');
         } catch (refreshError) {
           // رویداد ثبت شده است؛ فقط تازه‌سازی فهرست ناموفق بوده.
+          this.setSubmitProgressStep('refresh', 'warning', 'ثبت رویداد موفق بود؛ تازه‌سازی فهرست انجام نشد.');
+          this.completeSubmitProgress('رویداد ثبت شد؛ اما به‌روزرسانی فهرست با مشکل مواجه شد.');
           this.showRefreshNotice();
         }
 
@@ -3654,6 +3683,7 @@
         this.showFormError(
           'ثبت رویداد ناموفق بود: ' + this.errorMessage(error)
         );
+        this.failSubmitProgress(error);
       } finally {
         this.submitting = false;
         this.setSubmitState(false);
@@ -3666,6 +3696,196 @@
       this.events = this.normalize(PMS.Api.extractData(response));
       this.renderFilters();
       this.applyFilters();
+    },
+
+    openSubmitProgressModal: function () {
+      const existing = document.getElementById('event-submit-progress-modal');
+      if (existing) existing.remove();
+
+      const container = document.getElementById('event-configured-forms');
+      const fileInputs = container
+        ? Array.from(container.querySelectorAll('input[type="file"]')).filter(function (input) {
+            const wrapper = input.closest('.event-form-value-field');
+            return !(wrapper && wrapper.dataset.visibilityHidden === 'true');
+          })
+        : [];
+      let uploadTotal = 0;
+      let uploadDone = 0;
+      const completedFiles = new Set();
+      fileInputs.forEach(function (input) {
+        Array.from(input.files || []).forEach(function (file) {
+          uploadTotal += 1;
+          const cached = !!(
+            (input._pmsUploadedAttachments && input._pmsUploadedAttachments.has(file)) ||
+            (input._pmsUploadedFile === file && input._pmsUploadedAttachment)
+          );
+          if (cached) {
+            uploadDone += 1;
+            completedFiles.add(file);
+          }
+        });
+      });
+
+      this.submitProgressState = {
+        activeStep: 'prepare',
+        uploadTotal: uploadTotal,
+        uploadDone: uploadDone,
+        completedFiles: completedFiles,
+        steps: { prepare: 'active', event: 'pending', refresh: 'pending' }
+      };
+
+      const overlay = document.createElement('div');
+      overlay.id = 'event-submit-progress-modal';
+      overlay.className = 'event-submit-progress-overlay';
+      overlay.dir = 'rtl';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-labelledby', 'event-submit-progress-title');
+      overlay.innerHTML =
+        '<section class="event-submit-progress-dialog" role="document">' +
+          '<div class="event-submit-progress-topline"><span class="event-submit-progress-symbol" aria-hidden="true">↗</span><span class="event-submit-progress-badge">در حال انجام</span></div>' +
+          '<h3 id="event-submit-progress-title" class="event-submit-progress-title" tabindex="-1">در حال ثبت رویداد</h3>' +
+          '<p class="event-submit-progress-description" id="event-submit-progress-description">لطفاً تا پایان عملیات منتظر بمانید.</p>' +
+          '<div class="event-submit-progress-steps">' +
+            '<div class="event-submit-step is-active" data-progress-step="prepare"><span class="event-submit-step-icon" aria-hidden="true">◌</span><div class="event-submit-step-copy"><strong>آماده‌سازی فرم و آپلود پیوست‌ها</strong><small data-progress-detail>در حال آماده‌سازی اطلاعات فرم...</small><div class="event-submit-progress-track"><span data-progress-fill></span></div></div><span class="event-submit-step-state" data-progress-state>در حال انجام</span></div>' +
+            '<div class="event-submit-step is-pending" data-progress-step="event"><span class="event-submit-step-icon" aria-hidden="true">○</span><div class="event-submit-step-copy"><strong>ثبت رویداد در سیستم</strong><small data-progress-detail>در انتظار تکمیل مرحله قبل</small></div><span class="event-submit-step-state" data-progress-state>در انتظار</span></div>' +
+            '<div class="event-submit-step is-pending" data-progress-step="refresh"><span class="event-submit-step-icon" aria-hidden="true">○</span><div class="event-submit-step-copy"><strong>به‌روزرسانی فهرست رویدادها</strong><small data-progress-detail>در انتظار ثبت رویداد</small></div><span class="event-submit-step-state" data-progress-state>در انتظار</span></div>' +
+          '</div>' +
+          '<p class="event-submit-progress-footnote" id="event-submit-progress-footnote">تا پایان عملیات، پنجره را نبندید.</p>' +
+          '<button type="button" class="event-submit-progress-close" id="event-submit-progress-close" hidden>بستن</button>' +
+        '</section>';
+
+      const formModal = document.getElementById('event-create-modal');
+      if (formModal) formModal.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(overlay);
+      const closeButton = overlay.querySelector('#event-submit-progress-close');
+      closeButton.addEventListener('click', () => this.closeSubmitProgressModal());
+      overlay.querySelector('.event-submit-progress-title').focus();
+      this.renderSubmitProgressModal();
+    },
+
+    renderSubmitProgressModal: function () {
+      const overlay = document.getElementById('event-submit-progress-modal');
+      const state = this.submitProgressState;
+      if (!overlay || !state) return;
+
+      const labels = {
+        prepare: { active: 'در حال انجام', success: 'تکمیل شد', error: 'ناموفق' },
+        event: { active: 'در حال انجام', success: 'ثبت شد', error: 'ناموفق' },
+        refresh: { active: 'در حال انجام', success: 'تکمیل شد', warning: 'نیازمند تازه‌سازی', error: 'ناموفق' }
+      };
+      Object.keys(state.steps).forEach((key) => {
+        const step = overlay.querySelector('[data-progress-step="' + key + '"]');
+        if (!step) return;
+        const status = state.steps[key];
+        step.className = 'event-submit-step is-' + status;
+        const icon = step.querySelector('.event-submit-step-icon');
+        const stateLabel = step.querySelector('[data-progress-state]');
+        if (icon) icon.textContent = status === 'success' ? '✓' : status === 'error' ? '!' : status === 'warning' ? '!' : status === 'active' ? '◌' : '○';
+        if (stateLabel) stateLabel.textContent = labels[key][status] || 'در انتظار';
+      });
+
+      const prepare = overlay.querySelector('[data-progress-step="prepare"]');
+      if (prepare) {
+        const detail = prepare.querySelector('[data-progress-detail]');
+        const fill = prepare.querySelector('[data-progress-fill]');
+        if (detail) {
+          if (state.steps.prepare === 'error') {
+            detail.textContent = 'بارگذاری متوقف شد: ' + state.uploadDone + ' از ' + state.uploadTotal + ' فایل تکمیل شد.';
+          } else if (state.uploadTotal && state.steps.prepare === 'active') {
+            detail.textContent = state.uploadDone < state.uploadTotal
+              ? 'در حال آپلود تصاویر و فایل‌ها: ' + state.uploadDone + ' از ' + state.uploadTotal
+              : 'آپلود تصاویر و فایل‌ها تکمیل شد؛ در حال نهایی‌سازی اطلاعات فرم...';
+          } else if (state.uploadTotal) {
+            detail.textContent = 'آپلود تصاویر و فایل‌ها تکمیل شد: ' + state.uploadDone + ' از ' + state.uploadTotal;
+          } else {
+            detail.textContent = state.steps.prepare === 'active'
+              ? 'در حال آماده‌سازی اطلاعات فرم؛ فایل جدیدی برای آپلود انتخاب نشده است.'
+              : 'اطلاعات فرم آماده شد؛ فایل جدیدی برای بارگذاری وجود نداشت.';
+          }
+        }
+        if (fill) fill.style.width = state.uploadTotal
+          ? Math.min(100, Math.round((state.uploadDone / state.uploadTotal) * 100)) + '%'
+          : (state.steps.prepare === 'success' ? '100%' : '0%');
+      }
+
+      overlay.classList.toggle('is-error', state.finished === 'error');
+      overlay.classList.toggle('is-complete', state.finished === 'success');
+      const title = overlay.querySelector('.event-submit-progress-title');
+      const badge = overlay.querySelector('.event-submit-progress-badge');
+      const description = overlay.querySelector('.event-submit-progress-description');
+      const footnote = overlay.querySelector('.event-submit-progress-footnote');
+      const closeButton = overlay.querySelector('#event-submit-progress-close');
+      if (state.finished === 'success') {
+        title.textContent = 'عملیات ثبت رویداد پایان یافت';
+        badge.textContent = 'تکمیل شد';
+        description.textContent = state.message || 'تمام مراحل با موفقیت انجام شدند.';
+        footnote.textContent = 'برای بازگشت به صفحه، دکمه بستن را انتخاب کنید.';
+        closeButton.hidden = false;
+        closeButton.textContent = 'بستن';
+      } else if (state.finished === 'error') {
+        title.textContent = 'ثبت رویداد کامل نشد';
+        badge.textContent = 'نیازمند بررسی';
+        description.textContent = state.message || 'یکی از مراحل با خطا مواجه شد.';
+        footnote.textContent = 'پیام خطا در فرم ثبت نیز نمایش داده شده است؛ پس از بستن این پنجره می‌توانید دوباره تلاش کنید.';
+        closeButton.hidden = false;
+        closeButton.textContent = 'بازگشت به فرم';
+      }
+      if (state.finished) closeButton.focus();
+    },
+
+    setSubmitProgressStep: function (key, status, detail) {
+      const state = this.submitProgressState;
+      if (!state || !Object.prototype.hasOwnProperty.call(state.steps, key)) return;
+      state.steps[key] = status;
+      state.activeStep = status === 'active' ? key : state.activeStep;
+      const overlay = document.getElementById('event-submit-progress-modal');
+      if (overlay && detail) {
+        const step = overlay.querySelector('[data-progress-step="' + key + '"]');
+        const copy = step && step.querySelector('[data-progress-detail]');
+        if (copy && key !== 'prepare') copy.textContent = detail;
+      }
+      this.renderSubmitProgressModal();
+    },
+
+    recordSubmitProgressUpload: function (file) {
+      const state = this.submitProgressState;
+      if (!state || !file || state.completedFiles.has(file)) return;
+      state.completedFiles.add(file);
+      state.uploadDone = Math.min(state.uploadTotal, state.uploadDone + 1);
+      this.renderSubmitProgressModal();
+    },
+
+    completeSubmitProgress: function (message) {
+      if (!this.submitProgressState) return;
+      this.submitProgressState.finished = 'success';
+      this.submitProgressState.message = message || 'رویداد با موفقیت ثبت شد.';
+      this.renderSubmitProgressModal();
+    },
+
+    failSubmitProgress: function (error) {
+      const state = this.submitProgressState;
+      if (!state || state.finished) return;
+      const key = state.activeStep || 'prepare';
+      state.steps[key] = 'error';
+      state.finished = 'error';
+      state.message = this.errorMessage(error);
+      this.renderSubmitProgressModal();
+    },
+
+    closeSubmitProgressModal: function () {
+      const overlay = document.getElementById('event-submit-progress-modal');
+      if (overlay) overlay.remove();
+      this.submitProgressState = null;
+      const formModal = document.getElementById('event-create-modal');
+      if (formModal) {
+        formModal.removeAttribute('aria-hidden');
+        const submit = document.getElementById('event-form-submit');
+        if (submit && !submit.disabled) submit.focus();
+      } else {
+        const resultClose = document.querySelector('.event-result-close');
+        if (resultClose) resultClose.focus();
+      }
     },
 
     setSubmitState: function (busy) {

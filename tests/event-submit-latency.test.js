@@ -19,7 +19,7 @@ test('event submit enters visible busy state before asynchronous form response p
 });
 
 test('invalid configured form responses restore the submit state', () => {
-  assert.match(events, /if \(formResponses === null\) \{\s*this\.submitting = false;\s*this\.setSubmitState\(false\);\s*return;/);
+  assert.match(events, /if \(formResponses === null\) \{\s*this\.submitting = false;\s*this\.closeSubmitProgressModal\(\);\s*this\.setSubmitState\(false\);\s*return;/);
 });
 
 test('image preview and upload reuse the same FileReader promise', () => {
@@ -36,5 +36,5 @@ test('multiple images upload in bounded batches and preserve selection order', (
 });
 
 test('event submit asset cache-busting version is refreshed', () => {
-  assert.match(index, /js\/modules\/events\.js\?v=20261107-event-submit-latency-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261107-event-submit-progress-1/);
 });
