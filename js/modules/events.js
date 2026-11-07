@@ -92,7 +92,6 @@
     canCreateEvents: false,
     canAccessProjectOptions: false,
     formDefinitions: [],
-    formMode: 'quick',
     formsReady: true,
     formsRequestId: 0,
     eventFormsLoadRequestId: 0,
@@ -1705,7 +1704,6 @@
 
       this.modalOpen = true;
       this.formDefinitions = [];
-      this.formMode = 'quick';
       this.formsReady = true;
       this.formsRequestId++;
       this.eventFormsLoading = false;
@@ -1750,10 +1748,7 @@
         '<div hidden aria-hidden="true"><select id="event-amendment-source-event"></select><select id="event-amendment-source-form"></select></div></section>' +
         '<section class="event-form-section" id="event-quantity-section" hidden><h4 class="event-section-title">مقدار تولید/تحویل</h4>' +
         '<div id="event-quantity-field" class="event-dynamic-grid"></div></section>' +
-        '<section class="event-form-section" id="event-configured-forms-section" hidden><div class="event-configured-forms-heading"><h4 class="event-section-title">فرم‌های اطلاعات تکمیلی</h4>' +
-        '<div class="event-form-mode" role="group" aria-label="حالت نمایش فرم"><button type="button" class="event-form-mode-button is-active" data-form-mode="quick" aria-pressed="true">ثبت سریع</button>' +
-        '<button type="button" class="event-form-mode-button" data-form-mode="full" aria-pressed="false">ثبت کامل</button></div></div>' +
-        '<p id="event-form-mode-help" class="event-form-mode-help">فیلدهای ضروری نمایش داده می‌شوند؛ اطلاعات فیلدهای اختیاری حفظ می‌شود.</p>' +
+        '<section class="event-form-section" id="event-configured-forms-section" hidden><div class="event-configured-forms-heading"><h4 class="event-section-title">فرم‌های اطلاعات تکمیلی</h4></div>' +
         '<div id="event-configured-forms" class="event-dynamic-grid" aria-live="polite"></div></section>' +
         '<div id="event-submit-progress" class="event-submit-progress" hidden role="status" aria-live="polite">' +
         '<span class="event-spinner" aria-hidden="true"></span><div><strong>در حال ثبت رویداد</strong>' +
@@ -1792,9 +1787,6 @@
           this.toggleEventContextHistory(historyButton.dataset.contextHistory, historyButton);
           return;
         }
-        const modeButton = event.target.closest('[data-form-mode]');
-        if (!modeButton || !modal.contains(modeButton)) return;
-        this.updateFormMode(modeButton.dataset.formMode);
       });
 
       const projectSelect = document.getElementById('event-form-project');
@@ -2902,10 +2894,6 @@
           wrapper.dataset.formId = String(form.ID || mapping.FormID);
           wrapper.dataset.infoTypeId = typeId;
           wrapper.dataset.cardinality = cardinality;
-          // Quick mode is driven by field-level requiredness only.
-          // A required form mapping requires a response, not every field in that form.
-          // Required table columns are validated only when the user adds a row.
-          wrapper.dataset.formRequired = String(required);
           const visibilityRule = field.VisibilityRule || this.parseVisibilityRule(field.VisibilityRuleJSON);
           wrapper.dataset.visibilityRule = JSON.stringify(visibilityRule || {});
           if (columns.length) {
@@ -3021,33 +3009,6 @@
       });
       container.oninput = () => this.applyConfiguredFormVisibility(container);
       container.onchange = () => this.applyConfiguredFormVisibility(container);
-      this.updateFormMode(this.formMode || 'quick');
-    },
-
-    updateFormMode: function (mode) {
-      const nextMode = mode === 'full' ? 'full' : 'quick';
-      this.formMode = nextMode;
-      const modal = document.getElementById('event-create-modal');
-      if (!modal) return;
-      modal.querySelectorAll('[data-form-mode]').forEach((button) => {
-        const active = button.dataset.formMode === nextMode;
-        button.classList.toggle('is-active', active);
-        button.setAttribute('aria-pressed', String(active));
-      });
-      const container = document.getElementById('event-configured-forms');
-      if (!container) return;
-      const wrappers = Array.from(container.querySelectorAll('.event-form-value-field'));
-      wrappers.forEach((wrapper) => {
-        wrapper.dataset.quickHidden = String(nextMode === 'quick' && wrapper.dataset.formRequired !== 'true');
-      });
-      const hiddenCount = wrappers.filter(wrapper => wrapper.dataset.quickHidden === 'true' && wrapper.dataset.visibilityHidden !== 'true').length;
-      const help = document.getElementById('event-form-mode-help');
-      if (help) {
-        help.textContent = nextMode === 'quick'
-          ? (hiddenCount ? hiddenCount + ' فیلد اختیاری جمع شده است؛ با انتخاب «ثبت کامل» همه فیلدها را ببینید. اطلاعات واردشده پاک نمی‌شود.' : 'همه فیلدهای این فرم ضروری هستند؛ اطلاعات واردشده حفظ می‌شود.')
-          : 'همه فیلدها نمایش داده می‌شوند؛ اطلاعات واردشده حفظ می‌شود.';
-      }
-      this.applyConfiguredFormVisibility(container);
     },
 
     parseVisibilityRule: function (value) {
@@ -3085,7 +3046,7 @@
           else if (operator === 'NOT_EQUALS') visible = empty || String(value) !== String(rule.value);
         }
         wrapper.dataset.visibilityHidden = String(!visible);
-        wrapper.hidden = !visible || wrapper.dataset.quickHidden === 'true';
+        wrapper.hidden = !visible;
         wrapper.querySelectorAll('[data-form-value]').forEach((input) => {
           input.required = visible && input.dataset.baseRequired === 'true';
         });
