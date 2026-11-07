@@ -1,19 +1,20 @@
 ## 🎯 Current Objective
 
-افزودن دکمه «رویدادهای ثبت‌شده برای این پروژه» کنار «ثبت رویداد» در صفحه جزئیات پروژه. با کلیک، صفحه موجود رویدادها باز شود و فهرست تاریخچه فقط رویدادهای همان پروژه را نمایش دهد؛ همه رویدادهای مجاز (نه فقط ثبت‌شده توسط کاربر فعلی) دیده شوند. فیلترهای قبلی مزاحم نباشند و مسیر/صفحه/ API موازی ایجاد نشود.
+افزودن دکمه «رویدادهای ثبت‌شده برای این پروژه» روی کارت هر پروژه در صفحه «رویدادها»، دقیقاً کنار دکمه «ثبت رویداد برای این پروژه». با کلیک، بدون خروج از صفحه، بخش تاریخچه همان صفحه فقط رویدادهای همان پروژه را نمایش دهد؛ همه رویدادهای مجاز (نه فقط ثبت‌شده توسط کاربر فعلی) دیده شوند. دکمه اشتباهاً اضافه‌شده از صفحه جزئیات پروژه حذف شود. مسیر/صفحه/API موازی ایجاد نشود.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 
 ### مخازن و شاخه‌های عملیاتی
-- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `fix/project-event-history-button-permission-20261107`، شاخه از main پس از ادغام قابلیت با مبنای `60c6ff4908d1e22f3a5eacbeb814b1cae8cad708`.
+- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه اصلاح محل دکمه `fix/project-event-history-shortcut-placement-20261107`، مبنا `c602e34983226a446f54a42004371a2003c4e29e`.
 - Backend: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`، شاخه `feat/project-registered-events-button-20261107`، شاخه از main با مبنای آخرین commit `5838f1ccca5959d87fbdfe8dbb7561ef7414400e`.
 - هر دو مخزن عملیاتی، TODO5 و ARCHITECTURE بررسی شدند؛ فاز قبلی مودال پیشرفت ثبت رویداد بسته و TODO5 پاک‌سازی شده بود. مخازن توسعه و main نباید تغییر کنند.
 
 ### Frontend — مسیر موجود و نقاط اتصال
-- `pages/project-detail.html`: نوار `.page-header-actions` و دکمه فعلی `#project-add-event-button`؛ دکمه جدید باید در همین نوار کنار آن قرار گیرد.
-- `js/modules/project-detail.js`: `ProjectDetail.bindEvents()` نقطه اتصال کلیک؛ `ProjectDetail.projectId` شناسه پایدار پروژه؛ `ProjectDetail.load()` و `applyEventDetailsBundle()` بارگذاری bundle موجود پروژه.
-- `js/modules/events.js`: صفحه تاریخچه موجود؛ `Events.init()`، `Events.load()`، `renderFilters()`، `applyFilters()` و `clearHistoryFilters()` مسئول بارگذاری، ساخت فیلتر و نمایش فهرست‌اند.
-- `Events.applyFilters()` از فیلتر `event-project-filter` استفاده می‌کند، اما scope پیش‌فرض `mine` است؛ ورود از صفحه پروژه باید scope را به `all` تغییر دهد و فیلتر پروژه را بدون وابستگی به وجود option در select اعمال کند.
+- `pages/project-detail.html`: دکمه `#project-add-event-button` فقط برای ثبت رویداد از صفحه جزئیات؛ دکمه تاریخچه در این صفحه نباید وجود داشته باشد.
+- `js/modules/project-detail.js`: `ProjectDetail.bindEvents()` فقط مسیر فعلی ثبت رویداد پروژه را نگه می‌دارد؛ مسیر دکمه تاریخچه از این ماژول حذف می‌شود.
+- `pages/events.html` کارت‌های صف پروژه را در `#event-queue-pending`, `#event-queue-progress`, `#event-queue-completed` میزبانی می‌کند؛ خود کارت‌ها در `js/modules/events.js` ساخته می‌شوند. دکمه تاریخچه باید در همان گروه عملیات کارت و کنار CTA موجود ثبت رویداد قرار گیرد.
+- `js/modules/events.js`: `Events.init()` مجوز `EVENT_VIEW` را برای نمایش دکمه تاریخچه محاسبه می‌کند؛ رندر کارت صف دکمه `.event-queue-history-button` را با `data-project-id` می‌سازد؛ handler کلیک مستقیماً `applyProjectHistoryFilter(projectId)` را در همان صفحه اجرا می‌کند. `applyFilters()` و `clearHistoryFilters()` مسیر استاندارد فیلتر را حفظ می‌کنند.
+- `Events.applyProjectHistoryFilter(projectId)` فیلتر موجود را بازاستفاده می‌کند: scope=`all`، انتخاب پروژه، پاک‌سازی فیلترهای مزاحم و اسکرول به تاریخچه؛ نیازی به route/hash یا handoff بین صفحه‌ها نیست.
 - `pages/events.html`: فیلترهای تاریخچه در `#events-filter-content` و فهرست در `#events-table-container` قرار دارند. همان UI فعلی استفاده شود.
 - `css/events.css`: استایل‌های موجود تاریخچه و کنترل‌ها؛ از کلاس‌های دکمه استاندارد استفاده شود و CSS موازی غیرضروری ساخته نشود.
 - `index.html`: cache-busting نسخه فایل‌های تغییرکرده باید به‌روز شود.
@@ -33,17 +34,16 @@
 - تصمیم: پیاده‌سازی Frontend-only با استفاده از فیلتر فعلی؛ Backend بدون تغییر runtime.
 - *Log:* FE: `pages/project-detail.html:#project-add-event-button`، `js/modules/project-detail.js:ProjectDetail.bindEvents/load/applyEventDetailsBundle`، `pages/events.html:#events-filter-content/#event-project-filter/#event-history-scope/#events-table-container`، `js/modules/events.js:Events.init/load/renderFilters/applyFilters/clearHistoryFilters`، `index.html` و تست `tests/event-history-project-cards.test.js`. BE: `Router.js` و قرارداد `GET /events`؛ هیچ endpoint یا ساختار داده جدید لازم نیست. مبنای شاخه‌ها: FE `1126b6be3908ae0ddf590747586b78c53bbeb53f`، BE `5838f1ccca5959d87fbdfe8dbb7561ef7414400e`.
 
-### Task 2 — پیاده‌سازی دکمه و فیلتر مستقیم تاریخچه پروژه [x]
-- افزودن دکمه کنار «ثبت رویداد» با رعایت مجوز مشاهده رویدادها.
-- انتقال شناسه پروژه به صفحه موجود رویدادها و اعمال فیلتر اجباری ProjectID؛ scope برابر all و پاک‌سازی فیلترهای قبلی.
-- بازکردن بخش فیلترها/نمایش تاریخچه و حفظ امکان پاک‌کردن فیلتر برای بازگشت به فهرست عادی.
-- عدم تغییر Backend runtime و حفظ مسیر ثبت رویداد فعلی.
-- *Log:* `pages/project-detail.html`: افزودن `#project-view-events-button` کنار `#project-add-event-button`. `js/modules/project-detail.js:ProjectDetail.bindEvents`: کنترل مجوز `EVENT_VIEW`/ادمین و انتقال `ProjectDetail.projectId` در `Events.pendingProjectHistoryId` به route موجود `#events`. `js/modules/events.js:Events.init`: مصرف شناسه پس از پایان `load()`؛ `applyProjectHistoryFilter(projectId)`: پاک‌سازی فیلترهای قبلی، انتخاب پروژه، scope=`all`، بازکردن `#events-filter-content` و اسکرول به تاریخچه؛ `applyFilters()` و `clearHistoryFilters()` همچنان مسیر استاندارد فیلتر/پاک‌سازی را اجرا می‌کنند. `index.html`: cache-busting هر دو ماژول به `20261107-project-event-history-shortcut-1`. تست جدید `tests/project-event-history-shortcut.test.js`.
+### Task 2 — پیاده‌سازی محل صحیح دکمه تاریخچه پروژه [ ] (IN PROGRESS)
+- حذف دکمه تاریخچه از صفحه جزئیات پروژه؛ دکمه اصلی «ثبت رویداد» و رفتار آن بدون تغییر بماند.
+- افزودن دکمه تاریخچه به کارت پروژه‌های صف در صفحه رویدادها، کنار CTA موجود؛ نمایش آن فقط برای کاربران دارای `EVENT_VIEW` یا مدیر.
+- کلیک دکمه باید تاریخچه همان صفحه را با `ProjectID` پروژه انتخاب‌شده فیلتر کند؛ scope=`all` و پاک‌سازی فیلترهای مزاحم؛ امکان پاک‌کردن فیلتر برای بازگشت به فهرست عادی حفظ شود.
+- دکمه تاریخچه برای کارت‌های تکمیل‌شده نیز در کنار عملیات موجود قابل مشاهده باشد؛ CTA فعلی «درخواست ثبت تغییرات» حفظ شود.
+- عدم تغییر Backend runtime و حفظ API/Sheet/permissionهای موجود.
  
-### Task 3 — Regression، QA، ادغام و انتشار
-- *یافته رفع باگ:* انتشار GitHub Pages پس از ادغام PR #47 با موفقیت اجرا شد. شرط نمایش دکمه فقط `EVENT_VIEW` را می‌پذیرفت، درحالی‌که route موجود رویدادها `EVENT_VIEW` یا `EVENT_CREATE` را می‌پذیرد؛ این ناهماهنگی باعث مخفی‌شدن دکمه برای کاربران دارای فقط مجوز ثبت رویداد می‌شد.
-- *اقدام اصلاحی:* شرط نمایش/کلیک دکمه به `Router.hasRouteAccess('events')` متصل می‌شود تا دقیقاً از همان قواعد دسترسی route موجود استفاده کند؛ نسخه `project-detail.js` در `index.html` نیز cache-bust می‌شود.
-- تست خودکار برای دکمه، انتقال projectId، فیلتر فقط همان پروژه، نمایش رویدادهای ثبت‌شده توسط دیگر کاربرانِ مجاز و پاک‌کردن فیلتر.
-- بررسی مجوزها، حالت بدون رویداد، فیلترهای قبلی، cache و واکنش‌گرایی.
-- اجرای CI و Cross-repository QA؛ ادغام شاخه‌های عملیاتی و انتشار Frontend پس از موفقیت کنترل‌ها؛ Backend deployment لازم نیست مگر تغییر runtime اثبات شود.
-- ارائه مراحل تست نسخه منتشرشده به مالک محصول و توقف تا تأیید.
+### Task 3 — Regression، QA، ادغام و انتشار [ ]
+- *اصلاح دامنه:* درخواست مالک محصول مربوط به کارت‌های پروژه در صفحه رویدادهاست، نه صفحه جزئیات پروژه. دکمه قبلی در محل اشتباه قرار گرفته بود؛ این Task محل را اصلاح می‌کند.
+- تست رگرسیون برای وجود دکمه در کارت پروژه، اتصال به همان projectId، اجرای فیلتر در همان صفحه، مجوز `EVENT_VIEW`، حفظ CTA ثبت رویداد و حذف دکمه از صفحه جزئیات.
+- بررسی کارت‌های pending/progress/completed، حالت بدون رویداد، پاک‌کردن فیلتر، فیلترهای قبلی، cache و واکنش‌گرایی.
+- اجرای CI و Cross-repository QA؛ ادغام و انتشار Frontend پس از موفقیت کنترل‌ها؛ Backend deployment لازم نیست چون تغییری در runtime یا قرارداد API وجود ندارد.
+- ارائه مراحل تست نسخه عملیاتی به مالک محصول و توقف تا تأیید.
