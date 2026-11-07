@@ -541,6 +541,16 @@
                   Events.refreshEventTypeOptions();
                 }
               }
+            }).then(function (result) {
+              // Do not make the event-type picker wait for slower /events or
+              // /projects requests in the shared initial-load Promise.all.
+              if (result && result.cached === false) {
+                Events.eventTypes = Events.normalize(result.data);
+                if (document.getElementById('event-create-modal')) {
+                  Events.refreshEventTypeOptions();
+                }
+              }
+              return result;
             })
           );
         }
