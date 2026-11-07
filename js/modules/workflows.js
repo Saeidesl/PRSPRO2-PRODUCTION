@@ -786,7 +786,7 @@
     }).join('');
   }
 
-  function appendRuleRow(container, rule, sequenceMode) {
+  function appendRuleRow(container, rule, sequenceMode, displayOrder) {
     rule = rule || {};
     const requirement = String(getValue(rule, 'RequirementMode', 'requirementMode') || 'REQUIRED').toUpperCase();
     const row = document.createElement('div');
@@ -805,6 +805,11 @@
           <option value="REFERENCE" ${requirement === 'REFERENCE' ? 'selected' : ''}>از پروژه مرجع</option>
           <option value="NOT_REQUIRED" ${requirement === 'NOT_REQUIRED' ? 'selected' : ''}>غیرضروری</option>
         </select>
+      </div>
+      <div class="form-group workflow-rule-display-order" style="margin:0">
+        <label>ترتیب نمایش</label>
+        <input class="form-control" data-field="display-order" type="number" min="1" step="1"
+               value="${escapeAttribute(getValue(rule, 'DisplayOrder', 'displayOrder') || displayOrder || '')}" placeholder="۱">
       </div>
       <div class="form-group workflow-rule-strict" style="margin:0">
         <label>ترتیب</label>
@@ -836,6 +841,8 @@
   function updateRuleSequenceVisibility(container, sequenceMode) {
     const strict = sequenceMode === 'STRICT';
     const grouped = sequenceMode === 'GROUPED';
+    const free = sequenceMode === 'FREE';
+    container.querySelectorAll('.workflow-rule-display-order').forEach(function(el) { el.hidden = !free; });
     container.querySelectorAll('.workflow-rule-strict').forEach(function(el) { el.hidden = !strict; });
     container.querySelectorAll('.workflow-rule-grouped').forEach(function(el) { el.hidden = !grouped; });
   }
@@ -899,7 +906,7 @@
           const sequence = modalOverlay.querySelector('#workflow-rule-sequence');
           if (!rows || !sequence) return;
           try {
-            appendRuleRow(rows, {}, sequence.value);
+            appendRuleRow(rows, {}, sequence.value, rows.querySelectorAll('.workflow-event-rule-row').length + 1);
             const message = modalOverlay.querySelector('#workflow-rule-message');
             if (message) message.hidden = true;
           } catch (error) {
@@ -927,6 +934,7 @@
               DataSource: requirementMode === 'REFERENCE' ? 'SOURCE_PROJECT' :
                 requirementMode === 'NOT_REQUIRED' ? 'NONE' : 'NEW_EVENT',
               SequenceMode: sequence.value,
+              DisplayOrder: Number(row.querySelector('[data-field="display-order"]').value || payloadRules.length + 1),
               EventOrder: sequence.value === 'STRICT' ?
                 Number(row.querySelector('[data-field="event-order"]').value || 0) : 0,
               GroupKey: sequence.value === 'GROUPED' ?
@@ -984,7 +992,7 @@
       const message = overlay.querySelector('#workflow-rule-message');
 
       sequence.value = sequenceMode;
-      loadedRules.forEach(function(rule) { appendRuleRow(rows, rule, sequence.value); });
+      loadedRules.forEach(function(rule, index) { appendRuleRow(rows, rule, sequence.value, index + 1); });
       sequence.addEventListener('change', function() {
         updateRuleSequenceVisibility(rows, sequence.value);
       });
