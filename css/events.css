@@ -944,58 +944,23 @@
 @media (max-width:560px) { .event-center-status { display:none; } .events-project-entry-panel { padding:14px; } .events-project-entry-heading { align-items:flex-start; } .event-recent-project-card { align-items:flex-start; flex-direction:column; } .event-recent-project-action { width:100%; } .event-operations-center .event-queue-tabs { overflow-x:auto; } }
 
 
-/* Event form modes and responsive repeatable rows */
+/* Configured event forms and responsive repeatable rows */
 #event-create-modal .event-configured-forms-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-bottom: 8px;
+  display: block;
+  margin-bottom: 12px;
 }
 #event-create-modal .event-configured-forms-heading .event-section-title { margin: 0; }
-#event-create-modal .event-form-mode {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: 11px;
-  background: var(--color-surface-alt);
-}
-#event-create-modal .event-form-mode-button {
-  min-height: 35px;
-  padding: 6px 13px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-#event-create-modal .event-form-mode-button.is-active {
-  border-color: var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
-}
-#event-create-modal .event-form-mode-button:focus-visible,
-#event-create-modal .event-form-row-add:focus-visible,
-#event-create-modal .event-form-row-remove:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
-  outline-offset: 2px;
-}
-#event-create-modal .event-form-mode-help {
-  margin: 0 0 16px;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  line-height: 1.8;
-}
 #event-create-modal .event-form-value-field[hidden],
 #event-create-modal .event-form-group[hidden] {
   display: none !important;
+}
+#event-create-modal .event-form-row-add,
+#event-create-modal .event-form-row-remove {
+  outline-offset: 2px;
+}
+#event-create-modal .event-form-row-add:focus-visible,
+#event-create-modal .event-form-row-remove:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 #event-create-modal .event-form-row-add {
   min-width: 0;
@@ -1011,17 +976,8 @@
   font-size: 12px;
 }
 @media (max-width: 600px) {
-  #event-create-modal .event-configured-forms-heading {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  #event-create-modal .event-form-mode {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-  }
-  #event-create-modal .event-form-mode-button { width: 100%; }
   #event-create-modal .event-modal-table-wrap {
+#event-create-modal .event-modal-table-wrap {
     overflow: visible;
     border: 0;
     border-radius: 0;
