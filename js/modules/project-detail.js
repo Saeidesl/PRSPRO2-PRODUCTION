@@ -1193,7 +1193,7 @@
           '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         return '<div class="form-group information-file-field"><label>' + label + (required ? ' *' : '') +
           '<input type="file" name="' + this.escape(fieldName) + '" data-information-file-input data-file-data-type="' + type +
-          '" data-current-attachment="' + this.escape(current ? JSON.stringify(current) : JSON.stringify(currentItems)) + '" accept="' + accept + '"' + (type === 'image' ? ' multiple' : '') +
+          '" data-current-attachment="' + this.escape(current ? JSON.stringify(current) : JSON.stringify(currentItems)) + '" accept="' + accept + '' +
           (required && !currentId ? ' required' : '') + (this.canUploadInformationFiles() ? '' : ' disabled') + '></label>' +
           (currentId ? '<div class="information-file-current"><span>' + this.escape(current.FileName || 'فایل ثبت‌شده') + '</span>' +
             (this.canViewInformationFiles() ? '<button type="button" class="btn btn-sm btn-light" data-information-attachment="' + this.escape(currentId) +
