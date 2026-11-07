@@ -905,3 +905,38 @@
 - مالک محصول آزمون عملی نسخه منتشرشده را انجام داد و موفقیت قابلیت را تأیید کرد.
 - در این فاز هیچ مهاجرت داده، حذف داده، تغییر destructive یا تغییر در مخازن توسعه انجام نشد.
 - فاز در تاریخ 2026-11-07 با تأیید مالک محصول بسته شد.
+
+
+## 2026-11-07 — کاهش تأخیر پیش از شروع ثبت رویداد
+
+### هدف و نتیجه پذیرش
+- هدف: حذف بی‌خبری رابط کاربری پس از کلیک ثبت رویداد و کاهش زمان آماده‌سازی پیوست‌ها پیش از فراخوانی API ثبت؛ بدون تغییر قراردادهای عملیاتی.
+- کاربر تست نسخه منتشرشده را موفق اعلام کرد؛ فاز با پذیرش مالک محصول بسته شد.
+- اندازه‌گیری دقیق مدت کلیک تا اولین درخواست شبکه/POST رویداد در محیط زنده ثبت نشده است؛ بنابراین حذف عددی کامل تأخیر ۳۰ ثانیه‌ای ادعا نمی‌شود. نتیجه تأییدشده این فاز، بازخورد فوری رابط کاربری و عملکرد موفق تست عملیاتی است.
+
+### نقشه Frontend و تغییرات
+- `pages/events.html`: میزبان فرم موجود ثبت رویداد؛ مسیر جدید یا فرم موازی ایجاد نشد.
+- `js/modules/events.js`:
+  - `Events.bindEvents` و `Events.submitForm`: پس از اعتبارسنجی همگام فرم، وضعیت submitting فوراً فعال می‌شود؛ خطاهای جمع‌آوری پاسخ و تاریخ نامعتبر وضعیت را بازیابی می‌کنند.
+  - `getConfiguredFormFileData(file, input)`: Promise خواندن هر فایل را روی input نگه می‌دارد تا preview و upload از یک خواندن مشترک استفاده کنند.
+  - handlerهای انتخاب تصویر در فیلد مستقل و سلول جدول از همان آماده‌سازی فایل استفاده می‌کنند.
+  - `uploadConfiguredFormImages`: آپلود تصاویر با concurrency حداکثر ۳ و `Promise.all` اجرا می‌شود؛ نتایج مطابق ترتیب انتخاب مرتب می‌شوند؛ رفتار تصویر اول `PROFILE` در صورت فعال بودن گزینه حفظ می‌شود و تصاویر دیگر `INFORMATION` می‌مانند؛ سقف ۲۰ تصویر حفظ شده است.
+  - `uploadConfiguredFormFile`: داده آماده‌شده را reuse می‌کند و مسیر upload موجود را حفظ می‌کند.
+- `js/core/api.js`: بدون تغییر؛ `PMS.Api.post` و `request` همچنان transport واحد و موجود هستند.
+- `index.html`: cache-busting ماژول رویداد به `20261107-event-submit-latency-1` تغییر کرد.
+- تست جدید `tests/event-submit-latency.test.js` اضافه شد؛ assertionهای نسخه asset در تست‌های `event-history-project-cards.test.js`, `event-queue-project-cards.test.js`, `event-type-loading-state.test.js`, `project-picker.test.js`, `workflow-management.test.js` همگام شدند.
+
+### قرارداد Backend، API و داده
+- Backend runtime تغییر نکرد.
+- مسیرهای موجود حفظ شدند: `POST /events` با مجوز `EVENT_CREATE` و `POST /projects/:projectId/attachments` با مجوز `ATTACHMENT_UPLOAD`.
+- `Router.js`, `EventService.js:create`, `EventService.js:_createUnlocked_`, `AttachmentService.js`، idempotency و کنترل tenant/مالکیت بدون تغییر باقی ماندند.
+- هیچ Sheet، schema، API، permission یا داده عملیاتی تغییر نکرد؛ ذخیره رویداد و پیوست از مسیرهای قبلی ادامه دارد.
+
+### آزمون، ادغام و انتشار
+- Frontend PR #44 با squash در commit `d9bf675612e3deffadcdf723080cb4606143c452` روی `main` ادغام شد.
+- Backend PR #22 صرفاً شامل مستندات فاز بود و با squash در commit `b3c0e2f75af57388a72ebdf5307fabd488c20fae` ادغام شد.
+- Frontend checks، frontend agent suite و cross-repository QA روی commit نهایی موفق شدند.
+- GitHub Pages deploy در Run `42397792898` موفق شد؛ job `128478815026` و مراحل verify، upload artifact و publish همگی موفق بودند.
+- Backend انتشار جدید لازم نداشت، زیرا هیچ کد اجرایی Backend تغییر نکرد.
+- مالک محصول تست عملیاتی نسخه منتشرشده را موفق اعلام کرد.
+- ممیزی جامع UI در Run `42397792911` در زمان بستن فاز هنوز در حال اجرا بود؛ این ممیزی عمومی UI مانع پذیرش عملیاتی این تغییر ثبت رویداد نشد.
