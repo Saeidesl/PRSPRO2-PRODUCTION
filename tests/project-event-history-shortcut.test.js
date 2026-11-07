@@ -18,7 +18,7 @@ test('project detail exposes the registered-events shortcut beside event creatio
 test('project detail opens the existing events route with the current project context', () => {
   const source = read('js/modules/project-detail.js');
   assert.match(source, /project-view-events-button/);
-  assert.match(source, /permissions\.indexOf\('EVENT_VIEW'\)/);
+  assert.match(source, /router\.hasRouteAccess\('events'\)/);
   assert.match(source, /pendingProjectHistoryId = ProjectDetail\.projectId/);
   assert.match(source, /window\.location\.hash = '#events'/);
 });
