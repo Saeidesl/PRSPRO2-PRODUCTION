@@ -827,3 +827,36 @@
 - Backend در این فاز تغییر اجرایی نداشت؛ هیچ API، Router، permission، Sheet، schema یا داده عملیاتی تغییر نکرد.
 - آزمون‌های CI، QA بین‌مخزنی و auditهای مرورگر نهایی موفق شدند؛ تست عملیاتی مالک محصول نیز موفق اعلام شد.
 - Task 4 در هر دو مخزن به‌صورت [x] ثبت شده بود؛ TODO5 پس از آرشیو به عبارت Ready for the next feature بازنشانی شد.
+
+
+## 2026-11-07 — UI ترتیب نمایشی رویدادهای Workflow در حالت FREE
+
+### هدف و تصمیم معماری
+- امکان تعیین ترتیب نمایشی رویدادهای هر مرحله در حالت FREE به تنظیمات موجود Workflow اضافه شد.
+- کنترل ترتیب نمایش فقط روی فهرست رویدادها اثر دارد و ترتیب ثبت/اجرای رویدادها را محدود نمی‌کند.
+- از مودال تنظیم قواعد مرحله، API موجود و فهرست انتخاب رویداد موجود استفاده شد؛ هیچ مسیر موازی یا فرم جدیدی ایجاد نشد.
+
+### نقشه فنی و تغییرات
+- `js/modules/workflows.js`:
+  - `showStepEventRules(workflow, step)` همان مودال تنظیم قواعد رویداد مرحله را مدیریت می‌کند.
+  - `appendRuleRow(container, rule, sequenceMode)` ورودی عددی «ترتیب نمایش» را فقط در حالت FREE نشان می‌دهد.
+  - `updateRuleSequenceVisibility(container, sequenceMode)` نمایش فیلد را با تغییر mode هماهنگ می‌کند.
+  - هنگام افزودن ردیف جدید، مقدار بعدی برابر بزرگ‌ترین ترتیب موجود به‌علاوه یک است.
+  - payload ذخیره، مقدار `DisplayOrder` را از طریق همان `PUT /workflows/:id/steps/:stepId/event-rules` ارسال می‌کند؛ داده‌های قدیمی فاقد مقدار، fallback ترتیبی می‌گیرند.
+- `js/modules/events.js` — فهرست انتخاب رویداد در FREE بر اساس `displayOrder` مرتب می‌شود؛ STRICT از `eventOrder` و GROUPED از `groupOrder` استفاده می‌کند.
+- `index.html` — نسخه cache-busting فایل‌های `workflows.js` و `events.js` به `20261107-free-event-display-order-1` به‌روزرسانی شد.
+- `tests/workflow-management.test.js` و تست‌های وابسته — پوشش ترتیب دستی FREE، مرتب‌سازی picker و نسخه asset به‌روزرسانی شد.
+
+### ادغام، آزمون و انتشار
+- Frontend PR #42 با squash merge در commit `da349995d935ad8366597d8d531c755c3609595f` در main ادغام شد.
+- Frontend checks Run `42364868989`، Agent Suite Run `42364868876` و Cross-repository QA Run `42364869038` موفق شدند.
+- انتشار Frontend به GitHub Pages در Run `42364868899` موفق شد؛ Pages build/deployment در Run `42364868290` نیز موفق بود.
+- ممیزی جامع مرورگر در Run `42364868864` با موفقیت کامل شد؛ آزمون‌های مرورگر واقعی، UI inventory، performance audit، بارگذاری گزارش و ثبت گزارش در مخزن همگی موفق بودند.
+- نشانی عملیاتی Frontend: https://saeidesl.github.io/PRSPRO2-PRODUCTION/
+- مالک محصول تست عملیاتی را موفق اعلام کرد.
+
+### نتیجه پذیرش
+- ورودی ترتیب نمایش در تنظیمات مرحله فقط در FREE قابل مشاهده است.
+- ترتیب تنظیم‌شده پس از ذخیره و بازگشایی حفظ و در فهرست انتخاب رویداد اعمال می‌شود.
+- ثبت رویدادها همچنان آزاد است؛ رفتار STRICT و GROUPED حفظ شده است.
+- فاز در تاریخ 2026-11-07 با تأیید مالک محصول بسته شد.
