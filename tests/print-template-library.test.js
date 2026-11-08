@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-a4-print-page-scale-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-a4-print-page-scale-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-smart-form-conversion-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-smart-form-conversion-1'));
 });
 
 
@@ -234,4 +234,40 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
  assert.ok(index.includes('a4-print-page-scale-1'));
+});
+
+
+test('smart form conversion accepts PDF and image formats in the existing designer import flow',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ assert.match(page,/accept="[^"]*application\/pdf[^"]*image\/jpeg[^"]*image\/png/);
+ assert.match(page,/id="pt-smart-detect"/);
+ assert.match(module,/handleImportFile: async function/);
+ assert.match(module,/imageFileToPdf: async function/);
+ assert.match(module,/\/print-templates\/.*\/pdf/);
+ assert.match(module,/createWorker\('fas\+eng'/);
+});
+
+test('smart conversion extracts PDF text first and uses on-device OCR only for scanned pages',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/page\.getTextContent\(\)/);
+ assert.match(module,/if \(!lines\.length\)/);
+ assert.match(module,/tesseract\.js@5\.1\.1/);
+ assert.match(module,/worker\.recognize\(canvas\)/);
+ assert.match(module,/worker\.terminate\(\)/);
+ assert.match(module,/runSmartDetection: async function/);
+ assert.match(module,/smartLineToElements: function/);
+ assert.match(module,/suggestSmartBinding: function/);
+ assert.match(module,/renderBindings\(\); this\.renderEditor\(\); this\.commitHistory\(\)/);
+});
+
+test('smart detection remains a suggestion and uses existing template definitions and PMS binding sources',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/smartSourceCatalog: function/);
+ assert.match(module,/PROJECT_FIELD/);
+ assert.match(module,/PROJECT_INFORMATION/);
+ assert.match(module,/EVENT_FORM_FIELD/);
+ assert.match(module,/type:'field'/);
+ assert.match(module,/this\.definition\.elements = previousElements\.concat\(detected\)/);
+ assert.match(module,/برای ثبت دائمی، قالب را ذخیره کن/);
 });
