@@ -755,15 +755,26 @@
       this.refreshOutputPreview();
       return this.outputMargins;
     },
-    refreshOutputPreview: async function () {
-      const context = this.outputRenderContext;
+    refreshOutputPreview: function () {
       const preview = document.getElementById('pt-output-preview');
-      if (!context || !preview) return;
-      try {
-        preview.innerHTML = await this.renderOutputDocument(context.template, context.project, context.data);
-      } catch (error) {
-        this.setStatus('pt-output-status', error.message || 'به‌روزرسانی حاشیه‌های پیش‌نمایش ناموفق بود.', true);
-      }
+      if (!preview || !this.outputPageSpecs) return;
+      const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
+      const safeWidth = 203;
+      const safeHeight = 272;
+      Array.from(preview.querySelectorAll('.pt-print-page')).forEach(article => {
+        const pageIndex = Number(article.getAttribute('data-page-index') || 0);
+        const spec = this.outputPageSpecs[pageIndex];
+        if (!spec) return;
+        const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
+        const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
+        const scale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
+        article.style.setProperty('--pt-print-scale', String(scale));
+        const content = article.querySelector('.pt-print-page-content');
+        if (content) {
+          content.style.left = margins.left + 'mm';
+          content.style.top = margins.top + 'mm';
+        }
+      });
     },
     resetOutputMargins: function () {
       this.outputMargins = { top: 8, bottom: 8, right: 8, left: 8 };
@@ -773,6 +784,7 @@
       } catch (error) {
         // Keep reset values in memory when storage is unavailable.
       }
+      this.refreshOutputPreview();
     },
     loadOutputOptions: async function () {
       this.setStatus('pt-output-status', 'در حال دریافت قالب‌ها و پروژه‌ها…');
@@ -983,7 +995,6 @@
         const preview = document.getElementById('pt-output-preview');
         const card = document.getElementById('pt-output-preview-card');
         if (!template || !template.Definition) throw new Error('ساختار قالب برای تولید سند در دسترس نیست.');
-        this.outputRenderContext = { template, project, data };
         if (preview) preview.innerHTML = await this.renderOutputDocument(template, project, data);
         if (card) card.hidden = false;
         const printButton = document.getElementById('pt-output-print');
