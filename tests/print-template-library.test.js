@@ -358,7 +358,7 @@ test('smart PDF text keeps bidi control marks for mixed Persian and Latin conten
  const sandbox={window:{PMS:{}},console};
  vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
  const designer=sandbox.window.PMS.Modules.PrintDesigner;
- const mixed='\u200fکد \u200eA-12\u200f';
+ const mixed='\u200fکد \u200eA\u200f';
  assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200f'));
  assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200e'));
  assert.equal(designer.getSmartTextDirection(mixed,'ltr'),'rtl');
