@@ -160,7 +160,7 @@ test('print output hides image helper copy and uses exact page size without forc
  assert.match(module,/pt-output-image-empty/);
  assert.doesNotMatch(module,/برای نمایش تصویر، منبع تصویر را به این المان متصل کن/);
  assert.match(module,/@page/);
- assert.ok(module.includes("--pt-print-height:'+printHeight+'mm"), 'each PDF output page calculates a bounded physical print height');
+ assert.ok(module.includes("--pt-print-height:'+safeHeight+'mm"), 'each PDF output page uses a bounded physical print height');
  assert.match(styles,/\.pt-section-title\{display:none!important\}/);
  assert.match(styles,/page-break-after:auto!important/);
 });
