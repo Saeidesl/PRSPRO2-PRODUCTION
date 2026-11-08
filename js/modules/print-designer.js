@@ -965,7 +965,7 @@
         const safeHeight = 250;
         const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
-        const fitScale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
+        const fitScale = Math.max(0.01, Math.min(availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height)));
         const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm;left:'+margins.left+'mm;top:'+margins.top+'mm">'+background+elements.join('')+'</div>';
         const pageStyle = 'width:'+spec.width+'mm;height:'+spec.height+'mm;--pt-print-scale:'+fitScale+
           ';--pt-print-width:'+safeWidth+'mm;--pt-print-height:'+safeHeight+'mm';
