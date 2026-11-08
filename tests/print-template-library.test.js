@@ -188,17 +188,17 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.match(module,/const fitScale = Math\.max\(0\.01, Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)\)/);
  assert.ok(module.includes('safeWidth - margins.left - margins.right'));
  assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
- assert.ok(module.includes('const safeWidth = 190;'));
- assert.ok(module.includes('const safeHeight = 250;'));
+ assert.ok(module.includes('const safeWidth = 210;'));
+ assert.ok(module.includes('const safeHeight = 297;'));
  assert.match(module,/--pt-print-scale/);
  assert.match(module,/--pt-print-width/);
  assert.match(module,/pt-print-page-content/);
- assert.ok(module.includes("@page{margin:0}"));
+ assert.ok(module.includes("@page{size:A4 portrait;margin:0}"));
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(styles.includes('width:var(--pt-print-width,190mm)!important'));
- assert.ok(styles.includes('height:var(--pt-print-height,250mm)!important'));
+ assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
+ assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('print-margin-live-apply-1'));
+ assert.ok(index.includes('a4-print-page-scale-1'));
 });
 
 
