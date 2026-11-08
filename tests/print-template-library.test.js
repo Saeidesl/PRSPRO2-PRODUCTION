@@ -198,3 +198,25 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('break-inside:avoid!important'));
  assert.ok(index.includes('print-mobile-fit-2'));
 });
+
+
+test('print output exposes persistent user-configurable margins for all templates',()=>{
+ const page=read('pages/print-output.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ const index=read('index.html');
+ for(const side of ['top','bottom','right','left']) {
+  assert.ok(page.includes('id="pt-margin-'+side+'"'),side+' margin input exists');
+  assert.ok(module.includes("'"+side+"'"),side+' margin is loaded and saved');
+ }
+ assert.match(page,/pt-margin-reset/);
+ assert.match(module,/PMS_PRINT_OUTPUT_MARGINS_V1/);
+ assert.match(module,/window\.localStorage\.getItem/);
+ assert.match(module,/window\.localStorage\.setItem/);
+ assert.match(module,/availableWidth = Math\.max\(20, safeWidth - margins\.left - margins\.right\)/);
+ assert.match(module,/availableHeight = Math\.max\(20, safeHeight - margins\.top - margins\.bottom\)/);
+ assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
+ assert.match(styles,/\.pt-print-margin-grid/);
+ assert.match(styles,/pt-print-page-content\{transform:scale\(var\(--pt-print-scale,1\)\)\}/);
+ assert.ok(index.includes('print-margin-controls-1'));
+});
