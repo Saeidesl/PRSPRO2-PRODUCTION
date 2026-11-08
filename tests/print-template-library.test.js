@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-pdf-300dpi-rtl-ocr-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-pdf-300dpi-rtl-ocr-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-smart-text-order-2'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-smart-text-order-2'));
 });
 
 
@@ -198,7 +198,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('pdf-300dpi-rtl-ocr-1'));
+ assert.ok(index.includes('smart-text-order-2'));
 });
 
 
@@ -220,7 +220,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('pdf-300dpi-rtl-ocr-1'));
+ assert.ok(index.includes('smart-text-order-2'));
 });
 
 
@@ -233,7 +233,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('pdf-300dpi-rtl-ocr-1'));
+ assert.ok(index.includes('smart-text-order-2'));
 });
 
 
@@ -330,7 +330,7 @@ test('smart text grouping separates columns and preserves RTL and LTR reading or
   {text:'پروژه',x:85,y:10,width:13,height:4,dir:'rtl'},
   {text:'کد',x:20,y:10,width:8,height:4,dir:'rtl'},
   {text:'Project',x:10,y:30,width:20,height:4,dir:'ltr'},
-  {text:'Code',x:40,y:30,width:12,height:4,dir:'ltr'},
+  {text:'Code',x:36,y:30,width:12,height:4,dir:'ltr'},
   {text:'Date',x:10,y:36,width:12,height:4,dir:'ltr'}
  ]);
  assert.equal(lines.find(line=>line.text==='نام پروژه')?.direction,'rtl');
@@ -351,4 +351,45 @@ test('smart detected fields are positioned according to text direction',()=>{
  const ltr=designer.smartLineToElements([{text:'Name',x:10,y:10,width:15,height:4,rtl:false,direction:'ltr'}],0,210,[],0)[0];
  assert.ok(rtl.x<100);
  assert.ok(ltr.x>25);
+});
+
+
+test('smart PDF text keeps bidi control marks for mixed Persian and Latin content',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const mixed='\u200fکد \u200eA\u200f';
+ assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200f'));
+ assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200e'));
+ assert.equal(designer.getSmartTextDirection(mixed,'ltr'),'rtl');
+});
+
+test('smart PDF text joins adjacent glyph fragments and inserts spaces only for measured word gaps',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const joined=designer.groupSmartTextLines([
+  {text:'ژه',x:90,y:10,width:5,height:4,dir:'rtl'},
+  {text:'پرو',x:95,y:10,width:5,height:4,dir:'rtl'}
+ ]);
+ assert.equal(joined[0].text,'پروژه');
+ const spaced=designer.groupSmartTextLines([
+  {text:'پروژه',x:80,y:20,width:12,height:4,dir:'rtl'},
+  {text:'نام',x:94,y:20,width:8,height:4,dir:'rtl'}
+ ]);
+ assert.equal(spaced[0].text,'نام پروژه');
+});
+
+test('smart PDF text separates nearby columns without merging their labels',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const lines=designer.groupSmartTextLines([
+  {text:'نام',x:100,y:10,width:10,height:4,dir:'rtl'},
+  {text:'کد',x:82,y:10,width:8,height:4,dir:'rtl'}
+ ]);
+ assert.equal(lines.length,2);
+ assert.equal(lines.length,2);
+ assert.ok(lines.some(line=>line.text==='نام'));
+ assert.ok(lines.some(line=>line.text==='کد'));
 });

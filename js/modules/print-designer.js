@@ -550,12 +550,14 @@
       return catalog.find(item => alias.hint.some(term => this.normalizeSmartText(item.label).includes(term))) || null;
     },
     normalizeSmartLineText: function (value) {
+      // Keep Unicode bidi controls: PDF.js may use them to preserve mixed Persian,
+      // Latin and numeric runs. Removing them changes the logical reading order.
       return String(value || '').normalize('NFC')
-        .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
         .replace(/[\t\r\n ]+/g, ' ').trim();
     },
     getSmartTextDirection: function (value, fallback) {
-      const text = this.normalizeSmartLineText(value);
+      const text = this.normalizeSmartLineText(value)
+        .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '');
       const arabicCount = (text.match(/[\u0600-\u06FF]/g) || []).length;
       const latinCount = (text.match(/[A-Za-z0-9]/g) || []).length;
       if (arabicCount > latinCount) return 'rtl';
@@ -582,18 +584,19 @@
       rows.sort((a,b)=>a.centerY-b.centerY).forEach(row=>{
         const rtlHints=row.items.filter(item=>item.dir==='rtl').length;
         const ltrHints=row.items.filter(item=>item.dir==='ltr').length;
-        const rowText=row.items.map(item=>item.text).join(' ');
+        const rowText=row.items.map(item=>item.text).join('');
         const direction=(rtlHints+ltrHints>0 && rtlHints!==ltrHints)
           ? (rtlHints>ltrHints?'rtl':'ltr')
           : this.getSmartTextDirection(rowText,'rtl');
         const rtl=direction==='rtl';
-        const ordered=row.items.sort((a,b)=>rtl?b.x-a.x:a.x-b.x);
+        const ordered=row.items.slice().sort((a,b)=>rtl?b.x-a.x:a.x-b.x);
         const segments=[];
         ordered.forEach(item=>{
           const segment=segments[segments.length-1];
           const previous=segment&&segment.items[segment.items.length-1];
           const gap=!previous?0:(rtl?previous.x-(item.x+item.width):item.x-(previous.x+previous.width));
-          const gapLimit=previous?Math.max(10,Math.max(previous.height,item.height)*3.5):0;
+          // A large horizontal gap is more likely a column boundary than a word space.
+          const gapLimit=previous?Math.max(4.5,Math.max(previous.height,item.height)*1.6):0;
           if(!previous||gap>gapLimit)segments.push({items:[item]});
           else segment.items.push(item);
         });
@@ -603,13 +606,24 @@
           const top=Math.min.apply(null,parts.map(item=>item.y));
           const right=Math.max.apply(null,parts.map(item=>item.x+item.width));
           const bottom=Math.max.apply(null,parts.map(item=>item.y+item.height));
-          const text=this.normalizeSmartLineText(parts.map(item=>item.text).join(' '));
+          let assembled='';
+          parts.forEach((part,index)=>{
+            const value=part.text;
+            if(!assembled){assembled=value;return;}
+            const previous=parts[index-1];
+            const gap=rtl?previous.x-(part.x+part.width):part.x-(previous.x+previous.width);
+            const fontHeight=Math.max(previous.height,part.height);
+            const wordGap=Math.max(0.35,Math.min(1.4,fontHeight*0.16));
+            const hasExplicitSpace=/\s$/.test(assembled)||/^\s/.test(value);
+            assembled+=(hasExplicitSpace||gap>wordGap?' ':'')+value;
+          });
+          const text=this.normalizeSmartLineText(assembled);
           if(text)lines.push({text:text,x:left,y:top,width:Math.max(0,right-left),height:Math.max(1,bottom-top),rtl:rtl,direction:direction});
         });
       });
       return lines;
     },
-    smartLineToElements: function (lines, pageIndex, pageWidth, catalog, offset) {
+        smartLineToElements: function (lines, pageIndex, pageWidth, catalog, offset) {
       const labelPattern = /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|تیراژ|رنگ|سایز|اندازه|مدل|پارچه|ملزومات|توضیح|شرح|امضا|تحویل|سفارش|واحد|نام خانوادگی|مشتری|کارفرما|name|code|number|date|quantity|qty|amount|color|size|model|fabric|material|supply|description|remark|signature|delivery|order|unit|customer|client|project|style)/i;
       const results = [];
       lines.forEach(line => {
