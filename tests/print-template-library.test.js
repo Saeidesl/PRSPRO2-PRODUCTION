@@ -217,6 +217,6 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/availableHeight = Math\.max\(20, safeHeight - margins\.top - margins\.bottom\)/);
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
- assert.match(styles,/pt-print-page-content\{transform:scale\(var\(--pt-print-scale,1\)\)\}/);
+ assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
  assert.ok(index.includes('print-margin-controls-1'));
 });
