@@ -243,7 +243,12 @@ test('smart form conversion accepts PDF and image formats in the existing design
  assert.match(page,/accept="[^"]*application\/pdf[^"]*image\/jpeg[^"]*image\/png/);
  assert.match(page,/id="pt-smart-detect"/);
  assert.match(module,/handleImportFile: async function/);
- assert.match(module,/imageFileToPdf: async function/);\n assert.match(module,/Embed the original JPEG bytes/);\n assert.match(module,/PNG is embedded losslessly/);\n assert.match(module,/image\\.width \\* 25\\.4 \\/ 300/);\n assert.doesNotMatch(module,/maxDimension = 2400/);\n assert.doesNotMatch(module,/image\\.toDataURL\\('image\\/jpeg',0\\.92\\)/);
+ assert.match(module,/imageFileToPdf: async function/);
+ assert.match(module,/Embed the original JPEG bytes/);
+ assert.match(module,/PNG is embedded losslessly/);
+ assert.match(module,/image\\.width \\* 25\\.4 \\/ 300/);
+ assert.doesNotMatch(module,/maxDimension = 2400/);
+ assert.doesNotMatch(module,/image\\.toDataURL\\('image\\/jpeg',0\\.92\\)/);
  assert.match(module,/\/print-templates\/.*\/pdf/);
  assert.match(module,/createWorker\('fas\+eng'/);
 });
@@ -256,7 +261,9 @@ test('smart conversion extracts PDF text first and uses on-device OCR only for s
  assert.match(module,/worker\.recognize\(canvas\)/);
  assert.match(module,/worker\.terminate\(\)/);
  assert.match(module,/runSmartDetection: async function/);
- assert.match(module,/smartLineToElements: function/);\n assert.match(module,/const itemCenter = Number\\(item\\.y \\|\\| 0\\) \\+ Number\\(item\\.height \\|\\| 0\\) \\/ 2/);\n assert.match(module,/const arabicCount =/);
+ assert.match(module,/smartLineToElements: function/);
+ assert.match(module,/const itemCenter = Number\\(item\\.y \\|\\| 0\\) \\+ Number\\(item\\.height \\|\\| 0\\) \\/ 2/);
+ assert.match(module,/const arabicCount =/);
  assert.match(module,/suggestSmartBinding: function/);
  assert.match(module,/renderBindings\(\); this\.renderEditor\(\); this\.commitHistory\(\)/);
 });
