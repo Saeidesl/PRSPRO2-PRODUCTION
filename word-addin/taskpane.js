@@ -16,7 +16,7 @@
     $('status').className = 'status' + (type ? ' ' + type : '');
   }
   function extract(response) {
-    if (!response || response.success === false) throw new Error(response && response.message || 'پاسخ سرور معتبر نیست.');
+    if (!response || response.success === false) throw new Error(response && response.error && response.error.message || response && response.message || 'پاسخ سرور معتبر نیست.');
     return response.data !== undefined ? response.data : response;
   }
   async function api(method, path, body) {
@@ -30,8 +30,10 @@
       options.body = JSON.stringify(body || {});
     }
     const response = await fetch(url.toString(), options);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data && data.message || 'ارتباط با PMS ناموفق بود.');
+    let data;
+    try { data = await response.json(); }
+    catch (parseError) { throw new Error('پاسخ سرور قابل خواندن نیست؛ ارتباط یا نشانی سرویس را بررسی کنید.'); }
+    if (!response.ok) throw new Error(data && data.error && data.error.message || data && data.message || 'ارتباط با PMS ناموفق بود.');
     return extract(data);
   }
   function normalizeProjects(value) {
@@ -55,7 +57,7 @@
     $('login-button').disabled = true;
     try {
       const result = await api('POST','/auth/login',{username,password});
-      state.token = result.token || (result.data && result.data.token) || '';
+      state.token = result.token || '';
       state.user = result.user || (result.data && result.data.user) || null;
       if (!state.token) throw new Error('توکن ورود از PMS دریافت نشد.');
       $('password').value = '';
