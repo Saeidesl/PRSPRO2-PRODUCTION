@@ -282,3 +282,10 @@ test('smart-detected fields remain editable blank slots without duplicating the 
  assert.match(module,/filter\(item => !String\(item\.id \|\| ''\)\.startsWith\('smart_'\)\)/);
  assert.match(styles,/\.pt-output-field/);
 });
+
+
+test('smart conversion recognizes common Persian and English factory form labels',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/name\|code\|number\|date\|quantity\|qty\|amount\|color\|size\|model\|fabric/);
+ assert.match(module,/name\|code\|number\|date\|quantity\|qty\|color\|size\|description/);
+});
