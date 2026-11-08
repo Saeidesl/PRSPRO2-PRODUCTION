@@ -592,7 +592,7 @@
           const previous=segment&&segment.items[segment.items.length-1];
           const gap=!previous?0:(rtl?previous.x-(item.x+item.width):item.x-(previous.x+previous.width));
           const gapLimit=previous?Math.max(10,Math.max(previous.height,item.height)*3.5):0;
-          if(!previous||previous.hasEOL||gap>gapLimit)segments.push({items:[item]});
+          if(!previous||gap>gapLimit)segments.push({items:[item]});
           else segment.items.push(item);
         });
         segments.forEach(segment=>{
