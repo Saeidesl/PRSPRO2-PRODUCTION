@@ -101,7 +101,7 @@
 
 /* Final document preview and browser print output */
 .pt-output-preview{overflow:auto;padding:16px;background:var(--surface-muted,#f3f4f6);border-radius:10px}
-.pt-print-page{position:relative;box-sizing:border-box;margin:0 auto 18px;padding:14mm 12mm;background:#fff;color:#111827;box-shadow:0 2px 12px rgba(0,0,0,.12);overflow:hidden;direction:rtl}
+ .pt-print-page{position:relative;box-sizing:border-box;margin:0 auto 18px;padding:0;background:#fff;color:#111827;box-shadow:0 2px 12px rgba(0,0,0,.12);overflow:hidden;direction:rtl}
 
 .pt-output-element{position:absolute;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere}
 .pt-output-table table{width:100%;border-collapse:collapse;font-size:9pt}
