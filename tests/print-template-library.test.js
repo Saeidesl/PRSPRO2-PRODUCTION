@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-print-margin-live-apply-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-print-margin-live-apply-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-a4-print-page-scale-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-a4-print-page-scale-1'));
 });
 
 
