@@ -160,7 +160,7 @@ test('print output hides image helper copy and uses exact page size without forc
  assert.match(module,/pt-output-image-empty/);
  assert.doesNotMatch(module,/برای نمایش تصویر، منبع تصویر را به این المان متصل کن/);
  assert.match(module,/@page/);
- assert.ok(module.includes("height:'+spec.height+'mm"), 'each output page uses its own physical page height');
+ assert.ok(module.includes("--pt-print-height:'+printHeight+'mm"), 'each PDF output page calculates a bounded physical print height');
  assert.match(styles,/\.pt-section-title\{display:none!important\}/);
  assert.match(styles,/page-break-after:auto!important/);
 });
@@ -176,20 +176,25 @@ test('print output assets use refreshed cache keys for the current print fixes',
 test('final print document omits the entire automatic form and project header',()=>{
  const module=read('js/modules/print-designer.js');
  assert.doesNotMatch(module,/pt-print-heading/);
- assert.ok(module.includes("dir=\"rtl\">'+background+elements.join('')"), 'each RTL page renders its PDF background below configured elements');
- assert.match(module,/page:ptOutputPage/);
+ assert.ok(module.includes("pageContent+'</article>'"), 'each RTL page wraps its PDF background and configured elements in one scalable content layer');
+ assert.match(module,/pt-print-page-content/);
 });
 
 
-test('mobile print uses a document-sized default page and keeps preview-only scaling out of print',()=>{
+test('mobile print scales each complete PDF page into a safe Letter/A4 printable area',()=>{
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.match(module,/const firstSpec = specs\[0\]/);
- assert.ok(module.includes('@page{size:'));
- assert.ok(module.includes('@page ptOutputPage'));
- assert.ok(styles.includes('@media screen and (max-width:700px)'));
- assert.ok(styles.includes('max-width:none!important;min-height:0!important'));
- assert.ok(styles.includes('page-break-after:always!important'));
+ assert.match(module,/const fitScale = pdfPages/);
+ assert.ok(module.includes('203 / Math.max(1, spec.width)'));
+ assert.ok(module.includes('272 / Math.max(1, spec.height)'));
+ assert.match(module,/--pt-print-scale/);
+ assert.match(module,/--pt-print-width/);
+ assert.match(module,/pt-print-page-content/);
+ assert.ok(module.includes("@page{margin:0}"));
+ assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
+ assert.ok(styles.includes('width:var(--pt-print-width)!important'));
+ assert.ok(styles.includes('height:var(--pt-print-height)!important'));
+ assert.ok(styles.includes('break-inside:avoid!important'));
  assert.ok(index.includes('print-page-size-mobile-1'));
 });
