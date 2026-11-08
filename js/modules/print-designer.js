@@ -879,10 +879,17 @@
         printStyle.id = 'pt-output-page-rule';
         document.head.appendChild(printStyle);
       }
-      printStyle.textContent = specs.map((spec, index) =>
-        '@page ptOutputPage'+index+'{size:'+spec.width+'mm '+spec.height+'mm;margin:0}' +
-        '.pt-print-page[data-page-index="'+index+'"]{page:ptOutputPage'+index+'}'
-      ).join('');
+      const firstSpec = specs[0] || { width: 210, height: 297 };
+      const pageRules = [
+        '@page{size:'+firstSpec.width+'mm '+firstSpec.height+'mm;margin:0}'
+      ];
+      specs.forEach((spec, index) => {
+        pageRules.push(
+          '@page ptOutputPage'+index+'{size:'+spec.width+'mm '+spec.height+'mm;margin:0}',
+          '.pt-print-page[data-page-index="'+index+'"]{page:ptOutputPage'+index+'}'
+        );
+      });
+      printStyle.textContent = pageRules.join('\\n');
       document.body.classList.add('pt-printing');
       const images = Array.from(document.querySelectorAll('#pt-output-preview img'));
       await Promise.all(images.map(image => image.decode ? image.decode().catch(() => {}) : Promise.resolve()));
