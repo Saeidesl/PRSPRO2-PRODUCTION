@@ -16,6 +16,7 @@
     pdfDocument: null,
     pdfFile: null,
     pdfRenderVersion: 0,
+    pdfPageObserver: null,
     activePageIndex: 0,
     init: function () {
       const route = String(window.location.hash || '').replace(/^#/, '').split('/')[0];
@@ -345,21 +346,42 @@
       const version = this.pdfRenderVersion;
       const root = document.getElementById('pt-design-canvas');
       if (!root || !this.pdfDocument) return;
-      for (let index = 0; index < this.pdfDocument.numPages; index++) {
-        if (version !== this.pdfRenderVersion) return;
-        const pageNode = root.querySelector('.pt-design-page[data-page-index="' + index + '"]');
-        const canvas = pageNode && pageNode.querySelector('.pt-pdf-background');
-        if (!canvas) continue;
+      if (this.pdfPageObserver) this.pdfPageObserver.disconnect();
+      const renderPage = async (pageNode) => {
+        const index = Number(pageNode.dataset.pageIndex || 0);
+        const canvas = pageNode.querySelector('.pt-pdf-background');
+        if (!canvas || canvas.dataset.rendered === '1' || canvas.dataset.rendering === '1') return;
+        canvas.dataset.rendering = '1';
         try {
           const page = await this.pdfDocument.getPage(index + 1);
-          const viewport = page.getViewport({scale:1.25});
+          if (version !== this.pdfRenderVersion) return;
+          const viewport = page.getViewport({scale:1});
           canvas.width = Math.ceil(viewport.width);
           canvas.height = Math.ceil(viewport.height);
           const context = canvas.getContext('2d', {alpha:false});
           await page.render({canvasContext:context,viewport:viewport}).promise;
+          if (version === this.pdfRenderVersion) canvas.dataset.rendered = '1';
         } catch (error) {
           this.setStatus('pt-pdf-status', 'نمایش صفحه ' + (index + 1) + ' از PDF ناموفق بود.', true);
+        } finally {
+          canvas.dataset.rendering = '0';
         }
+      };
+      if (window.IntersectionObserver) {
+        const scrollRoot = root.closest('.pt-canvas-scroll');
+        this.pdfPageObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            const canvas = entry.target.querySelector('.pt-pdf-background');
+            if (entry.isIntersecting) renderPage(entry.target);
+            else if (canvas && canvas.dataset.rendered === '1') {
+              canvas.width = 0; canvas.height = 0; canvas.dataset.rendered = '0';
+            }
+          });
+        }, {root:scrollRoot || null,rootMargin:'300px 0px',threshold:0.01});
+        root.querySelectorAll('.pt-design-page').forEach(pageNode => this.pdfPageObserver.observe(pageNode));
+      } else {
+        const pages = Array.from(root.querySelectorAll('.pt-design-page'));
+        for (const pageNode of pages) await renderPage(pageNode);
       }
     },
     handlePdfFile: async function (file) {
@@ -644,7 +666,8 @@
         const wasNew = !this.editingId;
         let templateId = this.editingId;
         if (wasNew) {
-          const created = await PMS.Api.post('/print-templates', body);
+          const createBody = this.pdfFile ? Object.assign({}, body, {Definition:this.blankDefinition()}) : body;
+          const created = await PMS.Api.post('/print-templates', createBody);
           const createdData = this.extract(created) || {};
           templateId = createdData.ID;
           if (!templateId) throw new Error('قالب ایجاد شد اما شناسه آن دریافت نشد.');
