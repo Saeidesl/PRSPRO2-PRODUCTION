@@ -37,7 +37,12 @@ jobs:
           for name in ("taskpane.html", "taskpane.css", "taskpane.js", "README.md"):
               assert (root / name).is_file(), f"Missing Word add-in asset: {name}"
           html = (root / "taskpane.html").read_text(encoding="utf-8")
-          for asset in ("taskpane.css", "taskpane.js"):
+          js = (root / "taskpane.js").read_text(encoding="utf-8")
+          for asset in ("taskpane.css", "taskpane.js", "https://appsforoffice.microsoft.com/lib/1/hosted/office.js"):
               assert asset in html, f"Task pane does not reference {asset}"
+          for tag in ("PROJECT_NAME", "PROJECT_CODE", "TOTAL_QUANTITY", "PROJECT_DESCRIPTION", "PROJECT_STATUS", "PROJECT_ID"):
+              assert tag in js, f"Missing supported Content Control tag: {tag}"
+          assert "localStorage" not in js, "PMS token must not be persisted in browser storage"
+          assert "password" in js and "$('password').value = ''" in js, "Password should be cleared after login"
           print("Word add-in static checks passed.")
           PY
