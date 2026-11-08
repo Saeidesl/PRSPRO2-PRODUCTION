@@ -160,7 +160,7 @@ test('print output hides image helper copy and uses exact page size without forc
  assert.match(module,/pt-output-image-empty/);
  assert.doesNotMatch(module,/برای نمایش تصویر، منبع تصویر را به این المان متصل کن/);
  assert.match(module,/@page/);
- assert.ok(module.includes("--pt-print-height:'+printHeight+'mm"), 'each PDF output page calculates a bounded physical print height');
+ assert.ok(module.includes("--pt-print-height:'+safeHeight+'mm"), 'each PDF output page uses a bounded physical print height');
  assert.match(styles,/\.pt-section-title\{display:none!important\}/);
  assert.match(styles,/page-break-after:auto!important/);
 });
@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-print-mobile-fit-2'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-print-mobile-fit-2'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-print-margin-controls-2'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-print-margin-controls-2'));
 });
 
 
@@ -185,16 +185,40 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.match(module,/const fitScale = pdfPages/);
- assert.ok(module.includes('203 / Math.max(1, spec.width)'));
- assert.ok(module.includes('272 / Math.max(1, spec.height)'));
+ assert.match(module,/const fitScale = Math\.min\(1, availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)/);
+ assert.ok(module.includes('safeWidth - margins.left - margins.right'));
+ assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
+ assert.ok(module.includes('const safeWidth = 190;'));
+ assert.ok(module.includes('const safeHeight = 250;'));
  assert.match(module,/--pt-print-scale/);
  assert.match(module,/--pt-print-width/);
  assert.match(module,/pt-print-page-content/);
  assert.ok(module.includes("@page{margin:0}"));
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(styles.includes('width:var(--pt-print-width)!important'));
- assert.ok(styles.includes('height:var(--pt-print-height)!important'));
+ assert.ok(styles.includes('width:var(--pt-print-width,190mm)!important'));
+ assert.ok(styles.includes('height:var(--pt-print-height,250mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('print-mobile-fit-2'));
+ assert.ok(index.includes('print-margin-controls-2'));
+});
+
+
+test('print output exposes persistent user-configurable margins for all templates',()=>{
+ const page=read('pages/print-output.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ const index=read('index.html');
+ for(const side of ['top','bottom','right','left']) {
+  assert.ok(page.includes('id="pt-margin-'+side+'"'),side+' margin input exists');
+  assert.ok(module.includes("'"+side+"'"),side+' margin is loaded and saved');
+ }
+ assert.match(page,/pt-margin-reset/);
+ assert.match(module,/PMS_PRINT_OUTPUT_MARGINS_V1/);
+ assert.match(module,/window\.localStorage\.getItem/);
+ assert.match(module,/window\.localStorage\.setItem/);
+ assert.match(module,/availableWidth = Math\.max\(20, safeWidth - margins\.left - margins\.right\)/);
+ assert.match(module,/availableHeight = Math\.max\(20, safeHeight - margins\.top - margins\.bottom\)/);
+ assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
+ assert.match(styles,/\.pt-print-margin-grid/);
+ assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
+ assert.ok(index.includes('print-margin-controls-2'));
 });

@@ -8,6 +8,17 @@
       <div class="form-group"><label for="pt-output-project">پروژه</label><select id="pt-output-project"><option value="">در حال دریافت پروژه‌ها…</option></select></div>
       <button type="button" class="btn btn-primary" id="pt-output-resolve">ساخت پیش‌نمایش سند</button><button type="button" class="btn btn-secondary" id="pt-output-print" hidden>چاپ / ذخیره PDF</button>
     </div>
+    <details class="pt-print-margin-settings" open>
+      <summary>تنظیم فاصله چاپ (میلی‌متر)</summary>
+      <div class="pt-print-margin-grid">
+        <label for="pt-margin-top">از بالا <input id="pt-margin-top" type="number" min="0" max="60" step="1" value="8" inputmode="numeric"></label>
+        <label for="pt-margin-bottom">از پایین <input id="pt-margin-bottom" type="number" min="0" max="60" step="1" value="8" inputmode="numeric"></label>
+        <label for="pt-margin-right">از راست <input id="pt-margin-right" type="number" min="0" max="60" step="1" value="8" inputmode="numeric"></label>
+        <label for="pt-margin-left">از چپ <input id="pt-margin-left" type="number" min="0" max="60" step="1" value="8" inputmode="numeric"></label>
+        <button type="button" class="btn btn-secondary btn-sm" id="pt-margin-reset">بازنشانی فاصله‌ها</button>
+      </div>
+      <p class="text-muted">تنظیمات به‌صورت خودکار روی همین دستگاه ذخیره می‌شوند و برای همه قالب‌ها در چاپ‌های بعدی اعمال خواهند شد.</p>
+    </details>
     <p id="pt-output-status" class="pt-status" aria-live="polite"></p>
   </div></section>
   <section class="card" id="pt-output-preview-card" hidden><div class="card-body">

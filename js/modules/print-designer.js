@@ -13,6 +13,8 @@
     dragState: null,
     previewMode: false,
     outputPageSpec: { width: 210, height: 297 },
+    outputMargins: { top: 8, bottom: 8, right: 8, left: 8 },
+    outputMarginStorageKey: 'PMS_PRINT_OUTPUT_MARGINS_V1',
     pdfDocument: null,
     pdfFile: null,
     pdfRenderVersion: 0,
@@ -708,7 +710,81 @@
       const printButton = document.getElementById('pt-output-print');
       if (button) button.addEventListener('click', () => this.resolveOutput());
       if (printButton) printButton.addEventListener('click', () => this.printOutput());
+      this.loadOutputMargins();
+      ['top','bottom','right','left'].forEach(side => {
+        const input = document.getElementById('pt-margin-' + side);
+        if (input) input.addEventListener('change', () => this.saveOutputMargins());
+      });
+      const resetMargins = document.getElementById('pt-margin-reset');
+      if (resetMargins) resetMargins.addEventListener('click', () => this.resetOutputMargins());
       await this.loadOutputOptions();
+    },
+    loadOutputMargins: function () {
+      try {
+        const stored = JSON.parse(window.localStorage.getItem(this.outputMarginStorageKey) || 'null');
+        if (stored && typeof stored === 'object') {
+          ['top','bottom','right','left'].forEach(side => {
+            const value = Number(stored[side]);
+            if (Number.isFinite(value)) this.outputMargins[side] = Math.max(0, Math.min(60, value));
+          });
+        }
+      } catch (error) {
+        // Storage may be disabled; the in-memory defaults remain usable.
+      }
+      this.syncOutputMarginInputs();
+      return this.outputMargins;
+    },
+    syncOutputMarginInputs: function () {
+      ['top','bottom','right','left'].forEach(side => {
+        const input = document.getElementById('pt-margin-' + side);
+        if (input) input.value = String(this.outputMargins[side]);
+      });
+    },
+    saveOutputMargins: function () {
+      ['top','bottom','right','left'].forEach(side => {
+        const input = document.getElementById('pt-margin-' + side);
+        const parsed = input ? Number(input.value) : this.outputMargins[side];
+        this.outputMargins[side] = Number.isFinite(parsed) ? Math.max(0, Math.min(60, parsed)) : 8;
+      });
+      this.syncOutputMarginInputs();
+      try {
+        window.localStorage.setItem(this.outputMarginStorageKey, JSON.stringify(this.outputMargins));
+      } catch (error) {
+        // Printing still uses the current values even if persistent storage is unavailable.
+      }
+      this.refreshOutputPreview();
+      return this.outputMargins;
+    },
+    refreshOutputPreview: function () {
+      const preview = document.getElementById('pt-output-preview');
+      if (!preview || !this.outputPageSpecs) return;
+      const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
+      const safeWidth = 190;
+      const safeHeight = 250;
+      Array.from(preview.querySelectorAll('.pt-print-page')).forEach(article => {
+        const pageIndex = Number(article.getAttribute('data-page-index') || 0);
+        const spec = this.outputPageSpecs[pageIndex];
+        if (!spec) return;
+        const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
+        const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
+        const scale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
+        article.style.setProperty('--pt-print-scale', String(scale));
+        const content = article.querySelector('.pt-print-page-content');
+        if (content) {
+          content.style.left = margins.left + 'mm';
+          content.style.top = margins.top + 'mm';
+        }
+      });
+    },
+    resetOutputMargins: function () {
+      this.outputMargins = { top: 8, bottom: 8, right: 8, left: 8 };
+      this.syncOutputMarginInputs();
+      try {
+        window.localStorage.setItem(this.outputMarginStorageKey, JSON.stringify(this.outputMargins));
+      } catch (error) {
+        // Keep reset values in memory when storage is unavailable.
+      }
+      this.refreshOutputPreview();
     },
     loadOutputOptions: async function () {
       this.setStatus('pt-output-status', 'در حال دریافت قالب‌ها و پروژه‌ها…');
@@ -866,24 +942,23 @@
         const background = pdfPages && pdfPages[pageIndex]
           ? '<img class="pt-output-pdf-background" src="'+pdfPages[pageIndex].background+'" alt="" aria-hidden="true">'
           : '';
-        // Mobile print dialogs may ignore CSS @page custom dimensions and keep Letter paper.
-        // Fit the complete PDF page (background and positioned overlays together) inside a safe
-        // area that fits both Letter and A4, while preserving its original preview dimensions.
-        const fitScale = pdfPages
-          ? Math.min(1, 203 / Math.max(1, spec.width), 272 / Math.max(1, spec.height))
-          : 1;
-        const printWidth = spec.width * fitScale;
-        const printHeight = spec.height * fitScale;
+        // Fit the complete page (PDF background and all overlays) inside the mobile-safe
+        // paper area after applying the user's persistent top/bottom/left/right margins.
+        const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
+        const safeWidth = 190;
+        const safeHeight = 250;
+        const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
+        const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
+        const fitScale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
+        const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm;left:'+margins.left+'mm;top:'+margins.top+'mm">'+background+elements.join('')+'</div>';
         const pageStyle = 'width:'+spec.width+'mm;height:'+spec.height+'mm;--pt-print-scale:'+fitScale+
-          ';--pt-print-width:'+printWidth+'mm;--pt-print-height:'+printHeight+'mm';
-        const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm">'+background+elements.join('')+'</div>';
+          ';--pt-print-width:'+safeWidth+'mm;--pt-print-height:'+safeHeight+'mm';
         pages.push('<article class="pt-print-page'+(pdfPages ? ' pt-has-pdf' : '')+'" data-page-index="'+pageIndex+'" style="'+pageStyle+'" dir="rtl">'+pageContent+'</article>');
       }
       return pages.join('');
     },
     printOutput: async function () {
-      const specs = this.outputPageSpecs && this.outputPageSpecs.length
-        ? this.outputPageSpecs : [this.outputPageSpec || { width: 210, height: 297 }];
+      this.saveOutputMargins();
       let printStyle = document.getElementById('pt-output-page-rule');
       if (!printStyle) {
         printStyle = document.createElement('style');
