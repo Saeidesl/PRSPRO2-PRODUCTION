@@ -198,7 +198,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('a4-print-page-scale-1'));
+ assert.ok(index.includes('smart-form-conversion-1'));
 });
 
 
@@ -220,7 +220,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('a4-print-page-scale-1'));
+ assert.ok(index.includes('smart-form-conversion-1'));
 });
 
 
@@ -233,7 +233,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('a4-print-page-scale-1'));
+ assert.ok(index.includes('smart-form-conversion-1'));
 });
 
 
@@ -251,7 +251,7 @@ test('smart form conversion accepts PDF and image formats in the existing design
 test('smart conversion extracts PDF text first and uses on-device OCR only for scanned pages',()=>{
  const module=read('js/modules/print-designer.js');
  assert.match(module,/page\.getTextContent\(\)/);
- assert.match(module,/if \(!lines\.length\)/);
+ assert.match(module,/if \(!lines\.length \|\|/);
  assert.match(module,/tesseract\.js@5\.1\.1/);
  assert.match(module,/worker\.recognize\(canvas\)/);
  assert.match(module,/worker\.terminate\(\)/);
