@@ -118,6 +118,9 @@ test('print output page exposes a real document preview and print action',()=>{
   assert.match(page,/id="pt-output-preview"/);
   assert.match(page,/id="pt-output-print"/);
   assert.match(module,/renderOutputDocument/);
+  assert.match(module,/loadOutputPdfPages: async function/);
+  assert.match(module,/pt-output-pdf-background/);
+  assert.match(module,/item\.pageIndex \|\| 0/);
   assert.match(module,/window\.print\(\)/);
   assert.match(styles,/body\.pt-printing/);
 });
@@ -166,12 +169,13 @@ test('print output hides image helper copy and uses exact page size without forc
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
  assert.match(index,/css\/print-template-library\.css\?v=20261108-pdf-template-background-1/);
- assert.match(index,/js\/modules\/print-designer\.js\?v=20261108-pdf-template-background-1/);
+ assert.match(index,/js\/modules\/print-designer\.js\?v=20261108-pdf-output-background-2/);
 });
 
 
 test('final print document omits the entire automatic form and project header',()=>{
  const module=read('js/modules/print-designer.js');
  assert.doesNotMatch(module,/pt-print-heading/);
- assert.ok(module.includes("dir=\"rtl\">'+elements.join('')"), 'final document is rendered RTL from configured elements');
+ assert.ok(module.includes("dir=\"rtl\">'+background+elements.join('')"), 'each RTL page renders its PDF background below configured elements');
+ assert.match(module,/page:ptOutputPage/);
 });
