@@ -49,7 +49,7 @@ test('event registration displays current workflow step requirements', () => {
 
 test('event module cache version is refreshed for workflow progress', () => {
   const html = read('index.html');
-  assert.match(html, /js\/modules\/events\.js\?v=20261107-project-event-history-shortcut-placement-1/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261108-event-form-a4-modal-1/);
 });
 
 

@@ -1,37 +1,43 @@
 ## 🎯 Current Objective
 
-پشتیبانی سازگار Frontend از قابلیت اعلان تلگرام پس از ثبت رویداد، بدون تغییر مسیر فعلی ثبت رویداد یا ایجاد UI/فرم موازی. تصمیم محصولی تأییدشده: اعلان برای رویدادهای پروژه‌ای و مستقل ارسال شود؛ جزئیات فرم‌های متصل و داده‌های ثبت‌شده در پیام Backend درج می‌شوند.
+نمایش فرم‌های متصل به نوع رویداد در مودال تمام‌صفحه با تجربه بصری شبیه تکمیل یک برگه کاغذی A4؛ با حفظ کامل مسیر فعلی ثبت رویداد، اعتبارسنجی، فایل‌ها، فرم‌های چندردیفی و پاسخ‌های موجود.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 
 ### مخازن و شاخه
 - Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION`
-- Backend عملیاتی متناظر: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`
-- شاخه کاری فاز: `feat/telegram-event-notifications-20261107`
-- Frontend baseline: `1758a295b4158d32799667f3cf30644178e90c87`
-- Backend baseline: `1c9c9be4cc6c92fdc6e35d5bf19740945740264e`
-- `TODO5.md` پیش از شروع «Ready for the next feature» بود؛ `ARCHITECTURE.md` موجود است.
+- Backend عملیاتی: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`
+- شاخه کاری فاز: `feat/event-form-a4-modal-20261108` در هر دو مخزن؛ از آخرین commit شاخه main ساخته شد.
+- Frontend baseline: `dd54957585cabb6c1dcb1c13f87abe4d7bef1c9a`
+- Backend baseline: `5247d9872509f6e9e2a26a5b3f0607444c441a1a`
+- فاز قبلی Frontend در TODO5 تکمیل شده بود.
+- تسک قبلی Backend درباره اعلان تلگرام هنوز در Task 4 بود؛ بنا به دستور مالک محصول در وضعیت متوقف‌شده حفظ می‌شود و بخشی از این فاز نیست.
 
-### مسیر فعلی ثبت
-- `pages/events.html`: صفحه عملیاتی ثبت رویداد.
-- `js/modules/events.js`: `Events.submitForm`، `collectConfiguredFormResponses`، `uploadConfiguredFormImages` و `uploadConfiguredFormFile`؛ اطلاعات فرم و پیوست‌ها را آماده و از همان جریان موجود ارسال می‌کند.
-- `js/core/api.js`: لایه transport واحد `PMS.Api`.
-- API موجود: `POST /events`؛ پیوست‌ها از مسیر موجود `POST /projects/:projectId/attachments` بارگذاری می‌شوند.
-- Backend پس از ثبت موفق رویداد اعلان را می‌فرستد؛ Frontend نباید پیام تلگرام را جداگانه ارسال کند یا مسیر دوم بسازد.
-- رویداد مستقل بدون ProjectID در Backend پشتیبانی می‌شود؛ Frontend نباید برای آن پروژه اجباری کند.
+### معماری و جریان فعلی فرم رویداد
+- `pages/events.html`: صفحه میزبان ثبت رویداد؛ مودال ثبت در `js/modules/events.js:Events.openForm` به‌صورت پویا ساخته می‌شود.
+- `js/modules/events.js:Events.loadEventForms`: بارگذاری فرم‌های متصل به نوع رویداد.
+- `Events.loadConfiguredForms`: دریافت از API موجود `GET /event-types/:eventTypeId/forms` یا cache تعاریف.
+- `Events.renderConfiguredForms`: ساخت کنترل‌های فرم داخل `#event-configured-forms-section` و `#event-configured-forms`.
+- `Events.collectConfiguredFormResponses`: خواندن پاسخ‌ها از DOM موجود و ساخت payload فرم‌ها.
+- `Events.submitForm`: ارسال رویداد از مسیر موجود `POST /events`؛ فایل‌ها از مسیر موجود پیوست پروژه آپلود می‌شوند.
+- فرم‌های چندردیفی با `data-form-table`, `data-form-row`, `addConfiguredFormRow` ساخته و جمع‌آوری می‌شوند.
+- اعتبارسنجی فیلدهای اجباری، visibility rules، تصویر/فایل و پروفایل تصویر باید بدون تغییر رفتار حفظ شوند.
+- پنل اطلاعات زمینه‌ای پروژه `#event-context-panel` و مودال پیشرفت ثبت مستقل از نمایش A4 باقی می‌مانند.
+- Backend/API/Google Sheets برای این تجربه UI نیازی به تغییر اجرایی ندارند؛ پاسخ‌ها همچنان از همان قرارداد موجود ارسال و ذخیره می‌شوند.
 
-### قراردادهای داده مرتبط
-- Backend جزئیات را از `13_Events`, `35_EventFormData`, `15_Attachments` و تنظیمات امن Tenant دریافت می‌کند.
-- پاسخ فرم‌های چندردیفی و تصویر از همان `FormResponses` موجود ارسال می‌شوند.
-- در این فاز هیچ Sheet، API، فرم یا جریان ثبت جدیدی در Frontend تعریف نمی‌شود.
+### تصمیم طراحی
+- با انتخاب نوع رویداد دارای فرم متصل، همان بخش فرم موجود به‌صورت خودکار در overlay تمام‌صفحه نمایش داده شود.
+- محتوای فرم روی صفحه سفید با تناسب A4 و حاشیه چاپ‌مانند قرار گیرد؛ هدر فرم، نام فرم و بخش‌بندی خوانا باشند.
+- کنترل‌ها و پاسخ‌ها همان DOM و همان فرم HTML اصلی را حفظ کنند تا ارتباط submit و اعتبارسنجی قطع نشود.
+- امکان بستن برگه و بازکردن مجدد آن از فرم ثبت رویداد وجود داشته باشد.
+- در موبایل، برگه در عرض قابل استفاده با اسکرول عمودی نمایش داده شود؛ در دسکتاپ نسبت A4 حفظ شود.
+- فرم‌های بدون فرم متصل، روال فعلی را بدون بازشدن overlay اضافی ادامه دهند.
 
 ## 📋 Macro-Task Queue & Implementation Log
 
-- [x] **Task 1 — Discovery & Planning**: بررسی صفحه ثبت، submit، upload و قرارداد API انجام شد.
-  - *Log:* `pages/events.html` میزبان فرم موجود است؛ `js/modules/events.js:Events.submitForm` پاسخ‌ها را با `collectConfiguredFormResponses` جمع می‌کند و فایل‌ها را از مسیرهای موجود بارگذاری می‌کند؛ `js/core/api.js:PMS.Api` transport واحد است. اعلان از Backend انجام می‌شود و به تغییر UI یا ارسال جداگانه Frontend نیاز ندارد. شاخه کاری فاز از baseline عملیاتی ساخته شد.
-- [x] **Task 2 — بررسی سازگاری Frontend با رویداد مستقل و payloadهای موجود**: بررسی شد؛ Frontend از قبل برای `ConnectionType=INDEPENDENT` مقدار `ProjectID` خالی می‌فرستد و از همان `POST /events` استفاده می‌کند؛ پاسخ فرم‌ها و فایل‌ها نیز در مسیرهای موجود آماده می‌شوند. تغییر اجرایی Frontend لازم نیست.
-  - *Log:* `js/modules/events.js:Events.submitForm` نوع مستقل را تشخیص می‌دهد و `ProjectID: ''` را همراه `EventTypeID`, `OccurredAt`, `Description`, `FormResponses` و `IdempotencyKey` در payload موجود می‌فرستد؛ upload همچنان از مسیر موجود و transport از `PMS.Api` انجام می‌شود. هیچ اعلان سمت Frontend یا مسیر موازی اضافه نشد.
-- [x] **Task 3 — آزمون یکپارچه Frontend/Backend**: سازگاری payload با Backend و عدم نیاز به تغییر Frontend تأیید شد.
-  - *Log:* Backend `EventService._createUnlocked_` اکنون اعلان را بعد از تکمیل ذخیره نهایی برای رویدادهای پروژه‌ای و مستقل فراخوانی می‌کند؛ Frontend همچنان فقط یک `POST /events` ارسال می‌کند. PR Frontend #52 فقط TODO5 و ثبت معماری فاز را دارد و تغییر اجرایی/asset لازم نیست.
-- [x] **Task 4 — همگام‌سازی و تحویل Frontend**: PR مستندات Frontend ادغام شد؛ به‌دلیل نبود تغییر اجرایی در Frontend، انتشار جدید لازم نیست.
-  - *Log:* PR Frontend #52 با روش squash در `main` ادغام شد (merge commit: `42fbe4a32f54e247a487dc6d3d8016ad55ef5119`). هیچ فایل اجرایی یا asset فرانت‌اند تغییر نکرد؛ فقط TODO5 به‌روزرسانی شد. Frontend موجود با قرارداد فعلی `POST /events` سازگار است.
+- [x] **Task 1 — Discovery & Planning**: بررسی وضعیت مخازن عملیاتی، شاخه‌ها، TODO5/ARCHITECTURE و مسیر واقعی ساخت، بارگذاری، نمایش و جمع‌آوری پاسخ فرم انجام شد.
+  - *Log:* Frontend آخرین commit شاخه main برابر `dd54957585cabb6c1dcb1c13f87abe4d7bef1c9a` و Backend برابر `5247d9872509f6e9e2a26a5b3f0607444c441a1a` بود. شاخه کاری `feat/event-form-a4-modal-20261108` در هر دو مخزن از main ساخته شد؛ هیچ protected branch تغییر نکرد. نقاط اتصال اجرایی در `js/modules/events.js` شامل `openForm`, `loadEventForms`, `loadConfiguredForms`, `renderConfiguredForms`, `collectConfiguredFormResponses` و `submitForm` هستند. فرم فعلی داخل `#event-create-form` قرار دارد؛ بنابراین overlay باید همان DOM را درون فرم اصلی نگه دارد تا اعتبارسنجی، submit و کنترل‌های فایل/چندردیفی از کار نیفتند. Backend و قراردادهای API/Sheet بدون تغییر اجرایی می‌مانند.
+- [x] **Task 2 — پیاده‌سازی تجربه فرم A4**: نمایش فرم‌های متصل در overlay تمام‌صفحه با صفحه سفید A4، هدر و دکمه بستن/بازگشایی؛ کنترل‌های اصلی و container پاسخ در DOM فرم ثبت باقی می‌مانند.
+  - *Log:* `js/modules/events.js:Events.prepareConfiguredFormsA4`, `openConfiguredFormsA4`, `closeConfiguredFormsA4` ساختار موجود `#event-configured-forms-section` و `#event-configured-forms` را در پوسته A4 قرار می‌دهند؛ `renderConfiguredForms` پس از دریافت تعریف فرم، برگه را خودکار باز می‌کند. launcher امکان بازگشایی می‌دهد و submit هنگام بسته بودن برگه ابتدا آن را باز می‌کند تا فیلدهای اجباری پنهان نمانند. Escape و focus trap به‌روزرسانی شدند. `css/events.css` استایل دسکتاپ A4، موبایل، جدول‌ها، فایل‌ها و print را اضافه کرد؛ `index.html` نسخه cache-busting CSS/JS را به `20261108-event-form-a4-modal-1` تغییر داد. تست `tests/event-form-a4-modal.test.js` اضافه شد و asset assertions تست‌های وابسته همگام شدند. قرارداد API/Backend تغییر نکرد.
+- [ ] **Task 3 — آزمون یکپارچگی و رگرسیون (IN PROGRESS)**: آزمون فرم تکی و چندفرمی، فیلدهای اجباری، visibility rules، جدول‌های چندردیفی، فایل/تصویر، رویداد مستقل/پروژه‌ای، بستن و بازکردن مجدد، موبایل و submit موجود.
+- [ ] **Task 4 — ادغام و انتشار عملیاتی**: بررسی CI و سازگاری، PR و ادغام فقط پس از بررسی؛ انتشار GitHub Pages و تأیید نسخه زنده. انتشار Backend فقط در صورت تغییر واقعی Backend.

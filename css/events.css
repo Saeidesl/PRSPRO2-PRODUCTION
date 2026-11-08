@@ -1845,3 +1845,233 @@
   color: var(--color-danger);
   font-weight: 700;
 }
+
+
+/* فرم‌های متصل به رویداد — تجربه تمام‌صفحه برگه A4 */
+.event-configured-forms-launcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.event-configured-forms-launcher[hidden] { display: none !important; }
+
+#event-configured-forms-section.event-configured-forms-a4-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: rgba(20, 27, 38, .72);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+#event-configured-forms-section.event-configured-forms-a4-overlay[hidden] {
+  display: none !important;
+}
+.event-forms-a4-dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  color: #20242b;
+  direction: rtl;
+}
+.event-forms-a4-toolbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 66px;
+  padding: 10px 22px;
+  border-bottom: 1px solid rgba(255,255,255,.15);
+  background: #202833;
+  color: #fff;
+}
+.event-forms-a4-toolbar-copy { display: grid; gap: 2px; }
+.event-forms-a4-toolbar-copy strong { font-size: 15px; font-weight: 800; }
+.event-forms-a4-toolbar-copy small { color: rgba(255,255,255,.7); font-size: 11px; }
+.event-forms-a4-close {
+  display: grid;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 10px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 27px;
+  line-height: 1;
+  cursor: pointer;
+}
+.event-forms-a4-close:hover { background: rgba(255,255,255,.12); }
+.event-forms-a4-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 28px 18px 48px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #e8ebef;
+}
+.event-forms-a4-paper {
+  box-sizing: border-box;
+  width: min(210mm, calc(100vw - 72px));
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 17mm 16mm 20mm;
+  border: 1px solid #d9dde3;
+  background: #fff;
+  color: #20242b;
+  box-shadow: 0 12px 38px rgba(15,23,42,.18);
+  direction: rtl;
+}
+.event-forms-a4-paper,
+.event-forms-a4-paper * { box-sizing: border-box; }
+.event-forms-a4-paper .event-configured-forms-heading {
+  margin: 0 0 22px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid #dfe3e8;
+}
+.event-forms-a4-paper .event-section-title {
+  margin: 0;
+  color: #20242b;
+  font-size: 19px;
+  font-weight: 800;
+}
+.event-forms-a4-paper #event-configured-forms {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+.event-forms-a4-paper .event-configured-form-card {
+  min-width: 0;
+  padding: 0 0 20px;
+  border: 0;
+  border-bottom: 1px solid #e4e7eb;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+.event-forms-a4-paper .event-configured-form-card > h5 {
+  margin: 0 0 15px;
+  color: #20242b;
+  font-size: 16px;
+  font-weight: 800;
+}
+.event-forms-a4-paper .event-form-group {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid #e1e5ea;
+  border-radius: 7px;
+  background: #fff;
+}
+.event-forms-a4-paper .event-form-group > h6 {
+  margin: 0 0 12px;
+  color: #343b45;
+  font-size: 13px;
+  font-weight: 800;
+}
+.event-forms-a4-paper .event-form-value-field {
+  min-width: 0;
+  margin: 0 0 16px;
+  color: #20242b;
+}
+.event-forms-a4-paper .event-form-value-field > label,
+.event-forms-a4-paper .event-form-value-field > strong {
+  display: block;
+  margin: 0 0 7px;
+  color: #343b45;
+  font-size: 12px;
+  font-weight: 750;
+}
+.event-forms-a4-paper input:not([type="checkbox"]):not([type="file"]),
+.event-forms-a4-paper select,
+.event-forms-a4-paper textarea {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #cfd5dd;
+  border-radius: 6px;
+  background: #fff;
+  color: #20242b;
+  box-shadow: none;
+}
+.event-forms-a4-paper textarea { min-height: 88px; }
+.event-forms-a4-paper .event-modal-table-wrap { max-width: 100%; overflow-x: auto; }
+.event-forms-a4-paper .event-modal-table { width: 100%; border-collapse: collapse; color: #20242b; }
+.event-forms-a4-paper .event-modal-table th,
+.event-forms-a4-paper .event-modal-table td {
+  padding: 8px;
+  border: 1px solid #d9dee5;
+  vertical-align: top;
+  font-size: 11px;
+}
+.event-forms-a4-paper .event-modal-table th { background: #f2f4f7; font-weight: 800; }
+.event-forms-a4-paper .event-modal-button {
+  min-height: 36px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+.event-forms-a4-paper .event-muted { color: #66717e; }
+.event-forms-a4-paper .event-image-selection-item { background: #fff; color: #20242b; }
+
+@media (max-width: 700px) {
+  .event-forms-a4-toolbar { min-height: 58px; padding: 8px 13px; }
+  .event-forms-a4-toolbar-copy strong { font-size: 13px; }
+  .event-forms-a4-viewport { padding: 12px 8px 24px; }
+  .event-forms-a4-paper {
+    width: 100%;
+    min-height: 297mm;
+    padding: 24px 17px 32px;
+    border-radius: 2px;
+  }
+  .event-forms-a4-paper .event-form-group { padding: 11px; }
+  .event-configured-forms-launcher { align-items: stretch; flex-direction: column; }
+}
+@media print {
+  #event-configured-forms-section.event-configured-forms-a4-overlay {
+    position: static;
+    display: block;
+    width: auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    background: #fff;
+  }
+  .event-forms-a4-toolbar { display: none; }
+  .event-forms-a4-viewport { padding: 0; overflow: visible; background: #fff; }
+  .event-forms-a4-paper {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 15mm;
+    border: 0;
+    box-shadow: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #event-configured-forms-section,
+  .event-forms-a4-close { transition: none !important; animation: none !important; }
+}
