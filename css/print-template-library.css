@@ -184,3 +184,10 @@
   body.pt-printing .pt-print-page.pt-has-pdf{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body.pt-printing .pt-output-pdf-background{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+
+/* Smart conversion controls inside the existing Print Designer import panel */
+.pt-pdf-import-row #pt-smart-detect{white-space:nowrap;min-height:40px}
+.pt-pdf-import-row #pt-smart-detect:disabled{opacity:.55;cursor:not-allowed}
+.pt-pdf-import-row .pt-status{line-height:1.8}
+@media(max-width:560px){.pt-pdf-import-row #pt-smart-detect{width:100%}}
