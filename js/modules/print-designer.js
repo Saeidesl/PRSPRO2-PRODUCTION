@@ -529,9 +529,10 @@
         let line = lines.find(entry => Math.abs(entry.y-item.y) <= 2.8);
         if (!line) { line={y:item.y,x:item.x,width:item.width,height:item.height,parts:[]}; lines.push(line); }
         line.parts.push(item);
+        const right = Math.max(line.x + line.width,item.x + item.width);
         line.x = Math.min(line.x,item.x);
         line.y = Math.min(line.y,item.y);
-        line.width = Math.max(line.x+line.width,item.x+item.width)-line.x;
+        line.width = right - line.x;
         line.height = Math.max(line.height,item.height);
       });
       return lines.map(line => ({
