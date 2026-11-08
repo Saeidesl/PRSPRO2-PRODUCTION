@@ -160,3 +160,14 @@
 .pt-page-tab:focus-visible{outline:2px solid var(--primary,#4779d9);outline-offset:2px}
 @media(max-width:560px){.pt-pdf-import-row{grid-template-columns:1fr}.pt-page-tabs{overflow-x:auto;flex-wrap:nowrap}.pt-page-tab{white-space:nowrap}}
 @media print{.pt-page-tabs,.pt-pdf-import{display:none!important}.pt-design-canvas{gap:0!important}.pt-design-page{box-shadow:none!important;border:0!important;break-after:page}}
+
+
+/* Render imported PDF as the immutable background in document preview and print */
+.pt-print-page.pt-has-pdf{padding:0!important;background:#fff!important;isolation:isolate}
+.pt-output-pdf-background{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:fill;z-index:0}
+.pt-print-page.pt-has-pdf .pt-output-element{z-index:1}
+@media screen{.pt-print-page.pt-has-pdf{overflow:hidden}}
+@media print{
+  body.pt-printing .pt-print-page.pt-has-pdf{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.pt-printing .pt-output-pdf-background{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
