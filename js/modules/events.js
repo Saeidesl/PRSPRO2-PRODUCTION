@@ -167,6 +167,13 @@
           const progressOverlay = document.getElementById('event-submit-progress-modal');
           if (!Events.modalOpen && !progressOverlay) return;
           if (event.key === 'Escape') {
+            const a4Overlay = document.getElementById('event-configured-forms-section');
+            if (a4Overlay && !a4Overlay.hidden) {
+              Events.closeConfiguredFormsA4();
+              event.preventDefault();
+              event.stopImmediatePropagation();
+              return;
+            }
             if (progressOverlay) {
               if (Events.submitProgressState && Events.submitProgressState.finished) {
                 Events.closeSubmitProgressModal();
@@ -1887,6 +1894,7 @@
         '<div hidden aria-hidden="true"><select id="event-amendment-source-event"></select><select id="event-amendment-source-form"></select></div></section>' +
         '<section class="event-form-section" id="event-quantity-section" hidden><h4 class="event-section-title">مقدار تولید/تحویل</h4>' +
         '<div id="event-quantity-field" class="event-dynamic-grid"></div></section>' +
+        '<div class="event-configured-forms-launcher" id="event-configured-forms-launcher" hidden><span>فرم اطلاعات تکمیلی آماده تکمیل است.</span><button type="button" class="event-modal-button event-modal-button-primary" id="event-configured-forms-open">بازکردن برگه فرم‌ها</button></div>' +
         '<section class="event-form-section" id="event-configured-forms-section" hidden><div class="event-configured-forms-heading"><h4 class="event-section-title">فرم‌های اطلاعات تکمیلی</h4></div>' +
         '<div id="event-configured-forms" class="event-dynamic-grid" aria-live="polite"></div></section>' +
         '<div id="event-submit-progress" class="event-submit-progress" hidden role="status" aria-live="polite">' +
@@ -2059,6 +2067,12 @@
       document.getElementById('event-create-form')
         .addEventListener('submit', (event) => {
           event.preventDefault();
+          const a4Section = document.getElementById('event-configured-forms-section');
+          if (this.formDefinitions && this.formDefinitions.length && a4Section && a4Section.hidden) {
+            this.openConfiguredFormsA4();
+            this.showFormError('ابتدا برگه فرم اطلاعات تکمیلی را بازبینی کنید؛ سپس ثبت رویداد را انجام دهید.');
+            return;
+          }
           // Catch failures in async preflight work too (for example form-value
           // collection or file preparation), before submitForm enters its API try/catch.
           this.submitForm().catch((error) => {
@@ -2997,6 +3011,9 @@
       const container = document.getElementById('event-configured-forms');
       if (!section || !container) return;
       const definitions = this.formDefinitions || [];
+      const launcher = document.getElementById('event-configured-forms-launcher');
+      if (launcher) launcher.hidden = definitions.length === 0;
+      if (definitions.length) this.prepareConfiguredFormsA4(section, container);
       section.hidden = definitions.length === 0;
       container.replaceChildren();
       definitions.forEach((mapping) => {
@@ -3168,6 +3185,71 @@
       });
       container.oninput = () => this.applyConfiguredFormVisibility(container);
       container.onchange = () => this.applyConfiguredFormVisibility(container);
+      if (definitions.length) this.openConfiguredFormsA4();
+    },
+
+    prepareConfiguredFormsA4: function (section, container) {
+      if (!section || section.dataset.a4Prepared === 'true') return;
+      const originalHeading = section.querySelector('.event-configured-forms-heading');
+      const dialog = document.createElement('div');
+      dialog.className = 'event-forms-a4-dialog';
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+      dialog.setAttribute('aria-labelledby', 'event-forms-a4-title');
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'event-forms-a4-toolbar';
+      const title = document.createElement('div');
+      title.className = 'event-forms-a4-toolbar-copy';
+      title.innerHTML = '<strong id="event-forms-a4-title">تکمیل فرم اطلاعات</strong><small>فرم را مانند یک برگه کاغذی تکمیل کنید.</small>';
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.className = 'event-forms-a4-close';
+      close.id = 'event-forms-a4-close';
+      close.setAttribute('aria-label', 'بستن برگه فرم');
+      close.textContent = '×';
+      close.addEventListener('click', () => this.closeConfiguredFormsA4());
+      toolbar.append(title, close);
+
+      const viewport = document.createElement('div');
+      viewport.className = 'event-forms-a4-viewport';
+      const paper = document.createElement('div');
+      paper.className = 'event-forms-a4-paper';
+      if (originalHeading) {
+        originalHeading.classList.add('event-forms-a4-paper-heading');
+        paper.appendChild(originalHeading);
+      }
+      paper.appendChild(container);
+      viewport.appendChild(paper);
+      dialog.append(toolbar, viewport);
+      section.replaceChildren(dialog);
+      section.classList.add('event-configured-forms-a4-overlay');
+      section.dataset.a4Prepared = 'true';
+
+      const openButton = document.getElementById('event-configured-forms-open');
+      if (openButton) openButton.addEventListener('click', () => this.openConfiguredFormsA4());
+    },
+
+    openConfiguredFormsA4: function () {
+      const section = document.getElementById('event-configured-forms-section');
+      const launcher = document.getElementById('event-configured-forms-launcher');
+      if (!section || !section.dataset.a4Prepared) return;
+      section.hidden = false;
+      if (launcher) launcher.hidden = true;
+      const first = section.querySelector('input:not([type="file"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])');
+      if (first) window.requestAnimationFrame(() => first.focus({ preventScroll: true }));
+    },
+
+    closeConfiguredFormsA4: function () {
+      const section = document.getElementById('event-configured-forms-section');
+      const launcher = document.getElementById('event-configured-forms-launcher');
+      if (!section) return;
+      section.hidden = true;
+      if (launcher) {
+        launcher.hidden = false;
+        const button = launcher.querySelector('button');
+        if (button) button.focus();
+      }
     },
 
     parseVisibilityRule: function (value) {
