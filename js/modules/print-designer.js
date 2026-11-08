@@ -752,7 +752,18 @@
       } catch (error) {
         // Printing still uses the current values even if persistent storage is unavailable.
       }
+      this.refreshOutputPreview();
       return this.outputMargins;
+    },
+    refreshOutputPreview: async function () {
+      const context = this.outputRenderContext;
+      const preview = document.getElementById('pt-output-preview');
+      if (!context || !preview) return;
+      try {
+        preview.innerHTML = await this.renderOutputDocument(context.template, context.project, context.data);
+      } catch (error) {
+        this.setStatus('pt-output-status', error.message || 'به‌روزرسانی حاشیه‌های پیش‌نمایش ناموفق بود.', true);
+      }
     },
     resetOutputMargins: function () {
       this.outputMargins = { top: 8, bottom: 8, right: 8, left: 8 };
@@ -928,9 +939,8 @@
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
         const fitScale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
         const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm;left:'+margins.left+'mm;top:'+margins.top+'mm">'+background+elements.join('')+'</div>';
-        const pageStyle = 'width:'+safeWidth+'mm;height:'+safeHeight+'mm;--pt-print-scale:'+fitScale+
-          ';--pt-print-top:'+margins.top+'mm;--pt-print-bottom:'+margins.bottom+'mm;--pt-print-left:'+margins.left+
-          'mm;--pt-print-right:'+margins.right+'mm';
+        const pageStyle = 'width:'+spec.width+'mm;height:'+spec.height+'mm;--pt-print-scale:'+fitScale+
+          ';--pt-print-width:'+safeWidth+'mm;--pt-print-height:'+safeHeight+'mm';
         pages.push('<article class="pt-print-page'+(pdfPages ? ' pt-has-pdf' : '')+'" data-page-index="'+pageIndex+'" style="'+pageStyle+'" dir="rtl">'+pageContent+'</article>');
       }
       return pages.join('');
@@ -973,6 +983,7 @@
         const preview = document.getElementById('pt-output-preview');
         const card = document.getElementById('pt-output-preview-card');
         if (!template || !template.Definition) throw new Error('ساختار قالب برای تولید سند در دسترس نیست.');
+        this.outputRenderContext = { template, project, data };
         if (preview) preview.innerHTML = await this.renderOutputDocument(template, project, data);
         if (card) card.hidden = false;
         const printButton = document.getElementById('pt-output-print');
