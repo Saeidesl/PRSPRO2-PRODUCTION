@@ -246,9 +246,9 @@ test('smart form conversion accepts PDF and image formats in the existing design
  assert.match(module,/imageFileToPdf: async function/);
  assert.match(module,/Embed the original JPEG bytes/);
  assert.match(module,/PNG is embedded losslessly/);
- assert.match(module,/image\\.width \\* 25\\.4 \\/ 300/);
+ assert.ok(module.includes('image.width * 25.4 / 300'));
  assert.doesNotMatch(module,/maxDimension = 2400/);
- assert.doesNotMatch(module,/image\\.toDataURL\\('image\\/jpeg',0\\.92\\)/);
+ assert.ok(!module.includes("image.toDataURL('image/jpeg',0.92)"));
  assert.match(module,/\/print-templates\/.*\/pdf/);
  assert.match(module,/createWorker\('fas\+eng'/);
 });
@@ -262,7 +262,7 @@ test('smart conversion extracts PDF text first and uses on-device OCR only for s
  assert.match(module,/worker\.terminate\(\)/);
  assert.match(module,/runSmartDetection: async function/);
  assert.match(module,/smartLineToElements: function/);
- assert.match(module,/const itemCenter = Number\\(item\\.y \\|\\| 0\\) \\+ Number\\(item\\.height \\|\\| 0\\) \\/ 2/);
+ assert.ok(module.includes('const itemCenter = Number(item.y || 0) + Number(item.height || 0) / 2'));
  assert.match(module,/const arabicCount =/);
  assert.match(module,/suggestSmartBinding: function/);
  assert.match(module,/renderBindings\(\); this\.renderEditor\(\); this\.commitHistory\(\)/);
