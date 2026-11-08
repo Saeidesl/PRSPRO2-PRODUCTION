@@ -271,3 +271,14 @@ test('smart detection remains a suggestion and uses existing template definition
  assert.match(module,/this\.definition\.elements = previousElements\.concat\(detected\)/);
  assert.match(module,/برای ثبت دائمی، قالب را ذخیره کن/);
 });
+
+
+test('smart-detected fields remain editable blank slots without duplicating the printed label',()=>{
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ assert.match(module,/type:'field',text:'',label:text/);
+ assert.match(module,/pt-field-hint/);
+ assert.match(module,/pt-output-field/);
+ assert.match(module,/filter\(item => !String\(item\.id \|\| ''\)\.startsWith\('smart_'\)\)/);
+ assert.match(styles,/\.pt-output-field/);
+});
