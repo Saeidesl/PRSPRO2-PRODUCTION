@@ -582,8 +582,10 @@
       rows.sort((a,b)=>a.centerY-b.centerY).forEach(row=>{
         const rtlHints=row.items.filter(item=>item.dir==='rtl').length;
         const ltrHints=row.items.filter(item=>item.dir==='ltr').length;
-        const fallback=rtlHints===ltrHints ? this.getSmartTextDirection(row.items.map(item=>item.text).join(' '),'ltr') : (rtlHints>ltrHints?'rtl':'ltr');
-        const direction=this.getSmartTextDirection(row.items.map(item=>item.text).join(' '),fallback);
+        const rowText=row.items.map(item=>item.text).join(' ');
+        const direction=(rtlHints+ltrHints>0 && rtlHints!==ltrHints)
+          ? (rtlHints>ltrHints?'rtl':'ltr')
+          : this.getSmartTextDirection(rowText,'rtl');
         const rtl=direction==='rtl';
         const ordered=row.items.sort((a,b)=>rtl?b.x-a.x:a.x-b.x);
         const segments=[];
