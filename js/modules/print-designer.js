@@ -542,7 +542,7 @@
       })).filter(line => line.text);
     },
     smartLineToElements: function (lines, pageIndex, pageWidth, catalog, offset) {
-      const labelPattern = /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|تیراژ|رنگ|سایز|اندازه|مدل|پارچه|ملزومات|توضیح|شرح|امضا|تحویل|سفارش|واحد|نام خانوادگی|مشتری|کارفرما)/i;
+      const labelPattern = /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|تیراژ|رنگ|سایز|اندازه|مدل|پارچه|ملزومات|توضیح|شرح|امضا|تحویل|سفارش|واحد|نام خانوادگی|مشتری|کارفرما|name|code|number|date|quantity|qty|amount|color|size|model|fabric|material|supply|description|remark|signature|delivery|order|unit|customer|client|project|style)/i;
       const results = [];
       lines.forEach(line => {
         const text = String(line.text || '').trim();
@@ -590,7 +590,7 @@
             height:Number((Math.abs(item.height || item.transform[3] || 10)*25.4/72).toFixed(2))
           }));
           let lines = this.groupSmartTextLines(items);
-          if (!lines.length || !lines.some(line => /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|رنگ|سایز|اندازه|توضیح|امضا|سفارش)/i.test(line.text))) {
+          if (!lines.length || !lines.some(line => /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|رنگ|سایز|اندازه|توضیح|امضا|سفارش|name|code|number|date|quantity|qty|color|size|description|signature|order|project)/i.test(line.text))) {
             if (!worker) {
               this.setStatus('pt-pdf-status','صفحه اسکن‌شده شناسایی شد؛ در حال بارگذاری OCR فارسی/انگلیسی روی همین دستگاه…');
               await this.loadExternalScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js','Tesseract');
