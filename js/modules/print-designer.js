@@ -364,7 +364,7 @@
     },
     handlePdfFile: async function (file) {
       if (!file) return;
-      if ((file.type && file.type !== 'application/pdf') || !/\\.pdf$/i.test(file.name || '')) {
+      if ((file.type && file.type !== 'application/pdf') || !/\.pdf$/i.test(file.name || '')) {
         this.setStatus('pt-pdf-status', 'فقط فایل با پسوند PDF قابل انتخاب است.', true);
         return;
       }
