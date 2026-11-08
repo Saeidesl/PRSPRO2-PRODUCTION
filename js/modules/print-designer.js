@@ -958,8 +958,7 @@
       return pages.join('');
     },
     printOutput: async function () {
-      const specs = this.outputPageSpecs && this.outputPageSpecs.length
-        ? this.outputPageSpecs : [this.outputPageSpec || { width: 210, height: 297 }];
+      this.saveOutputMargins();
       let printStyle = document.getElementById('pt-output-page-rule');
       if (!printStyle) {
         printStyle = document.createElement('style');
