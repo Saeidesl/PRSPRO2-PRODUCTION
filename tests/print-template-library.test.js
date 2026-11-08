@@ -222,3 +222,16 @@ test('print output exposes persistent user-configurable margins for all template
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
  assert.ok(index.includes('print-margin-controls-2'));
 });
+
+
+test('print margin controls apply immediately to the rendered page and persist mobile input',()=>{
+ const module=read('js/modules/print-designer.js');
+ const index=read('index.html');
+ assert.match(module,/input\.addEventListener\('input',\(\) => this\.saveOutputMargins\(\)\)/);
+ assert.match(module,/content\.style\.transform = 'scale\(' \+ scale \+ '\)'/);
+ assert.match(module,/content\.style\.left = margins\.left \+ 'mm'/);
+ assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
+ assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
+ assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
+ assert.ok(index.includes('print-margin-live-apply-1'));
+});
