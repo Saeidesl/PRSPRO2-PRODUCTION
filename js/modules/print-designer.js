@@ -763,8 +763,8 @@
       const preview = document.getElementById('pt-output-preview');
       if (!preview || !this.outputPageSpecs || !this.outputPageSpecs.length) return;
       const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
-      const safeWidth = 190;
-      const safeHeight = 250;
+      const safeWidth = 210;
+      const safeHeight = 297;
       Array.from(preview.querySelectorAll('.pt-print-page')).forEach(article => {
         const pageIndex = Number(article.getAttribute('data-page-index') || 0);
         const spec = this.outputPageSpecs[pageIndex];
@@ -961,8 +961,8 @@
         // Fit the complete page (PDF background and all overlays) inside the mobile-safe
         // paper area after applying the user's persistent top/bottom/left/right margins.
         const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
-        const safeWidth = 190;
-        const safeHeight = 250;
+        const safeWidth = 210;
+        const safeHeight = 297;
         const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
         const fitScale = Math.max(0.01, Math.min(availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height)));
@@ -983,7 +983,7 @@
       }
       // Let the mobile print service choose its paper (often Letter); each PDF page is
       // pre-fitted to a safe common printable area so no page can spill onto a second sheet.
-      printStyle.textContent = '@page{margin:0}';
+      printStyle.textContent = '@page{size:A4 portrait;margin:0}';
       document.body.classList.add('pt-printing');
       const images = Array.from(document.querySelectorAll('#pt-output-preview img'));
       await Promise.all(images.map(image => image.decode ? image.decode().catch(() => {}) : Promise.resolve()));
