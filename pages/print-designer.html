@@ -7,6 +7,14 @@
   <details class="card pt-panel pt-saved-templates"><summary>قالب‌های ذخیره‌شده</summary><div class="card-body">
     <div id="pt-template-list" class="pt-template-list"><div class="pt-empty-state">در حال دریافت قالب‌ها…</div></div>
   </div></details>
+  <section class="card pt-panel pt-pdf-import"><div class="card-body">
+    <h3 class="pt-section-title">پس‌زمینه PDF قالب</h3>
+    <div class="pt-pdf-import-row">
+      <label for="pt-pdf-file">انتخاب فایل PDF آماده</label>
+      <input id="pt-pdf-file" type="file" accept="application/pdf,.pdf">
+      <span id="pt-pdf-status" class="pt-status" aria-live="polite">فایل تک‌صفحه‌ای یا چندصفحه‌ای را انتخاب کن؛ صفحات اصلی به‌صورت پس‌زمینه ثابت نمایش داده می‌شوند.</span>
+    </div>
+  </div></section>
   <section class="card pt-editor-workspace" id="pt-editor-workspace">
     <div class="card-body">
       <div class="pt-editor-toolbar">
@@ -31,7 +39,7 @@
         <label>جهت صفحه <select id="pt-page-orientation"><option value="portrait">عمودی</option><option value="landscape">افقی</option></select></label>
         <span class="text-muted">واحد اندازه‌گذاری: میلی‌متر</span>
       </div>
-      <div class="pt-editor-layout">
+      <div id="pt-page-tabs" class="pt-page-tabs" aria-label="انتخاب صفحه"></div>\n      <div class="pt-editor-layout">
         <aside class="pt-editor-inspector">
           <details class="pt-mobile-tools"><summary>مرحله ۲: تنظیم المان انتخاب‌شده</summary><div class="pt-mobile-tools-body">
           <div id="pt-inspector-empty" class="pt-empty-state">برای تنظیم، یک المان را روی صفحه انتخاب کن.</div>
