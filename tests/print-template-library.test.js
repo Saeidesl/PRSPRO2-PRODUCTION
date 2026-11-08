@@ -352,3 +352,42 @@ test('smart detected fields are positioned according to text direction',()=>{
  assert.ok(rtl.x<100);
  assert.ok(ltr.x>25);
 });
+
+
+test('smart PDF text keeps bidi control marks for mixed Persian and Latin content',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const mixed='\u200fکد \u200eA-12\u200f';
+ assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200f'));
+ assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200e'));
+ assert.equal(designer.getSmartTextDirection(mixed,'ltr'),'rtl');
+});
+
+test('smart PDF text joins adjacent glyph fragments and inserts spaces only for measured word gaps',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const joined=designer.groupSmartTextLines([
+  {text:'ژه',x:90,y:10,width:5,height:4,dir:'rtl'},
+  {text:'پرو',x:95,y:10,width:5,height:4,dir:'rtl'}
+ ]);
+ assert.equal(joined[0].text,'پروژه');
+ const spaced=designer.groupSmartTextLines([
+  {text:'پروژه',x:80,y:20,width:12,height:4,dir:'rtl'},
+  {text:'نام',x:94,y:20,width:8,height:4,dir:'rtl'}
+ ]);
+ assert.equal(spaced[0].text,'نام پروژه');
+});
+
+test('smart PDF text separates nearby columns without merging their labels',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const lines=designer.groupSmartTextLines([
+  {text:'نام',x:100,y:10,width:10,height:4,dir:'rtl'},
+  {text:'کد',x:82,y:10,width:8,height:4,dir:'rtl'}
+ ]);
+ assert.equal(lines.length,2);
+ assert.deepEqual(lines.map(line=>line.text).sort(),['کد','نام']);
+});
