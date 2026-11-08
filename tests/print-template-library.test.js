@@ -389,5 +389,5 @@ test('smart PDF text separates nearby columns without merging their labels',()=>
   {text:'کد',x:82,y:10,width:8,height:4,dir:'rtl'}
  ]);
  assert.equal(lines.length,2);
- assert.deepEqual(lines.map(line=>line.text).sort(),['کد','نام']);
+ assert.deepEqual(Array.from(lines,line=>line.text).sort(),['کد','نام']);
 });
