@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-smart-image-quality-2'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-smart-image-quality-2'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-pdf-300dpi-rtl-ocr-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-pdf-300dpi-rtl-ocr-1'));
 });
 
 
@@ -198,7 +198,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('smart-image-quality-2'));
+ assert.ok(index.includes('pdf-300dpi-rtl-ocr-1'));
 });
 
 
@@ -220,7 +220,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('smart-image-quality-2'));
+ assert.ok(index.includes('pdf-300dpi-rtl-ocr-1'));
 });
 
 
@@ -233,7 +233,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('smart-image-quality-2'));
+ assert.ok(index.includes('pdf-300dpi-rtl-ocr-1'));
 });
 
 
@@ -262,8 +262,13 @@ test('smart conversion extracts PDF text first and uses on-device OCR only for s
  assert.match(module,/worker\.terminate\(\)/);
  assert.match(module,/runSmartDetection: async function/);
  assert.match(module,/smartLineToElements: function/);
- assert.ok(module.includes('const itemCenter = Number(item.y || 0) + Number(item.height || 0) / 2'));
+ assert.ok(module.includes('const itemCenter = normalized.y + normalized.height / 2'));
  assert.match(module,/const arabicCount =/);
+ assert.match(module,/const maxPixels=12000000/);
+ assert.match(module,/canvas.toBlob/);
+ assert.match(module,/result.data.lines/);
+ assert.match(module,/pageViewport.convertToViewportPoint/);
+ assert.match(module,/preserve_interword_spaces/);
  assert.match(module,/suggestSmartBinding: function/);
  assert.match(module,/renderBindings\(\); this\.renderEditor\(\); this\.commitHistory\(\)/);
 });
@@ -295,4 +300,55 @@ test('smart conversion recognizes common Persian and English factory form labels
  const module=read('js/modules/print-designer.js');
  assert.match(module,/name\|code\|number\|date\|quantity\|qty\|amount\|color\|size\|model\|fabric/);
  assert.match(module,/name\|code\|number\|date\|quantity\|qty\|color\|size\|description/);
+});
+
+
+test('PDF output renders print backgrounds at 300 DPI and keeps PNG pages lossless',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/getPdfRenderScale: function/);
+ assert.match(module,/this\.getPdfRenderScale\(baseViewport,300\)/);
+ assert.match(module,/canvas\.toBlob\(result=>result\?resolve\(result\)/);
+ assert.match(module,/window\.URL\.createObjectURL\(blob\)/);
+ assert.doesNotMatch(module,/Math\.min\(2, 1800 \/ baseViewport\.width, 2400 \/ baseViewport\.height\)/);
+});
+
+test('PDF text extraction respects page transforms and OCR uses recognized line blocks',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/convertToViewportPoint\(e,f\)/);
+ assert.match(module,/dir:item\.dir\|\|''/);
+ assert.match(module,/result\.data\.lines/);
+ assert.match(module,/this\.getPdfRenderScale\(viewport,300\)/);
+ assert.match(module,/preserve_interword_spaces/);
+});
+
+test('smart text grouping separates columns and preserves RTL and LTR reading order',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const lines=designer.groupSmartTextLines([
+  {text:'نام',x:100,y:10,width:10,height:4,dir:'rtl'},
+  {text:'پروژه',x:85,y:10,width:13,height:4,dir:'rtl'},
+  {text:'کد',x:20,y:10,width:8,height:4,dir:'rtl'},
+  {text:'Project',x:10,y:30,width:20,height:4,dir:'ltr'},
+  {text:'Code',x:40,y:30,width:12,height:4,dir:'ltr'},
+  {text:'Date',x:10,y:36,width:12,height:4,dir:'ltr'}
+ ]);
+ assert.equal(lines.find(line=>line.text==='نام پروژه')?.direction,'rtl');
+ assert.ok(lines.some(line=>line.text==='کد'));
+ assert.ok(lines.some(line=>line.text==='Project Code'));
+ assert.ok(lines.some(line=>line.text==='Date'));
+ assert.equal(designer.getPdfRenderScale({width:595,height:842},300),300/72);
+ assert.ok(designer.getPdfRenderScale({width:2000,height:3000},300)<300/72);
+});
+
+test('smart detected fields are positioned according to text direction',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.definition={bindings:[]};
+ designer.suggestSmartBinding=()=>null;
+ const rtl=designer.smartLineToElements([{text:'نام',x:100,y:10,width:10,height:4,rtl:true,direction:'rtl'}],0,210,[],0)[0];
+ const ltr=designer.smartLineToElements([{text:'Name',x:10,y:10,width:15,height:4,rtl:false,direction:'ltr'}],0,210,[],0)[0];
+ assert.ok(rtl.x<100);
+ assert.ok(ltr.x>25);
 });
