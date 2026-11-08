@@ -9,33 +9,34 @@
 - شاخه‌های `main` فقط مبنای انشعاب بوده‌اند؛ تغییرات این فاز فقط روی شاخه کاری انجام می‌شوند.
 
 ### معماری موجود Frontend
-- `js/core/api.js`: API client فعلی PMS؛ `API_BASE_URL` از `window.PMS_API_BASE_URL` می‌آید و token فعلی با `pms_api_token`/حافظه مدیریت می‌شود. این مدل token مرورگر مستقیماً قابل انتقال به Office Add-in فرض نمی‌شود؛ روش امن مخصوص Office باید در Task 2 طراحی شود.
+- `js/core/api.js`: API client فعلی PMS؛ `API_BASE_URL` از `window.PMS_API_BASE_URL` می‌آید و token فعلی با `pms_api_token`/حافظه مدیریت می‌شود. افزونه Word کلاینت مستقل است و token را فقط در حافظه task pane نگه می‌دارد.
 - `js/modules/print-designer.js`: ماژول موجود کتابخانه قالب، منبع داده، binding و خروجی؛ از `PMS.Api` استفاده می‌کند.
 - `pages/print-designer.html`: رابط فعلی Print Designer.
 - `index.html`: نقطه بارگذاری assetها و cache-busting فرانت‌اند.
 - قالب‌ساز موجود و مسیرهای آن حفظ می‌شوند؛ افزونه Word کلاینت Office جداگانه است و نباید مسیر چاپ فعلی را حذف یا جایگزین کند.
 
-### قرارداد Backend موجود که افزونه باید مصرف کند
-- `GET /projects`: فهرست پروژه با کنترل دسترسی سرور.
-- `GET /projects/:id`: دریافت جزئیات پروژه با کنترل دسترسی.
-- `GET /print-templates/sources`: منابع قابل اتصال شامل فیلدهای پروژه، انواع اطلاعات مرکزی و فرم‌ها.
-- `POST /print-templates/:id/resolve` (مسیر دقیق متد/Router در Task 2 بازبینی شود): resolver موجود، با کنترل Tenant و دسترسی پروژه، مقادیر bindingها را برمی‌گرداند.
-- قراردادهای داده فعلی: `PROJECT_FIELD`, `PROJECT_INFORMATION`, `EVENT_FORM_RESPONSE`.
-- درخواست‌های PMS در فرانت‌اند فعلی از `js/core/api.js` عبور می‌کنند؛ Office Add-in باید احراز هویت و ارتباط را به‌صورت امن و مستقل پیاده کند.
+### قرارداد Backend موجود که افزونه مصرف می‌کند
+- `POST /auth/login`: ورودی دقیق `{username,password}`؛ پاسخ موفق `Response.success({token,expiresAt,user})` و توکن در `data.token`.
+- `GET /projects`: فهرست پروژه با کنترل دسترسی سرور؛ مجوزهای لازم `PROJECT_VIEW` یا `PROJECT_CREATE`.
+- `GET /projects/:id`: دریافت جزئیات پروژه با کنترل دسترسی و محدودیت Tenant.
+- `POST /auth/logout`: ابطال نشست فعلی.
+- `Response.js`: پاسخ استاندارد خطا در `error.message` و پاسخ موفق در `data`.
+- `Router.js` و `AuthService.js` بازبینی شدند؛ قرارداد ورود و مسیرهای پروژه با کلاینت MVP منطبق‌اند.
+- درخواست‌های فعلی PMS از `js/core/api.js` عبور می‌کنند؛ افزونه Word کلاینت مستقل دارد و مجوز/tenant را به Backend واگذار می‌کند.
 
-### تصمیم‌های طراحی
-- Office.js Add-in با manifest مشترک برای Word Desktop و Word Online.
+### تصمیم‌ها و محدودیت‌های طراحی
+- Office.js Add-in با manifest مشترک برای Word Desktop و Word Online؛ حداقل نیازمندی WordApi 1.1.
 - قالب DOCX توسط Product Owner در Word طراحی می‌شود؛ محل داده با Content Controls و Tagهای پایدار مشخص می‌شود.
 - پنل افزونه امکان جستجو و انتخاب پروژه از فهرست مجاز را فراهم می‌کند.
-- عملیات درج داده باید متن/محتوا را در Content Control هدف جایگزین کند و استایل و ساختار قالب را حفظ کند.
-- هر عملیات روی سند کاری انجام می‌شود؛ فایل قالب اصلی تغییر نمی‌کند.
-- دسترسی و tenant isolation باید توسط Backend اعمال شود؛ token در متن سند یا log ذخیره نشود.
-- سازگاری Word Desktop/Online و محدودیت‌های Office.js باید با تست واقعی ثابت شود؛ پشتیبانی از جدول‌های پویا و تصاویر در Task 3 است.
+- عملیات درج داده متن را در Content Control هدف جایگزین می‌کند؛ قالب اصلی و دیتابیس تغییر نمی‌کنند.
+- token در سند، localStorage یا کد ثابت ذخیره نمی‌شود؛ token در حافظه task pane است و برای API در query parameter ارسال می‌شود، مطابق قرارداد فعلی Backend. این روش به دلیل قرار گرفتن token در URL یک ریسک باقی‌مانده است و قبل از تأیید امنیتی/تست واقعی نباید به‌عنوان راهکار امنیتی نهایی پذیرفته شود.
+- HTTPS در Manifest تنظیم شده؛ دسترسی عمومی GitHub Pages و CORS/redirect پاسخ GAS در محیط Word هنوز از بیرون تأیید نشده‌اند.
+- سازگاری Word Desktop/Online باید با تست واقعی ثابت شود؛ جدول‌های پویا و تصاویر در Task 3 هستند.
 
 ## 📋 Macro-Task Queue & Implementation Log
 - [x] **Task 1 — Discovery & Planning:** بررسی مخازن عملیاتی، اسناد فاز قبلی، Print Designer موجود و APIهای پروژه/قالب؛ تعریف معماری افزونه مشترک Word.
   - *Log:* فایل‌های `js/core/api.js`, `js/modules/print-designer.js`, `pages/print-designer.html`, `index.html` بررسی شدند. Print Designer فعلی و bindingهایش حفظ می‌شود و افزونه Word به‌عنوان کلاینت Office مستقل تعریف شد.
-- [ ] **Task 2 — Word Add-in MVP (IN PROGRESS):** طراحی و پیاده‌سازی manifest و task pane مشترک؛ اتصال امن به Backend؛ نمایش/جستجوی پروژه‌های مجاز؛ درج فیلدهای متنی و عددی در Content Controls با Tag مشخص.
-  - *Log:* فایل‌های `word-addin/manifest.xml`, `word-addin/taskpane.html`, `word-addin/taskpane.css`, `word-addin/taskpane.js` و `word-addin/README.md` اضافه شدند. افزونه Office.js با WordApi 1.1، ورود از `POST /auth/login`, دریافت فهرست از `GET /projects` و جزئیات از `GET /projects/:id`، جستجوی محلی پروژه و جایگذاری فیلدهای تکی در Content Controls با Tag را پیاده می‌کند. قالب اصلی تغییر داده نمی‌شود؛ درج فقط در سند باز جاری انجام می‌شود. token فقط در حافظه task pane نگهداری و هنگام خروج پاک می‌شود. شناسه‌های MVP: `PROJECT_NAME`, `PROJECT_CODE`, `TOTAL_QUANTITY`, `PROJECT_DESCRIPTION`, `PROJECT_STATUS`, `PROJECT_ID`. PR Draft #67 ایجاد شد؛ PR مرتبط Backend #39 فقط TODO5 را به‌روزرسانی می‌کند. پس از بازبینی قرارداد واقعی `Response.success/error` در `Response.js`، مدیریت خطا در `word-addin/taskpane.js` اصلاح شد تا پیام `response.error.message` نمایش داده شود. Workflow کنترل ایستا در `.github/workflows/word-addin-check.yml` اضافه شد: `node --check`، اعتبار XML manifest، HTTPS بودن SourceLocation، وجود assetها، شناسه‌های شش‌گانه و عدم ذخیره token در localStorage. README وضعیت میزبانی و محدودیت تست را مستند می‌کند. اجرای موفق Workflow هنوز از ابزار GitHub قابل تأیید نشده؛ Pages نیز فعال/در دسترس بودنش تأیید نشده است. تست واقعی Word Desktop/Online، CORS/API و انتشار Pages همچنان باقی است؛ Task 2 باز می‌ماند.
+- [ ] **Task 2 — Word Add-in MVP (IN PROGRESS):** تکمیل روش احراز هویت و ارتباط امن با Backend؛ نمایش/جستجوی پروژه‌های مجاز؛ درج فیلدهای ساده در Content Controls؛ تأیید میزبانی HTTPS و تست واقعی Word Desktop/Online.
+  - *Log:* فایل‌های `word-addin/manifest.xml`, `word-addin/taskpane.html`, `word-addin/taskpane.css`, `word-addin/taskpane.js`, `word-addin/README.md` و Workflow `.github/workflows/word-addin-check.yml` اضافه شدند. افزونه Office.js/WordApi 1.1، ورود از `POST /auth/login`، دریافت فهرست از `GET /projects` و جزئیات از `GET /projects/:id`، جستجوی محلی و جایگذاری Tagهای `PROJECT_NAME`, `PROJECT_CODE`, `TOTAL_QUANTITY`, `PROJECT_DESCRIPTION`, `PROJECT_STATUS`, `PROJECT_ID` را پیاده می‌کند. قرارداد `AuthService.login`, `Router.get/post` و `Response.success/error` بازبینی شد و با payload/response کلاینت تطبیق دارد. خطاهای استاندارد با `response.error.message` نمایش داده می‌شوند. رمز پس از ورود پاک می‌شود؛ token فقط در حافظه task pane است و در localStorage یا سند ذخیره نمی‌شود. کنترل‌های خودکار روی commit `f27f0f7eb7c98609079f54bb790aef4195c57e35` اجرا شدند: Word Add-in Checks Run `42511538519` موفق؛ Frontend checks Run `42511538513` موفق؛ Cross-repository QA Run `42511538408` موفق. PMS comprehensive UI performance audit Run `42511538404` هنگام بررسی هنوز در حال اجرا بود. وضعیت PR #67 باز، Draft و mergeable است. Backend PR #39 فقط TODO5 را تغییر می‌دهد و هیچ runtime/database change ندارد. آزمون مرورگر/Office.js در Word واقعی، CORS و redirect سرویس GAS، دسترسی عمومی GitHub Pages و رفتار توکن در URL هنوز تأیید نشده‌اند؛ بنابراین Task 2 باز می‌ماند و هیچ merge یا deployment انجام نمی‌شود.
 - [ ] **Task 3 — داده‌های پیچیده و قالب‌بندی:** جدول‌های چندردیفی، تصاویر، فیلدهای اطلاعات مرکزی و پاسخ فرم؛ حفظ قالب اصلی و نسخه کاری؛ تست RTL و صفحه‌بندی در هر دو Word.
 - [ ] **Task 4 — آزمون یکپارچه و تحویل:** تست ویندوز و آنلاین، API، مجوز، tenant isolation، token، سازگاری و رگرسیون؛ مستندات نصب/استفاده و دستور تست کاربر. انتشار نهایی پس از تأیید جداگانه.
