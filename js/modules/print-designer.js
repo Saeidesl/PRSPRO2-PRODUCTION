@@ -14,6 +14,7 @@
     previewMode: false,
     outputPageSpec: { width: 210, height: 297 },
     outputMargins: { top: 8, bottom: 8, right: 8, left: 8 },
+    outputPdfObjectUrls: [],
     outputMarginStorageKey: 'PMS_PRINT_OUTPUT_MARGINS_V1',
     pdfDocument: null,
     pdfFile: null,
@@ -315,7 +316,7 @@
           const style = 'left:' + Number(item.x || 0) + 'mm;top:' + Number(item.y || 0) + 'mm;width:' + Number(item.width || 30) +
             'mm;height:' + Number(item.height || 15) + 'mm;font-size:' + Number(item.fontSize || 12) + 'pt;text-align:' + this.esc(item.align || 'right') + ';color:' + this.esc(item.color || 'black') + ';background:' + this.esc(item.background || 'transparent');
           const selected = String(item.id) === String(this.selectedElementId) ? ' is-selected' : '';
-          const label = item.type === 'field' ? '<span class="pt-field-hint">' + this.esc(item.label || 'فیلد داده') + '</span>' :
+          const label = item.type === 'field' ? '<span class="pt-field-hint" dir="auto">' + this.esc(item.label || 'فیلد داده') + '</span>' :
             (item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
             (item.type === 'rectangle' || item.type === 'ellipse' ? '<span class="pt-shape-outline" aria-hidden="true"></span>' :
             (item.type === 'image' ? '<span class="pt-image-placeholder">▧ تصویر</span>' :
@@ -358,9 +359,12 @@
         try {
           const page = await this.pdfDocument.getPage(index + 1);
           if (version !== this.pdfRenderVersion) return;
-          const viewport = page.getViewport({scale:1});
+          const previewScale = Math.max(1, Math.min(2, Number(window.devicePixelRatio) || 1));
+          const viewport = page.getViewport({scale:previewScale});
           canvas.width = Math.ceil(viewport.width);
           canvas.height = Math.ceil(viewport.height);
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
           const context = canvas.getContext('2d', {alpha:false});
           await page.render({canvasContext:context,viewport:viewport}).promise;
           if (version === this.pdfRenderVersion) canvas.dataset.rendered = '1';
@@ -488,7 +492,7 @@
         pdf.addImage(dataUrl,imageFormat,0,0,widthMm,heightMm,undefined,'FAST');
         const blob = pdf.output('blob');
         if (blob.size > 10 * 1024 * 1024) throw new Error('حجم PDF حاصل از تصویر بیش از سقف ۱۰ مگابایت است؛ لطفاً فایل را با فرمت JPG با کیفیت اصلی یا PDF اسکنر وارد کن.');
-        const name = String(file.name || 'factory-form').replace(/\\.[^.]+$/,'') + '.pdf';
+        const name = String(file.name || 'factory-form').replace(/\.[^.]+$/,'') + '.pdf';
         return new File([blob],name,{type:'application/pdf',lastModified:Date.now()});
       } finally {
         if (image && typeof image.close === 'function') image.close();
@@ -545,37 +549,63 @@
       if (!alias) return null;
       return catalog.find(item => alias.hint.some(term => this.normalizeSmartText(item.label).includes(term))) || null;
     },
+    normalizeSmartLineText: function (value) {
+      return String(value || '').normalize('NFC')
+        .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+        .replace(/[\t\r\n ]+/g, ' ').trim();
+    },
+    getSmartTextDirection: function (value, fallback) {
+      const text = this.normalizeSmartLineText(value);
+      const arabicCount = (text.match(/[\u0600-\u06FF]/g) || []).length;
+      const latinCount = (text.match(/[A-Za-z0-9]/g) || []).length;
+      if (arabicCount > latinCount) return 'rtl';
+      if (latinCount > arabicCount) return 'ltr';
+      return fallback === 'rtl' ? 'rtl' : 'ltr';
+    },
     groupSmartTextLines: function (items) {
-      const lines = [];
-      items.filter(item => item.text && String(item.text).trim()).sort((a,b) => a.y-b.y || a.x-b.x).forEach(item => {
-        const itemCenter = Number(item.y || 0) + Number(item.height || 0) / 2;
-        const itemHeight = Math.max(1, Number(item.height || 0));
-        let line = lines.find(entry => {
-          const tolerance = Math.max(2.2, Math.min(5.5, Math.max(entry.height, itemHeight) * 0.48));
-          return Math.abs(entry.centerY - itemCenter) <= tolerance;
+      const rows = [];
+      (items || []).filter(item => item && item.text && this.normalizeSmartLineText(item.text)).forEach(item => {
+        const normalized = {text:this.normalizeSmartLineText(item.text),x:Number(item.x||0),y:Number(item.y||0),
+          width:Math.max(0,Number(item.width||0)),height:Math.max(1,Number(item.height||1)),
+          dir:String(item.dir||''),hasEOL:item.hasEOL===true};
+        const itemCenter = normalized.y + normalized.height / 2;
+        let row = rows.find(entry => {
+          const tolerance = Math.max(0.8,Math.min(2.5,Math.max(entry.height,normalized.height)*0.3));
+          return Math.abs(entry.centerY-itemCenter)<=tolerance;
         });
-        if (!line) {
-          line = {y:Number(item.y || 0),centerY:itemCenter,x:Number(item.x || 0),width:Number(item.width || 0),height:itemHeight,parts:[]};
-          lines.push(line);
-        }
-        line.parts.push(item);
-        const right = Math.max(line.x + line.width, Number(item.x || 0) + Number(item.width || 0));
-        line.x = Math.min(line.x, Number(item.x || 0));
-        line.y = Math.min(line.y, Number(item.y || 0));
-        line.width = right - line.x;
-        line.height = Math.max(line.height, itemHeight);
-        line.centerY = line.parts.reduce((sum, part) => sum + Number(part.y || 0) + Number(part.height || 0) / 2, 0) / line.parts.length;
+        if (!row) { row={centerY:itemCenter,height:normalized.height,items:[]}; rows.push(row); }
+        row.items.push(normalized);
+        row.height=Math.max(row.height,normalized.height);
+        row.centerY=row.items.reduce((sum,part)=>sum+part.y+part.height/2,0)/row.items.length;
       });
-      return lines.map(line => {
-        const text = line.parts.map(item => String(item.text || '')).join(' ');
-        const arabicCount = (text.match(/[\\u0600-\\u06FF]/g) || []).length;
-        const latinCount = (text.match(/[A-Za-z0-9]/g) || []).length;
-        const rtl = arabicCount >= latinCount;
-        return {
-          text:line.parts.sort((a,b) => rtl ? Number(b.x || 0)-Number(a.x || 0) : Number(a.x || 0)-Number(b.x || 0)).map(item=>item.text).join(' ').replace(/\\s+/g,' ').trim(),
-          x:line.x,y:line.y,width:line.width,height:line.height
-        };
-      }).filter(line => line.text);
+      const lines=[];
+      rows.sort((a,b)=>a.centerY-b.centerY).forEach(row=>{
+        const rtlHints=row.items.filter(item=>item.dir==='rtl').length;
+        const ltrHints=row.items.filter(item=>item.dir==='ltr').length;
+        const fallback=rtlHints===ltrHints ? this.getSmartTextDirection(row.items.map(item=>item.text).join(' '),'ltr') : (rtlHints>ltrHints?'rtl':'ltr');
+        const direction=this.getSmartTextDirection(row.items.map(item=>item.text).join(' '),fallback);
+        const rtl=direction==='rtl';
+        const ordered=row.items.sort((a,b)=>rtl?b.x-a.x:a.x-b.x);
+        const segments=[];
+        ordered.forEach(item=>{
+          const segment=segments[segments.length-1];
+          const previous=segment&&segment.items[segment.items.length-1];
+          const gap=!previous?0:(rtl?previous.x-(item.x+item.width):item.x-(previous.x+previous.width));
+          const gapLimit=previous?Math.max(10,Math.max(previous.height,item.height)*3.5):0;
+          if(!previous||previous.hasEOL||gap>gapLimit)segments.push({items:[item]});
+          else segment.items.push(item);
+        });
+        segments.forEach(segment=>{
+          const parts=segment.items;
+          const left=Math.min.apply(null,parts.map(item=>item.x));
+          const top=Math.min.apply(null,parts.map(item=>item.y));
+          const right=Math.max.apply(null,parts.map(item=>item.x+item.width));
+          const bottom=Math.max.apply(null,parts.map(item=>item.y+item.height));
+          const text=this.normalizeSmartLineText(parts.map(item=>item.text).join(' '));
+          if(text)lines.push({text:text,x:left,y:top,width:Math.max(0,right-left),height:Math.max(1,bottom-top),rtl:rtl,direction:direction});
+        });
+      });
+      return lines;
     },
     smartLineToElements: function (lines, pageIndex, pageWidth, catalog, offset) {
       const labelPattern = /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|تیراژ|رنگ|سایز|اندازه|مدل|پارچه|ملزومات|توضیح|شرح|امضا|تحویل|سفارش|واحد|نام خانوادگی|مشتری|کارفرما|name|code|number|date|quantity|qty|amount|color|size|model|fabric|material|supply|description|remark|signature|delivery|order|unit|customer|client|project|style)/i;
@@ -585,7 +615,9 @@
         if (text.length < 2 || text.length > 90 || !labelPattern.test(text)) return;
         if (results.some(item => item.pageIndex === pageIndex && this.normalizeSmartText(item.text) === this.normalizeSmartText(text))) return;
         const fieldWidth = Math.max(24,Math.min(48,pageWidth*0.24));
-        const x = Math.max(0,Math.min(pageWidth-fieldWidth,Number(line.x||0)-fieldWidth-2));
+        const rtl = line.rtl !== false && line.direction !== 'ltr';
+        const proposedX = rtl ? Number(line.x||0)-fieldWidth-2 : Number(line.x||0)+Number(line.width||0)+2;
+        const x = Math.max(0,Math.min(pageWidth-fieldWidth,proposedX));
         const y = Math.max(0,Number(line.y||0));
         const match = this.suggestSmartBinding(text,catalog);
         if (match && !this.definition.bindings.some(binding => binding.id === match.binding.id)) {
@@ -619,12 +651,29 @@
           const widthMm = Number((viewport.width*25.4/72).toFixed(3));
           const heightMm = Number((viewport.height*25.4/72).toFixed(3));
           const content = await page.getTextContent();
-          let items = (content.items || []).filter(item => item.str && item.str.trim()).map(item => ({
-            text:item.str,x:Number((item.transform[4]*25.4/72).toFixed(2)),
-            y:Number((heightMm-item.transform[5]*25.4/72).toFixed(2)),
-            width:Number((item.width*25.4/72).toFixed(2)),
-            height:Number((Math.abs(item.height || item.transform[3] || 10)*25.4/72).toFixed(2))
-          }));
+          const pageViewport = page.getViewport({scale:1});
+          let items = (content.items || []).filter(item => item.str && item.str.trim()).map(item => {
+            const transform = Array.isArray(item.transform) ? item.transform : [1,0,0,1,0,0];
+            const xLength = Math.hypot(transform[0],transform[1]) || 1;
+            const yLength = Math.hypot(transform[2],transform[3]) || Math.max(1,Number(item.height)||10);
+            const widthPoints = Math.max(0,Number(item.width)||0);
+            const heightPoints = Math.max(1,Number(item.height)||yLength);
+            const ux=transform[0]/xLength, uy=transform[1]/xLength;
+            const vx=transform[2]/yLength, vy=transform[3]/yLength;
+            const e=transform[4], f=transform[5];
+            const corners=[
+              pageViewport.convertToViewportPoint(e,f),
+              pageViewport.convertToViewportPoint(e+ux*widthPoints,f+uy*widthPoints),
+              pageViewport.convertToViewportPoint(e+vx*heightPoints,f+vy*heightPoints),
+              pageViewport.convertToViewportPoint(e+ux*widthPoints+vx*heightPoints,f+uy*widthPoints+vy*heightPoints)
+            ];
+            const xs=corners.map(point=>point[0]), ys=corners.map(point=>point[1]), mm=25.4/72;
+            return {text:item.str,x:Number((Math.min.apply(null,xs)*mm).toFixed(2)),
+              y:Number((Math.min.apply(null,ys)*mm).toFixed(2)),
+              width:Number(((Math.max.apply(null,xs)-Math.min.apply(null,xs))*mm).toFixed(2)),
+              height:Number(((Math.max.apply(null,ys)-Math.min.apply(null,ys))*mm).toFixed(2)),
+              dir:item.dir||'',hasEOL:item.hasEOL===true};
+          });
           let lines = this.groupSmartTextLines(items);
           if (!lines.length || !lines.some(line => /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|رنگ|سایز|اندازه|توضیح|امضا|سفارش|name|code|number|date|quantity|qty|color|size|description|signature|order|project)/i.test(line.text))) {
             if (!worker) {
@@ -633,20 +682,29 @@
               worker = await window.Tesseract.createWorker('fas+eng',1,{logger:info=>{
                 if (info && info.status === 'recognizing text') this.setStatus('pt-pdf-status','تشخیص متن صفحه '+(index+1)+'… '+Math.round((info.progress||0)*100)+'٪');
               }});
+              if (typeof worker.setParameters === 'function') await worker.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
             }
-            const renderScale = Math.min(2,1600/Math.max(1,viewport.width));
+            const renderScale = this.getPdfRenderScale(viewport,300);
             const renderViewport = page.getViewport({scale:renderScale});
             const canvas = document.createElement('canvas');
-            canvas.width = Math.ceil(renderViewport.width); canvas.height = Math.ceil(renderViewport.height);
-            const context = canvas.getContext('2d',{alpha:false});
+            canvas.width=Math.ceil(renderViewport.width); canvas.height=Math.ceil(renderViewport.height);
+            const context=canvas.getContext('2d',{alpha:false});
             await page.render({canvasContext:context,viewport:renderViewport}).promise;
-            const result = await worker.recognize(canvas);
-            const sx = widthMm/canvas.width, sy = heightMm/canvas.height;
-            items = (result.data.words || []).filter(word=>word.text && word.text.trim()).map(word=>({
-              text:word.text,x:word.bbox.x0*sx,y:word.bbox.y0*sy,
-              width:(word.bbox.x1-word.bbox.x0)*sx,height:(word.bbox.y1-word.bbox.y0)*sy
+            const result=await worker.recognize(canvas);
+            const sx=widthMm/canvas.width, sy=heightMm/canvas.height;
+            const ocrLines=(result.data.lines||[]).filter(line=>line.text&&line.text.trim()&&line.bbox).map(line=>({
+              text:this.normalizeSmartLineText(line.text),x:line.bbox.x0*sx,y:line.bbox.y0*sy,
+              width:(line.bbox.x1-line.bbox.x0)*sx,height:(line.bbox.y1-line.bbox.y0)*sy,
+              direction:this.getSmartTextDirection(line.text,'rtl')
             }));
-            lines = this.groupSmartTextLines(items);
+            if(ocrLines.length) lines=ocrLines.map(line=>Object.assign({},line,{rtl:line.direction==='rtl'}));
+            else {
+              items=(result.data.words||[]).filter(word=>word.text&&word.text.trim()).map(word=>({
+                text:word.text,x:word.bbox.x0*sx,y:word.bbox.y0*sy,
+                width:(word.bbox.x1-word.bbox.x0)*sx,height:(word.bbox.y1-word.bbox.y0)*sy
+              }));
+              lines=this.groupSmartTextLines(items);
+            }
             canvas.width=0; canvas.height=0;
           }
           const pageElements = this.smartLineToElements(lines,index,widthMm,catalog,detected.length);
@@ -1104,51 +1162,66 @@
       if (mime.indexOf('image/') !== 0) throw new Error('فایل متصل‌شده تصویر معتبر نیست.');
       return 'data:' + mime + ';base64,' + String(base64).replace(/^data:[^,]*;base64,/, '');
     },
+    getPdfRenderScale: function (viewport,dpi) {
+      const width=Math.max(1,Number(viewport&&viewport.width)||1);
+      const height=Math.max(1,Number(viewport&&viewport.height)||1);
+      const targetScale=Math.max(72,Number(dpi)||300)/72;
+      const maxPixels=12000000;
+      const pixelLimitScale=Math.sqrt(maxPixels/(width*height));
+      return Math.max(0.5,Math.min(targetScale,pixelLimitScale));
+    },
+    clearOutputPdfObjectUrls: function () {
+      (this.outputPdfObjectUrls||[]).forEach(url=>{try{window.URL.revokeObjectURL(url);}catch(_){}});
+      this.outputPdfObjectUrls=[];
+    },
     loadOutputPdfPages: async function (templateId, definition) {
-      const metadata = definition && definition.pdf;
-      if (!metadata || !Array.isArray(metadata.pages) || !metadata.pages.length) return null;
-      if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== 'function') {
-        throw new Error('موتور نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن و دوباره تلاش کن.');
+      const metadata=definition&&definition.pdf;
+      if(!metadata||!Array.isArray(metadata.pages)||!metadata.pages.length)return null;
+      if(!window.pdfjsLib||typeof window.pdfjsLib.getDocument!=='function')throw new Error('موتور نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن و دوباره تلاش کن.');
+      const response=await PMS.Api.get('/print-templates/'+encodeURIComponent(templateId)+'/pdf',{trackSync:false});
+      const file=this.extract(response)||{};
+      const base64=String(file.base64||file.Base64||'').replace(/^data:application\\/pdf;base64,/i,'').replace(/\\s/g,'');
+      if(!base64)throw new Error('فایل پس‌زمینه PDF از فضای ذخیره‌سازی دریافت نشد.');
+      const binary=window.atob(base64),bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
+      if(pdf.numPages!==metadata.pages.length)throw new Error('تعداد صفحات فایل PDF با مشخصات قالب یکسان نیست؛ قالب را دوباره ذخیره کن.');
+      const rendered=[];
+      try {
+        for(let pageNumber=1;pageNumber<=pdf.numPages;pageNumber++){
+          const page=await pdf.getPage(pageNumber),baseViewport=page.getViewport({scale:1});
+          const scale=this.getPdfRenderScale(baseViewport,300),viewport=page.getViewport({scale:scale});
+          const canvas=document.createElement('canvas');
+          try {
+            canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+            const context=canvas.getContext('2d',{alpha:false});
+            if(!context)throw new Error('امکان آماده‌سازی تصویر صفحه PDF وجود ندارد.');
+            context.fillStyle='#ffffff';context.fillRect(0,0,canvas.width,canvas.height);
+            await page.render({canvasContext:context,viewport:viewport}).promise;
+            const blob=await new Promise((resolve,reject)=>{
+              if(typeof canvas.toBlob!=='function'){reject(new Error('مرورگر امکان آماده‌سازی تصویر باکیفیت PDF را ندارد؛ لطفاً مرورگر را به‌روز کن.'));return;}
+              canvas.toBlob(result=>result?resolve(result):reject(new Error('ساخت تصویر صفحه PDF ناموفق بود.')),'image/png');
+            });
+            const background=window.URL.createObjectURL(blob);
+            this.outputPdfObjectUrls.push(background);
+            const pageMeta=metadata.pages[pageNumber-1]||{};
+            rendered.push({width:Number(pageMeta.widthMm)||(baseViewport.width*25.4/72),
+              height:Number(pageMeta.heightMm)||(baseViewport.height*25.4/72),background:background});
+          } finally {
+            canvas.width=0;canvas.height=0;
+            if(typeof page.cleanup==='function')page.cleanup();
+          }
+        }
+        return rendered;
+      } catch(error) {
+        this.clearOutputPdfObjectUrls();
+        throw error;
+      } finally {
+        if(typeof pdf.destroy==='function')await pdf.destroy();
       }
-      const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(templateId) + '/pdf', { trackSync: false });
-      const file = this.extract(response) || {};
-      const base64 = String(file.base64 || file.Base64 || '').replace(/^data:application\/pdf;base64,/i, '').replace(/\s/g, '');
-      if (!base64) throw new Error('فایل پس‌زمینه PDF از فضای ذخیره‌سازی دریافت نشد.');
-      const binary = window.atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
-      if (pdf.numPages !== metadata.pages.length) {
-        throw new Error('تعداد صفحات فایل PDF با مشخصات قالب یکسان نیست؛ قالب را دوباره ذخیره کن.');
-      }
-      const rendered = [];
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-        const page = await pdf.getPage(pageNumber);
-        const baseViewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(2, 1800 / baseViewport.width, 2400 / baseViewport.height);
-        const viewport = page.getViewport({ scale: Math.max(1, scale) });
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.ceil(viewport.width);
-        canvas.height = Math.ceil(viewport.height);
-        const context = canvas.getContext('2d', { alpha: false });
-        if (!context) throw new Error('امکان آماده‌سازی تصویر صفحه PDF وجود ندارد.');
-        context.fillStyle = '#ffffff';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        await page.render({ canvasContext: context, viewport: viewport }).promise;
-        const pageMeta = metadata.pages[pageNumber - 1] || {};
-        rendered.push({
-          width: Number(pageMeta.widthMm) || (baseViewport.width * 25.4 / 72),
-          height: Number(pageMeta.heightMm) || (baseViewport.height * 25.4 / 72),
-          background: canvas.toDataURL('image/png')
-        });
-        canvas.width = 0;
-        canvas.height = 0;
-        if (typeof page.cleanup === 'function') page.cleanup();
-      }
-      if (typeof pdf.destroy === 'function') await pdf.destroy();
-      return rendered;
     },
     renderOutputDocument: async function (template, project, data) {
+      this.clearOutputPdfObjectUrls();
       const definition = template && template.Definition ? template.Definition : {};
       const pdfPages = template && template.Pdf && template.Pdf.HasFile
         ? await this.loadOutputPdfPages(template.ID, definition) : null;
@@ -1194,7 +1267,7 @@
         }
         if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
         if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
-        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" style="'+style+'">'+this.esc(value)+'</div>';
+        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" dir="auto" style="'+style+'">'+this.esc(value)+'</div>';
       };
       const pages = [];
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {
