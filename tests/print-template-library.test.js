@@ -185,7 +185,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.match(module,/const fitScale = Math\\.min\\(availableWidth \/ Math\\.max\\(1, spec\\.width\\), availableHeight \/ Math\\.max\\(1, spec\\.height\\)\\)/);
+ assert.match(module,/const fitScale = Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)/);
  assert.ok(module.includes('safeWidth - margins.left - margins.right'));
  assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
  assert.ok(module.includes('const safeWidth = 190;'));
@@ -227,7 +227,7 @@ test('print output exposes persistent user-configurable margins for all template
 test('print margin controls apply immediately to the rendered page and persist mobile input',()=>{
  const module=read('js/modules/print-designer.js');
  const index=read('index.html');
- assert.match(module,/input\.addEventListener\('input',\(\) => this\.saveOutputMargins\(\)\)/);
+ assert.match(module,/input\.addEventListener\('input',\s*\(\) => this\.saveOutputMargins\(\)\)/);
  assert.match(module,/content\.style\.transform = 'scale\(' \+ scale \+ '\)'/);
  assert.match(module,/content\.style\.left = margins\.left \+ 'mm'/);
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
