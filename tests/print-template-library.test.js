@@ -196,5 +196,5 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('print-page-size-mobile-1'));
+ assert.ok(index.includes('print-mobile-fit-2'));
 });
