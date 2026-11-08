@@ -589,7 +589,7 @@
             height:Number((Math.abs(item.height || item.transform[3] || 10)*25.4/72).toFixed(2))
           }));
           let lines = this.groupSmartTextLines(items);
-          if (!lines.length) {
+          if (!lines.length || !lines.some(line => /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|رنگ|سایز|اندازه|توضیح|امضا|سفارش)/i.test(line.text))) {
             if (!worker) {
               this.setStatus('pt-pdf-status','صفحه اسکن‌شده شناسایی شد؛ در حال بارگذاری OCR فارسی/انگلیسی روی همین دستگاه…');
               await this.loadExternalScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js','Tesseract');
