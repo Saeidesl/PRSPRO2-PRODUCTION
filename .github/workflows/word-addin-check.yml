@@ -1,0 +1,43 @@
+name: Word PMS Add-in Checks
+
+on:
+  push:
+    branches:
+      - feature/word-pms-connector-20261108
+    paths:
+      - 'word-addin/**'
+      - '.github/workflows/word-addin-check.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'word-addin/**'
+      - '.github/workflows/word-addin-check.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate JavaScript syntax
+        run: node --check word-addin/taskpane.js
+      - name: Validate Office manifest and referenced files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          root = Path("word-addin")
+          manifest = ET.parse(root / "manifest.xml").getroot()
+          ns = {"o": "http://schemas.microsoft.com/office/appforoffice/1.1"}
+          source = manifest.find(".//o:DefaultSettings/o:SourceLocation", ns)
+          assert source is not None, "Manifest SourceLocation is missing"
+          assert source.attrib.get("DefaultValue", "").startswith("https://"), "Add-in task pane must use HTTPS"
+          for name in ("taskpane.html", "taskpane.css", "taskpane.js", "README.md"):
+              assert (root / name).is_file(), f"Missing Word add-in asset: {name}"
+          html = (root / "taskpane.html").read_text(encoding="utf-8")
+          for asset in ("taskpane.css", "taskpane.js"):
+              assert asset in html, f"Task pane does not reference {asset}"
+          print("Word add-in static checks passed.")
+          PY
