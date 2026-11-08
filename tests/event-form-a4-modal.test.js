@@ -1,5 +1,7 @@
 'use strict';
 
+// Regression coverage for the connected-form A4 presentation.
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
