@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اتصال PMS به Word</title>
+  <link rel="stylesheet" href="taskpane.css">
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script defer src="taskpane.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header><div class="mark">PMS</div><div><h1>اتصال به مدیریت تولید</h1><p>انتخاب پروژه و تکمیل قالب Word</p></div></header>
+    <section id="login-panel" class="panel">
+      <h2>ورود به PMS</h2>
+      <label>نام کاربری<input id="username" autocomplete="username"></label>
+      <label>رمز عبور<input id="password" type="password" autocomplete="current-password"></label>
+      <button id="login-button" class="primary">ورود امن</button>
+    </section>
+    <section id="workspace" class="panel" hidden>
+      <div class="user-row"><span id="user-label"></span><button id="logout-button" class="link">خروج</button></div>
+      <label>جستجوی پروژه<input id="project-search" placeholder="نام یا کد پروژه"></label>
+      <label>انتخاب پروژه<select id="project-select"><option value="">ابتدا پروژه را انتخاب کنید</option></select></label>
+      <button id="load-project" class="secondary">بارگذاری اطلاعات پروژه</button>
+      <div id="project-summary" class="summary" hidden></div>
+      <h2>فیلدهای قابل درج</h2>
+      <p class="hint">در Word برای هر محل درج، یک Content Control بسازید و مقدار Tag آن را مطابق شناسه‌های زیر تنظیم کنید.</p>
+      <div class="tag-list">
+        <span>PROJECT_NAME</span><span>PROJECT_CODE</span><span>TOTAL_QUANTITY</span>
+        <span>PROJECT_DESCRIPTION</span><span>PROJECT_STATUS</span><span>PROJECT_ID</span>
+      </div>
+      <button id="scan-tags" class="secondary">بررسی شناسه‌های قالب</button>
+      <button id="insert-data" class="primary" disabled>درج اطلاعات در Word</button>
+    </section>
+    <div id="status" class="status" role="status" aria-live="polite">در حال آماده‌سازی افزونه…</div>
+    <footer>اطلاعات فقط از PMS عملیاتی دریافت می‌شود. رمز عبور و توکن در سند ذخیره نمی‌شوند.</footer>
+  </main>
+</body>
+</html>
