@@ -315,7 +315,8 @@
           const style = 'left:' + Number(item.x || 0) + 'mm;top:' + Number(item.y || 0) + 'mm;width:' + Number(item.width || 30) +
             'mm;height:' + Number(item.height || 15) + 'mm;font-size:' + Number(item.fontSize || 12) + 'pt;text-align:' + this.esc(item.align || 'right') + ';color:' + this.esc(item.color || 'black') + ';background:' + this.esc(item.background || 'transparent');
           const selected = String(item.id) === String(this.selectedElementId) ? ' is-selected' : '';
-          const label = item.type === 'field' ? '<span class="pt-field-hint">' + this.esc(item.label || 'فیلد داده') + '</span>' :\n            (item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
+          const label = item.type === 'field' ? '<span class="pt-field-hint">' + this.esc(item.label || 'فیلد داده') + '</span>' :
+            (item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
             (item.type === 'rectangle' || item.type === 'ellipse' ? '<span class="pt-shape-outline" aria-hidden="true"></span>' :
             (item.type === 'image' ? '<span class="pt-image-placeholder">▧ تصویر</span>' :
             (item.type === 'table' ? '<strong>' + this.esc(item.text) + '</strong><table><thead><tr>' +
