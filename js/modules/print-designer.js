@@ -866,7 +866,18 @@
         const background = pdfPages && pdfPages[pageIndex]
           ? '<img class="pt-output-pdf-background" src="'+pdfPages[pageIndex].background+'" alt="" aria-hidden="true">'
           : '';
-        pages.push('<article class="pt-print-page'+(pdfPages ? ' pt-has-pdf' : '')+'" data-page-index="'+pageIndex+'" style="width:'+spec.width+'mm;height:'+spec.height+'mm" dir="rtl">'+background+elements.join('')+'</article>');
+        // Mobile print dialogs may ignore CSS @page custom dimensions and keep Letter paper.
+        // Fit the complete PDF page (background and positioned overlays together) inside a safe
+        // area that fits both Letter and A4, while preserving its original preview dimensions.
+        const fitScale = pdfPages
+          ? Math.min(1, 203 / Math.max(1, spec.width), 272 / Math.max(1, spec.height))
+          : 1;
+        const printWidth = spec.width * fitScale;
+        const printHeight = spec.height * fitScale;
+        const pageStyle = 'width:'+spec.width+'mm;height:'+spec.height+'mm;--pt-print-scale:'+fitScale+
+          ';--pt-print-width:'+printWidth+'mm;--pt-print-height:'+printHeight+'mm';
+        const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm">'+background+elements.join('')+'</div>';
+        pages.push('<article class="pt-print-page'+(pdfPages ? ' pt-has-pdf' : '')+'" data-page-index="'+pageIndex+'" style="'+pageStyle+'" dir="rtl">'+pageContent+'</article>');
       }
       return pages.join('');
     },
@@ -879,17 +890,9 @@
         printStyle.id = 'pt-output-page-rule';
         document.head.appendChild(printStyle);
       }
-      const firstSpec = specs[0] || { width: 210, height: 297 };
-      const pageRules = [
-        '@page{size:'+firstSpec.width+'mm '+firstSpec.height+'mm;margin:0}'
-      ];
-      specs.forEach((spec, index) => {
-        pageRules.push(
-          '@page ptOutputPage'+index+'{size:'+spec.width+'mm '+spec.height+'mm;margin:0}',
-          '.pt-print-page[data-page-index="'+index+'"]{page:ptOutputPage'+index+'}'
-        );
-      });
-      printStyle.textContent = pageRules.join('\\n');
+      // Let the mobile print service choose its paper (often Letter); each PDF page is
+      // pre-fitted to a safe common printable area so no page can spill onto a second sheet.
+      printStyle.textContent = '@page{margin:0}';
       document.body.classList.add('pt-printing');
       const images = Array.from(document.querySelectorAll('#pt-output-preview img'));
       await Promise.all(images.map(image => image.decode ? image.decode().catch(() => {}) : Promise.resolve()));
