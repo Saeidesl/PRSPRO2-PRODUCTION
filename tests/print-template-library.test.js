@@ -187,9 +187,9 @@ test('mobile print uses a document-sized default page and keeps preview-only sca
  const index=read('index.html');
  assert.match(module,/const firstSpec = specs\[0\]/);
  assert.match(module,/@page\\{size:/);
- assert.match(module,/@page ptOutputPage/);
+ assert.ok(module.includes('@page ptOutputPage'));
  assert.match(styles,/@media screen and \\(max-width:700px\\)/);
- assert.match(styles,/max-width:none!important;min-height:0!important/);
- assert.match(styles,/page-break-after:always!important/);
- assert.match(index,/print-page-size-mobile-1/);
+ assert.ok(styles.includes('max-width:none!important;min-height:0!important'));
+ assert.ok(styles.includes('page-break-after:always!important'));
+ assert.ok(index.includes('print-page-size-mobile-1'));
 });
