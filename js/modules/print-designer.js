@@ -713,7 +713,11 @@
       this.loadOutputMargins();
       ['top','bottom','right','left'].forEach(side => {
         const input = document.getElementById('pt-margin-' + side);
-        if (input) input.addEventListener('change', () => this.saveOutputMargins());
+        if (input) {
+          // Apply and persist each edit immediately, including mobile numeric-keyboard input.
+          input.addEventListener('input', () => this.saveOutputMargins());
+          input.addEventListener('change', () => this.saveOutputMargins());
+        }
       });
       const resetMargins = document.getElementById('pt-margin-reset');
       if (resetMargins) resetMargins.addEventListener('click', () => this.resetOutputMargins());
@@ -757,7 +761,7 @@
     },
     refreshOutputPreview: function () {
       const preview = document.getElementById('pt-output-preview');
-      if (!preview || !this.outputPageSpecs) return;
+      if (!preview || !this.outputPageSpecs || !this.outputPageSpecs.length) return;
       const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
       const safeWidth = 190;
       const safeHeight = 250;
@@ -767,12 +771,24 @@
         if (!spec) return;
         const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
-        const scale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
-        article.style.setProperty('--pt-print-scale', String(scale));
+        const scale = Math.max(0.01, Math.min(
+          availableWidth / Math.max(1, spec.width),
+          availableHeight / Math.max(1, spec.height)
+        ));
         const content = article.querySelector('.pt-print-page-content');
+        article.style.setProperty('--pt-print-scale', String(scale));
+        article.style.setProperty('--pt-print-width', safeWidth + 'mm');
+        article.style.setProperty('--pt-print-height', safeHeight + 'mm');
         if (content) {
+          // Write the effective layout directly to the existing preview DOM. This avoids
+          // relying only on a CSS custom property during mobile print-preview rendering.
+          content.style.position = 'absolute';
+          content.style.width = spec.width + 'mm';
+          content.style.height = spec.height + 'mm';
           content.style.left = margins.left + 'mm';
           content.style.top = margins.top + 'mm';
+          content.style.transformOrigin = 'top left';
+          content.style.transform = 'scale(' + scale + ')';
         }
       });
     },
@@ -949,7 +965,7 @@
         const safeHeight = 250;
         const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
-        const fitScale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
+        const fitScale = Math.max(0.01, Math.min(availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height)));
         const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm;left:'+margins.left+'mm;top:'+margins.top+'mm">'+background+elements.join('')+'</div>';
         const pageStyle = 'width:'+spec.width+'mm;height:'+spec.height+'mm;--pt-print-scale:'+fitScale+
           ';--pt-print-width:'+safeWidth+'mm;--pt-print-height:'+safeHeight+'mm';
