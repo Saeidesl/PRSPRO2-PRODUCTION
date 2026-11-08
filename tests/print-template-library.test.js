@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-smart-form-conversion-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-smart-form-conversion-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-smart-image-quality-2'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-smart-image-quality-2'));
 });
 
 
@@ -198,7 +198,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('smart-form-conversion-1'));
+ assert.ok(index.includes('smart-image-quality-2'));
 });
 
 
@@ -220,7 +220,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('smart-form-conversion-1'));
+ assert.ok(index.includes('smart-image-quality-2'));
 });
 
 
@@ -233,7 +233,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('smart-form-conversion-1'));
+ assert.ok(index.includes('smart-image-quality-2'));
 });
 
 
@@ -244,6 +244,11 @@ test('smart form conversion accepts PDF and image formats in the existing design
  assert.match(page,/id="pt-smart-detect"/);
  assert.match(module,/handleImportFile: async function/);
  assert.match(module,/imageFileToPdf: async function/);
+ assert.match(module,/Embed the original JPEG bytes/);
+ assert.match(module,/PNG is embedded losslessly/);
+ assert.ok(module.includes('image.width * 25.4 / 300'));
+ assert.doesNotMatch(module,/maxDimension = 2400/);
+ assert.ok(!module.includes("image.toDataURL('image/jpeg',0.92)"));
  assert.match(module,/\/print-templates\/.*\/pdf/);
  assert.match(module,/createWorker\('fas\+eng'/);
 });
@@ -257,6 +262,8 @@ test('smart conversion extracts PDF text first and uses on-device OCR only for s
  assert.match(module,/worker\.terminate\(\)/);
  assert.match(module,/runSmartDetection: async function/);
  assert.match(module,/smartLineToElements: function/);
+ assert.ok(module.includes('const itemCenter = Number(item.y || 0) + Number(item.height || 0) / 2'));
+ assert.match(module,/const arabicCount =/);
  assert.match(module,/suggestSmartBinding: function/);
  assert.match(module,/renderBindings\(\); this\.renderEditor\(\); this\.commitHistory\(\)/);
 });

@@ -450,24 +450,45 @@
       await this.loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js', 'jspdf');
       const image = await createImageBitmap(file);
       try {
-        const maxDimension = 2400;
-        const ratio = Math.min(1, maxDimension / Math.max(image.width, image.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.width * ratio));
-        canvas.height = Math.max(1, Math.round(image.height * ratio));
-        const context = canvas.getContext('2d', {alpha:false});
-        if (!context) throw new Error('آماده‌سازی تصویر در این مرورگر ممکن نیست.');
-        context.fillStyle = '#ffffff';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        const widthMm = Number((canvas.width * 25.4 / 150).toFixed(2));
-        const heightMm = Number((canvas.height * 25.4 / 150).toFixed(2));
+        const extension = String(file.name || '').split('.').pop().toLowerCase();
+        const mime = String(file.type || '').toLowerCase();
+        let dataUrl = '';
+        let imageFormat = '';
+        if (mime === 'image/jpeg' || extension === 'jpg' || extension === 'jpeg') {
+          // Embed the original JPEG bytes: no downscaling and no second lossy encode.
+          dataUrl = 'data:image/jpeg;base64,' + await this.fileToBase64(file);
+          imageFormat = 'JPEG';
+        } else if (mime === 'image/png' || extension === 'png') {
+          // PNG is embedded losslessly, retaining fine text and thin table borders.
+          dataUrl = 'data:image/png;base64,' + await this.fileToBase64(file);
+          imageFormat = 'PNG';
+        } else if (mime === 'image/webp' || extension === 'webp') {
+          // jsPDF has no reliable native WebP decoder; convert at native pixel dimensions.
+          if (image.width * image.height > 30000000) throw new Error('ابعاد تصویر WebP برای تبدیل مستقیم بیش از حد بزرگ است؛ لطفاً نسخه PNG یا JPG همان تصویر را انتخاب کن.');
+          const canvas = document.createElement('canvas');
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const context = canvas.getContext('2d', {alpha:false});
+          if (!context) throw new Error('آماده‌سازی تصویر در این مرورگر ممکن نیست.');
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          dataUrl = canvas.toDataURL('image/png');
+          imageFormat = 'PNG';
+          canvas.width = 0;
+          canvas.height = 0;
+        } else {
+          throw new Error('فرمت تصویر پشتیبانی نمی‌شود؛ از JPG، PNG یا WebP استفاده کن.');
+        }
+        // 300 DPI defines a practical print size; source pixels are never reduced.
+        const widthMm = Number((image.width * 25.4 / 300).toFixed(3));
+        const heightMm = Number((image.height * 25.4 / 300).toFixed(3));
         const orientation = widthMm > heightMm ? 'landscape' : 'portrait';
         const pdf = new window.jspdf.jsPDF({orientation:orientation,unit:'mm',format:[widthMm,heightMm],compress:true});
-        pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,widthMm,heightMm,undefined,'FAST');
+        pdf.addImage(dataUrl,imageFormat,0,0,widthMm,heightMm,undefined,'FAST');
         const blob = pdf.output('blob');
-        if (blob.size > 10 * 1024 * 1024) throw new Error('حجم PDF ساخته‌شده از تصویر بیشتر از ۱۰ مگابایت است.');
-        const name = String(file.name || 'factory-form').replace(/\.[^.]+$/,'') + '.pdf';
+        if (blob.size > 10 * 1024 * 1024) throw new Error('حجم PDF حاصل از تصویر بیش از سقف ۱۰ مگابایت است؛ لطفاً فایل را با فرمت JPG با کیفیت اصلی یا PDF اسکنر وارد کن.');
+        const name = String(file.name || 'factory-form').replace(/\\.[^.]+$/,'') + '.pdf';
         return new File([blob],name,{type:'application/pdf',lastModified:Date.now()});
       } finally {
         if (image && typeof image.close === 'function') image.close();
@@ -527,19 +548,34 @@
     groupSmartTextLines: function (items) {
       const lines = [];
       items.filter(item => item.text && String(item.text).trim()).sort((a,b) => a.y-b.y || a.x-b.x).forEach(item => {
-        let line = lines.find(entry => Math.abs(entry.y-item.y) <= 2.8);
-        if (!line) { line={y:item.y,x:item.x,width:item.width,height:item.height,parts:[]}; lines.push(line); }
+        const itemCenter = Number(item.y || 0) + Number(item.height || 0) / 2;
+        const itemHeight = Math.max(1, Number(item.height || 0));
+        let line = lines.find(entry => {
+          const tolerance = Math.max(2.2, Math.min(5.5, Math.max(entry.height, itemHeight) * 0.48));
+          return Math.abs(entry.centerY - itemCenter) <= tolerance;
+        });
+        if (!line) {
+          line = {y:Number(item.y || 0),centerY:itemCenter,x:Number(item.x || 0),width:Number(item.width || 0),height:itemHeight,parts:[]};
+          lines.push(line);
+        }
         line.parts.push(item);
-        const right = Math.max(line.x + line.width,item.x + item.width);
-        line.x = Math.min(line.x,item.x);
-        line.y = Math.min(line.y,item.y);
+        const right = Math.max(line.x + line.width, Number(item.x || 0) + Number(item.width || 0));
+        line.x = Math.min(line.x, Number(item.x || 0));
+        line.y = Math.min(line.y, Number(item.y || 0));
         line.width = right - line.x;
-        line.height = Math.max(line.height,item.height);
+        line.height = Math.max(line.height, itemHeight);
+        line.centerY = line.parts.reduce((sum, part) => sum + Number(part.y || 0) + Number(part.height || 0) / 2, 0) / line.parts.length;
       });
-      return lines.map(line => ({
-        text:line.parts.sort((a,b)=>line.parts.some(part=>/[\u0600-\u06FF]/.test(part.text)) ? b.x-a.x : a.x-b.x).map(item=>item.text).join(' ').replace(/\s+/g,' ').trim(),
-        x:line.x,y:line.y,width:line.width,height:line.height
-      })).filter(line => line.text);
+      return lines.map(line => {
+        const text = line.parts.map(item => String(item.text || '')).join(' ');
+        const arabicCount = (text.match(/[\\u0600-\\u06FF]/g) || []).length;
+        const latinCount = (text.match(/[A-Za-z0-9]/g) || []).length;
+        const rtl = arabicCount >= latinCount;
+        return {
+          text:line.parts.sort((a,b) => rtl ? Number(b.x || 0)-Number(a.x || 0) : Number(a.x || 0)-Number(b.x || 0)).map(item=>item.text).join(' ').replace(/\\s+/g,' ').trim(),
+          x:line.x,y:line.y,width:line.width,height:line.height
+        };
+      }).filter(line => line.text);
     },
     smartLineToElements: function (lines, pageIndex, pageWidth, catalog, offset) {
       const labelPattern = /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|تیراژ|رنگ|سایز|اندازه|مدل|پارچه|ملزومات|توضیح|شرح|امضا|تحویل|سفارش|واحد|نام خانوادگی|مشتری|کارفرما|name|code|number|date|quantity|qty|amount|color|size|model|fabric|material|supply|description|remark|signature|delivery|order|unit|customer|client|project|style)/i;
