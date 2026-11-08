@@ -1180,7 +1180,7 @@
       if(!window.pdfjsLib||typeof window.pdfjsLib.getDocument!=='function')throw new Error('موتور نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن و دوباره تلاش کن.');
       const response=await PMS.Api.get('/print-templates/'+encodeURIComponent(templateId)+'/pdf',{trackSync:false});
       const file=this.extract(response)||{};
-      const base64=String(file.base64||file.Base64||'').replace(/^data:application\\/pdf;base64,/i,'').replace(/\\s/g,'');
+      const base64=String(file.base64||file.Base64||'').replace(/^data:application\/pdf;base64,/i,'').replace(/\s/g,'');
       if(!base64)throw new Error('فایل پس‌زمینه PDF از فضای ذخیره‌سازی دریافت نشد.');
       const binary=window.atob(base64),bytes=new Uint8Array(binary.length);
       for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
