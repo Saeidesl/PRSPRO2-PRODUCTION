@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.match(index,/css\/print-template-library\.css\?v=20261108-pdf-template-background-1/);
- assert.match(index,/js\/modules\/print-designer\.js\?v=20261108-pdf-output-background-2/);
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-print-page-size-mobile-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-print-page-size-mobile-1'));
 });
 
 
@@ -186,9 +186,9 @@ test('mobile print uses a document-sized default page and keeps preview-only sca
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
  assert.match(module,/const firstSpec = specs\[0\]/);
- assert.match(module,/@page\\{size:/);
+ assert.ok(module.includes('@page{size:'));
  assert.ok(module.includes('@page ptOutputPage'));
- assert.match(styles,/@media screen and \\(max-width:700px\\)/);
+ assert.ok(styles.includes('@media screen and (max-width:700px)'));
  assert.ok(styles.includes('max-width:none!important;min-height:0!important'));
  assert.ok(styles.includes('page-break-after:always!important'));
  assert.ok(index.includes('print-page-size-mobile-1'));
