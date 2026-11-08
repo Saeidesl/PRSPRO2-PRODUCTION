@@ -759,8 +759,8 @@
       const preview = document.getElementById('pt-output-preview');
       if (!preview || !this.outputPageSpecs) return;
       const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
-      const safeWidth = 203;
-      const safeHeight = 272;
+      const safeWidth = 190;
+      const safeHeight = 250;
       Array.from(preview.querySelectorAll('.pt-print-page')).forEach(article => {
         const pageIndex = Number(article.getAttribute('data-page-index') || 0);
         const spec = this.outputPageSpecs[pageIndex];
@@ -945,8 +945,8 @@
         // Fit the complete page (PDF background and all overlays) inside the mobile-safe
         // paper area after applying the user's persistent top/bottom/left/right margins.
         const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
-        const safeWidth = 203;
-        const safeHeight = 272;
+        const safeWidth = 190;
+        const safeHeight = 250;
         const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
         const fitScale = Math.min(1, availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height));
