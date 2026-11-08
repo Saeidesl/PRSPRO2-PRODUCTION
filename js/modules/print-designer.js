@@ -416,7 +416,8 @@
         this.activePageIndex = 0;
         this.definition = this.definition || this.blankDefinition();
         this.definition.pdf = {pageCount:pages.length,pages:pages};
-        this.renderEditor();
+        this.history = []; this.historyIndex = -1;
+        this.renderEditor(); this.commitHistory();
         this.setStatus('pt-pdf-status', 'PDF آماده است: ' + file.name + ' · ' + pages.length + ' صفحه. برای ثبت دائمی، قالب را ذخیره کن.');
       } catch (error) {
         this.pdfFile = null;
@@ -615,6 +616,7 @@
       const form = document.getElementById('pt-template-form');
       if (form) form.reset();
       this.editingId = '';
+      if (this.pdfPageObserver) this.pdfPageObserver.disconnect();
       this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
       const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) pdfInput.value = '';
       this.definition = this.blankDefinition();
