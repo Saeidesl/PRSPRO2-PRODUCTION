@@ -168,8 +168,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-print-margin-controls-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-print-margin-controls-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261108-print-margin-controls-2'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261108-print-margin-controls-2'));
 });
 
 
@@ -188,13 +188,15 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.match(module,/const fitScale = Math\.min\(1, availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)/);
  assert.ok(module.includes('safeWidth - margins.left - margins.right'));
  assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
+ assert.ok(module.includes('const safeWidth = 190;'));
+ assert.ok(module.includes('const safeHeight = 250;'));
  assert.match(module,/--pt-print-scale/);
  assert.match(module,/--pt-print-width/);
  assert.match(module,/pt-print-page-content/);
  assert.ok(module.includes("@page{margin:0}"));
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(styles.includes('width:var(--pt-print-width,203mm)!important'));
- assert.ok(styles.includes('height:var(--pt-print-height,272mm)!important'));
+ assert.ok(styles.includes('width:var(--pt-print-width,190mm)!important'));
+ assert.ok(styles.includes('height:var(--pt-print-height,250mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
  assert.ok(index.includes('print-margin-controls-1'));
 });
