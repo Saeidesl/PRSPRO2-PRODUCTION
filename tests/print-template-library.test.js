@@ -179,3 +179,17 @@ test('final print document omits the entire automatic form and project header',(
  assert.ok(module.includes("dir=\"rtl\">'+background+elements.join('')"), 'each RTL page renders its PDF background below configured elements');
  assert.match(module,/page:ptOutputPage/);
 });
+
+
+test('mobile print uses a document-sized default page and keeps preview-only scaling out of print',()=>{
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ const index=read('index.html');
+ assert.match(module,/const firstSpec = specs\[0\]/);
+ assert.match(module,/@page\\{size:/);
+ assert.match(module,/@page ptOutputPage/);
+ assert.match(styles,/@media screen and \\(max-width:700px\\)/);
+ assert.match(styles,/max-width:none!important;min-height:0!important/);
+ assert.match(styles,/page-break-after:always!important/);
+ assert.match(index,/print-page-size-mobile-1/);
+});
