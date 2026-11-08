@@ -3236,7 +3236,7 @@
       if (!section || !section.dataset.a4Prepared) return;
       section.hidden = false;
       if (launcher) launcher.hidden = true;
-      const first = section.querySelector('input:not([type="file"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])');
+      const first = section.querySelector('input:not([type="file"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]):not(.event-forms-a4-close)');
       if (first) window.requestAnimationFrame(() => first.focus({ preventScroll: true }));
     },
 
