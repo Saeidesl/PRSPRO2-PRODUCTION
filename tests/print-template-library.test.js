@@ -165,8 +165,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.match(index,/css\/print-template-library\.css\?v=20261102-remove-print-header-1/);
- assert.match(index,/js\/modules\/print-designer\.js\?v=20261102-remove-print-header-1/);
+ assert.match(index,/css\/print-template-library\.css\?v=20261108-pdf-template-background-1/);
+ assert.match(index,/js\/modules\/print-designer\.js\?v=20261108-pdf-template-background-1/);
 });
 
 
