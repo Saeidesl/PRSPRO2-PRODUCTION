@@ -315,13 +315,13 @@
           const style = 'left:' + Number(item.x || 0) + 'mm;top:' + Number(item.y || 0) + 'mm;width:' + Number(item.width || 30) +
             'mm;height:' + Number(item.height || 15) + 'mm;font-size:' + Number(item.fontSize || 12) + 'pt;text-align:' + this.esc(item.align || 'right') + ';color:' + this.esc(item.color || 'black') + ';background:' + this.esc(item.background || 'transparent');
           const selected = String(item.id) === String(this.selectedElementId) ? ' is-selected' : '';
-          const label = item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
+          const label = item.type === 'field' ? '<span class="pt-field-hint">' + this.esc(item.label || 'فیلد داده') + '</span>' :\n            (item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
             (item.type === 'rectangle' || item.type === 'ellipse' ? '<span class="pt-shape-outline" aria-hidden="true"></span>' :
             (item.type === 'image' ? '<span class="pt-image-placeholder">▧ تصویر</span>' :
             (item.type === 'table' ? '<strong>' + this.esc(item.text) + '</strong><table><thead><tr>' +
               (item.columns || []).map(col => '<th>' + this.esc(col) + '</th>').join('') + '</tr></thead><tbody>' +
               (item.rows || []).map(row => '<tr>' + row.map(cell => '<td>' + this.esc(cell) + '</td>').join('') + '</tr>').join('') +
-              '</tbody></table>' : this.esc(item.text || ''))));
+              '</tbody></table>' : this.esc(item.text || '')))));
           return '<div class="pt-canvas-element pt-element-' + this.esc(item.type) + selected + '" data-pt-element="' + this.esc(item.id) +
             '" style="' + style + '"><div class="pt-element-content">' + label + '</div>' +
             (selected ? '<button type="button" data-pt-resize aria-label="تغییر اندازه"></button>' : '') + '</div>';
@@ -536,7 +536,7 @@
         line.height = Math.max(line.height,item.height);
       });
       return lines.map(line => ({
-        text:line.parts.sort((a,b)=>a.x-b.x).map(item=>item.text).join(' ').replace(/\s+/g,' ').trim(),
+        text:line.parts.sort((a,b)=>line.parts.some(part=>/[\u0600-\u06FF]/.test(part.text)) ? b.x-a.x : a.x-b.x).map(item=>item.text).join(' ').replace(/\s+/g,' ').trim(),
         x:line.x,y:line.y,width:line.width,height:line.height
       })).filter(line => line.text);
     },
@@ -556,7 +556,7 @@
         }
         results.push({
           id:'smart_'+pageIndex+'_'+(offset+results.length+1),
-          type:'field',text:text,x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),
+          type:'field',text:'',label:text,x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),
           width:Number(fieldWidth.toFixed(2)),height:Math.max(7,Math.min(12,Number((line.height||5).toFixed(2))+3)),
           pageIndex:pageIndex,fontSize:10,align:'right',bindingId:match ? match.binding.id : ''
         });
@@ -570,7 +570,7 @@
       }
       const button = document.getElementById('pt-smart-detect');
       if (button) button.disabled = true;
-      const previousElements = (this.definition.elements || []).slice();
+      const previousElements = (this.definition.elements || []).filter(item => !String(item.id || '').startsWith('smart_'));
       const detected = [];
       const catalog = this.smartSourceCatalog();
       let worker = null;
@@ -1157,7 +1157,7 @@
         }
         if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
         if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
-        return '<div class="pt-output-element" style="'+style+'">'+this.esc(value)+'</div>';
+        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" style="'+style+'">'+this.esc(value)+'</div>';
       };
       const pages = [];
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {
