@@ -1026,3 +1026,43 @@
 - کش مرورگر موجود در `PMS.Api.getCached('/event-types', ...)` با TTL شصت‌ثانیه‌ای و refresh پس‌زمینه، کش حافظه‌ای داده‌های وابسته پروژه و in-flight deduplication در `js/core/api.js` حفظ شدند.
 - هیچ فرم، API، Sheet، ستون یا مسیر ثبت موازی ایجاد نشد.
 - کاربر تست نسخه عملیاتی را موفق تأیید کرد و فاز بسته شد.
+
+
+## 2026-11-08 — نمایش فرم‌های متصل به رویداد در مودال تمام‌صفحه A4
+
+### هدف و نتیجه پذیرش
+- فرم‌های متصل به نوع رویداد هنگام ثبت رویداد در یک مودال تمام‌صفحه با صفحه سفید و تناسب بصری A4 نمایش داده می‌شوند تا تجربه تکمیل فرم شبیه پرکردن برگه کاغذی باشد.
+- همان DOM فرم‌های پیکربندی‌شده در فرم اصلی ثبت رویداد حفظ شده است؛ مسیر موازی، فرم clone یا endpoint جدید ایجاد نشده است.
+- فرم‌های بدون فرم متصل، جریان قبلی ثبت رویداد را حفظ می‌کنند.
+- Product Owner نسخه عملیاتی را با فرم متصل، فیلد اجباری، تصویر، جدول چندردیفی و ثبت رویداد آزمایش و موفقیت را تأیید کرد.
+
+### نقشه Frontend و پیاده‌سازی
+- `pages/events.html`: صفحه میزبان ثبت رویداد و فرم اصلی `#event-create-form` بدون تغییر در مسیر submit باقی مانده‌اند.
+- `js/modules/events.js`:
+  - `Events.openForm`: فرم موجود ثبت رویداد را آماده می‌کند.
+  - `Events.loadEventForms` و `Events.loadConfiguredForms`: فرم‌های متصل به نوع رویداد را از قرارداد موجود بارگذاری می‌کنند.
+  - `Events.renderConfiguredForms`: فرم‌های دریافت‌شده را در `#event-configured-forms-section` و `#event-configured-forms` رندر و تجربه A4 را باز می‌کند.
+  - `Events.prepareConfiguredFormsA4`: پوسته مودال A4 و launcher بازگشایی را آماده می‌کند.
+  - `Events.openConfiguredFormsA4` و `Events.closeConfiguredFormsA4`: باز/بسته‌شدن برگه را مدیریت می‌کنند.
+  - `Events.collectConfiguredFormResponses` و `Events.submitForm`: همان DOM و قرارداد جمع‌آوری پاسخ و ثبت قبلی را استفاده می‌کنند؛ اگر برگه هنگام submit بسته باشد، پیش از اعتبارسنجی باز می‌شود تا کنترل‌های required پنهان نمانند.
+  - کنترل Escape و focus trap برای تعامل صفحه‌کلید حفظ شده‌اند.
+  - ساختارهای `data-form-table`, `data-form-row` و `addConfiguredFormRow` برای جدول‌های چندردیفی بدون تغییر قرارداد باقی مانده‌اند.
+- `css/events.css`: پوسته تمام‌صفحه، صفحه A4، فاصله‌های چاپ‌مانند، کنترل‌ها، جدول‌ها، فایل‌ها، breakpoint موبایل و قواعد چاپ را اضافه می‌کند.
+- `index.html`: نسخه cache-busting فایل‌های `events.css` و `events.js` به `20261108-event-form-a4-modal-1` تغییر یافت.
+- تست اختصاصی `tests/event-form-a4-modal.test.js` اضافه شد؛ assertionهای نسخه asset در تست‌های وابسته همگام شدند.
+
+### قرارداد Backend، API و داده
+- فرم‌های متصل همچنان از `GET /event-types/:eventTypeId/forms` بارگذاری می‌شوند.
+- ثبت رویداد همچنان از `POST /events` انجام می‌شود.
+- ذخیره پاسخ‌ها در قرارداد و شیت موجود `35_EventFormData` (نام منطقی `EVENT_FORM_DATA`) باقی مانده است.
+- آپلود فایل/تصویر از مسیر موجود پیوست پروژه استفاده می‌کند؛ ساختار چندردیفی و اعتبارسنجی فیلدهای اجباری حفظ شده‌اند.
+- Backend runtime، API، permission، schema، Google Sheets و داده عملیاتی تغییر نکردند؛ انتشار Apps Script برای این قابلیت لازم نبود.
+
+### آزمون، ادغام و انتشار
+- Frontend regression، syntax، asset/CSS checks، contract/diff review، cross-repository QA و Backend unit/integration + Apps Script manifest/source validation موفق شدند.
+- Browser audit شامل آزمون‌های keyboard، Jalali date-time picker و UI inventory/performance با موفقیت پایان یافت.
+- GitHub Actionsهای نهایی: Frontend checks Run `42468377556`، cross-repository QA Run `42468377587`، frontend agent suite Run `42468377557` و browser/performance audit Run `42468377613`؛ تمام بررسی‌های لازم موفق شدند.
+- Frontend PR #55 با squash در `main` ادغام شد؛ merge commit: `1219557e076b953e2fd25834315613aaffb760f8`.
+- Backend PR #30 صرفاً برای ثبت سازگاری و مستندات بود و با squash در `main` ادغام شد؛ merge commit: `e65ef9861ef958e362adf51881ef58c36d85572d`.
+- مالک محصول پس از ادغام، نسخه عملیاتی را تست و موفقیت را صریحاً تأیید کرد.
+- جزئیات مستقل اجرای workflow انتشار Frontend در این فاز ثبت نشده است؛ پذیرش عملیاتی بر اساس تأیید مستقیم Product Owner ثبت می‌شود.
