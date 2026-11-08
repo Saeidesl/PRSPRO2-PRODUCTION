@@ -315,13 +315,14 @@
           const style = 'left:' + Number(item.x || 0) + 'mm;top:' + Number(item.y || 0) + 'mm;width:' + Number(item.width || 30) +
             'mm;height:' + Number(item.height || 15) + 'mm;font-size:' + Number(item.fontSize || 12) + 'pt;text-align:' + this.esc(item.align || 'right') + ';color:' + this.esc(item.color || 'black') + ';background:' + this.esc(item.background || 'transparent');
           const selected = String(item.id) === String(this.selectedElementId) ? ' is-selected' : '';
-          const label = item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
+          const label = item.type === 'field' ? '<span class="pt-field-hint">' + this.esc(item.label || 'فیلد داده') + '</span>' :
+            (item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
             (item.type === 'rectangle' || item.type === 'ellipse' ? '<span class="pt-shape-outline" aria-hidden="true"></span>' :
             (item.type === 'image' ? '<span class="pt-image-placeholder">▧ تصویر</span>' :
             (item.type === 'table' ? '<strong>' + this.esc(item.text) + '</strong><table><thead><tr>' +
               (item.columns || []).map(col => '<th>' + this.esc(col) + '</th>').join('') + '</tr></thead><tbody>' +
               (item.rows || []).map(row => '<tr>' + row.map(cell => '<td>' + this.esc(cell) + '</td>').join('') + '</tr>').join('') +
-              '</tbody></table>' : this.esc(item.text || ''))));
+              '</tbody></table>' : this.esc(item.text || '')))));
           return '<div class="pt-canvas-element pt-element-' + this.esc(item.type) + selected + '" data-pt-element="' + this.esc(item.id) +
             '" style="' + style + '"><div class="pt-element-content">' + label + '</div>' +
             (selected ? '<button type="button" data-pt-resize aria-label="تغییر اندازه"></button>' : '') + '</div>';
@@ -389,7 +390,7 @@
     handlePdfFile: async function (file) {
       if (!file) return;
       if ((file.type && file.type !== 'application/pdf') || !/\.pdf$/i.test(file.name || '')) {
-        this.setStatus('pt-pdf-status', 'فقط فایل با پسوند PDF قابل انتخاب است.', true);
+        this.setStatus('pt-pdf-status', 'فقط فایل PDF داخلی برای پردازش پذیرفته می‌شود.', true);
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
@@ -418,12 +419,217 @@
         this.activePageIndex = 0;
         this.definition = this.definition || this.blankDefinition();
         this.definition.pdf = {pageCount:pages.length,pages:pages};
+        const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = false;
         this.history = []; this.historyIndex = -1;
         this.renderEditor(); this.commitHistory();
         this.setStatus('pt-pdf-status', 'PDF آماده است: ' + file.name + ' · ' + pages.length + ' صفحه. برای ثبت دائمی، قالب را ذخیره کن.');
       } catch (error) {
         this.pdfFile = null;
         this.setStatus('pt-pdf-status', error.message || 'خواندن فایل PDF ناموفق بود.', true);
+      }
+    },
+    loadExternalScript: function (src, globalName) {
+      if (window[globalName]) return Promise.resolve(window[globalName]);
+      const existing = document.querySelector('script[data-pt-loader="' + globalName + '"]');
+      if (existing) return new Promise((resolve, reject) => {
+        existing.addEventListener('load', () => resolve(window[globalName]), {once:true});
+        existing.addEventListener('error', () => reject(new Error('بارگذاری کتابخانه تحلیل سند ناموفق بود.')), {once:true});
+      });
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.dataset.ptLoader = globalName;
+        script.onload = () => window[globalName] ? resolve(window[globalName]) : reject(new Error('کتابخانه موردنیاز در دسترس نیست.'));
+        script.onerror = () => reject(new Error('بارگذاری کتابخانه تحلیل سند ناموفق بود.'));
+        document.head.appendChild(script);
+      });
+    },
+    imageFileToPdf: async function (file) {
+      if (file.size > 10 * 1024 * 1024) throw new Error('حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.');
+      await this.loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js', 'jspdf');
+      const image = await createImageBitmap(file);
+      try {
+        const maxDimension = 2400;
+        const ratio = Math.min(1, maxDimension / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * ratio));
+        canvas.height = Math.max(1, Math.round(image.height * ratio));
+        const context = canvas.getContext('2d', {alpha:false});
+        if (!context) throw new Error('آماده‌سازی تصویر در این مرورگر ممکن نیست.');
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const widthMm = Number((canvas.width * 25.4 / 150).toFixed(2));
+        const heightMm = Number((canvas.height * 25.4 / 150).toFixed(2));
+        const orientation = widthMm > heightMm ? 'landscape' : 'portrait';
+        const pdf = new window.jspdf.jsPDF({orientation:orientation,unit:'mm',format:[widthMm,heightMm],compress:true});
+        pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,widthMm,heightMm,undefined,'FAST');
+        const blob = pdf.output('blob');
+        if (blob.size > 10 * 1024 * 1024) throw new Error('حجم PDF ساخته‌شده از تصویر بیشتر از ۱۰ مگابایت است.');
+        const name = String(file.name || 'factory-form').replace(/\.[^.]+$/,'') + '.pdf';
+        return new File([blob],name,{type:'application/pdf',lastModified:Date.now()});
+      } finally {
+        if (image && typeof image.close === 'function') image.close();
+      }
+    },
+    handleImportFile: async function (file) {
+      if (!file) return;
+      const name = String(file.name || '');
+      const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(name);
+      const isImage = /^image\/(jpeg|png|webp)$/i.test(file.type || '') || /\.(jpe?g|png|webp)$/i.test(name);
+      if (isPdf) return this.handlePdfFile(file);
+      if (!isImage) {
+        this.setStatus('pt-pdf-status','فرمت مجاز: PDF، JPG، PNG یا WebP.',true);
+        return;
+      }
+      const input = document.getElementById('pt-pdf-file');
+      this.setStatus('pt-pdf-status','در حال تبدیل تصویر به سند PDF برای حفظ کیفیت و استفاده از مسیر ذخیره‌سازی امن…');
+      try {
+        const pdfFile = await this.imageFileToPdf(file);
+        if (input) input.dataset.originalImageName = name;
+        await this.handlePdfFile(pdfFile);
+        if (this.pdfDocument) this.setStatus('pt-pdf-status','تصویر با موفقیت به یک صفحه PDF تبدیل شد؛ اکنون می‌توانی تشخیص هوشمند را اجرا کنی.');
+      } catch (error) {
+        this.setStatus('pt-pdf-status',error.message || 'تبدیل تصویر ناموفق بود.',true);
+      }
+    },
+    normalizeSmartText: function (value) {
+      return String(value || '').toLowerCase().replace(/[\u0640\u200c\s:：،,؛;._-]+/g,'').replace(/[ي]/g,'ی').replace(/[ك]/g,'ک');
+    },
+    smartSourceCatalog: function () {
+      const groups = [];
+      (this.sources.projectFields || []).forEach(source => groups.push({label:source.label,binding:{id:'project_'+source.field,sourceType:'PROJECT_FIELD',field:source.field}}));
+      (this.sources.informationTypes || []).forEach(source => groups.push({label:source.Name,binding:{id:'info_'+source.ID,sourceType:'PROJECT_INFORMATION',informationTypeId:source.ID}}));
+      (this.sources.forms || []).forEach(form => (form.Fields || []).forEach(field => groups.push({
+        label:field.Name,binding:{id:'form_'+form.ID+'_'+field.ID,sourceType:'EVENT_FORM_FIELD',formId:form.ID,fieldId:field.ID,informationTypeId:field.InformationTypeID,selection:'LATEST'}
+      })));
+      return groups.filter(item => item.label && item.binding && item.binding.id);
+    },
+    suggestSmartBinding: function (label, catalog) {
+      const key = this.normalizeSmartText(label);
+      if (!key) return null;
+      const exact = catalog.find(item => this.normalizeSmartText(item.label) === key);
+      if (exact) return exact;
+      const aliases = [
+        {terms:['نامپروژه','عنوانپروژه','پروژه'],hint:['نامپروژه','عنوانپروژه']},
+        {terms:['کدپروژه','شمارهپروژه','کد'],hint:['کدپروژه','شمارهپروژه']},
+        {terms:['تعداد','مقدار','تیراژ'],hint:['تعداد','مقدار','تیراژ']},
+        {terms:['تاریخ','زمان'],hint:['تاریخ','زمان']},
+        {terms:['رنگ','رنگبندی'],hint:['رنگ']},
+        {terms:['سایز','اندازه'],hint:['سایز','اندازه']},
+        {terms:['توضیحات','شرح'],hint:['توضیحات','شرح']}
+      ];
+      const alias = aliases.find(item => item.terms.some(term => key.includes(term)));
+      if (!alias) return null;
+      return catalog.find(item => alias.hint.some(term => this.normalizeSmartText(item.label).includes(term))) || null;
+    },
+    groupSmartTextLines: function (items) {
+      const lines = [];
+      items.filter(item => item.text && String(item.text).trim()).sort((a,b) => a.y-b.y || a.x-b.x).forEach(item => {
+        let line = lines.find(entry => Math.abs(entry.y-item.y) <= 2.8);
+        if (!line) { line={y:item.y,x:item.x,width:item.width,height:item.height,parts:[]}; lines.push(line); }
+        line.parts.push(item);
+        const right = Math.max(line.x + line.width,item.x + item.width);
+        line.x = Math.min(line.x,item.x);
+        line.y = Math.min(line.y,item.y);
+        line.width = right - line.x;
+        line.height = Math.max(line.height,item.height);
+      });
+      return lines.map(line => ({
+        text:line.parts.sort((a,b)=>line.parts.some(part=>/[\u0600-\u06FF]/.test(part.text)) ? b.x-a.x : a.x-b.x).map(item=>item.text).join(' ').replace(/\s+/g,' ').trim(),
+        x:line.x,y:line.y,width:line.width,height:line.height
+      })).filter(line => line.text);
+    },
+    smartLineToElements: function (lines, pageIndex, pageWidth, catalog, offset) {
+      const labelPattern = /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|تیراژ|رنگ|سایز|اندازه|مدل|پارچه|ملزومات|توضیح|شرح|امضا|تحویل|سفارش|واحد|نام خانوادگی|مشتری|کارفرما|name|code|number|date|quantity|qty|amount|color|size|model|fabric|material|supply|description|remark|signature|delivery|order|unit|customer|client|project|style)/i;
+      const results = [];
+      lines.forEach(line => {
+        const text = String(line.text || '').trim();
+        if (text.length < 2 || text.length > 90 || !labelPattern.test(text)) return;
+        if (results.some(item => item.pageIndex === pageIndex && this.normalizeSmartText(item.text) === this.normalizeSmartText(text))) return;
+        const fieldWidth = Math.max(24,Math.min(48,pageWidth*0.24));
+        const x = Math.max(0,Math.min(pageWidth-fieldWidth,Number(line.x||0)-fieldWidth-2));
+        const y = Math.max(0,Number(line.y||0));
+        const match = this.suggestSmartBinding(text,catalog);
+        if (match && !this.definition.bindings.some(binding => binding.id === match.binding.id)) {
+          this.definition.bindings.push(Object.assign({},match.binding,{label:match.label}));
+        }
+        results.push({
+          id:'smart_'+pageIndex+'_'+(offset+results.length+1),
+          type:'field',text:'',label:text,x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),
+          width:Number(fieldWidth.toFixed(2)),height:Math.max(7,Math.min(12,Number((line.height||5).toFixed(2))+3)),
+          pageIndex:pageIndex,fontSize:10,align:'right',bindingId:match ? match.binding.id : ''
+        });
+      });
+      return results;
+    },
+    runSmartDetection: async function () {
+      if (!this.pdfDocument) {
+        this.setStatus('pt-pdf-status','ابتدا یک PDF یا تصویر فرم را انتخاب کن.',true);
+        return;
+      }
+      const button = document.getElementById('pt-smart-detect');
+      if (button) button.disabled = true;
+      const previousElements = (this.definition.elements || []).filter(item => !String(item.id || '').startsWith('smart_'));
+      const detected = [];
+      const catalog = this.smartSourceCatalog();
+      let worker = null;
+      try {
+        this.setStatus('pt-pdf-status','در حال تحلیل متن و مختصات صفحات…');
+        for (let index=0; index<this.pdfDocument.numPages; index++) {
+          const page = await this.pdfDocument.getPage(index+1);
+          const viewport = page.getViewport({scale:1});
+          const widthMm = Number((viewport.width*25.4/72).toFixed(3));
+          const heightMm = Number((viewport.height*25.4/72).toFixed(3));
+          const content = await page.getTextContent();
+          let items = (content.items || []).filter(item => item.str && item.str.trim()).map(item => ({
+            text:item.str,x:Number((item.transform[4]*25.4/72).toFixed(2)),
+            y:Number((heightMm-item.transform[5]*25.4/72).toFixed(2)),
+            width:Number((item.width*25.4/72).toFixed(2)),
+            height:Number((Math.abs(item.height || item.transform[3] || 10)*25.4/72).toFixed(2))
+          }));
+          let lines = this.groupSmartTextLines(items);
+          if (!lines.length || !lines.some(line => /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|رنگ|سایز|اندازه|توضیح|امضا|سفارش|name|code|number|date|quantity|qty|color|size|description|signature|order|project)/i.test(line.text))) {
+            if (!worker) {
+              this.setStatus('pt-pdf-status','صفحه اسکن‌شده شناسایی شد؛ در حال بارگذاری OCR فارسی/انگلیسی روی همین دستگاه…');
+              await this.loadExternalScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js','Tesseract');
+              worker = await window.Tesseract.createWorker('fas+eng',1,{logger:info=>{
+                if (info && info.status === 'recognizing text') this.setStatus('pt-pdf-status','تشخیص متن صفحه '+(index+1)+'… '+Math.round((info.progress||0)*100)+'٪');
+              }});
+            }
+            const renderScale = Math.min(2,1600/Math.max(1,viewport.width));
+            const renderViewport = page.getViewport({scale:renderScale});
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.ceil(renderViewport.width); canvas.height = Math.ceil(renderViewport.height);
+            const context = canvas.getContext('2d',{alpha:false});
+            await page.render({canvasContext:context,viewport:renderViewport}).promise;
+            const result = await worker.recognize(canvas);
+            const sx = widthMm/canvas.width, sy = heightMm/canvas.height;
+            items = (result.data.words || []).filter(word=>word.text && word.text.trim()).map(word=>({
+              text:word.text,x:word.bbox.x0*sx,y:word.bbox.y0*sy,
+              width:(word.bbox.x1-word.bbox.x0)*sx,height:(word.bbox.y1-word.bbox.y0)*sy
+            }));
+            lines = this.groupSmartTextLines(items);
+            canvas.width=0; canvas.height=0;
+          }
+          const pageElements = this.smartLineToElements(lines,index,widthMm,catalog,detected.length);
+          detected.push.apply(detected,pageElements);
+          if (typeof page.cleanup === 'function') page.cleanup();
+        }
+        if (!detected.length) {
+          this.setStatus('pt-pdf-status','تحلیل انجام شد اما برچسب قابل‌تشخیصی پیدا نشد. می‌توانی از ابزارهای دستی استفاده کنی.',true);
+          return;
+        }
+        this.definition.elements = previousElements.concat(detected);
+        this.renderBindings(); this.renderEditor(); this.commitHistory();
+        const connected = detected.filter(item=>item.bindingId).length;
+        this.setStatus('pt-pdf-status',detected.length+' محل ورود داده پیشنهاد شد؛ '+connected+' مورد به منبع PMS متصل شد. محل‌ها را در پیش‌نمایش بررسی و در صورت نیاز اصلاح کن، سپس قالب را ذخیره کن.');
+      } catch (error) {
+        this.setStatus('pt-pdf-status',error.message || 'تحلیل هوشمند سند ناموفق بود.',true);
+      } finally {
+        if (worker) { try { await worker.terminate(); } catch (_) {} }
+        if (button) button.disabled = false;
       }
     },
     loadTemplatePdf: async function (templateId, metadata) {
@@ -499,7 +705,9 @@
       if (resetSecondary) resetSecondary.addEventListener('click', () => this.resetForm());
       this.bindEditor();
       const pdfInput = document.getElementById('pt-pdf-file');
-      if (pdfInput) pdfInput.addEventListener('change', () => this.handlePdfFile(pdfInput.files && pdfInput.files[0]));
+      if (pdfInput) pdfInput.addEventListener('change', () => this.handleImportFile(pdfInput.files && pdfInput.files[0]));
+      const detectButton = document.getElementById('pt-smart-detect');
+      if (detectButton) detectButton.addEventListener('click', () => this.runSmartDetection());
       if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       await this.loadLibrary();
       this.syncPageControls();
@@ -620,7 +828,8 @@
       this.editingId = '';
       if (this.pdfPageObserver) this.pdfPageObserver.disconnect();
       this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
-      const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) pdfInput.value = '';
+      const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) { pdfInput.value = ''; delete pdfInput.dataset.originalImageName; }
+      const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = true;
       this.definition = this.blankDefinition();
       this.history = []; this.historyIndex = -1; this.selectedElementId = '';
       const code = document.getElementById('pt-template-code');
@@ -638,6 +847,7 @@
         this.definition = item.Definition || this.blankDefinition();
         this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
         if (item.Pdf && item.Pdf.HasFile) await this.loadTemplatePdf(item.ID, item.Pdf);
+        const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = !this.pdfDocument;
         const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) pdfInput.value = '';
         this.history = []; this.historyIndex = -1; this.selectedElementId = '';
         document.getElementById('pt-template-code').value = item.Code || '';
@@ -948,7 +1158,7 @@
         }
         if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
         if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
-        return '<div class="pt-output-element" style="'+style+'">'+this.esc(value)+'</div>';
+        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" style="'+style+'">'+this.esc(value)+'</div>';
       };
       const pages = [];
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {
