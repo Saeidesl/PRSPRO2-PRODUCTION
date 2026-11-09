@@ -460,3 +460,22 @@ test('source PDF overlay aligns with rotated crop boxes without changing source 
  assert.equal(calls[0].x,-90);
  assert.equal(calls[0].y,90);
 });
+
+
+test('template designer adds real image elements and uses dedicated tenant image asset APIs without converting to PDF',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const css=read('css/print-template-library.css');
+ assert.match(page,/id="pt-image-file"/);
+ assert.match(page,/data-pt-action="add-image">افزودن تصویر/);
+ assert.match(module,/handleImageSelection: async function/);
+ assert.match(module,/uploadPendingImages: async function/);
+ assert.match(module,/\/images\//);
+ assert.match(module,/\/images'/);
+ assert.match(module,/assetId/);
+ assert.match(module,/pt-canvas-image/);
+ assert.match(css,/\.pt-canvas-image/);
+ const action=module.slice(module.indexOf("if (action === 'add-image')"),module.indexOf("if (action === 'add-line')"));
+ assert.match(action,/input\.click\(\)/);
+ assert.doesNotMatch(action,/imageFileToPdf/);
+});
