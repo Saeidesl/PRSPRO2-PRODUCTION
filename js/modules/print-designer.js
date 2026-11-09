@@ -1204,7 +1204,7 @@
     fetchOutputPdfBytes: async function (templateId) {
       const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(templateId) + '/pdf', { trackSync: false });
       const file = this.extract(response) || {};
-      const base64 = String(file.base64 || file.Base64 || '').replace(/^data:application\\/pdf;base64,/i, '').replace(/\\s/g, '');
+      const base64 = String(file.base64 || file.Base64 || '').replace(/^data:application\/pdf;base64,/i, '').replace(/\s/g, '');
       if (!base64) throw new Error('فایل PDF اصلی از فضای ذخیره‌سازی دریافت نشد.');
       const binary = window.atob(base64);
       const bytes = new Uint8Array(binary.length);
@@ -1539,7 +1539,7 @@
           if (marginSettings) marginSettings.hidden = true;
           const outputBlob = await this.generateSourcePdfOutput(template, project, data);
           this.outputPdfBlobUrl = window.URL.createObjectURL(outputBlob);
-          const safeName = String(template.Code || template.Name || 'PMS-document').replace(/[^\\w\\u0600-\\u06FF-]+/g, '-').replace(/^-+|-+$/g, '');
+          const safeName = String(template.Code || template.Name || 'PMS-document').replace(/[^\w\u0600-\u06FF-]+/g, '-').replace(/^-+|-+$/g, '');
           this.outputPdfFileName = (safeName || 'PMS-document') + '.pdf';
           if (preview) await this.renderFinalPdfPreview(outputBlob);
           if (downloadButton) downloadButton.hidden = false;
