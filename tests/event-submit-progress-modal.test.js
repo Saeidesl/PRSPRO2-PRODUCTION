@@ -10,7 +10,7 @@ const styles = fs.readFileSync(path.join(__dirname, '..', 'css', 'events.css'), 
 const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 test('progress modal starts immediately after synchronous validation and before form collection', () => {
-  const validation = source.indexOf('if (!form.reportValidity()) return;');
+  const validation = source.indexOf('if (!this.validateEventFormControls(form)) return;');
   const busy = source.indexOf('this.setSubmitState(true);', validation);
   const modal = source.indexOf('this.openSubmitProgressModal();', busy);
   const collect = source.indexOf('await this.collectConfiguredFormResponses(projectId);', modal);
@@ -66,6 +66,6 @@ test('progress modal keeps keyboard focus contained and allows Escape only after
 });
 
 test('event progress assets use refreshed cache-busting versions', () => {
-  assert.match(index, /events\.css\?v=20261108-event-form-a4-modal-1/);
-  assert.match(index, /js\/modules\/events\.js\?v=20261108-event-form-a4-modal-1/);
+  assert.match(index, /events\.css\?v=20261109-event-form-submit-validation-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261109-event-form-submit-validation-1/);
 });
