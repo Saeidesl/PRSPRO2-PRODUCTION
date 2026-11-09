@@ -119,22 +119,17 @@ test('mobile template editor presents a guided workflow with collapsible tool pa
 
 
 
-test('print output page exposes a real document preview and print action',()=>{
-  const root=path.join(__dirname,'..');
-  const page=fs.readFileSync(path.join(root,'pages/print-output.html'),'utf8');
-  const module=fs.readFileSync(path.join(root,'js/modules/print-designer.js'),'utf8');
-  const styles=fs.readFileSync(path.join(root,'css/print-template-library.css'),'utf8');
-  assert.match(page,/id="pt-output-preview"/);
-  assert.match(page,/id="pt-output-print"/);
-  assert.doesNotMatch(page,/pt-output-download/);
-  assert.match(module,/renderOutputDocument/);
-  assert.match(module,/item\.pageIndex \|\| 0/);
-  assert.match(module,/window\.print\(\)/);
-  assert.match(page,/pt-output-download/);
-  assert.match(styles,/body\.pt-printing/);
+test('print output page exposes an HTML document preview and browser print action',()=>{
+ const page=read('pages/print-output.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ assert.match(page,/id="pt-output-preview"/);
+ assert.match(page,/id="pt-output-print"/);
+ assert.doesNotMatch(page,/pt-output-download/);
+ assert.match(module,/renderOutputDocument/);
+ assert.match(module,/window\.print\(\)/);
+ assert.match(styles,/body\.pt-printing/);
 });
-
-
 
 test('drawing toolbar supports editable line, divider, rectangle and ellipse elements in editor and print output',()=>{
  const module=read('js/modules/print-designer.js');
@@ -187,24 +182,19 @@ test('print output assets use refreshed cache keys for the current print fixes',
 
 
 
-test('final print document omits the entire automatic form and project header',()=>{
+test('final print document omits the automatic form and project header',()=>{
  const module=read('js/modules/print-designer.js');
  assert.doesNotMatch(module,/pt-print-heading/);
- assert.ok(module.includes("pageContent+'</article>'"), 'each RTL page wraps its PDF background and configured elements in one scalable content layer');
  assert.match(module,/pt-print-page-content/);
+ assert.match(module,/pages\.push\('<article class="pt-print-page"/);
 });
 
-
-
-test('mobile print scales each complete PDF page into a safe Letter/A4 printable area',()=>{
+test('HTML print scales each complete page into the configured A4 printable area',()=>{
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.match(module,/const fitScale = overlayOnly \? 1 : Math\.max\(0\.01, Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)\)/);
- assert.ok(module.includes('safeWidth - margins.left - margins.right'));
- assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
- assert.match(module,/const safeWidth = overlayOnly \? spec\.width : 210;/);
- assert.match(module,/const safeHeight = overlayOnly \? spec\.height : 297;/);
+ assert.ok(module.includes('safeWidth-margins.left-margins.right') || module.includes('safeWidth - margins.left - margins.right'));
+ assert.ok(module.includes('safeHeight-margins.top-margins.bottom') || module.includes('safeHeight - margins.top - margins.bottom'));
  assert.match(module,/--pt-print-scale/);
  assert.match(module,/--pt-print-width/);
  assert.match(module,/pt-print-page-content/);
@@ -213,10 +203,8 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('remove-field-detection-1'));
+ assert.ok(index.includes('remove-pdf-background-1'));
 });
-
-
 
 test('print output exposes persistent user-configurable margins for all templates',()=>{
  const page=read('pages/print-output.html');
@@ -255,21 +243,19 @@ test('print margin controls apply immediately to the rendered page and persist m
 
 
 
-test('legacy field analysis assets are absent while PDF tools remain',()=>{
+test('legacy field analysis and PDF background rendering assets are absent',()=>{
  const sources=['pages/print-designer.html','js/modules/print-designer.js','css/print-template-library.css','index.html'].map(read);
  const forbidden=[
   String.fromCharCode(112,116,45,115,109,97,114,116,45,100,101,116,101,99,116),
   String.fromCharCode(114,117,110,83,109,97,114,116,68,101,116,101,99,116,105,111,110),
   String.fromCharCode(116,101,115,115,101,114,97,99,116),
   String.fromCharCode(84,101,115,115,101,114,97,99,116),
-  String.fromCharCode(79,67,82)
+  String.fromCharCode(79,67,82),
+  'pt-pdf-file','imageFileToPdf','handleImportFile','handlePdfFile','loadTemplatePdf',
+  'pdfjsLib','PDFLib','jspdf','html2canvas','generateSourcePdfOutput','pt-pdf-background'
  ];
- for(const source of sources) for(const token of forbidden) assert.equal(source.includes(token),false,'obsolete asset marker must be absent');
- const module=sources[1];
- assert.ok(module.includes('window.pdfjsLib.getDocument'));
- assert.match(module,/imageFileToPdf: async function/);
+ for(const source of sources) for(const token of forbidden) assert.equal(source.includes(token),false,'obsolete asset marker must be absent: '+token);
 });
-
 
 test('manual template fields and existing binding types remain supported',()=>{
  const module=read('js/modules/print-designer.js');
@@ -348,7 +334,6 @@ test('live preview exposes a print action and prints the current HTML preview wi
  assert.match(module,/printLivePreview: async function/);
  assert.doesNotMatch(module,/livePreviewPdfBlob|generateSourcePdfOutput|renderFinalPdfPreview/);
  assert.match(module,/window\.print\(\)/);
- assert.match(module,/window\.open\(printUrl, '_blank'\)/);
  assert.match(module,/this\.livePreviewReady/);
  assert.match(styles,/body\.pt-live-preview-printing #pt-live-preview-content/);
  assert.match(styles,/pt-live-preview-printing #pt-live-preview-content \.pt-print-page:last-child/);
