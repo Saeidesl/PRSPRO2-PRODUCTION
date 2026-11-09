@@ -156,7 +156,7 @@
   body.pt-printing .pt-output-image-empty{border:0!important;background:transparent!important}
 }
 
-/* PDF template background and multi-page editor */
+/* Multi-page editor */
 .pt-page-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
 .pt-page-tab{border:1px solid var(--border-color,var(--border,#ddd));border-radius:8px;padding:7px 12px;background:var(--surface,#fff);color:inherit;cursor:pointer}
 .pt-page-tab.is-active{border-color:var(--primary,#4779d9);background:var(--surface-secondary,rgba(80,120,200,.12));font-weight:700}
@@ -167,17 +167,13 @@
 .pt-page-tab:focus-visible{outline:2px solid var(--primary,#4779d9);outline-offset:2px}
 
 
-/* Render imported PDF as the immutable background in document preview and print */
-@media print{
-}
-
 
 /* Manual input fields remain visible in the editor and final printed form */
 .pt-field-hint{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:7pt;color:#64748b;border-bottom:1px dashed #94a3b8;line-height:1.5}
 .pt-output-field{min-height:7mm;border-bottom:1px solid #64748b;white-space:pre-wrap}
 
 
-/* Original PDF output: keep the source page intact and rasterize only the transparent PMS overlay. */
+/* Print output controls and preview layout. */
 .pt-output-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto}
 @media(max-width:900px){.pt-output-controls{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.pt-output-controls{grid-template-columns:1fr}}
