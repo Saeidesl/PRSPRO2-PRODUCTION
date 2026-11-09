@@ -1292,6 +1292,16 @@
         this.renderLivePreview();
       }, Math.max(0, Number(delay) || 0));
     },
+    createLivePreviewDefinition: function () {
+      const definition = JSON.parse(JSON.stringify(this.definition || this.blankDefinition()));
+      (definition.elements || []).forEach(element => {
+        if (element && String(element.type || '').toLowerCase() === 'image' &&
+            !String(element.assetId || '').trim() && this.pendingImageFiles && this.pendingImageFiles[element.id]) {
+          delete element.assetId;
+        }
+      });
+      return definition;
+    },
     renderLivePreview: async function () {
       const select = document.getElementById('pt-live-preview-project');
       const root = document.getElementById('pt-live-preview-content');
@@ -1301,7 +1311,7 @@
       this.livePreviewPending = false;
       const requestId = this.livePreviewSequence;
       const projectId = select.value;
-      const definition = JSON.parse(JSON.stringify(this.definition));
+      const definition = this.createLivePreviewDefinition();
       this.setStatus('pt-live-preview-status', 'در حال دریافت اطلاعات پروژه و ساخت خروجی زنده…');
       try {
         const response = await PMS.Api.post('/print-templates/preview', {
