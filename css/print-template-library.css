@@ -206,3 +206,21 @@
 .pt-output-overlay-render-host .pt-output-pdf-background{display:none!important}
 @media(max-width:900px){.pt-output-controls{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.pt-output-controls{grid-template-columns:1fr}}
+
+
+/* Live print preview inside the existing designer workspace */
+.pt-editor-preview-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:16px;align-items:start;min-width:0}
+.pt-editor-layout{min-width:0}
+.pt-live-preview-panel{display:grid;gap:10px;min-width:0;padding:14px;border:1px solid var(--border-color,var(--border,#ddd));border-radius:10px;background:var(--surface-color,var(--card-bg,#fff))}
+.pt-live-preview-toolbar{display:grid;gap:10px}
+.pt-live-preview-toolbar h3,.pt-live-preview-toolbar p{margin:0}
+.pt-live-preview-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:end}
+.pt-live-preview-actions label{grid-column:1/-1;font-size:13px}
+.pt-live-preview-actions select{min-width:0;width:100%}
+.pt-live-preview-content{display:grid;gap:14px;min-width:0;max-height:72vh;overflow:auto;padding:12px;background:var(--surface-secondary,rgba(127,127,127,.07));border-radius:8px}
+.pt-live-preview-content .pt-print-page{margin:0 auto 14px;max-width:100%;box-shadow:0 2px 12px rgba(0,0,0,.14)}
+.pt-live-preview-content .pt-output-final-page{width:100%;height:auto}
+.pt-live-preview-panel.is-expanded{position:fixed;inset:12px;z-index:10000;overflow:auto;padding:18px;box-shadow:0 12px 48px rgba(0,0,0,.3);background:var(--surface-color,var(--card-bg,#fff))}
+.pt-live-preview-panel.is-expanded .pt-live-preview-content{max-height:none;min-height:60vh}
+@media(max-width:1200px){.pt-editor-preview-layout{grid-template-columns:minmax(0,1fr)}.pt-live-preview-content{max-height:65vh}}
+@media(max-width:560px){.pt-live-preview-panel{padding:10px}.pt-live-preview-actions{grid-template-columns:1fr 1fr}.pt-live-preview-actions label{grid-column:1/-1}.pt-live-preview-actions select{grid-column:1/-1}.pt-live-preview-content{padding:6px;max-height:60vh}.pt-live-preview-panel.is-expanded{inset:4px;padding:10px}}

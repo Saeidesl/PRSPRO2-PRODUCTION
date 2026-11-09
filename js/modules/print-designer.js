@@ -12,6 +12,12 @@
     historyIndex: -1,
     dragState: null,
     previewMode: false,
+    currentTemplateMeta: null,
+    livePreviewTimer: null,
+    livePreviewSequence: 0,
+    livePreviewBusy: false,
+    livePreviewPending: false,
+    livePreviewExpanded: false,
     outputPageSpec: { width: 210, height: 297 },
     outputMargins: { top: 8, bottom: 8, right: 8, left: 8 },
     outputPdfObjectUrls: [],
@@ -226,12 +232,9 @@
       if (action === 'undo') return this.undo();
       if (action === 'redo') return this.redo();
       if (action === 'preview') {
-        this.previewMode = !this.previewMode;
-        const workspace = document.getElementById('pt-editor-workspace');
-        const button = document.querySelector('[data-pt-action="preview"]');
-        if (workspace) workspace.classList.toggle('pt-preview-mode', this.previewMode);
-        if (button) button.textContent = this.previewMode ? 'بازگشت به ویرایش' : 'پیش‌نمایش';
-        this.setStatus('pt-editor-status', this.previewMode ? 'پیش‌نمایش چیدمان نمونه؛ داده‌های واقعی هنگام انتخاب پروژه در بخش چاپ بازیابی می‌شوند.' : 'به محیط ویرایش برگشتی.');
+        const panel = document.querySelector('.pt-live-preview-panel');
+        if (panel) panel.scrollIntoView({behavior:'smooth',block:'start'});
+        this.scheduleLivePreview(0);
         return;
       }
       if (action === 'remove' && selected) {
@@ -301,8 +304,9 @@
       } catch (_) {}
       const item = this.createElement('image',{text:'',fileName:file.name,mimeType:mime,assetId:'',width:Number(width.toFixed(1)),height:Number(height.toFixed(1)),fit:'contain'});
       this.pendingImageFiles[item.id] = file;
-      this.imageSources[item.id] = window.URL.createObjectURL(file);
+      this.imageSources[item.id] = 'data:' + mime + ';base64,' + await this.fileToBase64(file);
       this.renderEditor();
+      this.scheduleLivePreview(0);
       this.setStatus('pt-editor-status','تصویر به صفحه اضافه شد؛ آن را جابه‌جا یا اندازه‌اش را تنظیم کن. با ذخیره قالب، فایل اصلی بارگذاری می‌شود.');
     },
     loadTemplateImages: async function (template, sourceDefinition) {
@@ -314,7 +318,7 @@
         const id = image.ID || image.Id || image.AssetID || image.assetId;
         if (id) assets[String(id)] = image;
       });
-      const ids = Array.from(new Set(elements.filter(item => item.type === 'image' && item.assetId).map(item => String(item.assetId))));
+      const ids = Array.from(new Set(elements.filter(item => item.type === 'image' && item.assetId && !this.imageSources[item.assetId]).map(item => String(item.assetId))));
       await Promise.all(ids.map(async assetId => {
         if (!assets[assetId]) return;
         try {
@@ -884,12 +888,14 @@
       if (this.history.length > 60) this.history.shift();
       this.historyIndex = this.history.length - 1;
       this.setStatus('pt-editor-status', 'تغییرات طراحی ثبت شد؛ برای ماندگاری، قالب را ذخیره کن.');
+      this.scheduleLivePreview(650);
     },
     restoreHistory: function (index) {
       if (index < 0 || index >= this.history.length) return;
       this.historyIndex = index;
       this.definition = JSON.parse(this.history[index]);
       this.renderEditor();
+      this.scheduleLivePreview(250);
     },
     undo: function () { this.restoreHistory(this.historyIndex - 1); },
     redo: function () { this.restoreHistory(this.historyIndex + 1); },
@@ -901,12 +907,15 @@
       const resetSecondary = document.getElementById('pt-template-reset-secondary');
       if (resetSecondary) resetSecondary.addEventListener('click', () => this.resetForm());
       this.bindEditor();
+      this.bindLivePreview();
       const pdfInput = document.getElementById('pt-pdf-file');
       if (pdfInput) pdfInput.addEventListener('change', () => this.handleImportFile(pdfInput.files && pdfInput.files[0]));
       const detectButton = document.getElementById('pt-smart-detect');
       if (detectButton) detectButton.addEventListener('click', () => this.runSmartDetection());
       if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       await this.loadLibrary();
+      this.loadOutputMargins();
+      await this.loadLivePreviewProjects();
       this.syncPageControls();
       this.renderEditor();
     },
@@ -1028,6 +1037,13 @@
       const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) { pdfInput.value = ''; delete pdfInput.dataset.originalImageName; }
       const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = true;
       this.definition = this.blankDefinition();
+      this.currentTemplateMeta = null;
+      this.pendingImageFiles = Object.create(null);
+      Object.keys(this.imageSources || {}).forEach(key => {
+        const source = this.imageSources[key];
+        if (String(source || '').indexOf('blob:') === 0) { try { window.URL.revokeObjectURL(source); } catch (_) {} }
+      });
+      this.imageSources = Object.create(null);
       this.history = []; this.historyIndex = -1; this.selectedElementId = '';
       const code = document.getElementById('pt-template-code');
       if (code) code.disabled = false;
@@ -1041,9 +1057,11 @@
         const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(id));
         const item = this.extract(response);
         this.editingId = item.ID;
+        this.currentTemplateMeta = item;
         this.definition = item.Definition || this.blankDefinition();
         this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
         if (item.Pdf && item.Pdf.HasFile) await this.loadTemplatePdf(item.ID, item.Pdf);
+        await this.loadTemplateImages(item, this.definition);
         const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = !this.pdfDocument;
         const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) pdfInput.value = '';
         this.history = []; this.historyIndex = -1; this.selectedElementId = '';
@@ -1056,6 +1074,7 @@
         this.renderBindings();
         this.renderEditor();
         this.commitHistory();
+        this.scheduleLivePreview(0);
         document.getElementById('pt-template-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
         this.setStatus('pt-library-status', error.message || 'دریافت قالب ناموفق بود.', true);
@@ -1215,6 +1234,119 @@
       }
       this.refreshOutputPreview();
     },
+    loadLivePreviewProjects: async function () {
+      const select = document.getElementById('pt-live-preview-project');
+      if (!select) return;
+      try {
+        const response = await PMS.Api.get('/projects');
+        const projects = this.list(response, ['items','Items','projects','Projects']);
+        select.innerHTML = '<option value="">انتخاب پروژه</option>' + projects.map(item =>
+          '<option value="' + this.esc(item.ID) + '">' +
+          this.esc(item.ProjectCode || item.Code || 'بدون کد') + ' — ' +
+          this.esc(item.Title || item.Name || item.ID) + '</option>'
+        ).join('');
+        this.setStatus('pt-live-preview-status', projects.length
+          ? 'پروژه را انتخاب کن؛ پیش‌نمایش با تغییرات ذخیره‌نشده به‌روز می‌شود.'
+          : 'پروژه‌ای برای پیش‌نمایش در دسترس نیست.', !projects.length);
+      } catch (error) {
+        this.setStatus('pt-live-preview-status', error.message || 'دریافت فهرست پروژه‌ها ناموفق بود.', true);
+      }
+    },
+    bindLivePreview: function () {
+      const select = document.getElementById('pt-live-preview-project');
+      if (select && select.dataset.bound !== '1') {
+        select.dataset.bound = '1';
+        select.addEventListener('change', () => this.scheduleLivePreview(0));
+      }
+      const refresh = document.getElementById('pt-live-preview-refresh');
+      if (refresh && refresh.dataset.bound !== '1') {
+        refresh.dataset.bound = '1';
+        refresh.addEventListener('click', () => this.scheduleLivePreview(0));
+      }
+      const expand = document.getElementById('pt-live-preview-expand');
+      if (expand && expand.dataset.bound !== '1') {
+        expand.dataset.bound = '1';
+        expand.addEventListener('click', () => this.toggleLivePreviewExpanded());
+      }
+    },
+    toggleLivePreviewExpanded: function () {
+      const panel = document.querySelector('.pt-live-preview-panel');
+      const button = document.getElementById('pt-live-preview-expand');
+      if (!panel) return;
+      this.livePreviewExpanded = !this.livePreviewExpanded;
+      panel.classList.toggle('is-expanded', this.livePreviewExpanded);
+      if (button) {
+        button.textContent = this.livePreviewExpanded ? 'بازگشت' : 'نمایش بزرگ';
+        button.setAttribute('aria-pressed', this.livePreviewExpanded ? 'true' : 'false');
+      }
+    },
+    scheduleLivePreview: function (delay) {
+      const select = document.getElementById('pt-live-preview-project');
+      if (!select || !select.value) return;
+      this.livePreviewSequence += 1;
+      this.livePreviewPending = true;
+      if (this.livePreviewTimer) window.clearTimeout(this.livePreviewTimer);
+      this.livePreviewTimer = window.setTimeout(() => {
+        this.livePreviewTimer = null;
+        if (this.livePreviewBusy) return;
+        this.renderLivePreview();
+      }, Math.max(0, Number(delay) || 0));
+    },
+    renderLivePreview: async function () {
+      const select = document.getElementById('pt-live-preview-project');
+      const root = document.getElementById('pt-live-preview-content');
+      if (!select || !select.value || !root || !this.definition) return;
+      if (this.livePreviewBusy) { this.livePreviewPending = true; return; }
+      this.livePreviewBusy = true;
+      this.livePreviewPending = false;
+      const requestId = this.livePreviewSequence;
+      const projectId = select.value;
+      const definition = JSON.parse(JSON.stringify(this.definition));
+      this.setStatus('pt-live-preview-status', 'در حال دریافت اطلاعات پروژه و ساخت خروجی زنده…');
+      try {
+        const response = await PMS.Api.post('/print-templates/preview', {
+          ProjectID: projectId,
+          Definition: definition
+        });
+        if (requestId !== this.livePreviewSequence) return;
+        const result = this.extract(response) || {};
+        const project = result.project || {};
+        const data = result.data || {};
+        const meta = this.currentTemplateMeta || {};
+        const hasSourcePdf = !!(this.pdfFile || (meta.Pdf && meta.Pdf.HasFile));
+        const template = {
+          ID: this.editingId || '',
+          Code: (document.getElementById('pt-template-code') || {}).value || meta.Code || '',
+          Name: (document.getElementById('pt-template-name') || {}).value || meta.Name || '',
+          Definition: definition,
+          Pdf: { HasFile: hasSourcePdf },
+          Images: Array.isArray(meta.Images) ? meta.Images : []
+        };
+        if (hasSourcePdf) {
+          const outputBlob = await this.generateSourcePdfOutput(template, project, data);
+          if (requestId !== this.livePreviewSequence) return;
+          await this.renderFinalPdfPreview(outputBlob, 'pt-live-preview-content');
+        } else {
+          const outputHtml = await this.renderOutputDocument(template, project, data);
+          if (requestId !== this.livePreviewSequence) return;
+          root.innerHTML = outputHtml;
+          await Promise.all(Array.from(root.querySelectorAll('img')).map(image =>
+            image.decode ? image.decode().catch(() => {}) : Promise.resolve()
+          ));
+        }
+        if (requestId === this.livePreviewSequence) {
+          this.setStatus('pt-live-preview-status', 'پیش‌نمایش به‌روز است؛ این خروجی شامل تغییرات ذخیره‌نشده قالب است.');
+        }
+      } catch (error) {
+        if (requestId === this.livePreviewSequence) {
+          this.setStatus('pt-live-preview-status', error.message || 'ساخت پیش‌نمایش زنده ناموفق بود.', true);
+          root.innerHTML = '<div class="pt-empty-state">پیش‌نمایش ساخته نشد؛ طراحی و تغییرات شما محفوظ است.</div>';
+        }
+      } finally {
+        this.livePreviewBusy = false;
+        if (this.livePreviewPending && this.livePreviewTimer === null) this.scheduleLivePreview(150);
+      }
+    },
     loadOutputOptions: async function () {
       this.setStatus('pt-output-status', 'در حال دریافت قالب‌ها و پروژه‌ها…');
       try {
@@ -1291,14 +1423,20 @@
       this.outputPdfFileName = 'PMS-document.pdf';
       this.outputPdfPreviewWarning = '';
     },
-    fetchOutputPdfBytes: async function (templateId) {
-      const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(templateId) + '/pdf', { trackSync: false });
-      const file = this.extract(response) || {};
-      const base64 = String(file.base64 || file.Base64 || '').replace(/^data:application\/pdf;base64,/i, '').replace(/\s/g, '');
-      if (!base64) throw new Error('فایل PDF اصلی از فضای ذخیره‌سازی دریافت نشد.');
-      const binary = window.atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    fetchOutputPdfBytes: async function (templateId, localFile) {
+      let bytes;
+      if (localFile && typeof localFile.arrayBuffer === 'function') {
+        bytes = new Uint8Array(await localFile.arrayBuffer());
+      } else {
+        if (!templateId) throw new Error('شناسه قالب برای دریافت PDF ذخیره‌شده موجود نیست.');
+        const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(templateId) + '/pdf', { trackSync: false });
+        const file = this.extract(response) || {};
+        const base64 = String(file.base64 || file.Base64 || '').replace(/^data:application\/pdf;base64,/i, '').replace(/\s/g, '');
+        if (!base64) throw new Error('فایل PDF اصلی از فضای ذخیره‌سازی دریافت نشد.');
+        const binary = window.atob(base64);
+        bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      }
       if (!bytes.length || bytes[0] !== 0x25 || bytes[1] !== 0x50 || bytes[2] !== 0x44 || bytes[3] !== 0x46) {
         throw new Error('فایل دریافت‌شده، PDF معتبر نیست.');
       }
@@ -1375,7 +1513,7 @@
       }
     },
     drawTemplateImageOnSourcePage: async function (pdfDocument, page, item, pageSpec, PDFLib) {
-      const source = this.imageSources && this.imageSources[item.assetId];
+      const source = this.imageSources && this.imageSources[item.assetId || item.id];
       if (!source) throw new Error('فایل اصلی تصویر قالب در دسترس نیست: ' + (item.fileName || item.assetId || 'تصویر'));
       const imageData = await this.getImageBytesForPdf(source);
       const overlayDocument = await PDFLib.PDFDocument.create();
@@ -1441,7 +1579,7 @@
       }
     },
     generateSourcePdfOutput: async function (template, project, data) {
-      if (!template || !template.ID || !template.Definition || !template.Definition.pdf ||
+      if (!template || (!template.ID && !this.pdfFile) || !template.Definition || !template.Definition.pdf ||
           !Array.isArray(template.Definition.pdf.pages) || !template.Definition.pdf.pages.length) {
         throw new Error('مشخصات PDF اصلی قالب کامل نیست؛ قالب را دوباره ذخیره کن.');
       }
@@ -1451,7 +1589,7 @@
         throw new Error('موتور ساخت PDF با حفظ سند اصلی در دسترس نیست.');
       }
       this.setStatus('pt-output-status', 'در حال دریافت PDF اصلی و آماده‌سازی لایه اطلاعات…');
-      const sourceBytes = await this.fetchOutputPdfBytes(template.ID);
+      const sourceBytes = await this.fetchOutputPdfBytes(template.ID, this.pdfFile);
       const pdfDocument = await PDFLib.PDFDocument.load(sourceBytes);
       const sourcePages = pdfDocument.getPages();
       const pageMetadata = template.Definition.pdf.pages;
@@ -1494,7 +1632,7 @@
               segment = [];
               const elementId = element.getAttribute('data-pt-element-id');
               const imageItem = definitionElements.find(item => String(item.id) === String(elementId));
-              if (!imageItem || !imageItem.assetId) throw new Error('مشخصات تصویر مستقل قالب برای خروجی PDF پیدا نشد.');
+              if (!imageItem || !(imageItem.assetId || this.pendingImageFiles[elementId])) throw new Error('مشخصات تصویر مستقل قالب برای خروجی PDF پیدا نشد.');
               await this.drawTemplateImageOnSourcePage(pdfDocument, sourcePages[index], imageItem, pageSpec, PDFLib);
             } else {
               segment.push(element);
@@ -1509,11 +1647,11 @@
         if (host.parentNode) host.parentNode.removeChild(host);
       }
     },
-    renderFinalPdfPreview: async function (blob) {
+    renderFinalPdfPreview: async function (blob, rootId) {
       if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== 'function') {
         throw new Error('موتور پیش‌نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن.');
       }
-      const root = document.getElementById('pt-output-preview');
+      const root = document.getElementById(rootId || 'pt-output-preview');
       if (!root) return;
       root.innerHTML = '';
       const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -1635,15 +1773,15 @@
               if (overlayOnly) throw error;
               image = '<div class="pt-output-image pt-output-image-error">بارگذاری تصویر ناموفق بود</div>';
             }
-          } else if (item.type === 'image' && item.assetId && this.imageSources[item.assetId]) {
-            image = '<img class="pt-output-image-content" src="' + this.esc(this.imageSources[item.assetId]) + '" alt="' + this.esc(item.fileName || 'تصویر قالب') + '">';
+          } else if (item.type === 'image' && this.imageSources[item.assetId || item.id]) {
+            image = '<img class="pt-output-image-content" src="' + this.esc(this.imageSources[item.assetId || item.id]) + '" alt="' + this.esc(item.fileName || 'تصویر قالب') + '">';
           } else if (item.type === 'image') {
             if (overlayOnly) throw new Error('تصویر ثابت قالب بارگذاری نشده است: ' + (item.fileName || item.assetId || 'تصویر'));
             image = '<div class="pt-output-image pt-output-image-error">تصویر قالب در دسترس نیست</div>';
           } else {
             image = '<div class="pt-output-image pt-output-image-empty" aria-hidden="true"></div>';
           }
-          const directTemplateImage = item.type === 'image' && !!item.assetId && !imageAttachment;
+          const directTemplateImage = item.type === 'image' && !!(item.assetId || this.pendingImageFiles[item.id]) && !imageAttachment;
           const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
           return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+image+'</div>';
         }

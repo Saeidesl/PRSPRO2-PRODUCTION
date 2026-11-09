@@ -172,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-template-image-lossless-pdf-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-template-image-lossless-pdf-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-live-preview-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-live-preview-1'));
 });
 
 
@@ -202,7 +202,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('template-image-lossless-pdf-1'));
+ assert.ok(index.includes('live-preview-1'));
 });
 
 
@@ -224,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('template-image-lossless-pdf-1'));
+ assert.ok(index.includes('live-preview-1'));
 });
 
 
@@ -237,7 +237,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('template-image-lossless-pdf-1'));
+ assert.ok(index.includes('live-preview-1'));
 });
 
 
@@ -439,7 +439,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-template-image-lossless-pdf-1'));
+ assert.ok(index.includes('20261109-live-preview-1'));
 });
 
 
@@ -485,7 +485,7 @@ test('template designer adds real image elements and uses dedicated tenant image
 test('saved template image assets are loaded for output and embedded as image elements instead of empty placeholders',()=>{
  const module=read('js/modules/print-designer.js');
  assert.match(module,/await this\.loadTemplateImages\(template, definition\)/);
- assert.match(module,/item\.type === 'image' && item\.assetId && this\.imageSources\[item\.assetId\]/);
+ assert.match(module,/item\.type === 'image' && this\.imageSources\[item\.assetId \|\| item\.id\]/);
  assert.match(module,/pt-output-image-content/);
  assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
 });
@@ -521,4 +521,43 @@ test('JPEG template image bytes are embedded directly without re-encoding or dow
  assert.equal(drawnImageOptions.width,60*72/25.4);
  assert.equal(drawnImageOptions.height,40*72/25.4);
  assert.ok(drawnPageOptions);
+});
+
+
+test('print designer renders live output beside the canvas using the selected project and unsaved definition',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ assert.match(page,/id="pt-live-preview-project"/);
+ assert.match(page,/id="pt-live-preview-content"/);
+ assert.match(page,/id="pt-live-preview-refresh"/);
+ assert.match(page,/id="pt-live-preview-expand"/);
+ assert.match(styles,/\.pt-editor-preview-layout/);
+ assert.match(styles,/\.pt-live-preview-panel\.is-expanded/);
+ assert.match(module,/loadLivePreviewProjects: async function/);
+ assert.match(module,/scheduleLivePreview: function/);
+ assert.match(module,/livePreviewSequence/);
+ assert.match(module,/PMS\.Api\.post\('\/print-templates\/preview'/);
+ assert.match(module,/ProjectID: projectId,[\s\S]*Definition: definition/);
+ const start=module.indexOf('    renderLivePreview: async function');
+ const end=module.indexOf('    loadOutputOptions: async function',start);
+ const preview=module.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.match(preview,/this\.renderOutputDocument\(template, project, data\)/);
+ assert.match(preview,/this\.generateSourcePdfOutput\(template, project, data\)/);
+ assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
+});
+
+test('live preview supports unsaved local PDF files and pending image assets without uploading or saving them',async()=>{
+ const sandbox={window:{PMS:{}},console,Uint8Array};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const localBytes=new Uint8Array([37,80,68,70,45,49]);
+ const loaded=await designer.fetchOutputPdfBytes('',{arrayBuffer:async()=>localBytes.buffer});
+ assert.deepEqual(Array.from(loaded),Array.from(localBytes));
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/this\.imageSources\[item\.assetId \|\| item\.id\]/);
+ assert.match(module,/this\.pendingImageFiles\[elementId\]/);
+ assert.match(module,/renderFinalPdfPreview: async function \(blob, rootId\)/);
+ assert.match(module,/this\.scheduleLivePreview\(650\)/);
 });
