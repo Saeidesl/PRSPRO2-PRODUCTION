@@ -489,3 +489,36 @@ test('saved template image assets are loaded for output and embedded as image el
  assert.match(module,/pt-output-image-content/);
  assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
 });
+
+
+test('JPEG template image bytes are embedded directly without re-encoding or downscaling',async()=>{
+ const encoded=Buffer.from([0,1,2,255]).toString('base64');
+ const sandbox={window:{PMS:{},atob:value=>Buffer.from(value,'base64').toString('binary')},console,Buffer};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.imageSources={asset:'data:image/jpeg;base64,'+encoded};
+ let originalBytes=[],drawnImageOptions=null,drawnPageOptions=null;
+ const overlayPage={
+  drawImage:(image,options)=>{drawnImageOptions=options;}
+ };
+ const overlayDocument={
+  addPage:()=>overlayPage,
+  embedJpg:async bytes=>{originalBytes=Array.from(bytes);return{width:1200,height:800};},
+  embedPng:async()=>{throw new Error('PNG path must not be used for JPEG');},
+  save:async()=>new Uint8Array([37,80,68,70])
+ };
+ const PDFLib={PDFDocument:{create:async()=>overlayDocument},degrees:angle=>({angle})};
+ const pdfDocument={embedPdf:async()=>[{}]};
+ const targetPage={
+  getCropBox:()=>({x:0,y:0,width:595.28,height:841.89}),
+  getRotation:()=>({angle:0}),
+  drawPage:(page,options)=>{drawnPageOptions=options;}
+ };
+ await designer.drawTemplateImageOnSourcePage(pdfDocument,targetPage,
+  {id:'image-1',assetId:'asset',mimeType:'image/jpeg',x:10,y:20,width:60,height:40,fit:'contain'},
+  {width:210,height:297},PDFLib);
+ assert.deepEqual(originalBytes,[0,1,2,255]);
+ assert.equal(drawnImageOptions.width,60*72/25.4);
+ assert.equal(drawnImageOptions.height,40*72/25.4);
+ assert.ok(drawnPageOptions);
+});
