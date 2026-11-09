@@ -157,32 +157,18 @@
 }
 
 /* PDF template background and multi-page editor */
-.pt-pdf-import{margin-bottom:14px}
-.pt-pdf-import-row{display:grid;grid-template-columns:minmax(150px,220px) minmax(220px,1fr);gap:10px;align-items:center}
-.pt-pdf-import-row label{font-weight:600}
-.pt-pdf-import-row input{max-width:100%}
-.pt-pdf-import-row .pt-status{grid-column:1/-1;margin:0}
 .pt-page-tabs{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
 .pt-page-tab{border:1px solid var(--border-color,var(--border,#ddd));border-radius:8px;padding:7px 12px;background:var(--surface,#fff);color:inherit;cursor:pointer}
 .pt-page-tab.is-active{border-color:var(--primary,#4779d9);background:var(--surface-secondary,rgba(80,120,200,.12));font-weight:700}
 .pt-design-canvas{display:flex;flex-direction:column;align-items:center;gap:16px;width:100%!important;min-width:0!important;min-height:0!important;aspect-ratio:auto!important;overflow:visible;background:transparent;border:0;box-shadow:none}
 .pt-design-page{position:relative;flex:0 0 auto;box-sizing:border-box;overflow:hidden;background:#fff;color:#1f2937;border:1px solid #cbd5e1;box-shadow:0 4px 18px rgba(0,0,0,.12);direction:rtl}
-.pt-pdf-background{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .pt-page-elements{position:absolute;inset:0;z-index:1}
 .pt-page-elements .pt-canvas-empty{position:absolute;inset:0;pointer-events:none}
 .pt-page-tab:focus-visible{outline:2px solid var(--primary,#4779d9);outline-offset:2px}
-@media(max-width:560px){.pt-pdf-import-row{grid-template-columns:1fr}.pt-page-tabs{overflow-x:auto;flex-wrap:nowrap}.pt-page-tab{white-space:nowrap}}
-@media print{.pt-page-tabs,.pt-pdf-import{display:none!important}.pt-design-canvas{gap:0!important}.pt-design-page{box-shadow:none!important;border:0!important;break-after:page}}
 
 
 /* Render imported PDF as the immutable background in document preview and print */
-.pt-print-page.pt-has-pdf{padding:0!important;background:#fff!important;isolation:isolate}
-.pt-output-pdf-background{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:fill;z-index:0}
-.pt-print-page.pt-has-pdf .pt-output-element{z-index:1}
-@media screen{.pt-print-page.pt-has-pdf{overflow:hidden}}
 @media print{
-  body.pt-printing .pt-print-page.pt-has-pdf{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  body.pt-printing .pt-output-pdf-background{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
 
@@ -193,10 +179,6 @@
 
 /* Original PDF output: keep the source page intact and rasterize only the transparent PMS overlay. */
 .pt-output-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto}
-.pt-output-final-page{display:block;width:auto;max-width:100%;height:auto;margin:0 auto 18px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.14)}
-.pt-output-overlay-render-host .pt-print-page{display:block!important;flex:none!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;transform:none!important;overflow:hidden!important;background:transparent!important;box-shadow:none!important;border:0!important}
-.pt-output-overlay-render-host .pt-print-page-content{transform:none!important;left:0!important;top:0!important}
-.pt-output-overlay-render-host .pt-output-pdf-background{display:none!important}
 @media(max-width:900px){.pt-output-controls{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.pt-output-controls{grid-template-columns:1fr}}
 
@@ -212,7 +194,6 @@
 .pt-live-preview-actions select{min-width:0;width:100%}
 .pt-live-preview-content{display:grid;gap:14px;min-width:0;max-height:72vh;overflow:auto;padding:12px;background:var(--surface-secondary,rgba(127,127,127,.07));border-radius:8px}
 .pt-live-preview-content .pt-print-page{margin:0 auto 14px;max-width:100%;box-shadow:0 2px 12px rgba(0,0,0,.14)}
-.pt-live-preview-content .pt-output-final-page{width:100%;height:auto}
 .pt-live-preview-panel.is-expanded{position:fixed;inset:12px;z-index:10000;overflow:auto;padding:18px;box-shadow:0 12px 48px rgba(0,0,0,.3);background:var(--surface-color,var(--card-bg,#fff))}
 .pt-live-preview-panel.is-expanded .pt-live-preview-content{max-height:none;min-height:60vh}
 @media(max-width:1200px){.pt-editor-preview-layout{grid-template-columns:minmax(0,1fr)}.pt-live-preview-content{max-height:65vh}}
