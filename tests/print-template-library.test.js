@@ -548,6 +548,24 @@ test('print designer renders live output beside the canvas using the selected pr
  assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
 });
 
+test('live preview omits only the empty asset ID of a pending local image without mutating the editor definition',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.definition={elements:[
+  {id:'pending-image-1',type:'image',assetId:'',fileName:'new.png'},
+  {id:'saved-image-1',type:'image',assetId:'IMG_1234567890abcdef',fileName:'saved.png'},
+  {id:'broken-image-1',type:'image',assetId:'',fileName:'missing.png'}
+ ],bindings:[]};
+ designer.pendingImageFiles={'pending-image-1':{name:'new.png'}};
+ const original=JSON.stringify(designer.definition);
+ const preview=designer.createLivePreviewDefinition();
+ assert.equal(preview.elements[0].assetId,undefined);
+ assert.equal(preview.elements[1].assetId,'IMG_1234567890abcdef');
+ assert.equal(preview.elements[2].assetId,'');
+ assert.equal(JSON.stringify(designer.definition),original);
+});
+
 test('live preview supports unsaved local PDF files and pending image assets without uploading or saving them',async()=>{
  const sandbox={window:{PMS:{}},console,Uint8Array};
  vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
