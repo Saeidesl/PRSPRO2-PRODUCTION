@@ -19,19 +19,11 @@
     livePreviewPending: false,
     livePreviewExpanded: false,
     livePreviewReady: false,
-    livePreviewPdfBlob: null,
     outputPageSpec: { width: 210, height: 297 },
     outputMargins: { top: 8, bottom: 8, right: 8, left: 8 },
-    outputPdfObjectUrls: [],
     imageSources: Object.create(null),
     pendingImageFiles: Object.create(null),
-    outputPdfBlobUrl: '',
-    outputPdfFileName: 'PMS-document.pdf',
     outputMarginStorageKey: 'PMS_PRINT_OUTPUT_MARGINS_V1',
-    pdfDocument: null,
-    pdfFile: null,
-    pdfRenderVersion: 0,
-    pdfPageObserver: null,
     activePageIndex: 0,
     init: function () {
       const route = String(window.location.hash || '').replace(/^#/, '').split('/')[0];
@@ -63,12 +55,7 @@
     blankDefinition: function () {
       return { schemaVersion: 1, page: { size: 'A4', orientation: 'portrait' }, elements: [], bindings: [] };
     },
-    pageDimensions: function (pageIndex) {
-      const index = Number(pageIndex || 0);
-      const pdfPages = this.definition && this.definition.pdf && this.definition.pdf.pages;
-      if (Array.isArray(pdfPages) && pdfPages[index]) {
-        return { width: Number(pdfPages[index].widthMm), height: Number(pdfPages[index].heightMm) };
-      }
+    pageDimensions: function () {
       const size = document.getElementById('pt-page-size');
       const orientation = document.getElementById('pt-page-orientation');
       const key = size ? size.value : ((this.definition && this.definition.page && this.definition.page.size) || 'A4');
@@ -83,9 +70,8 @@
       const orientation = document.getElementById('pt-page-orientation');
       if (size) size.value = page.size || 'A4';
       if (orientation) orientation.value = page.orientation || 'portrait';
-      const hasPdf = !!(this.definition && this.definition.pdf && Array.isArray(this.definition.pdf.pages));
-      if (size) size.disabled = hasPdf;
-      if (orientation) orientation.disabled = hasPdf;
+      if (size) size.disabled = false;
+      if (orientation) orientation.disabled = false;
     },
     bindEditor: function () {
       const canvas = document.getElementById('pt-design-canvas');
@@ -389,23 +375,23 @@
       const root = document.getElementById('pt-design-canvas');
       if (!root) return;
       if (!this.definition) this.definition = this.blankDefinition();
-      const pageSpecs = (this.definition.pdf && Array.isArray(this.definition.pdf.pages) && this.definition.pdf.pages.length)
-        ? this.definition.pdf.pages.map((page, index) => ({ width: Number(page.widthMm), height: Number(page.heightMm), index: index }))
-        : [Object.assign(this.pageDimensions(0), { index: 0 })];
-      const structureKey = String(this.pdfRenderVersion) + '|' + pageSpecs.map(page => page.width + 'x' + page.height).join(',');
+      const elements = Array.isArray(this.definition.elements) ? this.definition.elements : [];
+      const pageCount = Math.max(1, ...elements.map(item => Math.max(0, Number(item.pageIndex || 0)) + 1));
+      const dimensions = this.pageDimensions();
+      const pageSpecs = Array.from({length:pageCount}, (_, index) => Object.assign({}, dimensions, {index:index}));
+      const structureKey = pageSpecs.map(page => page.width + 'x' + page.height).join(',');
       if (root.dataset.pageStructure !== structureKey) {
         root.innerHTML = pageSpecs.map(page =>
           '<div class="pt-design-page" data-page-index="' + page.index + '" style="width:' + page.width + 'mm;height:' + page.height + 'mm">' +
-          '<canvas class="pt-pdf-background" aria-hidden="true"></canvas><div class="pt-page-elements" data-page-elements="' + page.index + '"></div></div>'
+          '<div class="pt-page-elements" data-page-elements="' + page.index + '"></div></div>'
         ).join('');
         root.dataset.pageStructure = structureKey;
-        if (this.pdfDocument) this.renderPdfBackgrounds();
       }
       pageSpecs.forEach(page => {
         const layer = root.querySelector('[data-page-elements="' + page.index + '"]');
         if (!layer) return;
-        const elements = (this.definition.elements || []).filter(item => Number(item.pageIndex || 0) === page.index);
-        layer.innerHTML = elements.length ? elements.map(item => {
+        const pageElements = elements.filter(item => Number(item.pageIndex || 0) === page.index);
+        layer.innerHTML = pageElements.length ? pageElements.map(item => {
           const style = 'left:' + Number(item.x || 0) + 'mm;top:' + Number(item.y || 0) + 'mm;width:' + Number(item.width || 30) +
             'mm;height:' + Number(item.height || 15) + 'mm;font-size:' + Number(item.fontSize || 12) + 'pt;text-align:' + this.esc(item.align || 'right') + ';color:' + this.esc(item.color || 'black') + ';background:' + this.esc(item.background || 'transparent');
           const selected = String(item.id) === String(this.selectedElementId) ? ' is-selected' : '';
@@ -420,7 +406,7 @@
           return '<div class="pt-canvas-element pt-element-' + this.esc(item.type) + selected + '" data-pt-element="' + this.esc(item.id) +
             '" style="' + style + '"><div class="pt-element-content">' + label + '</div>' +
             (selected ? '<button type="button" data-pt-resize aria-label="تغییر اندازه"></button>' : '') + '</div>';
-        }).join('') : (this.pdfDocument ? '' : '<div class="pt-canvas-empty">برای شروع، از نوار ابزار یک المان اضافه کن.</div>');
+        }).join('') : '<div class="pt-canvas-empty">برای شروع، از نوار ابزار یک المان اضافه کن.</div>';
       });
       this.renderPageTabs(pageSpecs.length);
     },
@@ -438,202 +424,6 @@
         if (page) page.scrollIntoView({behavior:'smooth',block:'center'});
         this.renderPageTabs(count);
       }));
-    },
-    renderPdfBackgrounds: async function () {
-      const version = this.pdfRenderVersion;
-      const root = document.getElementById('pt-design-canvas');
-      if (!root || !this.pdfDocument) return;
-      if (this.pdfPageObserver) this.pdfPageObserver.disconnect();
-      const renderPage = async (pageNode) => {
-        const index = Number(pageNode.dataset.pageIndex || 0);
-        const canvas = pageNode.querySelector('.pt-pdf-background');
-        if (!canvas || canvas.dataset.rendered === '1' || canvas.dataset.rendering === '1') return;
-        canvas.dataset.rendering = '1';
-        try {
-          const page = await this.pdfDocument.getPage(index + 1);
-          if (version !== this.pdfRenderVersion) return;
-          const previewScale = Math.max(1, Math.min(2, Number(window.devicePixelRatio) || 1));
-          const viewport = page.getViewport({scale:previewScale});
-          canvas.width = Math.ceil(viewport.width);
-          canvas.height = Math.ceil(viewport.height);
-          canvas.style.width = '100%';
-          canvas.style.height = '100%';
-          const context = canvas.getContext('2d', {alpha:false});
-          await page.render({canvasContext:context,viewport:viewport}).promise;
-          if (version === this.pdfRenderVersion) canvas.dataset.rendered = '1';
-        } catch (error) {
-          this.setStatus('pt-pdf-status', 'نمایش صفحه ' + (index + 1) + ' از PDF ناموفق بود.', true);
-        } finally {
-          canvas.dataset.rendering = '0';
-        }
-      };
-      if (window.IntersectionObserver) {
-        const scrollRoot = root.closest('.pt-canvas-scroll');
-        this.pdfPageObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            const canvas = entry.target.querySelector('.pt-pdf-background');
-            if (entry.isIntersecting) renderPage(entry.target);
-            else if (canvas && canvas.dataset.rendered === '1') {
-              canvas.width = 0; canvas.height = 0; canvas.dataset.rendered = '0';
-            }
-          });
-        }, {root:scrollRoot || null,rootMargin:'300px 0px',threshold:0.01});
-        root.querySelectorAll('.pt-design-page').forEach(pageNode => this.pdfPageObserver.observe(pageNode));
-      } else {
-        const pages = Array.from(root.querySelectorAll('.pt-design-page'));
-        for (const pageNode of pages) await renderPage(pageNode);
-      }
-    },
-    handlePdfFile: async function (file) {
-      if (!file) return;
-      if ((file.type && file.type !== 'application/pdf') || !/\.pdf$/i.test(file.name || '')) {
-        this.setStatus('pt-pdf-status', 'فقط فایل PDF داخلی برای پردازش پذیرفته می‌شود.', true);
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        this.setStatus('pt-pdf-status', 'حجم PDF نباید بیشتر از ۱۰ مگابایت باشد.', true);
-        return;
-      }
-      if (!window.pdfjsLib) {
-        this.setStatus('pt-pdf-status', 'کتابخانه نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن.', true);
-        return;
-      }
-      this.setStatus('pt-pdf-status', 'در حال بررسی صفحات فایل PDF…');
-      try {
-        const buffer = await file.arrayBuffer();
-        const pdf = await window.pdfjsLib.getDocument({data:new Uint8Array(buffer)}).promise;
-        if (pdf.numPages < 1 || pdf.numPages > 50) throw new Error('تعداد صفحات PDF باید بین ۱ تا ۵۰ صفحه باشد.');
-        const pages = [];
-        for (let index = 1; index <= pdf.numPages; index++) {
-          const page = await pdf.getPage(index);
-          const viewport = page.getViewport({scale:1});
-          pages.push({widthMm:Number((viewport.width * 25.4 / 72).toFixed(3)),
-            heightMm:Number((viewport.height * 25.4 / 72).toFixed(3)),rotation:Number(page.rotate || 0)});
-        }
-        this.pdfDocument = pdf;
-        this.pdfFile = file;
-        this.pdfRenderVersion++;
-        this.activePageIndex = 0;
-        this.definition = this.definition || this.blankDefinition();
-        this.definition.pdf = {pageCount:pages.length,pages:pages};
-        this.history = []; this.historyIndex = -1;
-        this.renderEditor(); this.commitHistory();
-        this.setStatus('pt-pdf-status', 'PDF آماده است: ' + file.name + ' · ' + pages.length + ' صفحه. برای ثبت دائمی، قالب را ذخیره کن.');
-      } catch (error) {
-        this.pdfFile = null;
-        this.setStatus('pt-pdf-status', error.message || 'خواندن فایل PDF ناموفق بود.', true);
-      }
-    },
-    loadExternalScript: function (src, globalName) {
-      if (window[globalName]) return Promise.resolve(window[globalName]);
-      const existing = document.querySelector('script[data-pt-loader="' + globalName + '"]');
-      if (existing) return new Promise((resolve, reject) => {
-        existing.addEventListener('load', () => resolve(window[globalName]), {once:true});
-        existing.addEventListener('error', () => reject(new Error('بارگذاری کتابخانه تحلیل سند ناموفق بود.')), {once:true});
-      });
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        script.dataset.ptLoader = globalName;
-        script.onload = () => window[globalName] ? resolve(window[globalName]) : reject(new Error('کتابخانه موردنیاز در دسترس نیست.'));
-        script.onerror = () => reject(new Error('بارگذاری کتابخانه تحلیل سند ناموفق بود.'));
-        document.head.appendChild(script);
-      });
-    },
-    imageFileToPdf: async function (file) {
-      if (file.size > 10 * 1024 * 1024) throw new Error('حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.');
-      await this.loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js', 'jspdf');
-      const image = await createImageBitmap(file);
-      try {
-        const extension = String(file.name || '').split('.').pop().toLowerCase();
-        const mime = String(file.type || '').toLowerCase();
-        let dataUrl = '';
-        let imageFormat = '';
-        if (mime === 'image/jpeg' || extension === 'jpg' || extension === 'jpeg') {
-          // Embed the original JPEG bytes: no downscaling and no second lossy encode.
-          dataUrl = 'data:image/jpeg;base64,' + await this.fileToBase64(file);
-          imageFormat = 'JPEG';
-        } else if (mime === 'image/png' || extension === 'png') {
-          // PNG is embedded losslessly, retaining fine text and thin table borders.
-          dataUrl = 'data:image/png;base64,' + await this.fileToBase64(file);
-          imageFormat = 'PNG';
-        } else if (mime === 'image/webp' || extension === 'webp') {
-          // jsPDF has no reliable native WebP decoder; convert at native pixel dimensions.
-          if (image.width * image.height > 30000000) throw new Error('ابعاد تصویر WebP برای تبدیل مستقیم بیش از حد بزرگ است؛ لطفاً نسخه PNG یا JPG همان تصویر را انتخاب کن.');
-          const canvas = document.createElement('canvas');
-          canvas.width = image.width;
-          canvas.height = image.height;
-          const context = canvas.getContext('2d', {alpha:false});
-          if (!context) throw new Error('آماده‌سازی تصویر در این مرورگر ممکن نیست.');
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, canvas.width, canvas.height);
-          context.drawImage(image, 0, 0, canvas.width, canvas.height);
-          dataUrl = canvas.toDataURL('image/png');
-          imageFormat = 'PNG';
-          canvas.width = 0;
-          canvas.height = 0;
-        } else {
-          throw new Error('فرمت تصویر پشتیبانی نمی‌شود؛ از JPG، PNG یا WebP استفاده کن.');
-        }
-        // 300 DPI defines a practical print size; source pixels are never reduced.
-        const widthMm = Number((image.width * 25.4 / 300).toFixed(3));
-        const heightMm = Number((image.height * 25.4 / 300).toFixed(3));
-        const orientation = widthMm > heightMm ? 'landscape' : 'portrait';
-        const pdf = new window.jspdf.jsPDF({orientation:orientation,unit:'mm',format:[widthMm,heightMm],compress:true});
-        pdf.addImage(dataUrl,imageFormat,0,0,widthMm,heightMm,undefined,'FAST');
-        const blob = pdf.output('blob');
-        if (blob.size > 10 * 1024 * 1024) throw new Error('حجم PDF حاصل از تصویر بیش از سقف ۱۰ مگابایت است؛ لطفاً فایل را با فرمت JPG با کیفیت اصلی یا PDF اسکنر وارد کن.');
-        const name = String(file.name || 'factory-form').replace(/\.[^.]+$/,'') + '.pdf';
-        return new File([blob],name,{type:'application/pdf',lastModified:Date.now()});
-      } finally {
-        if (image && typeof image.close === 'function') image.close();
-      }
-    },
-    handleImportFile: async function (file) {
-      if (!file) return;
-      const name = String(file.name || '');
-      const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(name);
-      const isImage = /^image\/(jpeg|png|webp)$/i.test(file.type || '') || /\.(jpe?g|png|webp)$/i.test(name);
-      if (isPdf) return this.handlePdfFile(file);
-      if (!isImage) {
-        this.setStatus('pt-pdf-status','فرمت مجاز: PDF، JPG، PNG یا WebP.',true);
-        return;
-      }
-      const input = document.getElementById('pt-pdf-file');
-      this.setStatus('pt-pdf-status','در حال تبدیل تصویر به سند PDF برای حفظ کیفیت و استفاده از مسیر ذخیره‌سازی امن…');
-      try {
-        const pdfFile = await this.imageFileToPdf(file);
-        if (input) input.dataset.originalImageName = name;
-        await this.handlePdfFile(pdfFile);
-        if (this.pdfDocument) this.setStatus('pt-pdf-status','تصویر به‌عنوان پس‌زمینه PDF آماده شد؛ محل فیلدها را با ابزارهای دستی قالب‌ساز اضافه کن.');
-      } catch (error) {
-        this.setStatus('pt-pdf-status',error.message || 'تبدیل تصویر ناموفق بود.',true);
-      }
-    },
-    loadTemplatePdf: async function (templateId, metadata) {
-      if (!metadata || !metadata.HasFile) return;
-      if (!window.pdfjsLib) throw new Error('کتابخانه نمایش PDF بارگذاری نشده است.');
-      this.setStatus('pt-pdf-status', 'در حال دریافت PDF ذخیره‌شده…');
-      const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(templateId) + '/pdf', {trackSync:false});
-      const file = this.extract(response) || {};
-      const binary = atob(String(file.base64 || '').replace(/^data:[^,]*;base64,/, ''));
-      const bytes = new Uint8Array(binary.length);
-      for (let index=0; index<binary.length; index++) bytes[index] = binary.charCodeAt(index);
-      const pdf = await window.pdfjsLib.getDocument({data:bytes}).promise;
-      if (pdf.numPages > 50) throw new Error('تعداد صفحات PDF از سقف مجاز بیشتر است.');
-      const pages = [];
-      for (let index=1; index<=pdf.numPages; index++) {
-        const page = await pdf.getPage(index);
-        const viewport = page.getViewport({scale:1});
-        pages.push({widthMm:Number((viewport.width*25.4/72).toFixed(3)),heightMm:Number((viewport.height*25.4/72).toFixed(3)),rotation:Number(page.rotate||0)});
-      }
-      this.pdfDocument = pdf;
-      this.pdfFile = null;
-      this.pdfRenderVersion++;
-      this.definition.pdf = {pageCount:pages.length,pages:pages};
-      this.activePageIndex = 0;
-      this.setStatus('pt-pdf-status', 'PDF ذخیره‌شده بارگذاری شد: ' + (file.fileName || metadata.FileName || 'قالب') + ' · ' + pages.length + ' صفحه.');
     },
     fileToBase64: async function (file) {
       const bytes = new Uint8Array(await file.arrayBuffer());
@@ -686,9 +476,6 @@
       if (resetSecondary) resetSecondary.addEventListener('click', () => this.resetForm());
       this.bindEditor();
       this.bindLivePreview();
-      const pdfInput = document.getElementById('pt-pdf-file');
-      if (pdfInput) pdfInput.addEventListener('change', () => this.handleImportFile(pdfInput.files && pdfInput.files[0]));
-      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       await this.loadLibrary();
       this.loadOutputMargins();
       await this.loadLivePreviewProjects();
@@ -808,9 +595,7 @@
       const form = document.getElementById('pt-template-form');
       if (form) form.reset();
       this.editingId = '';
-      if (this.pdfPageObserver) this.pdfPageObserver.disconnect();
-      this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
-      const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) { pdfInput.value = ''; delete pdfInput.dataset.originalImageName; }
+      this.activePageIndex = 0;
       this.definition = this.blankDefinition();
       this.currentTemplateMeta = null;
       this.pendingImageFiles = Object.create(null);
@@ -834,10 +619,7 @@
         this.editingId = item.ID;
         this.currentTemplateMeta = item;
         this.definition = item.Definition || this.blankDefinition();
-        this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
-        if (item.Pdf && item.Pdf.HasFile) await this.loadTemplatePdf(item.ID, item.Pdf);
         await this.loadTemplateImages(item, this.definition);
-        const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) pdfInput.value = '';
         this.history = []; this.historyIndex = -1; this.selectedElementId = '';
         document.getElementById('pt-template-code').value = item.Code || '';
         document.getElementById('pt-template-code').disabled = true;
@@ -873,22 +655,14 @@
         if (wasNew) {
           const initialDefinition = JSON.parse(JSON.stringify(this.definition));
           initialDefinition.elements = (initialDefinition.elements || []).filter(element => element.type !== 'image' || element.assetId);
-          const createBody = Object.assign({}, body, {Definition:this.pdfFile ? this.blankDefinition() : initialDefinition});
-          const created = await PMS.Api.post('/print-templates', createBody);
+          const created = await PMS.Api.post('/print-templates', Object.assign({}, body, {Definition:initialDefinition}));
           const createdData = this.extract(created) || {};
           templateId = createdData.ID;
           if (!templateId) throw new Error('قالب ایجاد شد اما شناسه آن دریافت نشد.');
           this.editingId = templateId;
         }
         if (pendingIds.length) await this.uploadPendingImages(templateId);
-        if (this.pdfFile) {
-          await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/pdf', {
-            fileName: this.pdfFile.name, mimeType: 'application/pdf',
-            base64: await this.fileToBase64(this.pdfFile),
-            pageCount: Number(this.definition.pdf && this.definition.pdf.pages ? this.definition.pdf.pages.length : 0),
-            Definition: this.definition
-          });
-        } else if (!wasNew || pendingIds.length) {
+        if (!wasNew || pendingIds.length) {
           await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), Object.assign({},body,{Definition:this.definition}));
         }
         this.resetForm();
@@ -915,7 +689,6 @@
       const downloadButton = document.getElementById('pt-output-download');
       if (button) button.addEventListener('click', () => this.resolveOutput());
       if (printButton) printButton.addEventListener('click', () => this.printOutput());
-      if (downloadButton) downloadButton.addEventListener('click', () => this.downloadOutputPdf());
       this.loadOutputMargins();
       ['top','bottom','right','left'].forEach(side => {
         const input = document.getElementById('pt-margin-' + side);
@@ -1048,25 +821,10 @@
         expand.addEventListener('click', () => this.toggleLivePreviewExpanded());
       }
     },
-    clearLivePreviewPdf: function () {
-      this.livePreviewPdfBlob = null;
-    },
     printLivePreview: async function () {
       const root = document.getElementById('pt-live-preview-content');
       if (!this.livePreviewReady || !root) {
         this.setStatus('pt-live-preview-status', 'ابتدا یک پروژه انتخاب کن و منتظر تکمیل پیش‌نمایش بمان.', true);
-        return;
-      }
-      if (this.livePreviewPdfBlob) {
-        const printUrl = window.URL.createObjectURL(this.livePreviewPdfBlob);
-        const opened = window.open(printUrl, '_blank');
-        if (opened) {
-          window.setTimeout(() => window.URL.revokeObjectURL(printUrl), 600000);
-          this.setStatus('pt-live-preview-status', 'PDF نهایی باز شد؛ از گزینه چاپ در نمایشگر PDF استفاده کن.');
-        } else {
-          window.URL.revokeObjectURL(printUrl);
-          this.setStatus('pt-live-preview-status', 'مرورگر بازکردن PDF را مسدود کرد؛ اجازه بازشدن پنجره را بده و دوباره تلاش کن.', true);
-        }
         return;
       }
       let printStyle = document.getElementById('pt-live-preview-page-rule');
@@ -1134,39 +892,22 @@
       const definition = this.createLivePreviewDefinition();
       this.setStatus('pt-live-preview-status', 'در حال دریافت اطلاعات پروژه و ساخت خروجی زنده…');
       try {
-        const response = await PMS.Api.post('/print-templates/preview', {
-          ProjectID: projectId,
-          Definition: definition
-        });
+        const response = await PMS.Api.post('/print-templates/preview', {ProjectID:projectId,Definition:definition});
         if (requestId !== this.livePreviewSequence) return;
         const result = this.extract(response) || {};
-        const project = result.project || {};
-        const data = result.data || {};
-        const meta = this.currentTemplateMeta || {};
-        const hasSourcePdf = !!(this.pdfFile || (meta.Pdf && meta.Pdf.HasFile));
         const template = {
           ID: this.editingId || '',
-          Code: (document.getElementById('pt-template-code') || {}).value || meta.Code || '',
-          Name: (document.getElementById('pt-template-name') || {}).value || meta.Name || '',
+          Code: (document.getElementById('pt-template-code') || {}).value || (this.currentTemplateMeta || {}).Code || '',
+          Name: (document.getElementById('pt-template-name') || {}).value || (this.currentTemplateMeta || {}).Name || '',
           Definition: definition,
-          Pdf: { HasFile: hasSourcePdf },
-          Images: Array.isArray(meta.Images) ? meta.Images : []
+          Images: Array.isArray((this.currentTemplateMeta || {}).Images) ? this.currentTemplateMeta.Images : []
         };
-        if (hasSourcePdf) {
-          const outputBlob = await this.generateSourcePdfOutput(template, project, data);
-          if (requestId !== this.livePreviewSequence) return;
-          this.clearLivePreviewPdf();
-          this.livePreviewPdfBlob = outputBlob;
-          await this.renderFinalPdfPreview(outputBlob, 'pt-live-preview-content');
-        } else {
-          this.clearLivePreviewPdf();
-          const outputHtml = await this.renderOutputDocument(template, project, data);
-          if (requestId !== this.livePreviewSequence) return;
-          root.innerHTML = outputHtml;
-          await Promise.all(Array.from(root.querySelectorAll('img')).map(image =>
-            image.decode ? image.decode().catch(() => {}) : Promise.resolve()
-          ));
-        }
+        const outputHtml = await this.renderOutputDocument(template, result.project || {}, result.data || {});
+        if (requestId !== this.livePreviewSequence) return;
+        root.innerHTML = outputHtml;
+        await Promise.all(Array.from(root.querySelectorAll('img')).map(image =>
+          image.decode ? image.decode().catch(() => {}) : Promise.resolve()
+        ));
         if (requestId === this.livePreviewSequence) {
           this.livePreviewReady = true;
           if (printButton) printButton.disabled = false;
@@ -1175,7 +916,6 @@
       } catch (error) {
         if (requestId === this.livePreviewSequence) {
           this.livePreviewReady = false;
-          this.clearLivePreviewPdf();
           if (printButton) printButton.disabled = true;
           this.setStatus('pt-live-preview-status', error.message || 'ساخت پیش‌نمایش زنده ناموفق بود.', true);
           root.innerHTML = '<div class="pt-empty-state">پیش‌نمایش ساخته نشد؛ طراحی و تغییرات شما محفوظ است.</div>';
@@ -1241,355 +981,17 @@
       if (mime.indexOf('image/') !== 0) throw new Error('فایل متصل‌شده تصویر معتبر نیست.');
       return 'data:' + mime + ';base64,' + String(base64).replace(/^data:[^,]*;base64,/, '');
     },
-    getPdfRenderScale: function (viewport,dpi) {
-      const width=Math.max(1,Number(viewport&&viewport.width)||1);
-      const height=Math.max(1,Number(viewport&&viewport.height)||1);
-      const targetScale=Math.max(72,Number(dpi)||300)/72;
-      const maxPixels=12000000;
-      const pixelLimitScale=Math.sqrt(maxPixels/(width*height));
-      return Math.max(0.5,Math.min(targetScale,pixelLimitScale));
-    },
-    clearOutputPdfObjectUrls: function () {
-      (this.outputPdfObjectUrls||[]).forEach(url=>{try{window.URL.revokeObjectURL(url);}catch(_){}});
-      this.outputPdfObjectUrls=[];
-    },
-    clearGeneratedOutputPdf: function () {
-      if (this.outputPdfBlobUrl) {
-        try { window.URL.revokeObjectURL(this.outputPdfBlobUrl); } catch (_) {}
-      }
-      this.outputPdfBlobUrl = '';
-      this.outputPdfFileName = 'PMS-document.pdf';
-      this.outputPdfPreviewWarning = '';
-    },
-    fetchOutputPdfBytes: async function (templateId, localFile) {
-      let bytes;
-      if (localFile && typeof localFile.arrayBuffer === 'function') {
-        bytes = new Uint8Array(await localFile.arrayBuffer());
-      } else {
-        if (!templateId) throw new Error('شناسه قالب برای دریافت PDF ذخیره‌شده موجود نیست.');
-        const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(templateId) + '/pdf', { trackSync: false });
-        const file = this.extract(response) || {};
-        const base64 = String(file.base64 || file.Base64 || '').replace(/^data:application\/pdf;base64,/i, '').replace(/\s/g, '');
-        if (!base64) throw new Error('فایل PDF اصلی از فضای ذخیره‌سازی دریافت نشد.');
-        const binary = window.atob(base64);
-        bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      }
-      if (!bytes.length || bytes[0] !== 0x25 || bytes[1] !== 0x50 || bytes[2] !== 0x44 || bytes[3] !== 0x46) {
-        throw new Error('فایل دریافت‌شده، PDF معتبر نیست.');
-      }
-      return bytes;
-    },
-    getPdfOverlayPlacement: function (page, PDFLib, expectedPage) {
-      const crop = page.getCropBox();
-      const rotation = ((Number(page.getRotation().angle) % 360) + 360) % 360;
-      const quarterTurn = rotation === 90 || rotation === 270;
-      const displayWidth = quarterTurn ? crop.height : crop.width;
-      const displayHeight = quarterTurn ? crop.width : crop.height;
-      const expectedWidth = Number(expectedPage.width) * 72 / 25.4;
-      const expectedHeight = Number(expectedPage.height) * 72 / 25.4;
-      if (Math.abs(displayWidth - expectedWidth) > 2 || Math.abs(displayHeight - expectedHeight) > 2) {
-        throw new Error('ابعاد یا چرخش صفحه PDF با مشخصات قالب هم‌خوانی ندارد؛ برای جلوگیری از جابه‌جایی اطلاعات، خروجی متوقف شد.');
-      }
-      let options = { x: crop.x, y: crop.y, width: crop.width, height: crop.height };
-      if (rotation === 90) {
-        options = {
-          x: crop.x + (crop.width - crop.height) / 2,
-          y: crop.y + (crop.height - crop.width) / 2,
-          width: crop.height, height: crop.width, rotate: PDFLib.degrees(-90)
-        };
-      } else if (rotation === 180) {
-        options.rotate = PDFLib.degrees(180);
-      } else if (rotation === 270) {
-        options = {
-          x: crop.x + (crop.width - crop.height) / 2,
-          y: crop.y + (crop.height - crop.width) / 2,
-          width: crop.height, height: crop.width, rotate: PDFLib.degrees(90)
-        };
-      }
-      return options;
-    },
-    drawPdfOverlayOnSourcePage: function (page, image, PDFLib, expectedPage) {
-      page.drawImage(image, this.getPdfOverlayPlacement(page, PDFLib, expectedPage));
-    },
-    drawPdfOverlayPageOnSourcePage: function (page, overlayPage, PDFLib, expectedPage) {
-      page.drawPage(overlayPage, this.getPdfOverlayPlacement(page, PDFLib, expectedPage));
-    },
-    getImageBytesForPdf: async function (dataUrl) {
-      const match = String(dataUrl || '').match(/^data:(image\/[a-z0-9.+-]+);base64,([\s\S]+)$/i);
-      if (!match) throw new Error('فایل تصویر اصلی برای درج در PDF معتبر نیست.');
-      const mime = match[1].toLowerCase();
-      const binary = window.atob(match[2].replace(/\s/g, ''));
-      const originalBytes = new Uint8Array(binary.length);
-      for (let index = 0; index < binary.length; index++) originalBytes[index] = binary.charCodeAt(index);
-      if (mime === 'image/jpeg' || mime === 'image/png') return { mime: mime, bytes: originalBytes };
-      if (mime !== 'image/webp') throw new Error('فرمت تصویر برای درج مستقیم در PDF پشتیبانی نمی‌شود.');
-      const image = new Image();
-      image.src = dataUrl;
-      if (typeof image.decode === 'function') await image.decode();
-      else await new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = () => reject(new Error('خواندن تصویر WebP برای تبدیل lossless ناموفق بود.'));
-      });
-      const width = Number(image.naturalWidth || image.width);
-      const height = Number(image.naturalHeight || image.height);
-      if (!width || !height) throw new Error('ابعاد تصویر WebP معتبر نیست.');
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      try {
-        const context = canvas.getContext('2d', { alpha: true });
-        if (!context) throw new Error('مرورگر امکان تبدیل lossless تصویر WebP را ندارد.');
-        context.drawImage(image, 0, 0, width, height);
-        const png = await new Promise((resolve, reject) => {
-          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('تبدیل lossless تصویر WebP ناموفق بود.')), 'image/png');
-        });
-        return { mime: 'image/png', bytes: new Uint8Array(await png.arrayBuffer()) };
-      } finally {
-        canvas.width = 0;
-        canvas.height = 0;
-      }
-    },
-    drawTemplateImageOnSourcePage: async function (pdfDocument, page, item, pageSpec, PDFLib) {
-      const source = this.imageSources && this.imageSources[item.assetId || item.id];
-      if (!source) throw new Error('فایل اصلی تصویر قالب در دسترس نیست: ' + (item.fileName || item.assetId || 'تصویر'));
-      const imageData = await this.getImageBytesForPdf(source);
-      const overlayDocument = await PDFLib.PDFDocument.create();
-      const pageWidth = Number(pageSpec.width) * 72 / 25.4;
-      const pageHeight = Number(pageSpec.height) * 72 / 25.4;
-      if (!(pageWidth > 0 && pageHeight > 0)) throw new Error('ابعاد صفحه برای درج تصویر معتبر نیست.');
-      const overlayPage = overlayDocument.addPage([pageWidth, pageHeight]);
-      const embeddedImage = imageData.mime === 'image/jpeg'
-        ? await overlayDocument.embedJpg(imageData.bytes)
-        : await overlayDocument.embedPng(imageData.bytes);
-      const mmToPt = 72 / 25.4;
-      const frameX = Number(item.x || 0) * mmToPt;
-      const frameY = Number(item.y || 0) * mmToPt;
-      const frameWidth = Math.max(0.1, Number(item.width || 30) * mmToPt);
-      const frameHeight = Math.max(0.1, Number(item.height || 15) * mmToPt);
-      const ratio = embeddedImage.width / Math.max(1, embeddedImage.height);
-      let drawWidth = frameWidth;
-      let drawHeight = frameHeight;
-      if (String(item.fit || 'contain').toLowerCase() === 'contain') {
-        drawWidth = Math.min(frameWidth, frameHeight * ratio);
-        drawHeight = drawWidth / ratio;
-      }
-      const x = frameX + (frameWidth - drawWidth) / 2;
-      const y = pageHeight - frameY - frameHeight + (frameHeight - drawHeight) / 2;
-      overlayPage.drawImage(embeddedImage, { x: x, y: y, width: drawWidth, height: drawHeight });
-      const embeddedPages = await pdfDocument.embedPdf(await overlayDocument.save());
-      if (!embeddedPages || !embeddedPages[0]) throw new Error('درج تصویر اصلی در PDF ناموفق بود.');
-      this.drawPdfOverlayPageOnSourcePage(page, embeddedPages[0], PDFLib, pageSpec);
-    },
-    renderPdfOverlaySegment: async function (node, visibleElements, html2canvas, pdfDocument, page, pageSpec, PDFLib, scale, cssWidth, cssHeight) {
-      if (!visibleElements || !visibleElements.length) return;
-      const allElements = Array.from(node.querySelectorAll('.pt-output-element'));
-      const previousVisibility = allElements.map(element => element.style.visibility);
-      try {
-        allElements.forEach(element => { element.style.visibility = 'hidden'; });
-        visibleElements.forEach(element => {
-          const index = allElements.indexOf(element);
-          if (index >= 0) element.style.visibility = previousVisibility[index];
-        });
-        const canvas = await html2canvas(node, {
-          backgroundColor: null, scale: scale, logging: false, useCORS: false,
-          width: Math.ceil(cssWidth), height: Math.ceil(cssHeight),
-          windowWidth: Math.max(window.innerWidth, Math.ceil(cssWidth)),
-          windowHeight: Math.max(window.innerHeight, Math.ceil(cssHeight))
-        });
-        try {
-          const png = await new Promise((resolve, reject) => {
-            if (typeof canvas.toBlob !== 'function') {
-              reject(new Error('مرورگر امکان آماده‌سازی لایه اطلاعاتی PDF را ندارد.'));
-              return;
-            }
-            canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('ساخت لایه اطلاعاتی صفحه ناموفق بود.')), 'image/png');
-          });
-          const pngBytes = new Uint8Array(await png.arrayBuffer());
-          const overlayImage = await pdfDocument.embedPng(pngBytes);
-          this.drawPdfOverlayOnSourcePage(page, overlayImage, PDFLib, pageSpec);
-        } finally {
-          canvas.width = 0;
-          canvas.height = 0;
-        }
-      } finally {
-        allElements.forEach((element, index) => { element.style.visibility = previousVisibility[index]; });
-      }
-    },
-    generateSourcePdfOutput: async function (template, project, data) {
-      if (!template || (!template.ID && !this.pdfFile) || !template.Definition || !template.Definition.pdf ||
-          !Array.isArray(template.Definition.pdf.pages) || !template.Definition.pdf.pages.length) {
-        throw new Error('مشخصات PDF اصلی قالب کامل نیست؛ قالب را دوباره ذخیره کن.');
-      }
-      const PDFLib = await this.loadExternalScript('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', 'PDFLib');
-      const html2canvas = await this.loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas');
-      if (!PDFLib || !PDFLib.PDFDocument || typeof html2canvas !== 'function') {
-        throw new Error('موتور ساخت PDF با حفظ سند اصلی در دسترس نیست.');
-      }
-      this.setStatus('pt-output-status', 'در حال دریافت PDF اصلی و آماده‌سازی لایه اطلاعات…');
-      const sourceBytes = await this.fetchOutputPdfBytes(template.ID, this.pdfFile);
-      const pdfDocument = await PDFLib.PDFDocument.load(sourceBytes);
-      const sourcePages = pdfDocument.getPages();
-      const pageMetadata = template.Definition.pdf.pages;
-      if (sourcePages.length !== pageMetadata.length) {
-        throw new Error('تعداد صفحات PDF اصلی با مشخصات قالب یکسان نیست؛ قالب را دوباره ذخیره کن.');
-      }
-      const host = document.createElement('div');
-      host.className = 'pt-output-overlay-render-host';
-      host.style.cssText = 'position:fixed;left:-100000px;top:0;z-index:-1;display:block;width:max-content;direction:rtl;background:transparent;pointer-events:none;';
-      try {
-        host.innerHTML = await this.renderOutputDocument(template, project, data, { overlayOnly: true });
-        document.body.appendChild(host);
-        if (document.fonts && document.fonts.ready) await document.fonts.ready;
-        const attachedImages = Array.from(host.querySelectorAll('img'));
-        await Promise.all(attachedImages.map(image => image.decode ? image.decode() : Promise.resolve()));
-        const overlayNodes = Array.from(host.querySelectorAll('.pt-print-page'));
-        if (overlayNodes.length !== sourcePages.length) {
-          throw new Error('تعداد لایه‌های اطلاعاتی با تعداد صفحات PDF اصلی برابر نیست.');
-        }
-        for (let index = 0; index < sourcePages.length; index++) {
-          this.setStatus('pt-output-status', 'در حال افزودن اطلاعات و تصاویر اصلی به صفحه ' + (index + 1) + ' از ' + sourcePages.length + '…');
-          const node = overlayNodes[index];
-          const pageSpec = {
-            width: Number(pageMetadata[index].widthMm),
-            height: Number(pageMetadata[index].heightMm)
-          };
-          const rect = node.getBoundingClientRect();
-          const cssWidth = Math.max(1, rect.width);
-          const cssHeight = Math.max(1, rect.height);
-          const targetScale = 300 / 96;
-          const pixelLimitScale = Math.sqrt(12000000 / (cssWidth * cssHeight));
-          if (pixelLimitScale < 0.5) throw new Error('ابعاد این صفحه برای ساخت لایه باکیفیت در حافظه مرورگر بیش از حد بزرگ است.');
-          const scale = Math.max(0.5, Math.min(targetScale, pixelLimitScale));
-          const elements = Array.from(node.querySelectorAll('.pt-output-element'));
-          const definitionElements = Array.isArray(template.Definition.elements) ? template.Definition.elements : [];
-          let segment = [];
-          for (const element of elements) {
-            if (element.getAttribute('data-pt-template-image') === 'true') {
-              await this.renderPdfOverlaySegment(node, segment, html2canvas, pdfDocument, sourcePages[index], pageSpec, PDFLib, scale, cssWidth, cssHeight);
-              segment = [];
-              const elementId = element.getAttribute('data-pt-element-id');
-              const imageItem = definitionElements.find(item => String(item.id) === String(elementId));
-              if (!imageItem || !(imageItem.assetId || this.pendingImageFiles[elementId])) throw new Error('مشخصات تصویر مستقل قالب برای خروجی PDF پیدا نشد.');
-              await this.drawTemplateImageOnSourcePage(pdfDocument, sourcePages[index], imageItem, pageSpec, PDFLib);
-            } else {
-              segment.push(element);
-            }
-          }
-          await this.renderPdfOverlaySegment(node, segment, html2canvas, pdfDocument, sourcePages[index], pageSpec, PDFLib, scale, cssWidth, cssHeight);
-        }
-        this.setStatus('pt-output-status', 'در حال ذخیره PDF نهایی با حفظ صفحات اصلی…');
-        const outputBytes = await pdfDocument.save({ useObjectStreams: true });
-        return new Blob([outputBytes], { type: 'application/pdf' });
-      } finally {
-        if (host.parentNode) host.parentNode.removeChild(host);
-      }
-    },
-    renderFinalPdfPreview: async function (blob, rootId) {
-      if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== 'function') {
-        throw new Error('موتور پیش‌نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن.');
-      }
-      const root = document.getElementById(rootId || 'pt-output-preview');
-      if (!root) return;
-      root.innerHTML = '';
-      const bytes = new Uint8Array(await blob.arrayBuffer());
-      const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
-      try {
-        for (let number = 1; number <= pdf.numPages; number++) {
-          const page = await pdf.getPage(number);
-          const base = page.getViewport({ scale: 1 });
-          const pixelLimitScale = Math.sqrt(3000000 / Math.max(1, base.width * base.height));
-          const scale = Math.max(0.2, Math.min(1.25, 900 / Math.max(1, base.width), pixelLimitScale));
-          const viewport = page.getViewport({ scale: scale });
-          const canvas = document.createElement('canvas');
-          canvas.className = 'pt-output-final-page';
-          canvas.width = Math.ceil(viewport.width);
-          canvas.height = Math.ceil(viewport.height);
-          const context = canvas.getContext('2d', { alpha: false });
-          if (!context) throw new Error('ساخت پیش‌نمایش PDF ناموفق بود.');
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, canvas.width, canvas.height);
-          await page.render({ canvasContext: context, viewport: viewport }).promise;
-          root.appendChild(canvas);
-          if (typeof page.cleanup === 'function') page.cleanup();
-        }
-      } finally {
-        if (typeof pdf.destroy === 'function') await pdf.destroy();
-      }
-    },
-    downloadOutputPdf: function () {
-      if (!this.outputPdfBlobUrl) {
-        this.setStatus('pt-output-status', 'ابتدا پیش‌نمایش سند را بساز.', true);
-        return;
-      }
-      const link = document.createElement('a');
-      link.href = this.outputPdfBlobUrl;
-      link.download = this.outputPdfFileName || 'PMS-document.pdf';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    },
-    loadOutputPdfPages: async function (templateId, definition) {
-      const metadata=definition&&definition.pdf;
-      if(!metadata||!Array.isArray(metadata.pages)||!metadata.pages.length)return null;
-      if(!window.pdfjsLib||typeof window.pdfjsLib.getDocument!=='function')throw new Error('موتور نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن و دوباره تلاش کن.');
-      const response=await PMS.Api.get('/print-templates/'+encodeURIComponent(templateId)+'/pdf',{trackSync:false});
-      const file=this.extract(response)||{};
-      const base64=String(file.base64||file.Base64||'').replace(/^data:application\/pdf;base64,/i,'').replace(/\s/g,'');
-      if(!base64)throw new Error('فایل پس‌زمینه PDF از فضای ذخیره‌سازی دریافت نشد.');
-      const binary=window.atob(base64),bytes=new Uint8Array(binary.length);
-      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-      const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
-      if(pdf.numPages!==metadata.pages.length)throw new Error('تعداد صفحات فایل PDF با مشخصات قالب یکسان نیست؛ قالب را دوباره ذخیره کن.');
-      const rendered=[];
-      try {
-        for(let pageNumber=1;pageNumber<=pdf.numPages;pageNumber++){
-          const page=await pdf.getPage(pageNumber),baseViewport=page.getViewport({scale:1});
-          const scale=this.getPdfRenderScale(baseViewport,300),viewport=page.getViewport({scale:scale});
-          const canvas=document.createElement('canvas');
-          try {
-            canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
-            const context=canvas.getContext('2d',{alpha:false});
-            if(!context)throw new Error('امکان آماده‌سازی تصویر صفحه PDF وجود ندارد.');
-            context.fillStyle='#ffffff';context.fillRect(0,0,canvas.width,canvas.height);
-            await page.render({canvasContext:context,viewport:viewport}).promise;
-            const blob=await new Promise((resolve,reject)=>{
-              if(typeof canvas.toBlob!=='function'){reject(new Error('مرورگر امکان آماده‌سازی تصویر باکیفیت PDF را ندارد؛ لطفاً مرورگر را به‌روز کن.'));return;}
-              canvas.toBlob(result=>result?resolve(result):reject(new Error('ساخت تصویر صفحه PDF ناموفق بود.')),'image/png');
-            });
-            const background=window.URL.createObjectURL(blob);
-            this.outputPdfObjectUrls.push(background);
-            const pageMeta=metadata.pages[pageNumber-1]||{};
-            rendered.push({width:Number(pageMeta.widthMm)||(baseViewport.width*25.4/72),
-              height:Number(pageMeta.heightMm)||(baseViewport.height*25.4/72),background:background});
-          } finally {
-            canvas.width=0;canvas.height=0;
-            if(typeof page.cleanup==='function')page.cleanup();
-          }
-        }
-        return rendered;
-      } catch(error) {
-        this.clearOutputPdfObjectUrls();
-        throw error;
-      } finally {
-        if(typeof pdf.destroy==='function')await pdf.destroy();
-      }
-    },
-    renderOutputDocument: async function (template, project, data, options) {
-      this.clearOutputPdfObjectUrls();
+    renderOutputDocument: async function (template, project, data) {
       const definition = template && template.Definition ? template.Definition : {};
-      const overlayOnly = !!(options && options.overlayOnly);
       await this.loadTemplateImages(template, definition);
-      const pdfPages = !overlayOnly && template && template.Pdf && template.Pdf.HasFile
-        ? await this.loadOutputPdfPages(template.ID, definition) : null;
       const page = definition.page || {};
       const sizes = {A4:[210,297],A5:[148,210],LETTER:[216,279]};
       const base = sizes[String(page.size || 'A4').toUpperCase()] || sizes.A4;
       const landscape = String(page.orientation || 'portrait').toLowerCase() === 'landscape';
-      const defaultSpec = { width: landscape ? base[1] : base[0], height: landscape ? base[0] : base[1] };
-      const pageSpecs = overlayOnly && definition.pdf && Array.isArray(definition.pdf.pages)
-        ? definition.pdf.pages.map(item => ({width:Number(item.widthMm),height:Number(item.heightMm)}))
-        : (pdfPages && pdfPages.length ? pdfPages.map(item => ({width:item.width,height:item.height})) : [defaultSpec]);
+      const defaultSpec = {width:landscape ? base[1] : base[0],height:landscape ? base[0] : base[1]};
+      const elementsList = Array.isArray(definition.elements) ? definition.elements : [];
+      const pageCount = Math.max(1, ...elementsList.map(item => Math.max(0, Number(item.pageIndex || 0)) + 1));
+      const pageSpecs = Array.from({length:pageCount}, () => Object.assign({},defaultSpec));
       this.outputPageSpecs = pageSpecs;
       this.outputPageSpec = pageSpecs[0];
       const bindings = Object.create(null);
@@ -1608,64 +1010,48 @@
               const src = await this.loadOutputImage(raw);
               image = '<img class="pt-output-image-content" src="' + src + '" alt="' + this.esc(imageAttachment.id) + '">';
             } catch (error) {
-              if (overlayOnly) throw error;
               image = '<div class="pt-output-image pt-output-image-error">بارگذاری تصویر ناموفق بود</div>';
             }
           } else if (item.type === 'image' && this.imageSources[item.assetId || item.id]) {
             image = '<img class="pt-output-image-content" src="' + this.esc(this.imageSources[item.assetId || item.id]) + '" alt="' + this.esc(item.fileName || 'تصویر قالب') + '">';
           } else if (item.type === 'image') {
-            if (overlayOnly) throw new Error('تصویر ثابت قالب بارگذاری نشده است: ' + (item.fileName || item.assetId || 'تصویر'));
             image = '<div class="pt-output-image pt-output-image-error">تصویر قالب در دسترس نیست</div>';
           } else {
             image = '<div class="pt-output-image pt-output-image-empty" aria-hidden="true"></div>';
           }
-          const directTemplateImage = item.type === 'image' && !!(item.assetId || this.pendingImageFiles[item.id]) && !imageAttachment;
           const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
-          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+image+'</div>';
+          return '<div class="pt-output-element pt-output-image-frame" style="' + imageStyle + '">' + image + '</div>';
         }
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
           const columns = item.columns || [];
           const tableRows = rows.map(row => {
             const cells = Array.isArray(row) ? row : (row && typeof row === 'object' ? Object.values(row) : [row]);
-            return '<tr>'+columns.map((_,i)=>'<td>'+this.esc(this.formatOutputValue(cells[i]))+'</td>').join('')+'</tr>';
+            return '<tr>' + columns.map((_,i) => '<td>' + this.esc(this.formatOutputValue(cells[i])) + '</td>').join('') + '</tr>';
           }).join('');
-          return '<div class="pt-output-element pt-output-table" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+          return '<div class="pt-output-element pt-output-table" style="' + style + '"><strong>' + this.esc(item.text || '') + '</strong><table><thead><tr>' + columns.map(col => '<th>' + this.esc(col) + '</th>').join('') + '</tr></thead><tbody>' + tableRows + '</tbody></table></div>';
         }
-        if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
-        if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
-        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" dir="auto" style="'+style+'">'+this.esc(value)+'</div>';
+        if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-' + item.type + '" style="' + style + '" aria-hidden="true"></div>';
+        if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-' + item.type + '" style="' + style + '" aria-hidden="true"></div>';
+        return '<div class="pt-output-element' + (item.type === 'field' ? ' pt-output-field' : '') + '" dir="auto" style="' + style + '">' + this.esc(value) + '</div>';
       };
       const pages = [];
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {
         const spec = pageSpecs[pageIndex];
-        const pageElements = (definition.elements || []).filter(item => Number(item.pageIndex || 0) === pageIndex);
+        const pageElements = elementsList.filter(item => Number(item.pageIndex || 0) === pageIndex);
         const elements = await Promise.all(pageElements.map(renderElement));
-        const background = pdfPages && pdfPages[pageIndex]
-          ? '<img class="pt-output-pdf-background" src="'+pdfPages[pageIndex].background+'" alt="" aria-hidden="true">'
-          : '';
-        // Fit the complete page (PDF background and all overlays) inside the mobile-safe
-        // paper area after applying the user's persistent top/bottom/left/right margins.
-        const margins = overlayOnly ? { top: 0, bottom: 0, right: 0, left: 0 } : (this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 });
-        const safeWidth = overlayOnly ? spec.width : 210;
-        const safeHeight = overlayOnly ? spec.height : 297;
+        const margins = this.outputMargins || {top:8,bottom:8,right:8,left:8};
+        const safeWidth = 210, safeHeight = 297;
         const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
-        const fitScale = overlayOnly ? 1 : Math.max(0.01, Math.min(availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height)));
-        const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm;left:'+margins.left+'mm;top:'+margins.top+'mm">'+background+elements.join('')+'</div>';
-        const pageStyle = 'width:'+spec.width+'mm;height:'+spec.height+'mm;--pt-print-scale:'+fitScale+
-          ';--pt-print-width:'+safeWidth+'mm;--pt-print-height:'+safeHeight+'mm';
-        pages.push('<article class="pt-print-page'+(pdfPages ? ' pt-has-pdf' : '')+'" data-page-index="'+pageIndex+'" style="'+pageStyle+'" dir="rtl">'+pageContent+'</article>');
+        const fitScale = Math.max(0.01, Math.min(availableWidth / Math.max(1,spec.width), availableHeight / Math.max(1,spec.height)));
+        const pageContent = '<div class="pt-print-page-content" style="width:' + spec.width + 'mm;height:' + spec.height + 'mm;left:' + margins.left + 'mm;top:' + margins.top + 'mm">' + elements.join('') + '</div>';
+        const pageStyle = 'width:' + spec.width + 'mm;height:' + spec.height + 'mm;--pt-print-scale:' + fitScale + ';--pt-print-width:' + safeWidth + 'mm;--pt-print-height:' + safeHeight + 'mm';
+        pages.push('<article class="pt-print-page" data-page-index="' + pageIndex + '" style="' + pageStyle + '" dir="rtl">' + pageContent + '</article>');
       }
       return pages.join('');
     },
     printOutput: async function () {
-      if (this.outputPdfBlobUrl) {
-        const opened = window.open(this.outputPdfBlobUrl, '_blank');
-        if (!opened) this.setStatus('pt-output-status', 'مرورگر پنجره PDF را مسدود کرد؛ از دکمه «دانلود PDF نهایی» استفاده کن.');
-        else this.setStatus('pt-output-status', 'PDF اصلی در نمایشگر مرورگر باز شد؛ از گزینه چاپ یا ذخیره همان نمایشگر استفاده کن.');
-        return;
-      }
       this.saveOutputMargins();
       let printStyle = document.getElementById('pt-output-page-rule');
       if (!printStyle) {
@@ -1673,8 +1059,6 @@
         printStyle.id = 'pt-output-page-rule';
         document.head.appendChild(printStyle);
       }
-      // Let the mobile print service choose its paper (often Letter); each PDF page is
-      // pre-fitted to a safe common printable area so no page can spill onto a second sheet.
       printStyle.textContent = '@page{size:A4 portrait;margin:0}';
       document.body.classList.add('pt-printing');
       const images = Array.from(document.querySelectorAll('#pt-output-preview img'));
@@ -1692,14 +1076,11 @@
       }
       const button = document.getElementById('pt-output-resolve');
       if (button) button.disabled = true;
-      const initialPrintButton = document.getElementById('pt-output-print');
-      const initialDownloadButton = document.getElementById('pt-output-download');
-      if (initialPrintButton) initialPrintButton.hidden = true;
-      if (initialDownloadButton) initialDownloadButton.hidden = true;
-      this.clearGeneratedOutputPdf();
+      const printButton = document.getElementById('pt-output-print');
+      if (printButton) printButton.hidden = true;
       this.setStatus('pt-output-status', 'در حال دریافت اطلاعات پروژه و پاسخ فرم‌ها…');
       try {
-        const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/resolve', { ProjectID: projectId });
+        const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/resolve', {ProjectID:projectId});
         const result = this.extract(response) || {};
         const data = result.data || {};
         const template = (this.outputTemplates || []).find(item => String(item.ID) === String(templateId));
@@ -1707,48 +1088,23 @@
         const preview = document.getElementById('pt-output-preview');
         const card = document.getElementById('pt-output-preview-card');
         if (!template || !template.Definition) throw new Error('ساختار قالب برای تولید سند در دسترس نیست.');
-        const hasSourcePdf = !!(template.Pdf && template.Pdf.HasFile && template.Definition.pdf && Array.isArray(template.Definition.pdf.pages));
         const marginSettings = document.getElementById('pt-output-margin-settings');
-        const downloadButton = document.getElementById('pt-output-download');
-        const printButton = document.getElementById('pt-output-print');
-        if (hasSourcePdf) {
-          if (marginSettings) marginSettings.hidden = true;
-          const outputBlob = await this.generateSourcePdfOutput(template, project, data);
-          this.outputPdfBlobUrl = window.URL.createObjectURL(outputBlob);
-          const safeName = String(template.Code || template.Name || 'PMS-document').replace(/[^\w\u0600-\u06FF-]+/g, '-').replace(/^-+|-+$/g, '');
-          this.outputPdfFileName = (safeName || 'PMS-document') + '.pdf';
-          let previewWarning = '';
-          if (preview) {
-            try { await this.renderFinalPdfPreview(outputBlob); }
-            catch (previewError) {
-              preview.innerHTML = '<div class="pt-empty-state">فایل PDF نهایی ساخته شد، اما پیش‌نمایش در این مرورگر نمایش داده نشد. می‌توانی فایل را دانلود یا باز کنی.</div>';
-              previewWarning = ' پیش‌نمایش مرورگر در دسترس نبود، اما فایل نهایی آماده دانلود است.';
-            }
-          }
-          if (downloadButton) downloadButton.hidden = false;
-          if (printButton) printButton.textContent = 'بازکردن PDF برای چاپ';
-          this.outputPdfPreviewWarning = previewWarning;
-        } else {
-          if (marginSettings) marginSettings.hidden = false;
-          if (preview) preview.innerHTML = await this.renderOutputDocument(template, project, data);
-          if (downloadButton) downloadButton.hidden = true;
-          if (printButton) printButton.textContent = 'چاپ / ذخیره PDF';
-        }
+        if (marginSettings) marginSettings.hidden = false;
+        if (preview) preview.innerHTML = await this.renderOutputDocument(template, project, data);
         if (card) card.hidden = false;
-        if (printButton) printButton.hidden = false;
+        if (printButton) { printButton.textContent = 'چاپ / ذخیره PDF'; printButton.hidden = false; }
         const root = document.getElementById('pt-output-data');
         const keys = Object.keys(data);
         if (root) root.innerHTML = keys.length ? '<div class="pt-resolved-list">' +
           keys.map(key => '<div class="pt-resolved-row"><strong>' + this.esc(key) + '</strong><pre>' +
             this.esc(typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key], null, 2)) +
             '</pre></div>').join('') + '</div>' : '<div class="pt-empty-state">این قالب منبع داده‌ای ندارد.</div>';
-        this.setStatus('pt-output-status', hasSourcePdf
-          ? 'PDF نهایی آماده شد؛ صفحات و محتوای اصلی سند حفظ شده‌اند. برای دریافت فایل از «دانلود PDF نهایی» استفاده کن.' + (this.outputPdfPreviewWarning || '')
-          : 'پیش‌نمایش سند آماده است؛ برای چاپ یا ذخیره PDF از دکمه مربوط استفاده کن.');
+        this.setStatus('pt-output-status', 'پیش‌نمایش سند آماده است؛ برای چاپ یا ذخیره PDF از دکمه چاپ مرورگر استفاده کن.');
       } catch (error) {
         this.setStatus('pt-output-status', error.message || 'ساخت پیش‌نمایش سند ناموفق بود.', true);
       } finally { if (button) button.disabled = false; }
     }
+
   };
   PMS.Modules = PMS.Modules || {};
   PMS.Modules.PrintDesigner = PrintDesigner;
