@@ -3215,6 +3215,18 @@
       }
       paper.appendChild(container);
       viewport.appendChild(paper);
+
+      const actions = document.createElement('div');
+      actions.className = 'event-forms-a4-actions';
+      const confirm = document.createElement('button');
+      confirm.type = 'button';
+      confirm.className = 'event-forms-a4-confirm';
+      confirm.id = 'event-forms-a4-confirm';
+      confirm.textContent = 'تأیید';
+      confirm.addEventListener('click', () => this.closeConfiguredFormsA4());
+      actions.appendChild(confirm);
+      viewport.appendChild(actions);
+
       dialog.append(toolbar, viewport);
       section.replaceChildren(dialog);
       section.classList.add('event-configured-forms-a4-overlay');

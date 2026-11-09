@@ -1928,6 +1928,31 @@
   cursor: pointer;
 }
 .event-forms-a4-close:hover { background: rgba(255,255,255,.12); }
+.event-forms-a4-actions {
+  display: flex;
+  justify-content: center;
+  width: min(210mm, calc(100vw - 72px));
+  margin: 18px auto 0;
+  padding-bottom: 12px;
+}
+.event-forms-a4-confirm {
+  min-width: 150px;
+  min-height: 44px;
+  padding: 10px 28px;
+  border: 1px solid #176b45;
+  border-radius: 8px;
+  background: #198754;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.event-forms-a4-confirm:hover { background: #157347; }
+.event-forms-a4-confirm:focus-visible {
+  outline: 3px solid rgba(25,135,84,.28);
+  outline-offset: 3px;
+}
 .event-forms-a4-viewport {
   flex: 1 1 auto;
   min-height: 0;
@@ -2061,6 +2086,7 @@
     background: #fff;
   }
   .event-forms-a4-toolbar { display: none; }
+  .event-forms-a4-actions { display: none; }
   .event-forms-a4-viewport { padding: 0; overflow: visible; background: #fff; }
   .event-forms-a4-paper {
     width: 210mm;

@@ -23,6 +23,13 @@ test('connected forms open automatically and can be reopened after minimizing th
   assert.ok(source.includes('if (definitions.length) this.openConfiguredFormsA4()'));
   assert.ok(source.includes('openConfiguredFormsA4: function ()'));
   assert.ok(source.includes('closeConfiguredFormsA4: function ()'));
+  const closeStart = source.indexOf('closeConfiguredFormsA4: function ()');
+  const closeEnd = source.indexOf('parseVisibilityRule: function', closeStart);
+  const closeHandler = source.slice(closeStart, closeEnd);
+  assert.ok(closeHandler.includes('section.hidden = true'));
+  assert.ok(closeHandler.includes('launcher.hidden = false'));
+  assert.equal(closeHandler.includes('replaceChildren'), false);
+  assert.equal(closeHandler.includes('innerHTML ='), false);
   assert.ok(source.includes('event-configured-forms-open'));
   assert.ok(source.includes('event-forms-a4-close'));
 });
@@ -36,6 +43,19 @@ test('a completed connected form can be submitted while its A4 sheet is minimize
   assert.equal(submitListener.includes('ابتدا برگه فرم اطلاعات تکمیلی را بازبینی کنید'), false);
   assert.ok(source.includes('validateEventFormControls: function (form)'));
   assert.ok(source.includes('this.collectConfiguredFormResponses(projectId)'));
+});
+
+test('A4 confirmation button closes the sheet without submitting the event', () => {
+  const prepareStart = source.indexOf('prepareConfiguredFormsA4: function (section, container)');
+  const prepareEnd = source.indexOf('openConfiguredFormsA4: function ()', prepareStart);
+  const prepare = source.slice(prepareStart, prepareEnd);
+  assert.ok(prepare.includes("confirm.type = 'button'"));
+  assert.ok(prepare.includes("confirm.id = 'event-forms-a4-confirm'"));
+  assert.ok(prepare.includes("confirm.textContent = 'تأیید'"));
+  assert.ok(prepare.includes("confirm.addEventListener('click', () => this.closeConfiguredFormsA4())"));
+  assert.ok(prepare.indexOf('viewport.appendChild(paper)') < prepare.indexOf('viewport.appendChild(actions)'));
+  assert.ok(styles.includes('.event-forms-a4-confirm'));
+  assert.ok(source.includes('closeConfiguredFormsA4: function ()'));
 });
 
 test('invalid required controls reopen A4 only when needed and hidden conditional fields are ignored', () => {
@@ -61,6 +81,6 @@ test('A4 form UI keeps the existing event submission and response collection met
 });
 
 test('event form assets use the submit-validation cache-busting version', () => {
-  assert.ok(index.includes('events.css?v=20261109-event-form-submit-validation-1'));
-  assert.ok(index.includes('js/modules/events.js?v=20261109-event-form-submit-validation-1'));
+  assert.ok(index.includes('events.css?v=20261109-event-form-a4-confirm-1'));
+  assert.ok(index.includes('js/modules/events.js?v=20261109-event-form-a4-confirm-1'));
 });
