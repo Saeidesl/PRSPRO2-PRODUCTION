@@ -30,6 +30,32 @@
 - drag/resize با mouse و touch، انتخاب، حذف، لایه‌بندی، undo/redo، چندصفحه‌ای، ذخیره/بازیابی، پیش‌نمایش و چاپ باید کار کنند.
 - قالب‌های قدیمی، PDF اصلی، bindingهای داده، tenant scope و permissionها بدون regression حفظ شوند.
 
+### فاز فوری — اصلاح ثبت فرم‌های متصل به رویداد (2026-11-09)
+#### مخازن، شاخه‌ها و مبنا
+- Backend: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`، شاخه `fix/event-form-submit-a4-validation-20261109`، مبنا `main` با commit `683d16d8c69b84bb891739918148a392abafb9a8`.
+- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `fix/event-form-submit-a4-validation-20261109`، مبنا `main` با commit `7f7d1c904b0b4dff043ae41bc2388fa8a462d863`.
+- تسک قبلی حفظ کیفیت تصویر PDF باز و بدون تغییر در وضعیت پذیرش، به حالت تعلیق منتقل شده است؛ هیچ فایل runtime یا تغییر آن تسک بازنویسی نشده است.
+
+#### یافته‌های واقعی Frontend
+- `pages/events.html`: صفحه میزبان جریان اصلی ثبت رویداد؛ فرم اصلی `#event-create-form`.
+- `js/modules/events.js`:
+  - `renderConfiguredForms()` همان DOM فرم‌های متصل را داخل برگه A4 موجود قرار می‌دهد و فرم جدید/موازی نمی‌سازد.
+  - `prepareConfiguredFormsA4()` ظرف فعلی را در برگه A4 قرار می‌دهد؛ `openConfiguredFormsA4()` و `closeConfiguredFormsA4()` فقط وضعیت نمایش `#event-configured-forms-section` را تغییر می‌دهند و داده‌های کنترل‌ها را پاک نمی‌کنند.
+  - submit listener نزدیک خطوط 2068–2085 قبل از اجرای `submitForm()` بررسی می‌کند اگر `#event-configured-forms-section.hidden` باشد، A4 را باز و ارسال را متوقف کند. این شرط مستقل از کامل بودن پاسخ‌هاست و علت مستقیم بازشدن دوباره فرم پس از بستن آن است.
+  - `submitForm()` در حال حاضر `form.reportValidity()` را پیش از `collectConfiguredFormResponses(projectId)` روی کل فرم اجرا می‌کند؛ کنترل‌های اجباری داخل برگه پنهان ممکن است مانع اعتبارسنجی/تمرکز صحیح شوند.
+  - `collectConfiguredFormResponses()` پاسخ‌های SINGLE/MULTIPLE و فایل‌ها را از همان DOM جمع می‌کند و برای فیلدهای اجباری و ستون‌های چندردیفی اعتبارسنجی سفارشی دارد.
+  - API ثبت نهایی همان `PMS.Api.post('/events', payload)` با `FormResponses` و `IdempotencyKey` است.
+- `css/events.css`: نمایش/پنهان‌سازی overlay A4 و حالت واکنش‌گرا.
+- `tests/event-form-a4-modal.test.js`: تست فعلی به‌طور صریح وجود شرط بازکردن اجباری برگه هنگام submit را الزام می‌کند و باید به تست رفتار صحیح تغییر کند.
+- `index.html`: cache-busting فایل‌های `events.css` و `events.js` باید پس از تغییر Frontend افزایش یابد.
+
+#### یافته‌های واقعی Backend و قرارداد داده
+- `Router.js`: `POST /events` با مجوز `EVENT_CREATE` به `EventService.create(body, params)` می‌رسد.
+- `EventService.js`: پیش از ذخیره، `FormService.prepareEventResponses(eventType.ID, event.FormResponses || [], tenantId, projectId)` پاسخ‌ها را اعتبارسنجی می‌کند؛ سپس پس از ایجاد رویداد `FormService.saveEventResponses(...)` پاسخ را ذخیره می‌کند.
+- `FormService.js:prepareEventResponses`: mappingهای فعال، اجباری‌بودن فرم، نسخه فرم، فیلدها، visibility و required را اعتبارسنجی می‌کند.
+- داده پاسخ در ساختار موجود `35_EventFormData` ذخیره می‌شود؛ endpoint یا Sheet موازی لازم نیست.
+- بررسی اولیه نشان می‌دهد باگ گزارش‌شده در submit guard سمت Frontend است؛ در صورت عدم کشف ناسازگاری جدید، Backend runtime/API/schema تغییر نخواهد کرد.
+
 ## 📋 Macro-Task Queue & Implementation Log
 - [x] **Task 1 — Discovery & Planning:** مسیرهای فعلی Print Designer، مدل عناصر، ورودی import، ذخیره Definition، خروجی PDF و API/Storage بک‌اند بررسی شد.
   - *Log:* `pages/print-designer.html` toolbar افزودن تصویر؛ `js/modules/print-designer.js:createElement`, `handleEditorAction`, `renderCanvas`, `saveTemplate`, `imageFileToPdf`, `handleImportFile`, `findImageAttachment`, `loadOutputImage`, `renderOutputDocument`, `generateSourcePdfOutput`, `downloadOutputPdf`; `css/print-template-library.css`; `tests/print-template-library.test.js`; `index.html`. placeholder فعلی به‌جای تصویر واقعی نمایش داده می‌شود. مسیر تبدیل تصویر به PDF فقط برای import پس‌زمینه/OCR است و از feature جدید جدا می‌ماند. Backend موجود: `Router.js`, `PrintTemplateService.js`, `PrintTemplateRepository.js`, `GoogleDriveStorage.js`, `StorageRepository.js`; شیت `36_PrintTemplates` و فایل‌های Drive tenant-scoped.
@@ -39,3 +65,9 @@
   - *Log:* `pages/print-designer.html`: ورودی مستقل تصویر؛ `js/modules/print-designer.js`: `handleImageSelection`, `loadTemplateImages`, `uploadPendingImages`, `renderCanvas`, `saveTemplate`, `loadTemplate`؛ `css/print-template-library.css`: نمایش تصویر و کنترل resize؛ `tests/print-template-library.test.js`: تست مسیر upload/download و render خروجی. تصویر به‌عنوان asset اصلی در Drive ذخیره و در Definition با assetId ارجاع می‌شود. کاربر در 2026-11-09 ذخیره، بازگشایی و نمایش تصویر را در نسخه عملیاتی موفق تأیید کرد.
 - [ ] **Task 4 — حفظ کیفیت اصلی تصویر در خروجی PDF (IN PROGRESS):** حذف rasterize تصویرهای مستقل در html2canvas؛ embed مستقیم JPG/PNG و تبدیل lossless فرمت WebP به PNG در ابعاد اصلی، حفظ نسبت ابعاد و مختصات روی PDF اصلی، تست چندصفحه‌ای/چرخش/CropBox و سازگاری قالب‌های قدیمی.
 
+
+### فاز فوری — اصلاح ثبت فرم‌های متصل به رویداد
+- [x] **Task 1 — Discovery & Planning:** بررسی TODO5/ARCHITECTURE دو مخزن، branch و آخرین commitها، مسیر A4، submit، جمع‌آوری پاسخ، اعتبارسنجی Backend و تست‌های فعلی انجام شد.
+  - *Log:* Frontend: `pages/events.html`، `js/modules/events.js` توابع `renderConfiguredForms`, `prepareConfiguredFormsA4`, `openConfiguredFormsA4`, `closeConfiguredFormsA4`, `collectConfiguredFormResponses`, `submitForm`؛ `css/events.css`؛ `tests/event-form-a4-modal.test.js`؛ `index.html`. شرط submit در خط تقریبی 2071 صرفاً بر اساس hidden بودن A4 ثبت را متوقف می‌کند. Backend: `Router.js`، `EventService.js`، `FormService.js` و شیت موجود `35_EventFormData` بررسی شدند؛ قرارداد فعلی پاسخ فرم معتبر و قابل استفاده مجدد است. شاخه‌های feature در هر دو مخزن از commitهای ثبت‌شده main ساخته شدند.
+- [ ] **Task 2 — اصلاح اعتبارسنجی و ارسال فرم A4 (IN PROGRESS):** حذف شرط بازگشایی اجباری A4 صرفاً به دلیل بسته بودن؛ اعتبارسنجی کنترل‌های اصلی و کنترل‌های فرم متصل بدون خطای focus در حالت پنهان؛ بازکردن A4 فقط هنگام وجود فیلد نامعتبر و هدایت کاربر به همان فیلد؛ حفظ پاسخ‌ها، فایل‌ها، جدول‌های چندردیفی و idempotency.
+- [ ] **Task 3 — آزمون رگرسیون، ادغام و انتشار:** اصلاح تست A4 قبلی، افزودن سناریوهای فرم تکمیل‌شده در حالت بسته، فرم ناقص در حالت بسته، چندردیفی و فایل؛ اجرای تست‌های Frontend و Cross-repository QA؛ PR به main و انتشار طبق workflow موجود؛ سپس تست عملیاتی Product Owner.
