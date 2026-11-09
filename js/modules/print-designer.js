@@ -1268,6 +1268,8 @@
         host.innerHTML = await this.renderOutputDocument(template, project, data, { overlayOnly: true });
         document.body.appendChild(host);
         if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        const attachedImages = Array.from(host.querySelectorAll('img'));
+        await Promise.all(attachedImages.map(image => image.decode ? image.decode() : Promise.resolve()));
         const overlayNodes = Array.from(host.querySelectorAll('.pt-print-page'));
         if (overlayNodes.length !== sourcePages.length) {
           throw new Error('تعداد لایه‌های اطلاعاتی با تعداد صفحات PDF اصلی برابر نیست.');
@@ -1284,7 +1286,8 @@
           const cssHeight = Math.max(1, rect.height);
           const targetScale = 300 / 96;
           const pixelLimitScale = Math.sqrt(12000000 / (cssWidth * cssHeight));
-          const scale = Math.max(1, Math.min(targetScale, pixelLimitScale));
+          if (pixelLimitScale < 0.5) throw new Error('ابعاد این صفحه برای ساخت لایه باکیفیت در حافظه مرورگر بیش از حد بزرگ است.');
+          const scale = Math.max(0.5, Math.min(targetScale, pixelLimitScale));
           const canvas = await html2canvas(node, {
             backgroundColor: null, scale: scale, logging: false, useCORS: false,
             width: Math.ceil(cssWidth), height: Math.ceil(cssHeight),
@@ -1327,7 +1330,8 @@
         for (let number = 1; number <= pdf.numPages; number++) {
           const page = await pdf.getPage(number);
           const base = page.getViewport({ scale: 1 });
-          const scale = Math.max(0.45, Math.min(1.25, 900 / Math.max(1, base.width)));
+          const pixelLimitScale = Math.sqrt(3000000 / Math.max(1, base.width * base.height));
+          const scale = Math.max(0.2, Math.min(1.25, 900 / Math.max(1, base.width), pixelLimitScale));
           const viewport = page.getViewport({ scale: scale });
           const canvas = document.createElement('canvas');
           canvas.className = 'pt-output-final-page';
@@ -1512,6 +1516,10 @@
       }
       const button = document.getElementById('pt-output-resolve');
       if (button) button.disabled = true;
+      const initialPrintButton = document.getElementById('pt-output-print');
+      const initialDownloadButton = document.getElementById('pt-output-download');
+      if (initialPrintButton) initialPrintButton.hidden = true;
+      if (initialDownloadButton) initialDownloadButton.hidden = true;
       this.setStatus('pt-output-status', 'در حال دریافت اطلاعات پروژه و پاسخ فرم‌ها…');
       try {
         const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/resolve', { ProjectID: projectId });
