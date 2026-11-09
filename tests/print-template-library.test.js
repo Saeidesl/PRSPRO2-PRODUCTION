@@ -119,9 +119,13 @@ test('print output page exposes a real document preview and print action',()=>{
   assert.match(page,/id="pt-output-print"/);
   assert.match(module,/renderOutputDocument/);
   assert.match(module,/loadOutputPdfPages: async function/);
+  assert.match(module,/generateSourcePdfOutput: async function/);
+  assert.match(module,/renderFinalPdfPreview: async function/);
+  assert.match(module,/downloadOutputPdf: function/);
   assert.match(module,/pt-output-pdf-background/);
   assert.match(module,/item\.pageIndex \|\| 0/);
   assert.match(module,/window\.print\(\)/);
+  assert.match(page,/pt-output-download/);
   assert.match(styles,/body\.pt-printing/);
 });
 
@@ -168,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261108-smart-text-order-2'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261108-smart-text-order-2'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-original-pdf-preserve-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-original-pdf-preserve-1'));
 });
 
 
@@ -185,11 +189,11 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.match(module,/const fitScale = Math\.max\(0\.01, Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)\)/);
+ assert.match(module,/const fitScale = overlayOnly \? 1 : Math\.max\(0\.01, Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)\)/);
  assert.ok(module.includes('safeWidth - margins.left - margins.right'));
  assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
- assert.ok(module.includes('const safeWidth = 210;'));
- assert.ok(module.includes('const safeHeight = 297;'));
+ assert.match(module,/const safeWidth = overlayOnly \? spec\.width : 210;/);
+ assert.match(module,/const safeHeight = overlayOnly \? spec\.height : 297;/);
  assert.match(module,/--pt-print-scale/);
  assert.match(module,/--pt-print-width/);
  assert.match(module,/pt-print-page-content/);
@@ -198,7 +202,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('smart-text-order-2'));
+ assert.ok(index.includes('original-pdf-preserve-1'));
 });
 
 
@@ -220,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('smart-text-order-2'));
+ assert.ok(index.includes('original-pdf-preserve-1'));
 });
 
 
@@ -233,7 +237,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('smart-text-order-2'));
+ assert.ok(index.includes('original-pdf-preserve-1'));
 });
 
 
@@ -392,4 +396,67 @@ test('smart PDF text separates nearby columns without merging their labels',()=>
  assert.equal(lines.length,2);
  assert.ok(lines.some(line=>line.text==='نام'));
  assert.ok(lines.some(line=>line.text==='کد'));
+});
+
+
+test('source PDF output keeps original page objects and adds only a transparent PMS overlay',()=>{
+ const module=read('js/modules/print-designer.js');
+ const page=read('pages/print-output.html');
+ const styles=read('css/print-template-library.css');
+ const start=module.indexOf('generateSourcePdfOutput: async function');
+ const end=module.indexOf('renderFinalPdfPreview: async function',start);
+ assert.ok(start>=0&&end>start,'source PDF generation method exists');
+ const sourcePath=module.slice(start,end);
+ assert.match(sourcePath,/PDFLib\.PDFDocument\.load\(sourceBytes\)/);
+ assert.match(sourcePath,/pdfDocument\.getPages\(\)/);
+ assert.match(sourcePath,/pdfDocument\.embedPng\(pngBytes\)/);
+ assert.match(sourcePath,/drawPdfOverlayOnSourcePage/);
+ assert.match(sourcePath,/html2canvas\(node/);
+ assert.doesNotMatch(sourcePath,/pdfjsLib\.getDocument|page\.render\(/);
+ assert.match(module,/page\.drawImage\(image, options\)/);
+ assert.match(module,/page\.getCropBox\(\)/);
+ assert.match(module,/page\.getRotation\(\)\.angle/);
+ assert.match(module,/hasSourcePdf/);
+ assert.match(module,/renderFinalPdfPreview\(outputBlob\)/);
+ assert.match(page,/id="pt-output-download"/);
+ assert.match(styles,/pt-output-overlay-render-host/);
+ assert.match(styles,/pt-output-final-page/);
+});
+
+test('source PDF overlay rendering waits for fonts and attached images and rejects missing source files',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/fetchOutputPdfBytes: async function/);
+ assert.match(module,/فایل PDF اصلی از فضای ذخیره‌سازی دریافت نشد/);
+ assert.match(module,/document\.fonts\.ready/);
+ assert.match(module,/if \(overlayOnly\) throw error/);
+ assert.match(module,/drawPdfOverlayOnSourcePage/);
+ assert.match(module,/تعداد صفحات PDF اصلی با مشخصات قالب یکسان نیست/);
+});
+
+test('original PDF output assets use versioned pinned browser libraries and refreshed cache keys',()=>{
+ const index=read('index.html');
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/pdf-lib@1\.17\.1/);
+ assert.match(module,/html2canvas\/1\.4\.1/);
+ assert.ok(index.includes('20261109-original-pdf-preserve-1'));
+});
+
+
+test('source PDF overlay aligns with rotated crop boxes without changing source page dimensions',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const calls=[];
+ const page={
+  getCropBox:()=>({x:0,y:0,width:612,height:792}),
+  getRotation:()=>({angle:90}),
+  drawImage:(image,options)=>calls.push(options)
+ };
+ designer.drawPdfOverlayOnSourcePage(page,{}, {degrees:angle=>({angle})}, {width:279.4,height:215.9});
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].width,792);
+ assert.equal(calls[0].height,612);
+ assert.equal(calls[0].rotate.angle,-90);
+ assert.equal(calls[0].x,-90);
+ assert.equal(calls[0].y,90);
 });

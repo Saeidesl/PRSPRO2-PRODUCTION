@@ -6,9 +6,9 @@
     <div class="pt-output-controls">
       <div class="form-group"><label for="pt-output-template">قالب سند</label><select id="pt-output-template"><option value="">در حال دریافت قالب‌ها…</option></select></div>
       <div class="form-group"><label for="pt-output-project">پروژه</label><select id="pt-output-project"><option value="">در حال دریافت پروژه‌ها…</option></select></div>
-      <button type="button" class="btn btn-primary" id="pt-output-resolve">ساخت پیش‌نمایش سند</button><button type="button" class="btn btn-secondary" id="pt-output-print" hidden>چاپ / ذخیره PDF</button>
+      <button type="button" class="btn btn-primary" id="pt-output-resolve">ساخت پیش‌نمایش سند</button><button type="button" class="btn btn-secondary" id="pt-output-download" hidden>دانلود PDF نهایی</button><button type="button" class="btn btn-secondary" id="pt-output-print" hidden>چاپ / ذخیره PDF</button>
     </div>
-    <details class="pt-print-margin-settings" open>
+    <details class="pt-print-margin-settings" id="pt-output-margin-settings" open>
       <summary>تنظیم فاصله چاپ (میلی‌متر)</summary>
       <div class="pt-print-margin-grid">
         <label for="pt-margin-top">از بالا <input id="pt-margin-top" type="number" min="0" max="60" step="1" value="8" inputmode="numeric"></label>
