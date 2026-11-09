@@ -413,7 +413,8 @@ test('source PDF output keeps original page objects and adds only a transparent 
  assert.match(module,/drawPdfOverlayOnSourcePage/);
  assert.match(module,/html2canvas\(node/);
  assert.doesNotMatch(sourcePath,/pdfjsLib\.getDocument|page\.render\(/);
- assert.match(module,/page\.drawImage\(image, options\)/);
+ assert.match(module,/page\.drawImage\(image, this\.getPdfOverlayPlacement/);
+ assert.match(module,/page\.drawPage\(overlayPage, this\.getPdfOverlayPlacement/);
  assert.match(module,/page\.getCropBox\(\)/);
  assert.match(module,/page\.getRotation\(\)\.angle/);
  assert.match(module,/hasSourcePdf/);
