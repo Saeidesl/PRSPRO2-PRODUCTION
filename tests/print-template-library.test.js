@@ -203,7 +203,7 @@ test('HTML print scales each complete page into the configured A4 printable area
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('remove-pdf-background-1'));
+ assert.ok(index.includes('remove-background-import-1'));
 });
 
 test('print output exposes persistent user-configurable margins for all templates',()=>{
@@ -224,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('remove-pdf-background-1'));
+ assert.ok(index.includes('remove-background-import-1'));
 });
 
 
@@ -238,7 +238,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('remove-pdf-background-1'));
+ assert.ok(index.includes('remove-background-import-1'));
 });
 
 
@@ -296,7 +296,7 @@ test('saved template image assets are loaded for output and embedded as image el
  assert.match(module,/await this\.loadTemplateImages\(template, definition\)/);
  assert.match(module,/item\.type === 'image' && this\.imageSources\[item\.assetId \|\| item\.id\]/);
  assert.match(module,/pt-output-image-content/);
- assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
+ assert.match(module,/تصویر قالب در دسترس نیست/);
 });
 
 
@@ -315,7 +315,7 @@ test('print designer renders live output beside the canvas using the selected pr
  assert.match(module,/scheduleLivePreview: function/);
  assert.match(module,/livePreviewSequence/);
  assert.match(module,/PMS\.Api\.post\('\/print-templates\/preview'/);
- assert.match(module,/ProjectID: projectId,[\s\S]*Definition: definition/);
+ assert.match(module,/ProjectID:\s*projectId,[\s\S]*Definition:\s*definition/);
  const start=module.indexOf('    renderLivePreview: async function');
  const end=module.indexOf('    loadOutputOptions: async function',start);
  const preview=module.slice(start,end);
