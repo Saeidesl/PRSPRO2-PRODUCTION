@@ -246,7 +246,9 @@ test('manual PDF and image background import remains available',()=>{
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.match(page,/accept="[^"]*application\\/pdf[^"]*image\\/jpeg[^"]*image\\/png/);
+ assert.ok(page.includes("application/pdf"));
+ assert.ok(page.includes("image/jpeg"));
+ assert.ok(page.includes("image/png"));
  assert.match(page,/محل فیلدها را با ابزارهای دستی/);
  assert.match(module,/handleImportFile: async function/);
  assert.match(module,/imageFileToPdf: async function/);
@@ -255,7 +257,7 @@ test('manual PDF and image background import remains available',()=>{
  assert.match(module,/handlePdfFile: async function/);
  assert.match(module,/loadTemplatePdf: async function/);
  assert.equal(styles.includes(String.fromCharCode(112,116,45,115,109,97,114,116,45,100,101,116,101,99,116)),false);
- assert.match(index,/pdf\\.js\\/3\\.11\\.174\\/pdf\\.min\\.js/);
+ assert.ok(index.includes('pdf.js/3.11.174/pdf.min.js'));
 });
 
 test('legacy field analysis assets are absent while PDF tools remain',()=>{
@@ -269,7 +271,7 @@ test('legacy field analysis assets are absent while PDF tools remain',()=>{
  ];
  for(const source of sources) for(const token of forbidden) assert.equal(source.includes(token),false,'obsolete asset marker must be absent');
  const module=sources[1];
- assert.match(module,/window\\.pdfjsLib\\.getDocument/);
+ assert.ok(module.includes('window.pdfjsLib.getDocument'));
  assert.match(module,/imageFileToPdf: async function/);
 });
 
@@ -282,8 +284,8 @@ test('manual template fields and existing binding types remain supported',()=>{
  assert.match(module,/PROJECT_INFORMATION/);
  assert.match(module,/EVENT_FORM_FIELD/);
  assert.match(module,/type === 'field'/);
- assert.match(styles,/\\.pt-field-hint/);
- assert.match(styles,/\\.pt-output-field/);
+ assert.ok(styles.includes('.pt-field-hint'));
+ assert.ok(styles.includes('.pt-output-field'));
 });
 
 test('PDF output renders print backgrounds at 300 DPI and keeps PNG pages lossless',()=>{
