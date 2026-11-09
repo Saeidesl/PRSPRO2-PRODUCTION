@@ -1,3 +1,38 @@
+## 🎯 Current Objective
+حذف کامل مسیر واردکردن PDF/تصویر به‌عنوان پس‌زمینه قالب چاپ و تمام اجزای تبدیل، ذخیره‌سازی، بازیابی و رندر وابسته؛ حفظ مسیر مستقل افزودن تصویر مستقیم به صفحه و چاپ HTML.
+
+## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
+### مخازن و شاخه‌های عملیاتی
+- Backend: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`، شاخه `feat/remove-pdf-background-import-20261109`، مبنا `main` با commit `ffa4403f8fbb3d0033758fd3ee0a9a4cea91319b`.
+- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `feat/remove-pdf-background-import-20261109`، مبنا `main` با commit `d480a6af51880bf3b90230948299d76507594bd0`.
+
+### مرزبندی و قراردادهای حفظ‌شده
+- Frontend حذف‌شونده: ورودی `pt-pdf-file`، سکشن `pt-pdf-import`، توابع `handleImportFile`, `handlePdfFile`, `imageFileToPdf`, `loadTemplatePdf`, `renderPdfBackgrounds` و stateهای PDF background؛ کتابخانه‌های PDF.js/jsPDF/pdf-lib/html2canvas که صرفاً برای این مسیر بودند.
+- Frontend حفظ‌شونده: ورودی `pt-image-file`، `handleImageSelection`, `uploadPendingImages`, `loadTemplateImages`, عناصر `type=image`، رندر canvas و `renderOutputDocument`، `printOutput` و چاپ مرورگر.
+- Backend حذف‌شونده: `GET/POST /print-templates/:id/pdf`، `PrintTemplateService.uploadPdf/downloadPdf`، متادیتای عمومی PDF و فیلدهای PDF از قرارداد HEADERS؛ هیچ ستون یا فایل قدیمی فیزیکی حذف نمی‌شود.
+- Backend حفظ‌شونده: `POST /print-templates/:id/images`, `GET /print-templates/:id/images/:assetId`، `uploadImage/downloadImage`، `ImageAssetsJSON`، ذخیره tenant-scoped در Google Drive و اعتبارسنجی شناسه IMG.
+- `PrintTemplateValidator.parseDefinition` فقط metadata مربوط به PDF پس‌زمینه را نادیده می‌گیرد؛ اعتبارسنجی اندازه/جهت صفحه، bindingها، عناصر و assetهای تصویری باید حفظ شود.
+- شیت `36_PrintTemplates` و APIهای عمومی فایل/PDF در سایر بخش‌های PMS خارج از محدوده‌اند. هیچ داده قدیمی Drive/Sheet حذف یا migrate نمی‌شود.
+- خروجی قالب فقط HTML و چاپ استاندارد مرورگر است؛ PDF قابل دریافت از طریق گزینه چاپ/Save as PDF مرورگر انجام می‌شود.
+
+### یافته‌های واقعی Frontend و تست
+- فایل‌ها: `pages/print-designer.html`, `js/modules/print-designer.js`, `css/print-template-library.css`, `pages/print-output.html`, `index.html`.
+- تست‌ها: `tests/print-template-library.test.js`؛ تست‌های مستقیم تصویر، upload/download، preview، HTML output و browser print باید باقی بمانند.
+- تست ممنوعیت آثار PDF background باید فقط فایل‌های Print Designer را پوشش دهد و به سایر قابلیت‌های عمومی PDF در PMS تعمیم داده نشود.
+
+### یافته‌های واقعی Backend و تست
+- فایل‌ها: `Router.js`, `PrintTemplateService.js`, `PrintTemplateRepository.js`, `PrintTemplateValidator.js`.
+- تست‌ها: `tests/print-templates.test.js`؛ routeهای image و tenant isolation باید فعال بمانند؛ routeهای PDF background نباید وجود داشته باشند.
+- مسیر asset تصویر از Router به Service و سپس `GoogleDriveStorage` متصل است؛ metadata در `36_PrintTemplates.ImageAssetsJSON` نگهداری می‌شود.
+
+## 📋 Macro-Task Queue & Implementation Log
+- [x] **Task 1 — Discovery & Planning:** بررسی دو مخزن عملیاتی، TODO5/ARCHITECTURE، شاخه‌ها، PRها و تفکیک مسیر PDF background از تصویر مستقیم انجام شد.
+  - *Log:* Frontend: `pages/print-designer.html`, `js/modules/print-designer.js`، توابع `handleImageSelection/uploadPendingImages/loadTemplateImages/renderCanvas/renderOutputDocument/printOutput` و تست‌های `tests/print-template-library.test.js`. Backend: `Router.js`, `PrintTemplateService.js`, `PrintTemplateRepository.js`, `PrintTemplateValidator.js`، شیت `36_PrintTemplates` و APIهای مستقل `/images`. شاخه‌های عملیاتی `feat/remove-pdf-background-import-20261109` و PRهای Backend #50 و Frontend #78 شناسایی شدند.
+- [ ] **Task 2 — حذف یکپارچه PDF background و حفظ تصویر مستقیم (IN PROGRESS):** حذف مسیرهای ورودی/تبدیل/رندر/ذخیره PDF background در هر دو مخزن؛ حفظ assetهای تصویری مستقیم، validationهای عمومی صفحه، پیش‌نمایش و چاپ HTML.
+- [ ] **Task 3 — ممیزی نهایی، آزمون رگرسیون، ادغام و انتشار:** بررسی کامل آثار باقیمانده، اجرای همه CIها و مرورگر، تطبیق مستندات، سپس ادغام/انتشار طبق تأیید Product Owner و تست عملیاتی.
+
+---
+
 undefined
 ---
 
