@@ -1520,6 +1520,7 @@
       const initialDownloadButton = document.getElementById('pt-output-download');
       if (initialPrintButton) initialPrintButton.hidden = true;
       if (initialDownloadButton) initialDownloadButton.hidden = true;
+      this.clearGeneratedOutputPdf();
       this.setStatus('pt-output-status', 'در حال دریافت اطلاعات پروژه و پاسخ فرم‌ها…');
       try {
         const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/resolve', { ProjectID: projectId });
@@ -1530,7 +1531,6 @@
         const preview = document.getElementById('pt-output-preview');
         const card = document.getElementById('pt-output-preview-card');
         if (!template || !template.Definition) throw new Error('ساختار قالب برای تولید سند در دسترس نیست.');
-        this.clearGeneratedOutputPdf();
         const hasSourcePdf = !!(template.Pdf && template.Pdf.HasFile && template.Definition.pdf && Array.isArray(template.Definition.pdf.pages));
         const marginSettings = document.getElementById('pt-output-margin-settings');
         const downloadButton = document.getElementById('pt-output-download');
@@ -1541,9 +1541,17 @@
           this.outputPdfBlobUrl = window.URL.createObjectURL(outputBlob);
           const safeName = String(template.Code || template.Name || 'PMS-document').replace(/[^\w\u0600-\u06FF-]+/g, '-').replace(/^-+|-+$/g, '');
           this.outputPdfFileName = (safeName || 'PMS-document') + '.pdf';
-          if (preview) await this.renderFinalPdfPreview(outputBlob);
+          let previewWarning = '';
+          if (preview) {
+            try { await this.renderFinalPdfPreview(outputBlob); }
+            catch (previewError) {
+              preview.innerHTML = '<div class="pt-empty-state">فایل PDF نهایی ساخته شد، اما پیش‌نمایش در این مرورگر نمایش داده نشد. می‌توانی فایل را دانلود یا باز کنی.</div>';
+              previewWarning = ' پیش‌نمایش مرورگر در دسترس نبود، اما فایل نهایی آماده دانلود است.';
+            }
+          }
           if (downloadButton) downloadButton.hidden = false;
           if (printButton) printButton.textContent = 'بازکردن PDF برای چاپ';
+          this.outputPdfPreviewWarning = previewWarning;
         } else {
           if (marginSettings) marginSettings.hidden = false;
           if (preview) preview.innerHTML = await this.renderOutputDocument(template, project, data);
@@ -1559,7 +1567,7 @@
             this.esc(typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key], null, 2)) +
             '</pre></div>').join('') + '</div>' : '<div class="pt-empty-state">این قالب منبع داده‌ای ندارد.</div>';
         this.setStatus('pt-output-status', hasSourcePdf
-          ? 'PDF نهایی آماده شد؛ صفحات و محتوای اصلی سند حفظ شده‌اند. برای دریافت فایل از «دانلود PDF نهایی» استفاده کن.'
+          ? 'PDF نهایی آماده شد؛ صفحات و محتوای اصلی سند حفظ شده‌اند. برای دریافت فایل از «دانلود PDF نهایی» استفاده کن.' + (this.outputPdfPreviewWarning || '')
           : 'پیش‌نمایش سند آماده است؛ برای چاپ یا ذخیره PDF از دکمه مربوط استفاده کن.');
       } catch (error) {
         this.setStatus('pt-output-status', error.message || 'ساخت پیش‌نمایش سند ناموفق بود.', true);
