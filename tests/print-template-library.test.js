@@ -320,7 +320,7 @@ test('print designer renders live output beside the canvas using the selected pr
  const end=module.indexOf('    loadOutputOptions: async function',start);
  const preview=module.slice(start,end);
  assert.ok(start>=0&&end>start);
- assert.match(preview,/this\.renderOutputDocument\(template, project, data\)/);
+ assert.match(preview,/this\.renderOutputDocument\(template, result\.project \|\| \{\}, result\.data \|\| \{\}\)/);
  assert.doesNotMatch(preview,/generateSourcePdfOutput|pdfFile|Pdf\.HasFile/);
  assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
 });
