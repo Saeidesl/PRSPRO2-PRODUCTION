@@ -172,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-template-image-elements-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-template-image-elements-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-template-image-lossless-pdf-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-template-image-lossless-pdf-1'));
 });
 
 
@@ -202,7 +202,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('template-image-elements-1'));
+ assert.ok(index.includes('template-image-lossless-pdf-1'));
 });
 
 
@@ -224,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('template-image-elements-1'));
+ assert.ok(index.includes('template-image-lossless-pdf-1'));
 });
 
 
@@ -237,7 +237,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('template-image-elements-1'));
+ assert.ok(index.includes('template-image-lossless-pdf-1'));
 });
 
 
@@ -409,11 +409,12 @@ test('source PDF output keeps original page objects and adds only a transparent 
  const sourcePath=module.slice(start,end);
  assert.match(sourcePath,/PDFLib\.PDFDocument\.load\(sourceBytes\)/);
  assert.match(sourcePath,/pdfDocument\.getPages\(\)/);
- assert.match(sourcePath,/pdfDocument\.embedPng\(pngBytes\)/);
- assert.match(sourcePath,/drawPdfOverlayOnSourcePage/);
- assert.match(sourcePath,/html2canvas\(node/);
+ assert.match(module,/pdfDocument\.embedPng\(pngBytes\)/);
+ assert.match(module,/drawPdfOverlayOnSourcePage/);
+ assert.match(module,/html2canvas\(node/);
  assert.doesNotMatch(sourcePath,/pdfjsLib\.getDocument|page\.render\(/);
- assert.match(module,/page\.drawImage\(image, options\)/);
+ assert.match(module,/page\.drawImage\(image, this\.getPdfOverlayPlacement/);
+ assert.match(module,/page\.drawPage\(overlayPage, this\.getPdfOverlayPlacement/);
  assert.match(module,/page\.getCropBox\(\)/);
  assert.match(module,/page\.getRotation\(\)\.angle/);
  assert.match(module,/hasSourcePdf/);
@@ -438,7 +439,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-template-image-elements-1'));
+ assert.ok(index.includes('20261109-template-image-lossless-pdf-1'));
 });
 
 
@@ -487,4 +488,37 @@ test('saved template image assets are loaded for output and embedded as image el
  assert.match(module,/item\.type === 'image' && item\.assetId && this\.imageSources\[item\.assetId\]/);
  assert.match(module,/pt-output-image-content/);
  assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
+});
+
+
+test('JPEG template image bytes are embedded directly without re-encoding or downscaling',async()=>{
+ const encoded=Buffer.from([0,1,2,255]).toString('base64');
+ const sandbox={window:{PMS:{},atob:value=>Buffer.from(value,'base64').toString('binary')},console,Buffer};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.imageSources={asset:'data:image/jpeg;base64,'+encoded};
+ let originalBytes=[],drawnImageOptions=null,drawnPageOptions=null;
+ const overlayPage={
+  drawImage:(image,options)=>{drawnImageOptions=options;}
+ };
+ const overlayDocument={
+  addPage:()=>overlayPage,
+  embedJpg:async bytes=>{originalBytes=Array.from(bytes);return{width:1200,height:800};},
+  embedPng:async()=>{throw new Error('PNG path must not be used for JPEG');},
+  save:async()=>new Uint8Array([37,80,68,70])
+ };
+ const PDFLib={PDFDocument:{create:async()=>overlayDocument},degrees:angle=>({angle})};
+ const pdfDocument={embedPdf:async()=>[{}]};
+ const targetPage={
+  getCropBox:()=>({x:0,y:0,width:595.28,height:841.89}),
+  getRotation:()=>({angle:0}),
+  drawPage:(page,options)=>{drawnPageOptions=options;}
+ };
+ await designer.drawTemplateImageOnSourcePage(pdfDocument,targetPage,
+  {id:'image-1',assetId:'asset',mimeType:'image/jpeg',x:10,y:20,width:60,height:40,fit:'contain'},
+  {width:210,height:297},PDFLib);
+ assert.deepEqual(originalBytes,[0,1,2,255]);
+ assert.equal(drawnImageOptions.width,60*72/25.4);
+ assert.equal(drawnImageOptions.height,40*72/25.4);
+ assert.ok(drawnPageOptions);
 });

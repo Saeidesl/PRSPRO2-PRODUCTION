@@ -1304,7 +1304,7 @@
       }
       return bytes;
     },
-    drawPdfOverlayOnSourcePage: function (page, image, PDFLib, expectedPage) {
+    getPdfOverlayPlacement: function (page, PDFLib, expectedPage) {
       const crop = page.getCropBox();
       const rotation = ((Number(page.getRotation().angle) % 360) + 360) % 360;
       const quarterTurn = rotation === 90 || rotation === 270;
@@ -1331,7 +1331,114 @@
           width: crop.height, height: crop.width, rotate: PDFLib.degrees(90)
         };
       }
-      page.drawImage(image, options);
+      return options;
+    },
+    drawPdfOverlayOnSourcePage: function (page, image, PDFLib, expectedPage) {
+      page.drawImage(image, this.getPdfOverlayPlacement(page, PDFLib, expectedPage));
+    },
+    drawPdfOverlayPageOnSourcePage: function (page, overlayPage, PDFLib, expectedPage) {
+      page.drawPage(overlayPage, this.getPdfOverlayPlacement(page, PDFLib, expectedPage));
+    },
+    getImageBytesForPdf: async function (dataUrl) {
+      const match = String(dataUrl || '').match(/^data:(image\/[a-z0-9.+-]+);base64,([\s\S]+)$/i);
+      if (!match) throw new Error('فایل تصویر اصلی برای درج در PDF معتبر نیست.');
+      const mime = match[1].toLowerCase();
+      const binary = window.atob(match[2].replace(/\s/g, ''));
+      const originalBytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) originalBytes[index] = binary.charCodeAt(index);
+      if (mime === 'image/jpeg' || mime === 'image/png') return { mime: mime, bytes: originalBytes };
+      if (mime !== 'image/webp') throw new Error('فرمت تصویر برای درج مستقیم در PDF پشتیبانی نمی‌شود.');
+      const image = new Image();
+      image.src = dataUrl;
+      if (typeof image.decode === 'function') await image.decode();
+      else await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error('خواندن تصویر WebP برای تبدیل lossless ناموفق بود.'));
+      });
+      const width = Number(image.naturalWidth || image.width);
+      const height = Number(image.naturalHeight || image.height);
+      if (!width || !height) throw new Error('ابعاد تصویر WebP معتبر نیست.');
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      try {
+        const context = canvas.getContext('2d', { alpha: true });
+        if (!context) throw new Error('مرورگر امکان تبدیل lossless تصویر WebP را ندارد.');
+        context.drawImage(image, 0, 0, width, height);
+        const png = await new Promise((resolve, reject) => {
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('تبدیل lossless تصویر WebP ناموفق بود.')), 'image/png');
+        });
+        return { mime: 'image/png', bytes: new Uint8Array(await png.arrayBuffer()) };
+      } finally {
+        canvas.width = 0;
+        canvas.height = 0;
+      }
+    },
+    drawTemplateImageOnSourcePage: async function (pdfDocument, page, item, pageSpec, PDFLib) {
+      const source = this.imageSources && this.imageSources[item.assetId];
+      if (!source) throw new Error('فایل اصلی تصویر قالب در دسترس نیست: ' + (item.fileName || item.assetId || 'تصویر'));
+      const imageData = await this.getImageBytesForPdf(source);
+      const overlayDocument = await PDFLib.PDFDocument.create();
+      const pageWidth = Number(pageSpec.width) * 72 / 25.4;
+      const pageHeight = Number(pageSpec.height) * 72 / 25.4;
+      if (!(pageWidth > 0 && pageHeight > 0)) throw new Error('ابعاد صفحه برای درج تصویر معتبر نیست.');
+      const overlayPage = overlayDocument.addPage([pageWidth, pageHeight]);
+      const embeddedImage = imageData.mime === 'image/jpeg'
+        ? await overlayDocument.embedJpg(imageData.bytes)
+        : await overlayDocument.embedPng(imageData.bytes);
+      const mmToPt = 72 / 25.4;
+      const frameX = Number(item.x || 0) * mmToPt;
+      const frameY = Number(item.y || 0) * mmToPt;
+      const frameWidth = Math.max(0.1, Number(item.width || 30) * mmToPt);
+      const frameHeight = Math.max(0.1, Number(item.height || 15) * mmToPt);
+      const ratio = embeddedImage.width / Math.max(1, embeddedImage.height);
+      let drawWidth = frameWidth;
+      let drawHeight = frameHeight;
+      if (String(item.fit || 'contain').toLowerCase() === 'contain') {
+        drawWidth = Math.min(frameWidth, frameHeight * ratio);
+        drawHeight = drawWidth / ratio;
+      }
+      const x = frameX + (frameWidth - drawWidth) / 2;
+      const y = pageHeight - frameY - frameHeight + (frameHeight - drawHeight) / 2;
+      overlayPage.drawImage(embeddedImage, { x: x, y: y, width: drawWidth, height: drawHeight });
+      const embeddedPages = await pdfDocument.embedPdf(await overlayDocument.save());
+      if (!embeddedPages || !embeddedPages[0]) throw new Error('درج تصویر اصلی در PDF ناموفق بود.');
+      this.drawPdfOverlayPageOnSourcePage(page, embeddedPages[0], PDFLib, pageSpec);
+    },
+    renderPdfOverlaySegment: async function (node, visibleElements, html2canvas, pdfDocument, page, pageSpec, PDFLib, scale, cssWidth, cssHeight) {
+      if (!visibleElements || !visibleElements.length) return;
+      const allElements = Array.from(node.querySelectorAll('.pt-output-element'));
+      const previousVisibility = allElements.map(element => element.style.visibility);
+      try {
+        allElements.forEach(element => { element.style.visibility = 'hidden'; });
+        visibleElements.forEach(element => {
+          const index = allElements.indexOf(element);
+          if (index >= 0) element.style.visibility = previousVisibility[index];
+        });
+        const canvas = await html2canvas(node, {
+          backgroundColor: null, scale: scale, logging: false, useCORS: false,
+          width: Math.ceil(cssWidth), height: Math.ceil(cssHeight),
+          windowWidth: Math.max(window.innerWidth, Math.ceil(cssWidth)),
+          windowHeight: Math.max(window.innerHeight, Math.ceil(cssHeight))
+        });
+        try {
+          const png = await new Promise((resolve, reject) => {
+            if (typeof canvas.toBlob !== 'function') {
+              reject(new Error('مرورگر امکان آماده‌سازی لایه اطلاعاتی PDF را ندارد.'));
+              return;
+            }
+            canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('ساخت لایه اطلاعاتی صفحه ناموفق بود.')), 'image/png');
+          });
+          const pngBytes = new Uint8Array(await png.arrayBuffer());
+          const overlayImage = await pdfDocument.embedPng(pngBytes);
+          this.drawPdfOverlayOnSourcePage(page, overlayImage, PDFLib, pageSpec);
+        } finally {
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+      } finally {
+        allElements.forEach((element, index) => { element.style.visibility = previousVisibility[index]; });
+      }
     },
     generateSourcePdfOutput: async function (template, project, data) {
       if (!template || !template.ID || !template.Definition || !template.Definition.pdf ||
@@ -1365,7 +1472,7 @@
           throw new Error('تعداد لایه‌های اطلاعاتی با تعداد صفحات PDF اصلی برابر نیست.');
         }
         for (let index = 0; index < sourcePages.length; index++) {
-          this.setStatus('pt-output-status', 'در حال افزودن اطلاعات به صفحه ' + (index + 1) + ' از ' + sourcePages.length + '…');
+          this.setStatus('pt-output-status', 'در حال افزودن اطلاعات و تصاویر اصلی به صفحه ' + (index + 1) + ' از ' + sourcePages.length + '…');
           const node = overlayNodes[index];
           const pageSpec = {
             width: Number(pageMetadata[index].widthMm),
@@ -1378,27 +1485,22 @@
           const pixelLimitScale = Math.sqrt(12000000 / (cssWidth * cssHeight));
           if (pixelLimitScale < 0.5) throw new Error('ابعاد این صفحه برای ساخت لایه باکیفیت در حافظه مرورگر بیش از حد بزرگ است.');
           const scale = Math.max(0.5, Math.min(targetScale, pixelLimitScale));
-          const canvas = await html2canvas(node, {
-            backgroundColor: null, scale: scale, logging: false, useCORS: false,
-            width: Math.ceil(cssWidth), height: Math.ceil(cssHeight),
-            windowWidth: Math.max(window.innerWidth, Math.ceil(cssWidth)),
-            windowHeight: Math.max(window.innerHeight, Math.ceil(cssHeight))
-          });
-          try {
-            const png = await new Promise((resolve, reject) => {
-              if (typeof canvas.toBlob !== 'function') {
-                reject(new Error('مرورگر امکان آماده‌سازی لایه اطلاعاتی PDF را ندارد.'));
-                return;
-              }
-              canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('ساخت لایه اطلاعاتی صفحه ناموفق بود.')), 'image/png');
-            });
-            const pngBytes = new Uint8Array(await png.arrayBuffer());
-            const overlayImage = await pdfDocument.embedPng(pngBytes);
-            this.drawPdfOverlayOnSourcePage(sourcePages[index], overlayImage, PDFLib, pageSpec);
-          } finally {
-            canvas.width = 0;
-            canvas.height = 0;
+          const elements = Array.from(node.querySelectorAll('.pt-output-element'));
+          const definitionElements = Array.isArray(template.Definition.elements) ? template.Definition.elements : [];
+          let segment = [];
+          for (const element of elements) {
+            if (element.getAttribute('data-pt-template-image') === 'true') {
+              await this.renderPdfOverlaySegment(node, segment, html2canvas, pdfDocument, sourcePages[index], pageSpec, PDFLib, scale, cssWidth, cssHeight);
+              segment = [];
+              const elementId = element.getAttribute('data-pt-element-id');
+              const imageItem = definitionElements.find(item => String(item.id) === String(elementId));
+              if (!imageItem || !imageItem.assetId) throw new Error('مشخصات تصویر مستقل قالب برای خروجی PDF پیدا نشد.');
+              await this.drawTemplateImageOnSourcePage(pdfDocument, sourcePages[index], imageItem, pageSpec, PDFLib);
+            } else {
+              segment.push(element);
+            }
           }
+          await this.renderPdfOverlaySegment(node, segment, html2canvas, pdfDocument, sourcePages[index], pageSpec, PDFLib, scale, cssWidth, cssHeight);
         }
         this.setStatus('pt-output-status', 'در حال ذخیره PDF نهایی با حفظ صفحات اصلی…');
         const outputBytes = await pdfDocument.save({ useObjectStreams: true });
@@ -1541,7 +1643,9 @@
           } else {
             image = '<div class="pt-output-image pt-output-image-empty" aria-hidden="true"></div>';
           }
-          return '<div class="pt-output-element pt-output-image-frame" style="'+style+'">'+image+'</div>';
+          const directTemplateImage = item.type === 'image' && !!item.assetId && !imageAttachment;
+          const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
+          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+image+'</div>';
         }
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
