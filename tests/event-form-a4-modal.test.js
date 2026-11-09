@@ -45,7 +45,7 @@ test('A4 confirmation button closes the sheet without submitting the event', () 
   assert.ok(prepare.includes("confirm.type = 'button'"));
   assert.ok(prepare.includes("confirm.id = 'event-forms-a4-confirm'"));
   assert.ok(prepare.includes("confirm.textContent = 'تأیید'"));
-  assert.ok(prepare.includes('confirm.addEventListener(\\'click\\', () => this.closeConfiguredFormsA4())'));
+  assert.ok(prepare.includes("confirm.addEventListener('click', () => this.closeConfiguredFormsA4())"));
   assert.ok(prepare.indexOf('viewport.appendChild(paper)') < prepare.indexOf('viewport.appendChild(actions)'));
   assert.ok(styles.includes('.event-forms-a4-confirm'));
   assert.ok(source.includes('closeConfiguredFormsA4: function ()'));
