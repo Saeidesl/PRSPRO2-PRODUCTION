@@ -988,10 +988,10 @@
       const sizes = {A4:[210,297],A5:[148,210],LETTER:[216,279]};
       const base = sizes[String(page.size || 'A4').toUpperCase()] || sizes.A4;
       const landscape = String(page.orientation || 'portrait').toLowerCase() === 'landscape';
-      const defaultSpec = {width:landscape ? base[1] : base[0],height:landscape ? base[0] : base[1]};
+      const defaultSpec = { width: landscape ? base[1] : base[0], height: landscape ? base[0] : base[1] };
       const elementsList = Array.isArray(definition.elements) ? definition.elements : [];
       const pageCount = Math.max(1, ...elementsList.map(item => Math.max(0, Number(item.pageIndex || 0)) + 1));
-      const pageSpecs = Array.from({length:pageCount}, () => Object.assign({},defaultSpec));
+      const pageSpecs = Array.from({length:pageCount}, () => Object.assign({}, defaultSpec));
       this.outputPageSpecs = pageSpecs;
       this.outputPageSpec = pageSpecs[0];
       const bindings = Object.create(null);
@@ -1020,34 +1020,36 @@
             image = '<div class="pt-output-image pt-output-image-empty" aria-hidden="true"></div>';
           }
           const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
-          return '<div class="pt-output-element pt-output-image-frame" style="' + imageStyle + '">' + image + '</div>';
+          return '<div class="pt-output-element pt-output-image-frame" style="'+imageStyle+'">'+image+'</div>';
         }
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
           const columns = item.columns || [];
           const tableRows = rows.map(row => {
             const cells = Array.isArray(row) ? row : (row && typeof row === 'object' ? Object.values(row) : [row]);
-            return '<tr>' + columns.map((_,i) => '<td>' + this.esc(this.formatOutputValue(cells[i])) + '</td>').join('') + '</tr>';
+            return '<tr>'+columns.map((_,i)=>'<td>'+this.esc(this.formatOutputValue(cells[i]))+'</td>').join('')+'</tr>';
           }).join('');
-          return '<div class="pt-output-element pt-output-table" style="' + style + '"><strong>' + this.esc(item.text || '') + '</strong><table><thead><tr>' + columns.map(col => '<th>' + this.esc(col) + '</th>').join('') + '</tr></thead><tbody>' + tableRows + '</tbody></table></div>';
+          return '<div class="pt-output-element pt-output-table" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
         }
-        if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-' + item.type + '" style="' + style + '" aria-hidden="true"></div>';
-        if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-' + item.type + '" style="' + style + '" aria-hidden="true"></div>';
-        return '<div class="pt-output-element' + (item.type === 'field' ? ' pt-output-field' : '') + '" dir="auto" style="' + style + '">' + this.esc(value) + '</div>';
+        if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
+        if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
+        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" dir="auto" style="'+style+'">'+this.esc(value)+'</div>';
       };
       const pages = [];
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {
         const spec = pageSpecs[pageIndex];
-        const pageElements = elementsList.filter(item => Number(item.pageIndex || 0) === pageIndex);
+        const pageElements = (definition.elements || []).filter(item => Number(item.pageIndex || 0) === pageIndex);
         const elements = await Promise.all(pageElements.map(renderElement));
-        const margins = this.outputMargins || {top:8,bottom:8,right:8,left:8};
-        const safeWidth = 210, safeHeight = 297;
+        const margins = this.outputMargins || { top: 8, bottom: 8, right: 8, left: 8 };
+        const safeWidth = 210;
+        const safeHeight = 297;
         const availableWidth = Math.max(20, safeWidth - margins.left - margins.right);
         const availableHeight = Math.max(20, safeHeight - margins.top - margins.bottom);
-        const fitScale = Math.max(0.01, Math.min(availableWidth / Math.max(1,spec.width), availableHeight / Math.max(1,spec.height)));
-        const pageContent = '<div class="pt-print-page-content" style="width:' + spec.width + 'mm;height:' + spec.height + 'mm;left:' + margins.left + 'mm;top:' + margins.top + 'mm">' + elements.join('') + '</div>';
-        const pageStyle = 'width:' + spec.width + 'mm;height:' + spec.height + 'mm;--pt-print-scale:' + fitScale + ';--pt-print-width:' + safeWidth + 'mm;--pt-print-height:' + safeHeight + 'mm';
-        pages.push('<article class="pt-print-page" data-page-index="' + pageIndex + '" style="' + pageStyle + '" dir="rtl">' + pageContent + '</article>');
+        const fitScale = Math.max(0.01, Math.min(availableWidth / Math.max(1, spec.width), availableHeight / Math.max(1, spec.height)));
+        const pageContent = '<div class="pt-print-page-content" style="width:'+spec.width+'mm;height:'+spec.height+'mm;left:'+margins.left+'mm;top:'+margins.top+'mm">'+elements.join('')+'</div>';
+        const pageStyle = 'width:'+spec.width+'mm;height:'+spec.height+'mm;--pt-print-scale:'+fitScale+
+          ';--pt-print-width:'+safeWidth+'mm;--pt-print-height:'+safeHeight+'mm';
+        pages.push('<article class="pt-print-page" data-page-index="'+pageIndex+'" style="'+pageStyle+'" dir="rtl">'+pageContent+'</article>');
       }
       return pages.join('');
     },
