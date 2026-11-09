@@ -192,8 +192,8 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.match(module,/const fitScale = overlayOnly \? 1 : Math\.max\(0\.01, Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)\)/);
  assert.ok(module.includes('safeWidth - margins.left - margins.right'));
  assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
- assert.match(module,/const safeWidth = overlayOnly \\? spec\\.width : 210;/);
- assert.match(module,/const safeHeight = overlayOnly \\? spec\\.height : 297;/);
+ assert.match(module,/const safeWidth = overlayOnly \? spec\.width : 210;/);
+ assert.match(module,/const safeHeight = overlayOnly \? spec\.height : 297;/);
  assert.match(module,/--pt-print-scale/);
  assert.match(module,/--pt-print-width/);
  assert.match(module,/pt-print-page-content/);
