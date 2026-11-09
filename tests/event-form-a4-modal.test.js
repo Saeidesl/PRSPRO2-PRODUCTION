@@ -38,6 +38,19 @@ test('a completed connected form can be submitted while its A4 sheet is minimize
   assert.ok(source.includes('this.collectConfiguredFormResponses(projectId)'));
 });
 
+test('A4 confirmation button closes the sheet without submitting the event', () => {
+  const prepareStart = source.indexOf('prepareConfiguredFormsA4: function (section, container)');
+  const prepareEnd = source.indexOf('openConfiguredFormsA4: function ()', prepareStart);
+  const prepare = source.slice(prepareStart, prepareEnd);
+  assert.ok(prepare.includes("confirm.type = 'button'"));
+  assert.ok(prepare.includes("confirm.id = 'event-forms-a4-confirm'"));
+  assert.ok(prepare.includes("confirm.textContent = 'تأیید'"));
+  assert.ok(prepare.includes('confirm.addEventListener(\\'click\\', () => this.closeConfiguredFormsA4())'));
+  assert.ok(prepare.indexOf('viewport.appendChild(paper)') < prepare.indexOf('viewport.appendChild(actions)'));
+  assert.ok(styles.includes('.event-forms-a4-confirm'));
+  assert.ok(source.includes('closeConfiguredFormsA4: function ()'));
+});
+
 test('invalid required controls reopen A4 only when needed and hidden conditional fields are ignored', () => {
   assert.ok(source.includes('configuredContainer.contains(invalidControl)'));
   assert.ok(source.includes("wrapper.dataset.visibilityHidden === 'true'"));
