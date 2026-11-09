@@ -548,6 +548,21 @@ test('print designer renders live output beside the canvas using the selected pr
  assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
 });
 
+test('live preview exposes a print action and prints the current HTML preview without using the saved output route',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ assert.match(page,/id="pt-live-preview-print" disabled/);
+ assert.match(module,/printLivePreview: async function/);
+ assert.match(module,/this\.livePreviewPdfBlobUrl/);
+ assert.match(module,/window\.print\(\)/);
+ assert.match(module,/window\.open\(this\.livePreviewPdfBlobUrl, '_blank'\)/);
+ assert.match(module,/this\.livePreviewReady/);
+ assert.match(styles,/body\.pt-live-preview-printing #pt-live-preview-content/);
+ assert.match(styles,/pt-live-preview-printing #pt-live-preview-content \.pt-print-page:last-child/);
+ assert.doesNotMatch(module,/printLivePreview:[\s\S]{0,1800}saveTemplate\(/);
+});
+
 test('live preview omits only the empty asset ID of a pending local image without mutating the editor definition',()=>{
  const sandbox={window:{PMS:{}},console};
  vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
