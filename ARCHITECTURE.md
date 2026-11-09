@@ -1113,3 +1113,38 @@
 ### تصمیم تحویل
 - Task 1 تا Task 4 در TODO5 به‌عنوان بسته‌شده بایگانی می‌شوند، با این قید که آزمون میدانی فایل واقعی کارخانه انجام‌شده تلقی نمی‌شود.
 - در صورت مشاهده اشکال در استفاده بعدی از فرم واقعی کارخانه، آن مورد باید به‌عنوان تسک/فاز اصلاحی جدید ثبت شود؛ این فاز بسته‌شده بدون گزارش خطای مشخص بازگشایی نمی‌شود.
+
+
+## 2026-11-09 — حفظ PDF اصلی در خروجی نهایی قالب‌های چاپ
+
+### هدف و تصمیم معماری
+- سند PDF واردشده باید در طراحی، ذخیره‌سازی، پیش‌نمایش، دانلود و چاپ به‌عنوان سند اصلی باقی بماند؛ صفحات PDF نباید به PNG/JPEG تبدیل شوند.
+- قابلیت در همان Print Designer و مدل Definition.elements توسعه یافت؛ صفحه، API، فرم یا مسیر ذخیره موازی ایجاد نشد.
+
+### مسیرهای Frontend
+- pages/print-designer.html: محیط موجود طراحی و کنترل‌های خروجی.
+- js/modules/print-designer.js:
+  - handleImportFile و handlePdfFile: ورود PDF اصلی و نگهداری فایل/سند برای ذخیره.
+  - saveTemplate: ارسال PDF اصلی از مسیر موجود POST /print-templates/:id/pdf.
+  - fetchOutputPdfBytes: دریافت سند اصلی از API tenant-scoped و بررسی امضای PDF.
+  - generateSourcePdfOutput: بارگذاری سند با pdf-lib@1.17.1 و افزودن overlay بدون rasterize کردن صفحات اصلی.
+  - renderOutputDocument با overlayOnly: رندر شفاف صرفاً برای المان‌های PMS؛ صفحات منبع به تصویر پس‌زمینه تبدیل نمی‌شوند.
+  - drawPdfOverlayOnSourcePage: هم‌راستاسازی overlay با اندازه، CropBox و چرخش صفحه.
+  - renderFinalPdfPreview: استفاده از PDF.js صرفاً برای نمایش پیش‌نمایش سند تولیدشده.
+  - downloadOutputPdf و مسیر چاپ PDF نهایی برای دانلود و چاپ سند تولیدشده.
+- pages/print-output.html: کنترل دانلود خروجی PDF و تنظیمات حاشیه.
+- css/print-template-library.css: استایل لایه طراحی، پیش‌نمایش خروجی و کنترل‌های واکنش‌گرا.
+- tests/print-template-library.test.js: آزمون‌های رگرسیون حفظ سند اصلی، overlay، چرخش/CropBox، بارگذاری فونت/تصویر، دانلود و نسخه asset.
+- index.html: cache key قابلیت با 20261109-original-pdf-preserve-1 به‌روز شد.
+
+### قرارداد Backend و داده
+- APIهای موجود GET/POST /print-templates/:id/pdf و POST /print-templates/:id/resolve حفظ شدند.
+- PDF اصلی در Google Drive tenant-scoped و metadata/Definition در شیت موجود 36_PrintTemplates نگهداری می‌شوند.
+- Backend runtime، schema، permission و داده عملیاتی تغییر نکردند.
+
+### آزمون، ادغام، انتشار و پذیرش
+- syntax فایل‌های js/modules/print-designer.js و tests/print-template-library.test.js بررسی شد و آزمون‌های رگرسیون ساختاری مربوط اجرا شدند.
+- Frontend PR #68 با squash در main ادغام شد؛ commit 704db5a0003359cf3b27f3a13a258dc29b156fda.
+- Backend PR #40 با squash در main ادغام شد؛ commit 07a5eae94d0ecc440ffb660b7d9316954d375552؛ این PR فقط TODO5 را همگام کرد و runtime بک‌اند تغییر نکرد.
+- Frontend GitHub Pages workflow پس از merge اجرا شد؛ کاربر نسخه عملیاتی را تست و موفقیت حفظ PDF اصلی در خروجی را صریحاً تأیید کرد.
+- فاز با تأیید صریح Product Owner در 2026-11-09 بسته شد.
