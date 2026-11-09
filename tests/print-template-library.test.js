@@ -172,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-template-image-lossless-pdf-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-template-image-lossless-pdf-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-live-preview-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-live-preview-1'));
 });
 
 
@@ -439,7 +439,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-template-image-lossless-pdf-1'));
+ assert.ok(index.includes('20261109-live-preview-1'));
 });
 
 
@@ -485,7 +485,7 @@ test('template designer adds real image elements and uses dedicated tenant image
 test('saved template image assets are loaded for output and embedded as image elements instead of empty placeholders',()=>{
  const module=read('js/modules/print-designer.js');
  assert.match(module,/await this\.loadTemplateImages\(template, definition\)/);
- assert.match(module,/item\.type === 'image' && item\.assetId && this\.imageSources\[item\.assetId\]/);
+ assert.match(module,/item\.type === 'image' && this\.imageSources\[item\.assetId \|\| item\.id\]/);
  assert.match(module,/pt-output-image-content/);
  assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
 });
