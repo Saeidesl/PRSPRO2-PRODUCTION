@@ -9,7 +9,7 @@ const events = fs.readFileSync(path.join(__dirname, '..', 'js', 'modules', 'even
 const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 test('event submit enters visible busy state before asynchronous form response preparation', () => {
-  const validation = events.indexOf('if (!form.reportValidity()) return;');
+  const validation = events.indexOf('if (!this.validateEventFormControls(form)) return;');
   const busy = events.indexOf('this.setSubmitState(true);', validation);
   const collect = events.indexOf('await this.collectConfiguredFormResponses(projectId);', validation);
   assert.ok(validation >= 0);
@@ -18,10 +18,13 @@ test('event submit enters visible busy state before asynchronous form response p
   assert.equal(events.indexOf('this.setSubmitState(true);', collect), -1);
 });
 
-test('invalid configured form responses restore the submit state', () => {
-  assert.match(events, /if \(formResponses === null\) \{\s*this\.submitting = false;\s*this\.closeSubmitProgressModal\(\);\s*this\.setSubmitState\(false\);\s*return;/);
+test('invalid configured form responses reopen the A4 sheet when minimized and restore the submit state', () => {
+  const invalid = events.indexOf('if (formResponses === null) {');
+  const reveal = events.indexOf('this.openConfiguredFormsA4();', invalid);
+  const closeProgress = events.indexOf('this.closeSubmitProgressModal();', invalid);
+  const restore = events.indexOf('this.setSubmitState(false);', invalid);
+  assert.ok(invalid >= 0 && reveal > invalid && closeProgress > reveal && restore > closeProgress);
 });
-
 test('image preview and upload reuse the same FileReader promise', () => {
   assert.equal((events.match(/getConfiguredFormFileData\(file, input\)/g) || []).length >= 3, true);
   assert.match(events, /_pmsFileDataPromises/);
@@ -36,5 +39,5 @@ test('multiple images upload in bounded batches and preserve selection order', (
 });
 
 test('event submit asset cache-busting version is refreshed', () => {
-  assert.match(index, /js\/modules\/events\.js\?v=20261108-event-form-a4-modal-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261109-event-form-submit-validation-1/);
 });
