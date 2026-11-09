@@ -189,7 +189,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.match(module,/const fitScale = Math\.max\(0\.01, Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)\)/);
+ assert.match(module,/const fitScale = overlayOnly \\? 1 : Math\\.max\\(0\\.01, Math\\.min\\(availableWidth \/ Math\\.max\\(1, spec\\.width\\), availableHeight \/ Math\\.max\\(1, spec\\.height\\)\\)\\)/);
  assert.ok(module.includes('safeWidth - margins.left - margins.right'));
  assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
  assert.match(module,/const safeWidth = overlayOnly \\? spec\\.width : 210;/);
