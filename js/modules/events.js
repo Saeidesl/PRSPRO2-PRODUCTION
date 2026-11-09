@@ -2067,12 +2067,6 @@
       document.getElementById('event-create-form')
         .addEventListener('submit', (event) => {
           event.preventDefault();
-          const a4Section = document.getElementById('event-configured-forms-section');
-          if (this.formDefinitions && this.formDefinitions.length && a4Section && a4Section.hidden) {
-            this.openConfiguredFormsA4();
-            this.showFormError('ابتدا برگه فرم اطلاعات تکمیلی را بازبینی کنید؛ سپس ثبت رویداد را انجام دهید.');
-            return;
-          }
           // Catch failures in async preflight work too (for example form-value
           // collection or file preparation), before submitForm enters its API try/catch.
           this.submitForm().catch((error) => {
@@ -3641,6 +3635,24 @@
         String(value) === '1';
     },
 
+    validateEventFormControls: function (form) {
+      const configuredContainer = document.getElementById('event-configured-forms');
+      const invalidControl = Array.from(form && form.elements ? form.elements : []).find((control) => {
+        if (!control || control.disabled || typeof control.checkValidity !== 'function') return false;
+        const wrapper = control.closest ? control.closest('.event-form-value-field') : null;
+        if (wrapper && wrapper.dataset.visibilityHidden === 'true') return false;
+        return !control.checkValidity();
+      });
+      if (!invalidControl) return true;
+
+      if (configuredContainer && configuredContainer.contains(invalidControl)) {
+        this.openConfiguredFormsA4();
+      }
+      if (typeof invalidControl.reportValidity === 'function') invalidControl.reportValidity();
+      if (typeof invalidControl.focus === 'function') invalidControl.focus({ preventScroll: true });
+      return false;
+    },
+
     submitForm: async function () {
       if (this.submitting) return;
 
@@ -3680,7 +3692,7 @@
         return;
       }
 
-      if (!form.reportValidity()) return;
+      if (!this.validateEventFormControls(form)) return;
 
       this.submitting = true;
       this.setSubmitState(true);
@@ -3692,6 +3704,21 @@
       const description = descriptionInput.value.trim();
       const formResponses = await this.collectConfiguredFormResponses(projectId);
       if (formResponses === null) {
+        const a4Section = document.getElementById('event-configured-forms-section');
+        const configuredContainer = document.getElementById('event-configured-forms');
+        if (a4Section && a4Section.hidden) {
+          this.openConfiguredFormsA4();
+          window.requestAnimationFrame(() => {
+            const invalidControl = configuredContainer && (
+              configuredContainer.querySelector(':invalid') ||
+              configuredContainer.querySelector('[data-column-required="true"]') ||
+              configuredContainer.querySelector('[data-form-value][required]')
+            );
+            if (invalidControl && typeof invalidControl.focus === 'function') {
+              invalidControl.focus({ preventScroll: true });
+            }
+          });
+        }
         this.submitting = false;
         this.closeSubmitProgressModal();
         this.setSubmitState(false);

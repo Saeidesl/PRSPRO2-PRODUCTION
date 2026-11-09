@@ -1,6 +1,6 @@
 'use strict';
 
-// Regression coverage for the connected-form A4 presentation.
+// Regression coverage for the connected-form A4 presentation and submission.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -12,42 +12,55 @@ const styles = fs.readFileSync(path.join(__dirname, '..', 'css', 'events.css'), 
 const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 test('connected event forms are presented in a full-screen A4 sheet without replacing the form controls', () => {
-  assert.match(source, /prepareConfiguredFormsA4: function \(section, container\)/);
-  assert.match(source, /paper\.appendChild\(container\)/);
-  assert.match(source, /section\.replaceChildren\(dialog\)/);
-  assert.match(source, /event-forms-a4-paper/);
-  assert.match(source, /event-configured-forms-launcher/);
+  assert.ok(source.includes('prepareConfiguredFormsA4: function (section, container)'));
+  assert.ok(source.includes('paper.appendChild(container)'));
+  assert.ok(source.includes('section.replaceChildren(dialog)'));
+  assert.ok(source.includes('event-forms-a4-paper'));
+  assert.ok(source.includes('event-configured-forms-launcher'));
 });
 
 test('connected forms open automatically and can be reopened after minimizing the sheet', () => {
-  assert.match(source, /if \(definitions\.length\) this\.openConfiguredFormsA4\(\)/);
-  assert.match(source, /openConfiguredFormsA4: function \(\)/);
-  assert.match(source, /closeConfiguredFormsA4: function \(\)/);
-  assert.match(source, /event-configured-forms-open/);
-  assert.match(source, /event-forms-a4-close/);
+  assert.ok(source.includes('if (definitions.length) this.openConfiguredFormsA4()'));
+  assert.ok(source.includes('openConfiguredFormsA4: function ()'));
+  assert.ok(source.includes('closeConfiguredFormsA4: function ()'));
+  assert.ok(source.includes('event-configured-forms-open'));
+  assert.ok(source.includes('event-forms-a4-close'));
 });
 
-test('closing the A4 sheet cannot silently submit hidden required fields', () => {
-  assert.match(source, /a4Section\.hidden\)\s*\{\s*this\.openConfiguredFormsA4\(\)/);
-  assert.match(source, /ابتدا برگه فرم اطلاعات تکمیلی را بازبینی کنید/);
+test('a completed connected form can be submitted while its A4 sheet is minimized', () => {
+  const submitStart = source.indexOf("document.getElementById('event-create-form')");
+  const submitEnd = source.indexOf("modal.addEventListener('click'", submitStart);
+  const submitListener = source.slice(submitStart, submitEnd);
+  assert.equal(submitStart >= 0 && submitEnd > submitStart, true);
+  assert.equal(submitListener.includes('a4Section.hidden'), false);
+  assert.equal(submitListener.includes('ابتدا برگه فرم اطلاعات تکمیلی را بازبینی کنید'), false);
+  assert.ok(source.includes('validateEventFormControls: function (form)'));
+  assert.ok(source.includes('this.collectConfiguredFormResponses(projectId)'));
+});
+
+test('invalid required controls reopen A4 only when needed and hidden conditional fields are ignored', () => {
+  assert.ok(source.includes('configuredContainer.contains(invalidControl)'));
+  assert.ok(source.includes("wrapper.dataset.visibilityHidden === 'true'"));
+  assert.ok(source.includes('if (formResponses === null)'));
+  assert.ok(source.includes('this.openConfiguredFormsA4()'));
+  assert.ok(source.includes("configuredContainer.querySelector(':invalid')"));
 });
 
 test('A4 modal supports keyboard dismissal, mobile scrolling, print sizing, and reduced motion', () => {
-  assert.match(source, /Events\.closeConfiguredFormsA4\(\)/);
-  assert.match(styles, /#event-configured-forms-section\.event-configured-forms-a4-overlay/);
-  assert.match(styles, /width: min\(210mm, calc\(100vw - 72px\)\)/);
-  assert.match(styles, /@media \(max-width: 700px\)/);
-  assert.match(styles, /@media print/);
-  assert.match(styles, /prefers-reduced-motion: reduce/);
+  assert.ok(source.includes('Events.closeConfiguredFormsA4()'));
+  assert.ok(styles.includes('#event-configured-forms-section.event-configured-forms-a4-overlay'));
+  assert.ok(styles.includes('width: min(210mm, calc(100vw - 72px))'));
+  assert.ok(styles.includes('@media (max-width: 700px)'));
+  assert.ok(styles.includes('@media print'));
+  assert.ok(styles.includes('prefers-reduced-motion: reduce'));
 });
 
 test('A4 form UI keeps the existing event submission and response collection methods', () => {
-  assert.match(source, /collectConfiguredFormResponses: async function \(projectId\)/);
-  assert.match(source, /this\.collectConfiguredFormResponses\(projectId\)/);
-  assert.match(source, /PMS\.Api\.post\(['"]\/events['"]/);
+  assert.ok(source.includes('collectConfiguredFormResponses: async function (projectId)'));
+  assert.ok(source.includes("PMS.Api.post('/events'"));
 });
 
-test('event form assets use the A4 cache-busting version', () => {
-  assert.match(index, /events\.css\?v=20261108-event-form-a4-modal-1/);
-  assert.match(index, /js\/modules\/events\.js\?v=20261108-event-form-a4-modal-1/);
+test('event form assets use the submit-validation cache-busting version', () => {
+  assert.ok(index.includes('events.css?v=20261109-event-form-submit-validation-1'));
+  assert.ok(index.includes('js/modules/events.js?v=20261109-event-form-submit-validation-1'));
 });
