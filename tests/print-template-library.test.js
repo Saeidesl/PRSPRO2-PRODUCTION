@@ -560,7 +560,11 @@ test('live preview exposes a print action and prints the current HTML preview wi
  assert.match(module,/this\.livePreviewReady/);
  assert.match(styles,/body\.pt-live-preview-printing #pt-live-preview-content/);
  assert.match(styles,/pt-live-preview-printing #pt-live-preview-content \.pt-print-page:last-child/);
- assert.doesNotMatch(module,/printLivePreview:[\s\S]{0,1800}saveTemplate\(/);
+ const start=module.indexOf('    printLivePreview: async function');
+ const end=module.indexOf('    toggleLivePreviewExpanded: function',start);
+ const printMethod=module.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.doesNotMatch(printMethod,/saveTemplate\(|PMS\.Api\.(post|put)\(/);
 });
 
 test('live preview omits only the empty asset ID of a pending local image without mutating the editor definition',()=>{
