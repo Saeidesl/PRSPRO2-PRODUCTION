@@ -19,7 +19,7 @@
     livePreviewPending: false,
     livePreviewExpanded: false,
     livePreviewReady: false,
-    livePreviewPdfBlobUrl: '',
+    livePreviewPdfBlob: null,
     outputPageSpec: { width: 210, height: 297 },
     outputMargins: { top: 8, bottom: 8, right: 8, left: 8 },
     outputPdfObjectUrls: [],
@@ -1277,10 +1277,7 @@
       }
     },
     clearLivePreviewPdf: function () {
-      if (this.livePreviewPdfBlobUrl && window.URL && typeof window.URL.revokeObjectURL === 'function') {
-        window.URL.revokeObjectURL(this.livePreviewPdfBlobUrl);
-      }
-      this.livePreviewPdfBlobUrl = '';
+      this.livePreviewPdfBlob = null;
     },
     printLivePreview: async function () {
       const root = document.getElementById('pt-live-preview-content');
@@ -1288,11 +1285,16 @@
         this.setStatus('pt-live-preview-status', 'ابتدا یک پروژه انتخاب کن و منتظر تکمیل پیش‌نمایش بمان.', true);
         return;
       }
-      if (this.livePreviewPdfBlobUrl) {
-        const opened = window.open(this.livePreviewPdfBlobUrl, '_blank');
-        this.setStatus('pt-live-preview-status', opened
-          ? 'PDF نهایی باز شد؛ از گزینه چاپ در نمایشگر PDF استفاده کن.'
-          : 'مرورگر بازکردن PDF را مسدود کرد؛ اجازه بازشدن پنجره را بده و دوباره تلاش کن.', !opened);
+      if (this.livePreviewPdfBlob) {
+        const printUrl = window.URL.createObjectURL(this.livePreviewPdfBlob);
+        const opened = window.open(printUrl, '_blank');
+        if (opened) {
+          window.setTimeout(() => window.URL.revokeObjectURL(printUrl), 600000);
+          this.setStatus('pt-live-preview-status', 'PDF نهایی باز شد؛ از گزینه چاپ در نمایشگر PDF استفاده کن.');
+        } else {
+          window.URL.revokeObjectURL(printUrl);
+          this.setStatus('pt-live-preview-status', 'مرورگر بازکردن PDF را مسدود کرد؛ اجازه بازشدن پنجره را بده و دوباره تلاش کن.', true);
+        }
         return;
       }
       let printStyle = document.getElementById('pt-live-preview-page-rule');
@@ -1382,7 +1384,7 @@
           const outputBlob = await this.generateSourcePdfOutput(template, project, data);
           if (requestId !== this.livePreviewSequence) return;
           this.clearLivePreviewPdf();
-          this.livePreviewPdfBlobUrl = window.URL.createObjectURL(outputBlob);
+          this.livePreviewPdfBlob = outputBlob;
           await this.renderFinalPdfPreview(outputBlob, 'pt-live-preview-content');
         } else {
           this.clearLivePreviewPdf();
