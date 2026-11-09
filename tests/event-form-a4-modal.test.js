@@ -74,6 +74,6 @@ test('A4 form UI keeps the existing event submission and response collection met
 });
 
 test('event form assets use the submit-validation cache-busting version', () => {
-  assert.ok(index.includes('events.css?v=20261109-event-form-submit-validation-1'));
-  assert.ok(index.includes('js/modules/events.js?v=20261109-event-form-submit-validation-1'));
+  assert.ok(index.includes('events.css?v=20261109-event-form-a4-confirm-1'));
+  assert.ok(index.includes('js/modules/events.js?v=20261109-event-form-a4-confirm-1'));
 });
