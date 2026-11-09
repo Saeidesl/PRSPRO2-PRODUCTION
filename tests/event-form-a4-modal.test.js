@@ -23,6 +23,13 @@ test('connected forms open automatically and can be reopened after minimizing th
   assert.ok(source.includes('if (definitions.length) this.openConfiguredFormsA4()'));
   assert.ok(source.includes('openConfiguredFormsA4: function ()'));
   assert.ok(source.includes('closeConfiguredFormsA4: function ()'));
+  const closeStart = source.indexOf('closeConfiguredFormsA4: function ()');
+  const closeEnd = source.indexOf('parseVisibilityRule: function', closeStart);
+  const closeHandler = source.slice(closeStart, closeEnd);
+  assert.ok(closeHandler.includes('section.hidden = true'));
+  assert.ok(closeHandler.includes('launcher.hidden = false'));
+  assert.equal(closeHandler.includes('replaceChildren'), false);
+  assert.equal(closeHandler.includes('innerHTML ='), false);
   assert.ok(source.includes('event-configured-forms-open'));
   assert.ok(source.includes('event-forms-a4-close'));
 });
