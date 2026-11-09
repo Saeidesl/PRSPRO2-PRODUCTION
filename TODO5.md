@@ -1,5 +1,5 @@
 ## 🎯 Current Objective
-افزودن دکمه «تأیید» در انتهای برگه A4 فرم‌های متصل به رویداد؛ این دکمه فقط برگه را می‌بندد و مقادیر فرم را حفظ می‌کند و به هیچ عنوان رویداد را ثبت نمی‌کند.
+افزودن پیش‌نمایش زنده و واقعی خروجی چاپ در محیط قالب‌ساز، بدون ذخیره اجباری قالب.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 ### مخازن و شاخه عملیاتی
@@ -95,3 +95,42 @@
   - *Log:* Frontend `js/modules/events.js`: در `prepareConfiguredFormsA4(section, container)` عنصر `button#event-forms-a4-confirm` با متن «تأیید» ساخته و فقط به `closeConfiguredFormsA4()` متصل شد؛ دکمه پس از `paper` در viewport قرار گرفت. `css/events.css`: استایل `.event-forms-a4-actions` و `.event-forms-a4-confirm` و مخفی‌سازی در `@media print`. `tests/event-form-a4-modal.test.js`: تست نوع button، متن، listener بستن، ترتیب قرارگیری و حفظ DOM/مقادیر. `index.html`: cache-busting با نسخه `20261109-event-form-a4-confirm-1`. Frontend PR #73 با merge commit `0bcc7f43d17ae1f9388218e798b421fef5a07aad` ادغام شد. Backend PR #45 فقط مستندات TODO5 را sync کرد؛ هیچ تغییر runtime/API/schema/Sheet نداشت و با commit `ec5c890ae296c6421a6512aedb2cdfba3d343fb3` ادغام شد.
 - [x] **Task 3 — آزمون رگرسیون، ادغام و انتشار:** تست‌ها و کنترل‌های CI موفق شدند؛ هر دو PR ادغام و انتشار Frontend به GitHub Pages با موفقیت تکمیل شد؛ Product Owner تست عملیاتی را تأیید کرد.
   - *Log:* Frontend PR #73 ادغام شد؛ workflowهای `Frontend checks` run `42633388334`، `PMS cross-repository QA` run `42633388482` و `PMS frontend agent suite` run `42633388613` موفق شدند. انتشار `Publish frontend to GitHub Pages (MAIN)` run `42633389071` و `pages build and deployment` run `42633385825` هر دو با conclusion=success تکمیل شدند. کاربر در 2026-11-09 تست عملیاتی را تأیید کرد: دکمه A4 را بدون ثبت رویداد می‌بندد و اطلاعات فرم پس از بازگشایی حفظ می‌شوند. Backend PR #45 فقط مستندات بود؛ انتشار مجدد Apps Script لازم نبود. ادغام‌ها: Frontend `0bcc7f43d17ae1f9388218e798b421fef5a07aad`، Backend `ec5c890ae296c6421a6512aedb2cdfba3d343fb3`.
+
+
+## 2026-11-09 — پیش‌نمایش زنده در محیط قالب‌ساز
+
+### 🎯 Current Objective
+افزودن پیش‌نمایش واقعی و زنده خروجی چاپ در همان محیط طراحی؛ تغییرات ذخیره‌نشده باید بدون رفتن به صفحه چاپ اسناد و بدون ذخیره قالب قابل مشاهده باشند.
+
+### 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
+#### مخازن و شاخه‌های عملیاتی
+- Backend: Saeidesl/PRSPRO2BACKEND-PRODUCTION، شاخه feat/live-print-preview-20261109، مبنا main با commit 33c36066d559f0e051fc6525b50c6d0c61c797f9.
+- Frontend: Saeidesl/PRSPRO2-PRODUCTION، شاخه feat/live-print-preview-20261109، مبنا main با commit 51a545c8cc6648e60dea6ac06b60fda8edf981e5.
+- هر دو شاخه مستقل از main ساخته شده‌اند؛ مخازن توسعه و شاخه‌های قدیمی feature مبنای این کار نیستند.
+
+#### معماری کشف‌شده Frontend
+- pages/print-designer.html: صفحه فعلی قالب‌ساز، toolbar، پنل تنظیمات، بوم #pt-design-canvas و فرم ذخیره #pt-template-form.
+- js/modules/print-designer.js:
+  - definition منبع واحد تغییرات جاری و ذخیره‌نشده است.
+  - renderEditor() و renderCanvas() بعد از تغییرات، بوم را رندر می‌کنند؛ drag/resize در bindEditor() و ویرایش تنظیمات در applyInspectorChange() انجام می‌شود.
+  - editTemplate() قالب و PDF موجود را بارگذاری می‌کند؛ saveTemplate() تنها مسیر ذخیره صریح است.
+  - renderOutputDocument(template, project, data) موتور HTML خروجی و generateSourcePdfOutput() موتور PDF اصلی/overlay است.
+  - loadTemplateImages()، loadOutputPdfPages() و fetchOutputPdfBytes() منابع تصویری و PDF را از مسیرهای امن موجود بارگذاری می‌کنند.
+  - loadOutputOptions() فهرست پروژه‌ها و قالب‌ها را در صفحه چاپ اسناد می‌گیرد؛ resolveOutput() از POST /print-templates/:id/resolve استفاده می‌کند.
+- css/print-template-library.css: استایل بوم، صفحه‌های طراحی، خروجی چاپ و breakpoint موبایل؛ پنل preview در همین فایل توسعه می‌یابد.
+- tests/print-template-library.test.js: تست‌های قالب‌ساز، رندر خروجی، PDF، تصاویر، چندصفحه‌ای و نسخه asset.
+- index.html: cache-busting فایل‌های print-template-library.css و print-designer.js.
+
+#### قرارداد و قیود
+- Backend endpoint هدف POST /print-templates/preview با payload {ProjectID, Definition} و پاسخ {project, data}؛ فقط resolve می‌کند و چیزی ذخیره نمی‌کند. مجوز PROJECT_VIEW و tenant/project scope الزامی است.
+- فقط Definition جاری و ذخیره‌نشده preview می‌شود؛ مسیر ذخیره قالب فعلی saveTemplate() و APIهای فعلی دست‌نخورده می‌مانند.
+- رندر preview از renderOutputDocument و مسیر PDF موجود reuse شود؛ هیچ موتور چاپ موازی یا کپی Definition ساخته نشود.
+- دسکتاپ: صفحه طراحی و preview کنار هم؛ موبایل: تغییر نما/نمایش تمام‌صفحه؛ تغییرات با debounce به‌روز شوند و پاسخ‌های کهنه درخواست‌ها نمایش داده نشوند.
+- preview نباید فایل‌های موقت یا Definition را در Google Sheets/Drive ذخیره کند. برای assetهای تازه انتخاب‌شده در مرورگر از داده موقت حافظه استفاده شود تا زمان ذخیره صریح.
+
+### 📋 Macro-Task Queue & Implementation Log
+- [x] **Task 1 — Discovery & Planning:** بررسی TODO5.md و ARCHITECTURE.md هر دو مخزن، آخرین commitهای main، شاخه‌ها، Print Designer، موتور خروجی، مسیرهای resolve و منابع داده انجام شد.
+  - *Log:* Backend main=33c36066d559f0e051fc6525b50c6d0c61c797f9 و Frontend main=51a545c8cc6648e60dea6ac06b60fda8edf981e5؛ شاخه مستقل feat/live-print-preview-20261109 در هر دو مخزن ایجاد شد. Frontend: pages/print-designer.html، js/modules/print-designer.js توابع bindEditor، renderEditor، renderCanvas، editTemplate، saveTemplate، renderOutputDocument، generateSourcePdfOutput؛ css/print-template-library.css، tests/print-template-library.test.js و index.html بررسی شدند. Backend resolver فعلی و validator Definition نیز برای قرارداد API preview بررسی شدند. خروجی باید از همان موتور چاپ تولید شود و داده پروژه از مسیر tenant-scoped resolve شود.
+- [ ] **Task 2 — Backend: سرویس امن Resolve برای پیش‌نمایش ذخیره‌نشده (IN PROGRESS):** استخراج منطق resolve مشترک و افزودن endpoint POST /print-templates/preview با دریافت ProjectID و Definition، اعتبارسنجی و کنترل دسترسی، بدون ذخیره‌سازی.
+- [ ] **Task 3 — Frontend: پیش‌نمایش زنده در همان قالب‌ساز:** افزودن انتخاب پروژه و پنل پیش‌نمایش در کنار بوم، رندر تغییرات ذخیره‌نشده از طریق موتور موجود، debounce، حفظ PDF/تصویر و واکنش‌گرایی.
+- [ ] **Task 4 — رگرسیون، سازگاری، ادغام و انتشار:** اجرای تست‌های کامل و بررسی عدم ذخیره ناخواسته، یکسانی preview با چاپ، PDF چندصفحه‌ای، RTL، تصاویر و موبایل؛ سپس ادغام/انتشار و تحویل برای تست Product Owner.
