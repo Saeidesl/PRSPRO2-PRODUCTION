@@ -18,6 +18,8 @@
     livePreviewBusy: false,
     livePreviewPending: false,
     livePreviewExpanded: false,
+    livePreviewReady: false,
+    livePreviewPdfBlobUrl: '',
     outputPageSpec: { width: 210, height: 297 },
     outputMargins: { top: 8, bottom: 8, right: 8, left: 8 },
     outputPdfObjectUrls: [],
@@ -1263,11 +1265,49 @@
         refresh.dataset.bound = '1';
         refresh.addEventListener('click', () => this.scheduleLivePreview(0));
       }
+      const print = document.getElementById('pt-live-preview-print');
+      if (print && print.dataset.bound !== '1') {
+        print.dataset.bound = '1';
+        print.addEventListener('click', () => this.printLivePreview());
+      }
       const expand = document.getElementById('pt-live-preview-expand');
       if (expand && expand.dataset.bound !== '1') {
         expand.dataset.bound = '1';
         expand.addEventListener('click', () => this.toggleLivePreviewExpanded());
       }
+    },
+    clearLivePreviewPdf: function () {
+      if (this.livePreviewPdfBlobUrl && window.URL && typeof window.URL.revokeObjectURL === 'function') {
+        window.URL.revokeObjectURL(this.livePreviewPdfBlobUrl);
+      }
+      this.livePreviewPdfBlobUrl = '';
+    },
+    printLivePreview: async function () {
+      const root = document.getElementById('pt-live-preview-content');
+      if (!this.livePreviewReady || !root) {
+        this.setStatus('pt-live-preview-status', 'ابتدا یک پروژه انتخاب کن و منتظر تکمیل پیش‌نمایش بمان.', true);
+        return;
+      }
+      if (this.livePreviewPdfBlobUrl) {
+        const opened = window.open(this.livePreviewPdfBlobUrl, '_blank');
+        this.setStatus('pt-live-preview-status', opened
+          ? 'PDF نهایی باز شد؛ از گزینه چاپ در نمایشگر PDF استفاده کن.'
+          : 'مرورگر بازکردن PDF را مسدود کرد؛ اجازه بازشدن پنجره را بده و دوباره تلاش کن.', !opened);
+        return;
+      }
+      let printStyle = document.getElementById('pt-live-preview-page-rule');
+      if (!printStyle) {
+        printStyle = document.createElement('style');
+        printStyle.id = 'pt-live-preview-page-rule';
+        document.head.appendChild(printStyle);
+      }
+      printStyle.textContent = '@page{size:A4 portrait;margin:0}';
+      document.body.classList.add('pt-live-preview-printing');
+      const images = Array.from(root.querySelectorAll('img'));
+      await Promise.all(images.map(image => image.decode ? image.decode().catch(() => {}) : Promise.resolve()));
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      window.print();
+      window.setTimeout(() => document.body.classList.remove('pt-live-preview-printing'), 1500);
     },
     toggleLivePreviewExpanded: function () {
       const panel = document.querySelector('.pt-live-preview-panel');
@@ -1285,6 +1325,9 @@
       if (!select || !select.value) return;
       this.livePreviewSequence += 1;
       this.livePreviewPending = true;
+      this.livePreviewReady = false;
+      const printButton = document.getElementById('pt-live-preview-print');
+      if (printButton) printButton.disabled = true;
       if (this.livePreviewTimer) window.clearTimeout(this.livePreviewTimer);
       this.livePreviewTimer = window.setTimeout(() => {
         this.livePreviewTimer = null;
@@ -1309,6 +1352,9 @@
       if (this.livePreviewBusy) { this.livePreviewPending = true; return; }
       this.livePreviewBusy = true;
       this.livePreviewPending = false;
+      this.livePreviewReady = false;
+      const printButton = document.getElementById('pt-live-preview-print');
+      if (printButton) printButton.disabled = true;
       const requestId = this.livePreviewSequence;
       const projectId = select.value;
       const definition = this.createLivePreviewDefinition();
@@ -1335,8 +1381,11 @@
         if (hasSourcePdf) {
           const outputBlob = await this.generateSourcePdfOutput(template, project, data);
           if (requestId !== this.livePreviewSequence) return;
+          this.clearLivePreviewPdf();
+          this.livePreviewPdfBlobUrl = window.URL.createObjectURL(outputBlob);
           await this.renderFinalPdfPreview(outputBlob, 'pt-live-preview-content');
         } else {
+          this.clearLivePreviewPdf();
           const outputHtml = await this.renderOutputDocument(template, project, data);
           if (requestId !== this.livePreviewSequence) return;
           root.innerHTML = outputHtml;
@@ -1345,10 +1394,15 @@
           ));
         }
         if (requestId === this.livePreviewSequence) {
-          this.setStatus('pt-live-preview-status', 'پیش‌نمایش به‌روز است؛ این خروجی شامل تغییرات ذخیره‌نشده قالب است.');
+          this.livePreviewReady = true;
+          if (printButton) printButton.disabled = false;
+          this.setStatus('pt-live-preview-status', 'پیش‌نمایش به‌روز است؛ می‌توانی همین خروجی را چاپ کنی.');
         }
       } catch (error) {
         if (requestId === this.livePreviewSequence) {
+          this.livePreviewReady = false;
+          this.clearLivePreviewPdf();
+          if (printButton) printButton.disabled = true;
           this.setStatus('pt-live-preview-status', error.message || 'ساخت پیش‌نمایش زنده ناموفق بود.', true);
           root.innerHTML = '<div class="pt-empty-state">پیش‌نمایش ساخته نشد؛ طراحی و تغییرات شما محفوظ است.</div>';
         }
