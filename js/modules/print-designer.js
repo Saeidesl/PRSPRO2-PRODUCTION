@@ -305,9 +305,10 @@
       this.renderEditor();
       this.setStatus('pt-editor-status','تصویر به صفحه اضافه شد؛ آن را جابه‌جا یا اندازه‌اش را تنظیم کن. با ذخیره قالب، فایل اصلی بارگذاری می‌شود.');
     },
-    loadTemplateImages: async function (template) {
+    loadTemplateImages: async function (template, sourceDefinition) {
       const images = Array.isArray(template && template.Images) ? template.Images : [];
-      const elements = (this.definition && this.definition.elements) || [];
+      const definition = sourceDefinition || this.definition || {};
+      const elements = Array.isArray(definition.elements) ? definition.elements : [];
       const assets = Object.create(null);
       images.forEach(image => {
         const id = image.ID || image.Id || image.AssetID || image.assetId;
@@ -1500,6 +1501,7 @@
       this.clearOutputPdfObjectUrls();
       const definition = template && template.Definition ? template.Definition : {};
       const overlayOnly = !!(options && options.overlayOnly);
+      await this.loadTemplateImages(template, definition);
       const pdfPages = !overlayOnly && template && template.Pdf && template.Pdf.HasFile
         ? await this.loadOutputPdfPages(template.ID, definition) : null;
       const page = definition.page || {};
@@ -1531,6 +1533,11 @@
               if (overlayOnly) throw error;
               image = '<div class="pt-output-image pt-output-image-error">بارگذاری تصویر ناموفق بود</div>';
             }
+          } else if (item.type === 'image' && item.assetId && this.imageSources[item.assetId]) {
+            image = '<img class="pt-output-image-content" src="' + this.esc(this.imageSources[item.assetId]) + '" alt="' + this.esc(item.fileName || 'تصویر قالب') + '">';
+          } else if (item.type === 'image') {
+            if (overlayOnly) throw new Error('تصویر ثابت قالب بارگذاری نشده است: ' + (item.fileName || item.assetId || 'تصویر'));
+            image = '<div class="pt-output-image pt-output-image-error">تصویر قالب در دسترس نیست</div>';
           } else {
             image = '<div class="pt-output-image pt-output-image-empty" aria-hidden="true"></div>';
           }
