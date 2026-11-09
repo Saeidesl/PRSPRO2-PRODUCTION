@@ -516,7 +516,6 @@
         this.activePageIndex = 0;
         this.definition = this.definition || this.blankDefinition();
         this.definition.pdf = {pageCount:pages.length,pages:pages};
-        const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = false;
         this.history = []; this.historyIndex = -1;
         this.renderEditor(); this.commitHistory();
         this.setStatus('pt-pdf-status', 'PDF آماده است: ' + file.name + ' · ' + pages.length + ' صفحه. برای ثبت دائمی، قالب را ذخیره کن.');
@@ -607,232 +606,9 @@
         const pdfFile = await this.imageFileToPdf(file);
         if (input) input.dataset.originalImageName = name;
         await this.handlePdfFile(pdfFile);
-        if (this.pdfDocument) this.setStatus('pt-pdf-status','تصویر با موفقیت به یک صفحه PDF تبدیل شد؛ اکنون می‌توانی تشخیص هوشمند را اجرا کنی.');
+        if (this.pdfDocument) this.setStatus('pt-pdf-status','تصویر به‌عنوان پس‌زمینه PDF آماده شد؛ محل فیلدها را با ابزارهای دستی قالب‌ساز اضافه کن.');
       } catch (error) {
         this.setStatus('pt-pdf-status',error.message || 'تبدیل تصویر ناموفق بود.',true);
-      }
-    },
-    normalizeSmartText: function (value) {
-      return String(value || '').toLowerCase().replace(/[\u0640\u200c\s:：،,؛;._-]+/g,'').replace(/[ي]/g,'ی').replace(/[ك]/g,'ک');
-    },
-    smartSourceCatalog: function () {
-      const groups = [];
-      (this.sources.projectFields || []).forEach(source => groups.push({label:source.label,binding:{id:'project_'+source.field,sourceType:'PROJECT_FIELD',field:source.field}}));
-      (this.sources.informationTypes || []).forEach(source => groups.push({label:source.Name,binding:{id:'info_'+source.ID,sourceType:'PROJECT_INFORMATION',informationTypeId:source.ID}}));
-      (this.sources.forms || []).forEach(form => (form.Fields || []).forEach(field => groups.push({
-        label:field.Name,binding:{id:'form_'+form.ID+'_'+field.ID,sourceType:'EVENT_FORM_FIELD',formId:form.ID,fieldId:field.ID,informationTypeId:field.InformationTypeID,selection:'LATEST'}
-      })));
-      return groups.filter(item => item.label && item.binding && item.binding.id);
-    },
-    suggestSmartBinding: function (label, catalog) {
-      const key = this.normalizeSmartText(label);
-      if (!key) return null;
-      const exact = catalog.find(item => this.normalizeSmartText(item.label) === key);
-      if (exact) return exact;
-      const aliases = [
-        {terms:['نامپروژه','عنوانپروژه','پروژه'],hint:['نامپروژه','عنوانپروژه']},
-        {terms:['کدپروژه','شمارهپروژه','کد'],hint:['کدپروژه','شمارهپروژه']},
-        {terms:['تعداد','مقدار','تیراژ'],hint:['تعداد','مقدار','تیراژ']},
-        {terms:['تاریخ','زمان'],hint:['تاریخ','زمان']},
-        {terms:['رنگ','رنگبندی'],hint:['رنگ']},
-        {terms:['سایز','اندازه'],hint:['سایز','اندازه']},
-        {terms:['توضیحات','شرح'],hint:['توضیحات','شرح']}
-      ];
-      const alias = aliases.find(item => item.terms.some(term => key.includes(term)));
-      if (!alias) return null;
-      return catalog.find(item => alias.hint.some(term => this.normalizeSmartText(item.label).includes(term))) || null;
-    },
-    normalizeSmartLineText: function (value) {
-      // Keep Unicode bidi controls: PDF.js may use them to preserve mixed Persian,
-      // Latin and numeric runs. Removing them changes the logical reading order.
-      return String(value || '').normalize('NFC')
-        .replace(/[\t\r\n ]+/g, ' ').trim();
-    },
-    getSmartTextDirection: function (value, fallback) {
-      const text = this.normalizeSmartLineText(value)
-        .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '');
-      const arabicCount = (text.match(/[\u0600-\u06FF]/g) || []).length;
-      const latinCount = (text.match(/[A-Za-z0-9]/g) || []).length;
-      if (arabicCount > latinCount) return 'rtl';
-      if (latinCount > arabicCount) return 'ltr';
-      return fallback === 'rtl' ? 'rtl' : 'ltr';
-    },
-    groupSmartTextLines: function (items) {
-      const rows = [];
-      (items || []).filter(item => item && item.text && this.normalizeSmartLineText(item.text)).forEach(item => {
-        const normalized = {text:this.normalizeSmartLineText(item.text),x:Number(item.x||0),y:Number(item.y||0),
-          width:Math.max(0,Number(item.width||0)),height:Math.max(1,Number(item.height||1)),
-          dir:String(item.dir||''),hasEOL:item.hasEOL===true};
-        const itemCenter = normalized.y + normalized.height / 2;
-        let row = rows.find(entry => {
-          const tolerance = Math.max(0.8,Math.min(2.5,Math.max(entry.height,normalized.height)*0.3));
-          return Math.abs(entry.centerY-itemCenter)<=tolerance;
-        });
-        if (!row) { row={centerY:itemCenter,height:normalized.height,items:[]}; rows.push(row); }
-        row.items.push(normalized);
-        row.height=Math.max(row.height,normalized.height);
-        row.centerY=row.items.reduce((sum,part)=>sum+part.y+part.height/2,0)/row.items.length;
-      });
-      const lines=[];
-      rows.sort((a,b)=>a.centerY-b.centerY).forEach(row=>{
-        const rtlHints=row.items.filter(item=>item.dir==='rtl').length;
-        const ltrHints=row.items.filter(item=>item.dir==='ltr').length;
-        const rowText=row.items.map(item=>item.text).join('');
-        const direction=(rtlHints+ltrHints>0 && rtlHints!==ltrHints)
-          ? (rtlHints>ltrHints?'rtl':'ltr')
-          : this.getSmartTextDirection(rowText,'rtl');
-        const rtl=direction==='rtl';
-        const ordered=row.items.slice().sort((a,b)=>rtl?b.x-a.x:a.x-b.x);
-        const segments=[];
-        ordered.forEach(item=>{
-          const segment=segments[segments.length-1];
-          const previous=segment&&segment.items[segment.items.length-1];
-          const gap=!previous?0:(rtl?previous.x-(item.x+item.width):item.x-(previous.x+previous.width));
-          // A large horizontal gap is more likely a column boundary than a word space.
-          const gapLimit=previous?Math.max(4.5,Math.max(previous.height,item.height)*1.6):0;
-          if(!previous||gap>gapLimit)segments.push({items:[item]});
-          else segment.items.push(item);
-        });
-        segments.forEach(segment=>{
-          const parts=segment.items;
-          const left=Math.min.apply(null,parts.map(item=>item.x));
-          const top=Math.min.apply(null,parts.map(item=>item.y));
-          const right=Math.max.apply(null,parts.map(item=>item.x+item.width));
-          const bottom=Math.max.apply(null,parts.map(item=>item.y+item.height));
-          let assembled='';
-          parts.forEach((part,index)=>{
-            const value=part.text;
-            if(!assembled){assembled=value;return;}
-            const previous=parts[index-1];
-            const gap=rtl?previous.x-(part.x+part.width):part.x-(previous.x+previous.width);
-            const fontHeight=Math.max(previous.height,part.height);
-            const wordGap=Math.max(0.35,Math.min(1.4,fontHeight*0.16));
-            const hasExplicitSpace=/\s$/.test(assembled)||/^\s/.test(value);
-            assembled+=(hasExplicitSpace||gap>wordGap?' ':'')+value;
-          });
-          const text=this.normalizeSmartLineText(assembled);
-          if(text)lines.push({text:text,x:left,y:top,width:Math.max(0,right-left),height:Math.max(1,bottom-top),rtl:rtl,direction:direction});
-        });
-      });
-      return lines;
-    },
-        smartLineToElements: function (lines, pageIndex, pageWidth, catalog, offset) {
-      const labelPattern = /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|تیراژ|رنگ|سایز|اندازه|مدل|پارچه|ملزومات|توضیح|شرح|امضا|تحویل|سفارش|واحد|نام خانوادگی|مشتری|کارفرما|name|code|number|date|quantity|qty|amount|color|size|model|fabric|material|supply|description|remark|signature|delivery|order|unit|customer|client|project|style)/i;
-      const results = [];
-      lines.forEach(line => {
-        const text = String(line.text || '').trim();
-        if (text.length < 2 || text.length > 90 || !labelPattern.test(text)) return;
-        if (results.some(item => item.pageIndex === pageIndex && this.normalizeSmartText(item.text) === this.normalizeSmartText(text))) return;
-        const fieldWidth = Math.max(24,Math.min(48,pageWidth*0.24));
-        const rtl = line.rtl !== false && line.direction !== 'ltr';
-        const proposedX = rtl ? Number(line.x||0)-fieldWidth-2 : Number(line.x||0)+Number(line.width||0)+2;
-        const x = Math.max(0,Math.min(pageWidth-fieldWidth,proposedX));
-        const y = Math.max(0,Number(line.y||0));
-        const match = this.suggestSmartBinding(text,catalog);
-        if (match && !this.definition.bindings.some(binding => binding.id === match.binding.id)) {
-          this.definition.bindings.push(Object.assign({},match.binding,{label:match.label}));
-        }
-        results.push({
-          id:'smart_'+pageIndex+'_'+(offset+results.length+1),
-          type:'field',text:'',label:text,x:Number(x.toFixed(2)),y:Number(y.toFixed(2)),
-          width:Number(fieldWidth.toFixed(2)),height:Math.max(7,Math.min(12,Number((line.height||5).toFixed(2))+3)),
-          pageIndex:pageIndex,fontSize:10,align:'right',bindingId:match ? match.binding.id : ''
-        });
-      });
-      return results;
-    },
-    runSmartDetection: async function () {
-      if (!this.pdfDocument) {
-        this.setStatus('pt-pdf-status','ابتدا یک PDF یا تصویر فرم را انتخاب کن.',true);
-        return;
-      }
-      const button = document.getElementById('pt-smart-detect');
-      if (button) button.disabled = true;
-      const previousElements = (this.definition.elements || []).filter(item => !String(item.id || '').startsWith('smart_'));
-      const detected = [];
-      const catalog = this.smartSourceCatalog();
-      let worker = null;
-      try {
-        this.setStatus('pt-pdf-status','در حال تحلیل متن و مختصات صفحات…');
-        for (let index=0; index<this.pdfDocument.numPages; index++) {
-          const page = await this.pdfDocument.getPage(index+1);
-          const viewport = page.getViewport({scale:1});
-          const widthMm = Number((viewport.width*25.4/72).toFixed(3));
-          const heightMm = Number((viewport.height*25.4/72).toFixed(3));
-          const content = await page.getTextContent();
-          const pageViewport = page.getViewport({scale:1});
-          let items = (content.items || []).filter(item => item.str && item.str.trim()).map(item => {
-            const transform = Array.isArray(item.transform) ? item.transform : [1,0,0,1,0,0];
-            const xLength = Math.hypot(transform[0],transform[1]) || 1;
-            const yLength = Math.hypot(transform[2],transform[3]) || Math.max(1,Number(item.height)||10);
-            const widthPoints = Math.max(0,Number(item.width)||0);
-            const heightPoints = Math.max(1,Number(item.height)||yLength);
-            const ux=transform[0]/xLength, uy=transform[1]/xLength;
-            const vx=transform[2]/yLength, vy=transform[3]/yLength;
-            const e=transform[4], f=transform[5];
-            const corners=[
-              pageViewport.convertToViewportPoint(e,f),
-              pageViewport.convertToViewportPoint(e+ux*widthPoints,f+uy*widthPoints),
-              pageViewport.convertToViewportPoint(e+vx*heightPoints,f+vy*heightPoints),
-              pageViewport.convertToViewportPoint(e+ux*widthPoints+vx*heightPoints,f+uy*widthPoints+vy*heightPoints)
-            ];
-            const xs=corners.map(point=>point[0]), ys=corners.map(point=>point[1]), mm=25.4/72;
-            return {text:item.str,x:Number((Math.min.apply(null,xs)*mm).toFixed(2)),
-              y:Number((Math.min.apply(null,ys)*mm).toFixed(2)),
-              width:Number(((Math.max.apply(null,xs)-Math.min.apply(null,xs))*mm).toFixed(2)),
-              height:Number(((Math.max.apply(null,ys)-Math.min.apply(null,ys))*mm).toFixed(2)),
-              dir:item.dir||'',hasEOL:item.hasEOL===true};
-          });
-          let lines = this.groupSmartTextLines(items);
-          if (!lines.length || !lines.some(line => /(نام|عنوان|کد|شماره|تاریخ|تعداد|مقدار|رنگ|سایز|اندازه|توضیح|امضا|سفارش|name|code|number|date|quantity|qty|color|size|description|signature|order|project)/i.test(line.text))) {
-            if (!worker) {
-              this.setStatus('pt-pdf-status','صفحه اسکن‌شده شناسایی شد؛ در حال بارگذاری OCR فارسی/انگلیسی روی همین دستگاه…');
-              await this.loadExternalScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js','Tesseract');
-              worker = await window.Tesseract.createWorker('fas+eng',1,{logger:info=>{
-                if (info && info.status === 'recognizing text') this.setStatus('pt-pdf-status','تشخیص متن صفحه '+(index+1)+'… '+Math.round((info.progress||0)*100)+'٪');
-              }});
-              if (typeof worker.setParameters === 'function') await worker.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
-            }
-            const renderScale = this.getPdfRenderScale(viewport,300);
-            const renderViewport = page.getViewport({scale:renderScale});
-            const canvas = document.createElement('canvas');
-            canvas.width=Math.ceil(renderViewport.width); canvas.height=Math.ceil(renderViewport.height);
-            const context=canvas.getContext('2d',{alpha:false});
-            await page.render({canvasContext:context,viewport:renderViewport}).promise;
-            const result=await worker.recognize(canvas);
-            const sx=widthMm/canvas.width, sy=heightMm/canvas.height;
-            const ocrLines=(result.data.lines||[]).filter(line=>line.text&&line.text.trim()&&line.bbox).map(line=>({
-              text:this.normalizeSmartLineText(line.text),x:line.bbox.x0*sx,y:line.bbox.y0*sy,
-              width:(line.bbox.x1-line.bbox.x0)*sx,height:(line.bbox.y1-line.bbox.y0)*sy,
-              direction:this.getSmartTextDirection(line.text,'rtl')
-            }));
-            if(ocrLines.length) lines=ocrLines.map(line=>Object.assign({},line,{rtl:line.direction==='rtl'}));
-            else {
-              items=(result.data.words||[]).filter(word=>word.text&&word.text.trim()).map(word=>({
-                text:word.text,x:word.bbox.x0*sx,y:word.bbox.y0*sy,
-                width:(word.bbox.x1-word.bbox.x0)*sx,height:(word.bbox.y1-word.bbox.y0)*sy
-              }));
-              lines=this.groupSmartTextLines(items);
-            }
-            canvas.width=0; canvas.height=0;
-          }
-          const pageElements = this.smartLineToElements(lines,index,widthMm,catalog,detected.length);
-          detected.push.apply(detected,pageElements);
-          if (typeof page.cleanup === 'function') page.cleanup();
-        }
-        if (!detected.length) {
-          this.setStatus('pt-pdf-status','تحلیل انجام شد اما برچسب قابل‌تشخیصی پیدا نشد. می‌توانی از ابزارهای دستی استفاده کنی.',true);
-          return;
-        }
-        this.definition.elements = previousElements.concat(detected);
-        this.renderBindings(); this.renderEditor(); this.commitHistory();
-        const connected = detected.filter(item=>item.bindingId).length;
-        this.setStatus('pt-pdf-status',detected.length+' محل ورود داده پیشنهاد شد؛ '+connected+' مورد به منبع PMS متصل شد. محل‌ها را در پیش‌نمایش بررسی و در صورت نیاز اصلاح کن، سپس قالب را ذخیره کن.');
-      } catch (error) {
-        this.setStatus('pt-pdf-status',error.message || 'تحلیل هوشمند سند ناموفق بود.',true);
-      } finally {
-        if (worker) { try { await worker.terminate(); } catch (_) {} }
-        if (button) button.disabled = false;
       }
     },
     loadTemplatePdf: async function (templateId, metadata) {
@@ -912,8 +688,6 @@
       this.bindLivePreview();
       const pdfInput = document.getElementById('pt-pdf-file');
       if (pdfInput) pdfInput.addEventListener('change', () => this.handleImportFile(pdfInput.files && pdfInput.files[0]));
-      const detectButton = document.getElementById('pt-smart-detect');
-      if (detectButton) detectButton.addEventListener('click', () => this.runSmartDetection());
       if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       await this.loadLibrary();
       this.loadOutputMargins();
@@ -1037,7 +811,6 @@
       if (this.pdfPageObserver) this.pdfPageObserver.disconnect();
       this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
       const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) { pdfInput.value = ''; delete pdfInput.dataset.originalImageName; }
-      const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = true;
       this.definition = this.blankDefinition();
       this.currentTemplateMeta = null;
       this.pendingImageFiles = Object.create(null);
@@ -1064,7 +837,6 @@
         this.pdfDocument = null; this.pdfFile = null; this.pdfRenderVersion++; this.activePageIndex = 0;
         if (item.Pdf && item.Pdf.HasFile) await this.loadTemplatePdf(item.ID, item.Pdf);
         await this.loadTemplateImages(item, this.definition);
-        const smartButton = document.getElementById('pt-smart-detect'); if (smartButton) smartButton.disabled = !this.pdfDocument;
         const pdfInput = document.getElementById('pt-pdf-file'); if (pdfInput) pdfInput.value = '';
         this.history = []; this.historyIndex = -1; this.selectedElementId = '';
         document.getElementById('pt-template-code').value = item.Code || '';

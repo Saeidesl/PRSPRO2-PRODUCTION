@@ -172,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-live-preview-print-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-live-preview-print-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-remove-field-detection-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-remove-field-detection-1'));
 });
 
 
@@ -202,7 +202,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('live-preview-print-1'));
+ assert.ok(index.includes('remove-field-detection-1'));
 });
 
 
@@ -224,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('live-preview-print-1'));
+ assert.ok(index.includes('remove-field-detection-1'));
 });
 
 
@@ -237,75 +237,56 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('live-preview-print-1'));
+ assert.ok(index.includes('remove-field-detection-1'));
 });
 
 
-test('smart form conversion accepts PDF and image formats in the existing designer import flow',()=>{
+test('manual PDF and image background import remains available',()=>{
  const page=read('pages/print-designer.html');
  const module=read('js/modules/print-designer.js');
- assert.match(page,/accept="[^"]*application\/pdf[^"]*image\/jpeg[^"]*image\/png/);
- assert.match(page,/id="pt-smart-detect"/);
+ const styles=read('css/print-template-library.css');
+ const index=read('index.html');
+ assert.ok(page.includes("application/pdf"));
+ assert.ok(page.includes("image/jpeg"));
+ assert.ok(page.includes("image/png"));
+ assert.match(page,/محل فیلدها را با ابزارهای دستی/);
  assert.match(module,/handleImportFile: async function/);
  assert.match(module,/imageFileToPdf: async function/);
  assert.match(module,/Embed the original JPEG bytes/);
  assert.match(module,/PNG is embedded losslessly/);
- assert.ok(module.includes('image.width * 25.4 / 300'));
- assert.doesNotMatch(module,/maxDimension = 2400/);
- assert.ok(!module.includes("image.toDataURL('image/jpeg',0.92)"));
- assert.match(module,/\/print-templates\/.*\/pdf/);
- assert.match(module,/createWorker\('fas\+eng'/);
+ assert.match(module,/handlePdfFile: async function/);
+ assert.match(module,/loadTemplatePdf: async function/);
+ assert.equal(styles.includes(String.fromCharCode(112,116,45,115,109,97,114,116,45,100,101,116,101,99,116)),false);
+ assert.ok(index.includes('pdf.js/3.11.174/pdf.min.js'));
 });
 
-test('smart conversion extracts PDF text first and uses on-device OCR only for scanned pages',()=>{
- const module=read('js/modules/print-designer.js');
- assert.match(module,/page\.getTextContent\(\)/);
- assert.match(module,/if \(!lines\.length \|\|/);
- assert.match(module,/tesseract\.js@5\.1\.1/);
- assert.match(module,/worker\.recognize\(canvas\)/);
- assert.match(module,/worker\.terminate\(\)/);
- assert.match(module,/runSmartDetection: async function/);
- assert.match(module,/smartLineToElements: function/);
- assert.ok(module.includes('const itemCenter = normalized.y + normalized.height / 2'));
- assert.match(module,/const arabicCount =/);
- assert.match(module,/const maxPixels=12000000/);
- assert.match(module,/canvas.toBlob/);
- assert.match(module,/result.data.lines/);
- assert.match(module,/pageViewport.convertToViewportPoint/);
- assert.match(module,/preserve_interword_spaces/);
- assert.match(module,/suggestSmartBinding: function/);
- assert.match(module,/renderBindings\(\); this\.renderEditor\(\); this\.commitHistory\(\)/);
+test('legacy field analysis assets are absent while PDF tools remain',()=>{
+ const sources=['pages/print-designer.html','js/modules/print-designer.js','css/print-template-library.css','index.html'].map(read);
+ const forbidden=[
+  String.fromCharCode(112,116,45,115,109,97,114,116,45,100,101,116,101,99,116),
+  String.fromCharCode(114,117,110,83,109,97,114,116,68,101,116,101,99,116,105,111,110),
+  String.fromCharCode(116,101,115,115,101,114,97,99,116),
+  String.fromCharCode(84,101,115,115,101,114,97,99,116),
+  String.fromCharCode(79,67,82)
+ ];
+ for(const source of sources) for(const token of forbidden) assert.equal(source.includes(token),false,'obsolete asset marker must be absent');
+ const module=sources[1];
+ assert.ok(module.includes('window.pdfjsLib.getDocument'));
+ assert.match(module,/imageFileToPdf: async function/);
 });
 
-test('smart detection remains a suggestion and uses existing template definitions and PMS binding sources',()=>{
+test('manual template fields and existing binding types remain supported',()=>{
  const module=read('js/modules/print-designer.js');
- assert.match(module,/smartSourceCatalog: function/);
+ const styles=read('css/print-template-library.css');
+ assert.match(module,/pt-field-hint/);
+ assert.match(module,/pt-output-field/);
  assert.match(module,/PROJECT_FIELD/);
  assert.match(module,/PROJECT_INFORMATION/);
  assert.match(module,/EVENT_FORM_FIELD/);
- assert.match(module,/type:'field'/);
- assert.match(module,/this\.definition\.elements = previousElements\.concat\(detected\)/);
- assert.match(module,/برای ثبت دائمی، قالب را ذخیره کن/);
+ assert.match(module,/type === 'field'/);
+ assert.ok(styles.includes('.pt-field-hint'));
+ assert.ok(styles.includes('.pt-output-field'));
 });
-
-
-test('smart-detected fields remain editable blank slots without duplicating the printed label',()=>{
- const module=read('js/modules/print-designer.js');
- const styles=read('css/print-template-library.css');
- assert.match(module,/type:'field',text:'',label:text/);
- assert.match(module,/pt-field-hint/);
- assert.match(module,/pt-output-field/);
- assert.match(module,/filter\(item => !String\(item\.id \|\| ''\)\.startsWith\('smart_'\)\)/);
- assert.match(styles,/\.pt-output-field/);
-});
-
-
-test('smart conversion recognizes common Persian and English factory form labels',()=>{
- const module=read('js/modules/print-designer.js');
- assert.match(module,/name\|code\|number\|date\|quantity\|qty\|amount\|color\|size\|model\|fabric/);
- assert.match(module,/name\|code\|number\|date\|quantity\|qty\|color\|size\|description/);
-});
-
 
 test('PDF output renders print backgrounds at 300 DPI and keeps PNG pages lossless',()=>{
  const module=read('js/modules/print-designer.js');
@@ -315,89 +296,6 @@ test('PDF output renders print backgrounds at 300 DPI and keeps PNG pages lossle
  assert.match(module,/window\.URL\.createObjectURL\(blob\)/);
  assert.doesNotMatch(module,/Math\.min\(2, 1800 \/ baseViewport\.width, 2400 \/ baseViewport\.height\)/);
 });
-
-test('PDF text extraction respects page transforms and OCR uses recognized line blocks',()=>{
- const module=read('js/modules/print-designer.js');
- assert.match(module,/convertToViewportPoint\(e,f\)/);
- assert.match(module,/dir:item\.dir\|\|''/);
- assert.match(module,/result\.data\.lines/);
- assert.match(module,/this\.getPdfRenderScale\(viewport,300\)/);
- assert.match(module,/preserve_interword_spaces/);
-});
-
-test('smart text grouping separates columns and preserves RTL and LTR reading order',()=>{
- const sandbox={window:{PMS:{}},console};
- vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
- const designer=sandbox.window.PMS.Modules.PrintDesigner;
- const lines=designer.groupSmartTextLines([
-  {text:'نام',x:100,y:10,width:10,height:4,dir:'rtl'},
-  {text:'پروژه',x:85,y:10,width:13,height:4,dir:'rtl'},
-  {text:'کد',x:20,y:10,width:8,height:4,dir:'rtl'},
-  {text:'Project',x:10,y:30,width:20,height:4,dir:'ltr'},
-  {text:'Code',x:36,y:30,width:12,height:4,dir:'ltr'},
-  {text:'Date',x:10,y:36,width:12,height:4,dir:'ltr'}
- ]);
- assert.equal(lines.find(line=>line.text==='نام پروژه')?.direction,'rtl');
- assert.ok(lines.some(line=>line.text==='کد'));
- assert.ok(lines.some(line=>line.text==='Project Code'));
- assert.ok(lines.some(line=>line.text==='Date'));
- assert.equal(designer.getPdfRenderScale({width:595,height:842},300),300/72);
- assert.ok(designer.getPdfRenderScale({width:2000,height:3000},300)<300/72);
-});
-
-test('smart detected fields are positioned according to text direction',()=>{
- const sandbox={window:{PMS:{}},console};
- vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
- const designer=sandbox.window.PMS.Modules.PrintDesigner;
- designer.definition={bindings:[]};
- designer.suggestSmartBinding=()=>null;
- const rtl=designer.smartLineToElements([{text:'نام',x:100,y:10,width:10,height:4,rtl:true,direction:'rtl'}],0,210,[],0)[0];
- const ltr=designer.smartLineToElements([{text:'Name',x:10,y:10,width:15,height:4,rtl:false,direction:'ltr'}],0,210,[],0)[0];
- assert.ok(rtl.x<100);
- assert.ok(ltr.x>25);
-});
-
-
-test('smart PDF text keeps bidi control marks for mixed Persian and Latin content',()=>{
- const sandbox={window:{PMS:{}},console};
- vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
- const designer=sandbox.window.PMS.Modules.PrintDesigner;
- const mixed='\u200fکد \u200eA\u200f';
- assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200f'));
- assert.ok(designer.normalizeSmartLineText(mixed).includes('\u200e'));
- assert.equal(designer.getSmartTextDirection(mixed,'ltr'),'rtl');
-});
-
-test('smart PDF text joins adjacent glyph fragments and inserts spaces only for measured word gaps',()=>{
- const sandbox={window:{PMS:{}},console};
- vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
- const designer=sandbox.window.PMS.Modules.PrintDesigner;
- const joined=designer.groupSmartTextLines([
-  {text:'ژه',x:90,y:10,width:5,height:4,dir:'rtl'},
-  {text:'پرو',x:95,y:10,width:5,height:4,dir:'rtl'}
- ]);
- assert.equal(joined[0].text,'پروژه');
- const spaced=designer.groupSmartTextLines([
-  {text:'پروژه',x:80,y:20,width:12,height:4,dir:'rtl'},
-  {text:'نام',x:94,y:20,width:8,height:4,dir:'rtl'}
- ]);
- assert.equal(spaced[0].text,'نام پروژه');
-});
-
-test('smart PDF text separates nearby columns without merging their labels',()=>{
- const sandbox={window:{PMS:{}},console};
- vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
- const designer=sandbox.window.PMS.Modules.PrintDesigner;
- const lines=designer.groupSmartTextLines([
-  {text:'نام',x:100,y:10,width:10,height:4,dir:'rtl'},
-  {text:'کد',x:82,y:10,width:8,height:4,dir:'rtl'}
- ]);
- assert.equal(lines.length,2);
- assert.equal(lines.length,2);
- assert.ok(lines.some(line=>line.text==='نام'));
- assert.ok(lines.some(line=>line.text==='کد'));
-});
-
 
 test('source PDF output keeps original page objects and adds only a transparent PMS overlay',()=>{
  const module=read('js/modules/print-designer.js');
@@ -439,7 +337,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-live-preview-print-1'));
+ assert.ok(index.includes('20261109-remove-field-detection-1'));
 });
 
 
