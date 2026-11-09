@@ -172,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-live-preview-pending-image-asset-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-live-preview-pending-image-asset-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-live-preview-print-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-live-preview-print-1'));
 });
 
 
@@ -202,7 +202,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('live-preview-pending-image-asset-1'));
+ assert.ok(index.includes('live-preview-print-1'));
 });
 
 
@@ -224,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('live-preview-pending-image-asset-1'));
+ assert.ok(index.includes('live-preview-print-1'));
 });
 
 
@@ -237,7 +237,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('live-preview-pending-image-asset-1'));
+ assert.ok(index.includes('live-preview-print-1'));
 });
 
 
@@ -439,7 +439,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-live-preview-pending-image-asset-1'));
+ assert.ok(index.includes('20261109-live-preview-print-1'));
 });
 
 
@@ -546,6 +546,25 @@ test('print designer renders live output beside the canvas using the selected pr
  assert.match(preview,/this\.renderOutputDocument\(template, project, data\)/);
  assert.match(preview,/this\.generateSourcePdfOutput\(template, project, data\)/);
  assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
+});
+
+test('live preview exposes a print action and prints the current HTML preview without using the saved output route',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ assert.match(page,/id="pt-live-preview-print" disabled/);
+ assert.match(module,/printLivePreview: async function/);
+ assert.match(module,/this\.livePreviewPdfBlob/);
+ assert.match(module,/window\.print\(\)/);
+ assert.match(module,/window\.open\(printUrl, '_blank'\)/);
+ assert.match(module,/this\.livePreviewReady/);
+ assert.match(styles,/body\.pt-live-preview-printing #pt-live-preview-content/);
+ assert.match(styles,/pt-live-preview-printing #pt-live-preview-content \.pt-print-page:last-child/);
+ const start=module.indexOf('    printLivePreview: async function');
+ const end=module.indexOf('    toggleLivePreviewExpanded: function',start);
+ const printMethod=module.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.doesNotMatch(printMethod,/saveTemplate\(|PMS\.Api\.(post|put)\(/);
 });
 
 test('live preview omits only the empty asset ID of a pending local image without mutating the editor definition',()=>{

@@ -224,3 +224,15 @@
 .pt-live-preview-panel.is-expanded .pt-live-preview-content{max-height:none;min-height:60vh}
 @media(max-width:1200px){.pt-editor-preview-layout{grid-template-columns:minmax(0,1fr)}.pt-live-preview-content{max-height:65vh}}
 @media(max-width:560px){.pt-live-preview-panel{padding:10px}.pt-live-preview-actions{grid-template-columns:1fr 1fr}.pt-live-preview-actions label{grid-column:1/-1}.pt-live-preview-actions select{grid-column:1/-1}.pt-live-preview-content{padding:6px;max-height:60vh}.pt-live-preview-panel.is-expanded{inset:4px;padding:10px}}
+
+
+/* Print the live preview directly from the designer without printing editor controls */
+@media print{
+  body.pt-live-preview-printing *{visibility:hidden!important}
+  body.pt-live-preview-printing #pt-live-preview-content,
+  body.pt-live-preview-printing #pt-live-preview-content *{visibility:visible!important}
+  body.pt-live-preview-printing #pt-live-preview-content{position:absolute!important;top:0!important;left:0!important;width:210mm!important;max-height:none!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important;border:0!important;border-radius:0!important;display:block!important}
+  body.pt-live-preview-printing #pt-live-preview-content .pt-print-page{display:block!important;box-sizing:border-box!important;width:210mm!important;height:297mm!important;min-width:0!important;max-width:none!important;min-height:0!important;margin:0!important;padding:0!important;box-shadow:none!important;overflow:hidden!important;break-after:page!important;page-break-after:always!important;break-inside:avoid!important;page-break-inside:avoid!important}
+  body.pt-live-preview-printing #pt-live-preview-content .pt-print-page:last-child{break-after:auto!important;page-break-after:auto!important}
+  body.pt-live-preview-printing #pt-live-preview-content .pt-output-image-content{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
