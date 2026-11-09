@@ -1631,7 +1631,7 @@
               segment = [];
               const elementId = element.getAttribute('data-pt-element-id');
               const imageItem = definitionElements.find(item => String(item.id) === String(elementId));
-              if (!imageItem || !imageItem.assetId) throw new Error('مشخصات تصویر مستقل قالب برای خروجی PDF پیدا نشد.');
+              if (!imageItem || !(imageItem.assetId || this.pendingImageFiles[elementId])) throw new Error('مشخصات تصویر مستقل قالب برای خروجی PDF پیدا نشد.');
               await this.drawTemplateImageOnSourcePage(pdfDocument, sourcePages[index], imageItem, pageSpec, PDFLib);
             } else {
               segment.push(element);
