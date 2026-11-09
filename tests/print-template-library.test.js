@@ -409,9 +409,11 @@ test('source PDF output keeps original page objects and adds only a transparent 
  const sourcePath=module.slice(start,end);
  assert.match(sourcePath,/PDFLib\.PDFDocument\.load\(sourceBytes\)/);
  assert.match(sourcePath,/pdfDocument\.getPages\(\)/);
- assert.match(sourcePath,/pdfDocument\.embedPng\(pngBytes\)/);
+ assert.match(sourcePath,/renderPdfOverlaySegment/);
+ assert.match(sourcePath,/drawTemplateImageOnSourcePage/);
+ assert.match(module,/pdfDocument\.embedPng\(pngBytes\)/);
  assert.match(sourcePath,/drawPdfOverlayOnSourcePage/);
- assert.match(sourcePath,/html2canvas\(node/);
+ assert.match(module,/html2canvas\(node/);
  assert.doesNotMatch(sourcePath,/pdfjsLib\.getDocument|page\.render\(/);
  assert.match(module,/page\.drawImage\(image, options\)/);
  assert.match(module,/page\.getCropBox\(\)/);
@@ -487,4 +489,19 @@ test('saved template image assets are loaded for output and embedded as image el
  assert.match(module,/item\.type === 'image' && item\.assetId && this\.imageSources\[item\.assetId\]/);
  assert.match(module,/pt-output-image-content/);
  assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
+});
+
+
+test('static template images are embedded in PDF without rasterizing or resampling the original image',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/getImageBytesForPdf: async function/);
+ assert.match(module,/overlayDocument\.embedJpg\(imageData\.bytes\)/);
+ assert.match(module,/overlayDocument\.embedPng\(imageData\.bytes\)/);
+ assert.match(module,/pdfDocument\.embedPdf\(await overlayDocument\.save\(\)\)/);
+ assert.match(module,/drawPdfOverlayPageOnSourcePage/);
+ assert.match(module,/data-pt-template-image="true"/);
+ assert.match(module,/renderPdfOverlaySegment/);
+ assert.match(module,/image\.naturalWidth/);
+ assert.match(module,/image\.naturalHeight/);
+ assert.match(module,/canvas\.toBlob\(blob => blob \? resolve\(blob\) : reject\(new Error\('تبدیل lossless تصویر WebP ناموفق بود\.'\)\), 'image\/png'\)/);
 });
