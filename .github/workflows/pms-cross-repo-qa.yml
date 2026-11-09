@@ -28,7 +28,7 @@ jobs:
       - name: Checkout backend reference
         uses: actions/checkout@v4
         with:
-          repository: Saeidesl/PRSPRO2BACKEND
+          repository: Saeidesl/PRSPRO2BACKEND-PRODUCTION
           ref: main
           path: backend
 
