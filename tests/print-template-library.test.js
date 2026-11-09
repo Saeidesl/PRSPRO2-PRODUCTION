@@ -479,3 +479,12 @@ test('template designer adds real image elements and uses dedicated tenant image
  assert.match(action,/input\.click\(\)/);
  assert.doesNotMatch(action,/imageFileToPdf/);
 });
+
+
+test('saved template image assets are loaded for output and embedded as image elements instead of empty placeholders',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/await this\.loadTemplateImages\(template, definition\)/);
+ assert.match(module,/item\.type === 'image' && item\.assetId && this\.imageSources\[item\.assetId\]/);
+ assert.match(module,/pt-output-image-content/);
+ assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
+});
