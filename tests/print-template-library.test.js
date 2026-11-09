@@ -522,3 +522,42 @@ test('JPEG template image bytes are embedded directly without re-encoding or dow
  assert.equal(drawnImageOptions.height,40*72/25.4);
  assert.ok(drawnPageOptions);
 });
+
+
+test('print designer renders live output beside the canvas using the selected project and unsaved definition',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ assert.match(page,/id="pt-live-preview-project"/);
+ assert.match(page,/id="pt-live-preview-content"/);
+ assert.match(page,/id="pt-live-preview-refresh"/);
+ assert.match(page,/id="pt-live-preview-expand"/);
+ assert.match(styles,/\.pt-editor-preview-layout/);
+ assert.match(styles,/\.pt-live-preview-panel\.is-expanded/);
+ assert.match(module,/loadLivePreviewProjects: async function/);
+ assert.match(module,/scheduleLivePreview: function/);
+ assert.match(module,/livePreviewSequence/);
+ assert.match(module,/PMS\.Api\.post\('\/print-templates\/preview'/);
+ assert.match(module,/ProjectID: projectId,[\s\S]*Definition: definition/);
+ const start=module.indexOf('    renderLivePreview: async function');
+ const end=module.indexOf('    loadOutputOptions: async function',start);
+ const preview=module.slice(start,end);
+ assert.ok(start>=0&&end>start);
+ assert.match(preview,/this\.renderOutputDocument\(template, project, data\)/);
+ assert.match(preview,/this\.generateSourcePdfOutput\(template, project, data\)/);
+ assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
+});
+
+test('live preview supports unsaved local PDF files and pending image assets without uploading or saving them',async()=>{
+ const sandbox={window:{PMS:{}},console,Uint8Array};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const localBytes=new Uint8Array([37,80,68,70,45,49]);
+ const loaded=await designer.fetchOutputPdfBytes('',{arrayBuffer:async()=>localBytes.buffer});
+ assert.deepEqual(Array.from(loaded),Array.from(localBytes));
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/this\.imageSources\[item\.assetId \|\| item\.id\]/);
+ assert.match(module,/this\.pendingImageFiles\[elementId\]/);
+ assert.match(module,/renderFinalPdfPreview: async function \(blob, rootId\)/);
+ assert.match(module,/this\.scheduleLivePreview\(650\)/);
+});
