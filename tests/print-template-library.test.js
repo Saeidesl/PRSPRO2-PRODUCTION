@@ -224,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('remove-field-detection-1'));
+ assert.ok(index.includes('remove-pdf-background-1'));
 });
 
 
@@ -321,7 +321,7 @@ test('print designer renders live output beside the canvas using the selected pr
  const preview=module.slice(start,end);
  assert.ok(start>=0&&end>start);
  assert.match(preview,/this\.renderOutputDocument\(template, project, data\)/);
- assert.match(preview,/this\.generateSourcePdfOutput\(template, project, data\)/);
+ assert.doesNotMatch(preview,/generateSourcePdfOutput|pdfFile|Pdf\.HasFile/);
  assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
 });
 
