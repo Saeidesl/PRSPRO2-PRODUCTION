@@ -15,6 +15,8 @@
     outputPageSpec: { width: 210, height: 297 },
     outputMargins: { top: 8, bottom: 8, right: 8, left: 8 },
     outputPdfObjectUrls: [],
+    imageSources: Object.create(null),
+    pendingImageFiles: Object.create(null),
     outputPdfBlobUrl: '',
     outputPdfFileName: 'PMS-document.pdf',
     outputMarginStorageKey: 'PMS_PRINT_OUTPUT_MARGINS_V1',
@@ -159,6 +161,15 @@
         input.dataset.bound = '1';
         input.addEventListener('change', () => this.applyInspectorChange(id, input.value));
       });
+      const imageInput = document.getElementById('pt-image-file');
+      if (imageInput && imageInput.dataset.bound !== '1') {
+        imageInput.dataset.bound = '1';
+        imageInput.addEventListener('change', () => {
+          const file = imageInput.files && imageInput.files[0];
+          imageInput.value = '';
+          if (file) this.handleImageSelection(file);
+        });
+      }
       ['pt-page-size','pt-page-orientation'].forEach(id => {
         const input = document.getElementById(id);
         if (!input || input.dataset.bound === '1') return;
@@ -203,7 +214,11 @@
         const binding = this.definition && this.definition.bindings && this.definition.bindings.find(item => item.sourceType === 'EVENT_FORM_RESPONSE' || item.selection === 'ALL');
         return this.createElement('table', { bindingId: binding ? binding.id : '' });
       }
-      if (action === 'add-image') return this.createElement('image');
+      if (action === 'add-image') {
+        const input = document.getElementById('pt-image-file');
+        if (input) input.click();
+        return;
+      }
       if (action === 'add-line') return this.createElement('line', { text: '' });
       if (action === 'add-divider') return this.createElement('divider', { text: '' });
       if (action === 'add-rectangle') return this.createElement('rectangle', { text: '' });
@@ -264,6 +279,76 @@
       }
       this.renderCanvas(); this.renderLayers(); this.commitHistory();
     },
+    handleImageSelection: async function (file) {
+      const mime = String(file.type || '').toLowerCase();
+      const ext = String(file.name || '').split('.').pop().toLowerCase();
+      const allowed = {'image/jpeg':['jpg','jpeg'],'image/png':['png'],'image/webp':['webp']};
+      if (!allowed[mime] || !allowed[mime].includes(ext)) {
+        this.setStatus('pt-editor-status','فقط تصویر JPG، PNG یا WebP پذیرفته می‌شود.',true);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        this.setStatus('pt-editor-status','حجم تصویر نباید بیشتر از ۱۰ مگابایت باشد.',true);
+        return;
+      }
+      let width = 55, height = 40;
+      try {
+        const bitmap = await createImageBitmap(file);
+        const ratio = bitmap.width / Math.max(1,bitmap.height);
+        height = Math.max(12,Math.min(70,width / Math.max(0.1,ratio)));
+        if (height > 60) { height = 60; width = height * ratio; }
+        if (bitmap.close) bitmap.close();
+      } catch (_) {}
+      const item = this.createElement('image',{text:'',fileName:file.name,mimeType:mime,assetId:'',width:Number(width.toFixed(1)),height:Number(height.toFixed(1)),fit:'contain'});
+      this.pendingImageFiles[item.id] = file;
+      this.imageSources[item.id] = window.URL.createObjectURL(file);
+      this.renderEditor();
+      this.setStatus('pt-editor-status','تصویر به صفحه اضافه شد؛ آن را جابه‌جا یا اندازه‌اش را تنظیم کن. با ذخیره قالب، فایل اصلی بارگذاری می‌شود.');
+    },
+    loadTemplateImages: async function (template, sourceDefinition) {
+      const images = Array.isArray(template && template.Images) ? template.Images : [];
+      const definition = sourceDefinition || this.definition || {};
+      const elements = Array.isArray(definition.elements) ? definition.elements : [];
+      const assets = Object.create(null);
+      images.forEach(image => {
+        const id = image.ID || image.Id || image.AssetID || image.assetId;
+        if (id) assets[String(id)] = image;
+      });
+      const ids = Array.from(new Set(elements.filter(item => item.type === 'image' && item.assetId).map(item => String(item.assetId))));
+      await Promise.all(ids.map(async assetId => {
+        if (!assets[assetId]) return;
+        try {
+          const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(template.ID) + '/images/' + encodeURIComponent(assetId), {trackSync:false});
+          const file = this.extract(response) || {};
+          const base64 = String(file.base64 || file.Base64 || '').replace(/^data:[^,]*;base64,/i,'');
+          const mime = String(file.mimeType || file.MimeType || assets[assetId].MimeType || 'image/png').toLowerCase();
+          if (!base64 || !/^image\/(jpeg|png|webp)$/.test(mime)) throw new Error('تصویر قالب معتبر نیست.');
+          this.imageSources[assetId] = 'data:' + mime + ';base64,' + base64;
+        } catch (error) {
+          this.setStatus('pt-editor-status','دریافت یکی از تصاویر قالب ناموفق بود: ' + (error.message || ''),true);
+        }
+      }));
+    },
+    uploadPendingImages: async function (templateId) {
+      const pendingIds = Object.keys(this.pendingImageFiles || {});
+      for (const elementId of pendingIds) {
+        const file = this.pendingImageFiles[elementId];
+        const element = (this.definition.elements || []).find(item => String(item.id) === String(elementId));
+        if (!file || !element) continue;
+        const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/images', {
+          fileName:file.name,mimeType:file.type,base64:await this.fileToBase64(file)
+        });
+        const uploaded = this.extract(response) || {};
+        const assetId = uploaded.ID || uploaded.id || uploaded.AssetID || uploaded.assetId;
+        if (!assetId) throw new Error('تصویر بارگذاری شد اما شناسه آن دریافت نشد.');
+        element.assetId = String(assetId);
+        element.fileName = uploaded.FileName || uploaded.fileName || file.name;
+        element.mimeType = uploaded.MimeType || uploaded.mimeType || file.type;
+        this.imageSources[element.assetId] = this.imageSources[elementId] || '';
+        delete this.imageSources[elementId];
+        delete this.pendingImageFiles[elementId];
+      }
+    },
     renderInspector: function () {
       const item = this.getSelectedOrById(this.selectedElementId);
       const empty = document.getElementById('pt-inspector-empty');
@@ -321,7 +406,7 @@
           const label = item.type === 'field' ? '<span class="pt-field-hint" dir="auto">' + this.esc(item.label || 'فیلد داده') + '</span>' :
             (item.type === 'line' || item.type === 'divider' ? '<span class="pt-shape-line" aria-hidden="true"></span>' :
             (item.type === 'rectangle' || item.type === 'ellipse' ? '<span class="pt-shape-outline" aria-hidden="true"></span>' :
-            (item.type === 'image' ? '<span class="pt-image-placeholder">▧ تصویر</span>' :
+            (item.type === 'image' ? (this.imageSources[item.assetId || item.id] ? '<img class="pt-canvas-image" src="' + this.esc(this.imageSources[item.assetId || item.id]) + '" alt="' + this.esc(item.fileName || 'تصویر قالب') + '">' : '<span class="pt-image-placeholder">▧ ' + this.esc(item.fileName || 'تصویر') + '</span>') :
             (item.type === 'table' ? '<strong>' + this.esc(item.text) + '</strong><table><thead><tr>' +
               (item.columns || []).map(col => '<th>' + this.esc(col) + '</th>').join('') + '</tr></thead><tbody>' +
               (item.rows || []).map(row => '<tr>' + row.map(cell => '<td>' + this.esc(cell) + '</td>').join('') + '</tr>').join('') +
@@ -991,14 +1076,18 @@
       try {
         const wasNew = !this.editingId;
         let templateId = this.editingId;
+        const pendingIds = Object.keys(this.pendingImageFiles || {});
         if (wasNew) {
-          const createBody = this.pdfFile ? Object.assign({}, body, {Definition:this.blankDefinition()}) : body;
+          const initialDefinition = JSON.parse(JSON.stringify(this.definition));
+          initialDefinition.elements = (initialDefinition.elements || []).filter(element => element.type !== 'image' || element.assetId);
+          const createBody = Object.assign({}, body, {Definition:this.pdfFile ? this.blankDefinition() : initialDefinition});
           const created = await PMS.Api.post('/print-templates', createBody);
           const createdData = this.extract(created) || {};
           templateId = createdData.ID;
           if (!templateId) throw new Error('قالب ایجاد شد اما شناسه آن دریافت نشد.');
           this.editingId = templateId;
         }
+        if (pendingIds.length) await this.uploadPendingImages(templateId);
         if (this.pdfFile) {
           await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/pdf', {
             fileName: this.pdfFile.name, mimeType: 'application/pdf',
@@ -1006,8 +1095,8 @@
             pageCount: Number(this.definition.pdf && this.definition.pdf.pages ? this.definition.pdf.pages.length : 0),
             Definition: this.definition
           });
-        } else if (!wasNew) {
-          await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), body);
+        } else if (!wasNew || pendingIds.length) {
+          await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), Object.assign({},body,{Definition:this.definition}));
         }
         this.resetForm();
         await this.loadLibrary();
@@ -1412,6 +1501,7 @@
       this.clearOutputPdfObjectUrls();
       const definition = template && template.Definition ? template.Definition : {};
       const overlayOnly = !!(options && options.overlayOnly);
+      await this.loadTemplateImages(template, definition);
       const pdfPages = !overlayOnly && template && template.Pdf && template.Pdf.HasFile
         ? await this.loadOutputPdfPages(template.ID, definition) : null;
       const page = definition.page || {};
@@ -1443,6 +1533,11 @@
               if (overlayOnly) throw error;
               image = '<div class="pt-output-image pt-output-image-error">بارگذاری تصویر ناموفق بود</div>';
             }
+          } else if (item.type === 'image' && item.assetId && this.imageSources[item.assetId]) {
+            image = '<img class="pt-output-image-content" src="' + this.esc(this.imageSources[item.assetId]) + '" alt="' + this.esc(item.fileName || 'تصویر قالب') + '">';
+          } else if (item.type === 'image') {
+            if (overlayOnly) throw new Error('تصویر ثابت قالب بارگذاری نشده است: ' + (item.fileName || item.assetId || 'تصویر'));
+            image = '<div class="pt-output-image pt-output-image-error">تصویر قالب در دسترس نیست</div>';
           } else {
             image = '<div class="pt-output-image pt-output-image-empty" aria-hidden="true"></div>';
           }

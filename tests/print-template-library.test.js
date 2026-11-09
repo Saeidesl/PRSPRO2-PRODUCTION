@@ -172,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-original-pdf-preserve-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-original-pdf-preserve-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-template-image-elements-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-template-image-elements-1'));
 });
 
 
@@ -202,7 +202,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('original-pdf-preserve-1'));
+ assert.ok(index.includes('template-image-elements-1'));
 });
 
 
@@ -224,7 +224,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('original-pdf-preserve-1'));
+ assert.ok(index.includes('template-image-elements-1'));
 });
 
 
@@ -237,7 +237,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('original-pdf-preserve-1'));
+ assert.ok(index.includes('template-image-elements-1'));
 });
 
 
@@ -438,7 +438,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-original-pdf-preserve-1'));
+ assert.ok(index.includes('20261109-template-image-elements-1'));
 });
 
 
@@ -459,4 +459,32 @@ test('source PDF overlay aligns with rotated crop boxes without changing source 
  assert.equal(calls[0].rotate.angle,-90);
  assert.equal(calls[0].x,-90);
  assert.equal(calls[0].y,90);
+});
+
+
+test('template designer adds real image elements and uses dedicated tenant image asset APIs without converting to PDF',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const css=read('css/print-template-library.css');
+ assert.match(page,/id="pt-image-file"/);
+ assert.match(page,/data-pt-action="add-image">افزودن تصویر/);
+ assert.match(module,/handleImageSelection: async function/);
+ assert.match(module,/uploadPendingImages: async function/);
+ assert.match(module,/\/images\//);
+ assert.match(module,/\/images'/);
+ assert.match(module,/assetId/);
+ assert.match(module,/pt-canvas-image/);
+ assert.match(css,/\.pt-canvas-image/);
+ const action=module.slice(module.indexOf("if (action === 'add-image')"),module.indexOf("if (action === 'add-line')"));
+ assert.match(action,/input\.click\(\)/);
+ assert.doesNotMatch(action,/imageFileToPdf/);
+});
+
+
+test('saved template image assets are loaded for output and embedded as image elements instead of empty placeholders',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/await this\.loadTemplateImages\(template, definition\)/);
+ assert.match(module,/item\.type === 'image' && item\.assetId && this\.imageSources\[item\.assetId\]/);
+ assert.match(module,/pt-output-image-content/);
+ assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
 });
