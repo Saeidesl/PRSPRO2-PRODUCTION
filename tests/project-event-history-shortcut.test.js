@@ -56,7 +56,7 @@ test('clearing history filters removes the selected project filter', () => {
 test('project and events modules use refreshed production assets', () => {
   const index = read('index.html');
   assert.match(index, /project-detail\.js\?v=20261107-project-event-history-shortcut-placement-1/);
-  assert.match(index, /events\.js\?v=20261108-event-form-a4-modal-1/);
+  assert.match(index, /events\.js\?v=20261109-event-form-submit-validation-1/);
 });
 
 test('events route grants access to users who can view or create events', () => {
