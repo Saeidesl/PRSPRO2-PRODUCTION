@@ -40,7 +40,8 @@
         <label>جهت صفحه <select id="pt-page-orientation"><option value="portrait">عمودی</option><option value="landscape">افقی</option></select></label>
         <span class="text-muted">واحد اندازه‌گذاری: میلی‌متر</span>
       </div>
-      <div id="pt-page-tabs" class="pt-page-tabs" aria-label="انتخاب صفحه"></div>\n      <div class="pt-editor-layout">
+      <div id="pt-page-tabs" class="pt-page-tabs" aria-label="انتخاب صفحه"></div>\n      <div class="pt-editor-preview-layout">
+      <div class="pt-editor-layout">
         <aside class="pt-editor-inspector">
           <details class="pt-mobile-tools"><summary>مرحله ۲: تنظیم المان انتخاب‌شده</summary><div class="pt-mobile-tools-body">
           <div id="pt-inspector-empty" class="pt-empty-state">برای تنظیم، یک المان را روی صفحه انتخاب کن.</div>
@@ -75,6 +76,20 @@
           <details class="pt-layer-details"><summary>لایه‌های صفحه</summary><div id="pt-layer-list" class="pt-layer-list"></div></details>
         </aside>
         <div class="pt-canvas-scroll"><div id="pt-design-canvas" class="pt-design-canvas" aria-label="بوم طراحی قالب"><div class="pt-canvas-empty">برای شروع، از نوار ابزار یک المان اضافه کن.</div></div></div>
+      </div>
+      <section class="pt-live-preview-panel" aria-label="پیش‌نمایش زنده خروجی چاپ">
+        <div class="pt-live-preview-toolbar">
+          <div><h3 class="pt-section-title">پیش‌نمایش زنده خروجی چاپ</h3><p class="text-muted">تغییرات طراحی بدون ذخیره قالب، روی اطلاعات پروژه انتخاب‌شده نمایش داده می‌شوند.</p></div>
+          <div class="pt-live-preview-actions">
+            <label for="pt-live-preview-project">پروژه برای پیش‌نمایش</label>
+            <select id="pt-live-preview-project"><option value="">انتخاب پروژه</option></select>
+            <button type="button" class="btn btn-secondary btn-sm" id="pt-live-preview-refresh">به‌روزرسانی</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="pt-live-preview-expand" aria-pressed="false">نمایش بزرگ</button>
+          </div>
+        </div>
+        <p id="pt-live-preview-status" class="pt-status" aria-live="polite">برای مشاهده خروجی واقعی، یک پروژه انتخاب کن.</p>
+        <div id="pt-live-preview-content" class="pt-live-preview-content"><div class="pt-empty-state">پیش‌نمایش پس از انتخاب پروژه در این قسمت نمایش داده می‌شود.</div></div>
+      </section>
       </div>
       <p id="pt-editor-status" class="pt-status" aria-live="polite">تغییرات چیدمان همراه قالب ذخیره می‌شوند.</p>
     </div>
