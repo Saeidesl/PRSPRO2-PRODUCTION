@@ -172,8 +172,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-live-preview-print-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-live-preview-print-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-remove-field-detection-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-remove-field-detection-1'));
 });
 
 
@@ -335,7 +335,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-live-preview-print-1'));
+ assert.ok(index.includes('20261109-remove-field-detection-1'));
 });
 
 
