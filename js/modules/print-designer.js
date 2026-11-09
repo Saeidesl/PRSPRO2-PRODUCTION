@@ -1200,6 +1200,7 @@
       }
       this.outputPdfBlobUrl = '';
       this.outputPdfFileName = 'PMS-document.pdf';
+      this.outputPdfPreviewWarning = '';
     },
     fetchOutputPdfBytes: async function (templateId) {
       const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(templateId) + '/pdf', { trackSync: false });
