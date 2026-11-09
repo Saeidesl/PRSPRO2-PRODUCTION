@@ -554,9 +554,9 @@ test('live preview exposes a print action and prints the current HTML preview wi
  const styles=read('css/print-template-library.css');
  assert.match(page,/id="pt-live-preview-print" disabled/);
  assert.match(module,/printLivePreview: async function/);
- assert.match(module,/this\.livePreviewPdfBlobUrl/);
+ assert.match(module,/this\.livePreviewPdfBlob/);
  assert.match(module,/window\.print\(\)/);
- assert.match(module,/window\.open\(this\.livePreviewPdfBlobUrl, '_blank'\)/);
+ assert.match(module,/window\.open\(printUrl, '_blank'\)/);
  assert.match(module,/this\.livePreviewReady/);
  assert.match(styles,/body\.pt-live-preview-printing #pt-live-preview-content/);
  assert.match(styles,/pt-live-preview-printing #pt-live-preview-content \.pt-print-page:last-child/);
