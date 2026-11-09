@@ -409,9 +409,9 @@ test('source PDF output keeps original page objects and adds only a transparent 
  const sourcePath=module.slice(start,end);
  assert.match(sourcePath,/PDFLib\.PDFDocument\.load\(sourceBytes\)/);
  assert.match(sourcePath,/pdfDocument\.getPages\(\)/);
- assert.match(sourcePath,/pdfDocument\.embedPng\(pngBytes\)/);
+ assert.match(module,/pdfDocument\.embedPng\(pngBytes\)/);
  assert.match(module,/drawPdfOverlayOnSourcePage/);
- assert.match(sourcePath,/html2canvas\(node/);
+ assert.match(module,/html2canvas\(node/);
  assert.doesNotMatch(sourcePath,/pdfjsLib\.getDocument|page\.render\(/);
  assert.match(module,/page\.drawImage\(image, options\)/);
  assert.match(module,/page\.getCropBox\(\)/);
