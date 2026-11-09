@@ -437,6 +437,6 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const index=read('index.html');
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
- assert.match(module,/html2canvas@1\.4\.1/);
+ assert.match(module,/html2canvas\/1\.4\.1/);
  assert.ok(index.includes('20261109-original-pdf-preserve-1'));
 });
