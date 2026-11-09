@@ -440,3 +440,23 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  assert.match(module,/html2canvas\/1\.4\.1/);
  assert.ok(index.includes('20261109-original-pdf-preserve-1'));
 });
+
+
+test('source PDF overlay aligns with rotated crop boxes without changing source page dimensions',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const calls=[];
+ const page={
+  getCropBox:()=>({x:0,y:0,width:612,height:792}),
+  getRotation:()=>({angle:90}),
+  drawImage:(image,options)=>calls.push(options)
+ };
+ designer.drawPdfOverlayOnSourcePage(page,{}, {degrees:angle=>({angle})}, {width:279.4,height:215.9});
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].width,792);
+ assert.equal(calls[0].height,612);
+ assert.equal(calls[0].rotate.angle,-90);
+ assert.equal(calls[0].x,-90);
+ assert.equal(calls[0].y,90);
+});
