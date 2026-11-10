@@ -613,3 +613,14 @@ test('data source picker modal styles remain isolated from the A4 canvas and pri
  assert.doesNotMatch(modal,/\.pt-design-canvas|\.pt-print-page|@media print/);
  assert.match(modal,/prefers-reduced-motion/);
 });
+
+
+test('data source groups expand and collapse through directly bound disclosure controls',()=>{
+ const module=read('js/modules/print-designer.js');
+ const render=module.slice(module.indexOf('    renderSources: function'),module.indexOf('    findFreeElementPosition: function'));
+ assert.match(render,/root\.querySelectorAll\('\[data-pt-group-toggle\]'\)/);
+ assert.match(render,/button\.addEventListener\('click'/);
+ assert.match(render,/this\.expandedSourceGroups\[id\] = !this\.expandedSourceGroups\[id\]/);
+ assert.match(render,/this\.renderSources\(\)/);
+ assert.doesNotMatch(module,/const toggle = event\.target\.closest\('\[data-pt-group-toggle\]'\)/);
+});
