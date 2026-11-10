@@ -60,7 +60,7 @@ test('print designer module parses and is loaded exactly once',()=>{
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
- assert.match(index,/20261110-event-type-scoped-picker-1/);
+ assert.match(index,/20261110-event-picker-visible-groups-1/);
 });
 
 
@@ -182,8 +182,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261110-data-picker-modal-polish-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261110-event-type-scoped-picker-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261110-event-picker-visible-groups-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261110-event-picker-visible-groups-1'));
 });
 
 
@@ -212,7 +212,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('event-type-scoped-picker-1'));
+ assert.ok(index.includes('event-picker-visible-groups-1'));
 });
 
 
@@ -234,7 +234,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('event-type-scoped-picker-1'));
+ assert.ok(index.includes('event-picker-visible-groups-1'));
 });
 
 
@@ -247,7 +247,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('event-type-scoped-picker-1'));
+ assert.ok(index.includes('event-picker-visible-groups-1'));
 });
 
 
@@ -292,8 +292,8 @@ test('unified source picker groups central data, full forms and event fields in 
  for(const tab of ['central','forms','events']) assert.ok(page.includes('data-pt-source-tab="'+tab+'"'));
  assert.match(page,/افزودن اطلاعات/);
  assert.match(module,/eventTypes: Array\.isArray\(sources\.eventTypes\)/);
- assert.match(module,/eventType\.Forms \|\| \[\]/);
- assert.match(module,/eventTypeId: eventType\.ID, formId: form\.ID/);
+ assert.match(module,/Array\.isArray\(eventType\.Forms\)/);
+ assert.match(module,/eventTypeId: eventTypeId, formId: formId/);
  assert.match(module,/sourceType: 'EVENT_FORM_FIELD'/);
  assert.match(module,/EVENT_FIELD/);
  assert.match(module,/addSourceItems: function/);
@@ -369,7 +369,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261110-event-type-scoped-picker-1'));
+ assert.ok(index.includes('20261110-event-picker-visible-groups-1'));
 });
 
 
@@ -626,4 +626,41 @@ test('data source groups expand and collapse through directly bound disclosure c
  assert.match(render,/this\.expandedSourceGroups\[id\] = !this\.expandedSourceGroups\[id\]/);
  assert.match(render,/this\.renderSources\(\)/);
  assert.doesNotMatch(module,/const toggle = event\.target\.closest\('\[data-pt-group-toggle\]'\)/);
+});
+
+
+test('event source groups always render a readable title when API labels use alternate field names',()=>{
+ const sandbox={window:{PMS:{}},console,document:{
+  getElementById:id=>id==='pt-data-picker-content'?root:id==='pt-source-count'?count:id==='pt-picker-selected-count'?selected:null,
+  querySelectorAll:()=>[]
+ }};
+ let html='';
+ const root={set innerHTML(value){html=value;},get innerHTML(){return html;},querySelectorAll:()=>[]};
+ const count={textContent:''},selected={textContent:''};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.sources={projectFields:[],informationTypes:[],forms:[],eventTypes:[
+  {ID:'ET-X',Name:'عنوان نوع رویداد',Code:'TYPE_X',Fields:[
+   {field:'Description',label:'توضیحات'}
+  ],Forms:[]}
+ ]};
+ designer.sourcePickerTab='events';
+ designer.expandedSourceGroups['event-ET-X']=true;
+ designer.definition={elements:[]};
+ designer.renderSources();
+ assert.match(html,/عنوان نوع رویداد/);
+ assert.match(html,/توضیحات/);
+ assert.match(html,/data-pt-group-toggle="event-ET-X"/);
+ assert.equal(count.textContent,'1 منبع در این دسته');
+});
+
+test('event source group headers keep visible touch-sized disclosure and action controls',()=>{
+ const css=read('css/print-template-library.css');
+ const start=css.indexOf('.pt-data-group-heading {');
+ const end=css.indexOf('.pt-data-group-count {',start);
+ const groupStyles=css.slice(start,end);
+ assert.match(groupStyles,/display:\s*flex/);
+ assert.match(groupStyles,/min-height:\s*48px/);
+ assert.match(groupStyles,/\.pt-data-group-title button[\s\S]*?min-height:\s*26px/);
+ assert.match(groupStyles,/\.pt-data-group-actions[\s\S]*?visibility:\s*visible/);
 });
