@@ -261,7 +261,7 @@
   grid-template-rows: auto auto auto auto minmax(0, 1fr);
   gap: 14px;
   width: min(760px, calc(100vw - 36px));
-  height: min(760px, calc(100dvh - 36px));
+  height: min(760px, calc(100vh - 36px));
   max-height: calc(100vh - 36px);
   min-width: 0;
   min-height: 0;
@@ -276,6 +276,7 @@
 
 @supports (height: 100dvh) {
   .pt-data-modal-dialog {
+    height: min(760px, calc(100dvh - 36px));
     max-height: calc(100dvh - 36px);
   }
 }
@@ -572,12 +573,12 @@
 @media (max-width: 700px) {
   .pt-data-modal:not([hidden]) {
     align-items: end;
-    padding: 8px 8px max(8px, env(safe-area-inset-bottom));
+    padding: 8px;
   }
 
   .pt-data-modal-dialog {
     width: 100%;
-    height: min(90dvh, 760px);
+    height: min(90vh, 760px);
     max-height: calc(100vh - 16px);
     padding: 16px 14px calc(14px + env(safe-area-inset-bottom));
     gap: 12px;
@@ -586,6 +587,7 @@
 
   @supports (height: 100dvh) {
     .pt-data-modal-dialog {
+      height: min(90dvh, 760px);
       max-height: calc(100dvh - 16px);
     }
   }
