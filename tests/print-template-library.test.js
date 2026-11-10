@@ -496,3 +496,67 @@ test('live preview supports unsaved local PDF files and pending image assets wit
  assert.match(module,/renderFinalPdfPreview: async function \(blob, rootId\)/);
  assert.match(module,/this\.scheduleLivePreview\(650\)/);
 });
+
+
+test('clearing the live preview invalidates in-flight work and removes stale output and PDF state',()=>{
+ const nodes={
+  'pt-live-preview-content':{innerHTML:'old preview'},
+  'pt-live-preview-print':{disabled:false}
+ };
+ const cleared=[];
+ const sandbox={
+  window:{PMS:{},clearTimeout:id=>cleared.push(id)},
+  document:{getElementById:id=>nodes[id]||null},
+  console
+ };
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.livePreviewSequence=7;
+ designer.livePreviewTimer=42;
+ designer.livePreviewPending=true;
+ designer.livePreviewReady=true;
+ designer.livePreviewPdfBlob={old:true};
+ designer.setStatus=()=>{};
+ designer.clearLivePreview('پیش‌نمایش پاک شد');
+ assert.equal(designer.livePreviewSequence,8);
+ assert.deepEqual(cleared,[42]);
+ assert.equal(designer.livePreviewTimer,null);
+ assert.equal(designer.livePreviewPending,false);
+ assert.equal(designer.livePreviewReady,false);
+ assert.equal(designer.livePreviewPdfBlob,null);
+ assert.equal(nodes['pt-live-preview-print'].disabled,true);
+ assert.match(nodes['pt-live-preview-content'].innerHTML,/انتخاب پروژه/);
+});
+
+test('scheduling live preview without a selected project invalidates previous results instead of retaining stale content',()=>{
+ const nodes={
+  'pt-live-preview-project':{value:''},
+  'pt-live-preview-content':{innerHTML:'old project result'},
+  'pt-live-preview-print':{disabled:false}
+ };
+ const sandbox={
+  window:{PMS:{},clearTimeout:()=>{}},
+  document:{getElementById:id=>nodes[id]||null},
+  console
+ };
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.livePreviewSequence=2;
+ designer.livePreviewReady=true;
+ designer.livePreviewPdfBlob={old:true};
+ designer.setStatus=()=>{};
+ designer.scheduleLivePreview(0);
+ assert.equal(designer.livePreviewSequence,3);
+ assert.equal(designer.livePreviewReady,false);
+ assert.equal(designer.livePreviewPdfBlob,null);
+ assert.equal(nodes['pt-live-preview-print'].disabled,true);
+ assert.match(nodes['pt-live-preview-content'].innerHTML,/انتخاب پروژه/);
+});
+
+test('new-template save failures deactivate the partially created template without undoing a committed save',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/let saveCommitted = false/);
+ assert.match(module,/if \(!saveCommitted && wasNew && templateId\)/);
+ assert.match(module,/PMS\.Api\.delete\('\/print-templates\/' \+ encodeURIComponent\(templateId\)\)/);
+ assert.match(module,/قالب ناقص به‌صورت غیرفعال علامت‌گذاری شد/);
+});
