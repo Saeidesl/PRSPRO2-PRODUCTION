@@ -60,7 +60,7 @@
   - تصمیم معماری: توسعه همان Print Designer و API منابع موجود؛ عدم ایجاد Sheet، endpoint، صفحه یا مسیر ذخیره‌سازی موازی.
   - یافته‌ها و قرارداد اولیه در بخش Technical Spec ثبت شد.
 
-- [ ] **Task 2 — Unified data-source picker & direct canvas insertion (IN PROGRESS)**
+- [x] **Task 2 — Unified data-source picker & direct canvas insertion**
   - اصلاح تب اطلاعات رویدادها: گروه‌بندی بر اساس نوع رویداد؛ نمایش فیلدهای عمومی و فقط فرم‌ها/فیلدهای متصل به همان نوع؛ binding فرم شامل `eventTypeId` است و شناسه منبع بین انواع رویداد یکتا می‌ماند. رفع ایراد نمایش گروه‌های خالی/نامرئی با پشتیبانی از نام‌ها و فیلدهای جایگزین payload و تثبیت نمایش عنوان و کنترل‌های گروه در موبایل.
   - Follow-up defect: expand/collapse of form and information groups must be bound directly to the rendered disclosure buttons; preserve the existing grouped picker and data contracts.
   - Frontend: جایگزینی source pickerهای پراکنده با دکمه «افزودن اطلاعات» و مودال سه‌تب مرکزی/فرم‌ها/رویدادها؛ جستجو، باز/بسته‌کردن گروه‌ها، شمارنده انتخاب و وضعیت +/✓.
@@ -69,7 +69,9 @@
   - تست: گروه کامل/انتخاب تکی، dedupe، رویدادهای متعدد، آخرین/همه/مشخص، نام‌های انسانی، tenant isolation و سازگاری قالب‌های قدیمی.
   - بازبینی تکمیلی UI مودال انتخاب اطلاعات: محدودسازی ارتفاع پنجره، اسکرول مستقل فهرست منابع، اصلاح چیدمان گروه‌ها و ردیف‌ها، اندازه مناسب کنترل‌های لمسی، تمرکز صفحه‌کلید، سازگاری موبایل/ناحیه امن و وضعیت‌های focus/hover؛ بدون تغییر قرارداد API یا منطق انتخاب منابع.
 
-- [ ] **Task 3 — Integration, regression & delivery**
+  - *Log:* اصلاح نهایی چیدمان مودال انتخاب اطلاعات در Frontend عملیاتی و ادغام‌شده در main: `css/print-template-library.css` — افزودن `.pt-data-picker-content` با `flex-flow: row nowrap` و `overflow-x: auto`، تثبیت عرض کارت‌های `.pt-data-group`، اسکرول عمودی مستقل `.pt-data-items`، محدودیت ارتفاع و تنظیمات موبایل؛ `tests/print-template-library.test.js` — افزودن آزمون رگرسیون برای ریل افقی گروه‌ها و اسکرول مستقل فهرست فیلدها؛ `index.html` — به‌روزرسانی cache key استایل به `20261111-data-picker-horizontal-scroll-1`. هیچ API، تابع JavaScript، ساختار Google Sheets، مدل داده یا تغییر Backend برای این اصلاح لازم نبود. PR فرانت‌اند #91 با commit ادغام `80345c997153a0bb9ffbf59cb1f18fcd549f7168` در `main` ادغام شد؛ تست عملی سه تب در موبایل توسط Product Owner تأیید شد.
+
+- [ ] **Task 3 — Integration, regression & delivery (IN PROGRESS)**
   - اجرای تست‌های Frontend و Backend، syntax و CI؛ بررسی PDF اصلی، تصویر مستقل، پیش‌نمایش، چاپ، ذخیره/بازگشایی و قالب‌های قدیمی.
   - بازبینی diff، قرارداد API، مجوزها و عدم تغییر داده/Sheet.
   - پس از موفقیت، ایجاد PRهای جداگانه به main؛ ادغام/انتشار فقط طبق چرخه مجاز و بدون ادعای استقرار تا تأیید workflow و بررسی نسخه زنده.
