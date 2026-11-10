@@ -292,6 +292,9 @@ test('unified source picker groups central data, full forms and event fields in 
  for(const tab of ['central','forms','events']) assert.ok(page.includes('data-pt-source-tab="'+tab+'"'));
  assert.match(page,/افزودن اطلاعات/);
  assert.match(module,/eventTypes: Array\.isArray\(sources\.eventTypes\)/);
+ assert.match(module,/eventType\.Forms \|\| \[\]/);
+ assert.match(module,/eventTypeId: eventType\.ID, formId: form\.ID/);
+ assert.match(module,/sourceType: 'EVENT_FORM_FIELD'/);
  assert.match(module,/EVENT_FIELD/);
  assert.match(module,/addSourceItems: function/);
  assert.match(module,/findFreeElementPosition: function/);
