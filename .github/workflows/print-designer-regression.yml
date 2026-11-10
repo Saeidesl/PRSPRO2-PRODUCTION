@@ -1,0 +1,45 @@
+name: Print designer regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'js/modules/print-designer.js'
+      - 'pages/print-designer.html'
+      - 'pages/print-output.html'
+      - 'css/print-template-library.css'
+      - 'tests/print-template-library.test.js'
+      - 'tests/project-print-designer.test.js'
+      - '.github/workflows/print-designer-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'js/modules/print-designer.js'
+      - 'pages/print-designer.html'
+      - 'pages/print-output.html'
+      - 'css/print-template-library.css'
+      - 'tests/print-template-library.test.js'
+      - 'tests/project-print-designer.test.js'
+      - '.github/workflows/print-designer-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: print-designer-regression-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  print-designer-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate Print Designer JavaScript syntax
+        run: node --check js/modules/print-designer.js
+      - name: Run Print Designer regression tests
+        run: node --test tests/print-template-library.test.js tests/project-print-designer.test.js
