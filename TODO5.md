@@ -75,4 +75,5 @@
   - اجرای تست‌های Frontend و Backend، syntax و CI؛ بررسی PDF اصلی، تصویر مستقل، پیش‌نمایش، چاپ، ذخیره/بازگشایی و قالب‌های قدیمی.
   - بازبینی diff، قرارداد API، مجوزها و عدم تغییر داده/Sheet.
   - پس از موفقیت، ایجاد PRهای جداگانه به main؛ ادغام/انتشار فقط طبق چرخه مجاز و بدون ادعای استقرار تا تأیید workflow و بررسی نسخه زنده.
+  - *Log:* بازبینی Regression: `tests/print-template-library.test.js` شامل ۴۳ آزمون (از جمله اسکرول مودال، انتخاب منابع، پیش‌نمایش، PDF، تصویر و چاپ) و `tests/project-print-designer.test.js` در محدوده Frontend شناسایی شد. چون مخزن Frontend فاقد اجرای CI قابل‌تأیید برای این دو مجموعه بود، workflow هدفمند `.github/workflows/print-designer-regression.yml` اضافه و از طریق PR #92 با commit ادغام `aa07997b66eafc75de14c188638e852174eb72ca` به `main` منتقل شد؛ workflow برای Node.js 20، بررسی syntax ماژول Print Designer و اجرای دو مجموعه تست تنظیم شده است. ابزار GitHub در این بررسی هنوز اجرای workflow یا نتیجه تست Frontend را گزارش نکرد؛ بنابراین نتیجه تست Frontend و انتشار زنده GitHub Pages تأییدشده محسوب نمی‌شود.
   - تحویل به Product Owner برای تست عملی؛ تا تأیید کاربر تسک بسته نمی‌شود.
