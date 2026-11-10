@@ -14,7 +14,8 @@ test('template library uses central CRUD and source catalog APIs',()=>{
  assert.ok(module.includes("PMS.Api.post('/print-templates'"));
  assert.ok(module.includes("PMS.Api.put('/print-templates/'"));
  assert.ok(module.includes("PMS.Api.delete('/print-templates/'"));
- assert.match(page,/pt-source-list/);
+ assert.match(page,/pt-data-picker-content/);
+ assert.match(page,/id="pt-open-data-picker"/);
  assert.match(page,/pt-binding-list/);
 });
 
@@ -68,7 +69,7 @@ test('visual editor module parses and exposes canvas interactions',()=>{
  const css=read('css/print-template-library.css');
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  for(const token of ['bindEditor: function','createElement: function','renderCanvas: function','renderInspector: function','commitHistory: function','undo: function','redo: function','pointermove','pointerup','data-pt-resize']) assert.ok(module.includes(token),token);
- for(const id of ['pt-design-canvas','pt-inspector-fields','pt-page-size','pt-page-orientation','pt-prop-columns','pt-prop-rows','pt-prop-color','pt-prop-background','pt-prop-selection','pt-layer-list','pt-editor-source-list','pt-source-count']) assert.ok(page.includes(id),id);
+ for(const id of ['pt-design-canvas','pt-inspector-fields','pt-page-size','pt-page-orientation','pt-prop-columns','pt-prop-rows','pt-prop-color','pt-prop-background','pt-prop-selection','pt-layer-list','pt-data-picker','pt-data-picker-content','pt-data-picker-search','pt-source-count']) assert.ok(page.includes(id),id);
  assert.match(css,/\.pt-design-canvas\{position:relative/);
  assert.match(css,/\.pt-canvas-element\.is-selected/);
  assert.match(css,/\.pt-editor-layout/);
@@ -84,7 +85,9 @@ test('visual editor persists page layout and supports editable table rows and la
  assert.match(module,/layer-down/);
  assert.match(module,/previewMode/);
  assert.match(module,/Promise\.allSettled/);
- assert.match(module,/pt-editor-source-list/);
+ assert.match(module,/openDataPicker: function/);
+ assert.match(module,/addSourceItems: function/);
+ assert.match(module,/findFreeElementPosition: function/);
  assert.match(module,/sourceError/);
  assert.match(module,/اتصال/);
  assert.match(module,/pt-prop-selection/);
@@ -98,11 +101,12 @@ test('mobile template editor presents a guided workflow with collapsible tool pa
  const css=read('css/print-template-library.css');
  assert.match(page,/مرحله ۱: طراحی صفحه/);
  assert.match(page,/مرحله ۲: تنظیم المان انتخاب‌شده/);
- assert.match(page,/مرحله ۳: اتصال اطلاعات/);
+ assert.match(page,/افزودن اطلاعات/);
  assert.match(page,/مرحله ۴: نام‌گذاری و ذخیره قالب/);
  assert.match(page,/<details class="[^"]*pt-saved-templates"/);
  assert.match(page,/<details class="pt-mobile-tools"/);
- assert.match(page,/<details class="pt-editor-source-picker"/);
+ assert.match(page,/pt-data-modal-dialog/);
+ assert.doesNotMatch(page,/<details class="pt-editor-source-picker"/);
  assert.match(page,/<details class="pt-layer-details"/);
  assert.match(css,/@media\(max-width:700px\)/);
  assert.match(css,/\.pt-toolbar-actions\{display:grid/);
@@ -275,6 +279,20 @@ test('legacy field analysis assets are absent while PDF tools remain',()=>{
  assert.match(module,/imageFileToPdf: async function/);
 });
 
+test('unified source picker groups central data, full forms and event fields in one modal',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const css=read('css/print-template-library.css');
+ for(const tab of ['central','forms','events']) assert.ok(page.includes('data-pt-source-tab="'+tab+'"'));
+ assert.match(page,/افزودن اطلاعات/);
+ assert.match(module,/eventTypes: Array\.isArray\(sources\.eventTypes\)/);
+ assert.match(module,/EVENT_FIELD/);
+ assert.match(module,/addSourceItems: function/);
+ assert.match(module,/findFreeElementPosition: function/);
+ assert.match(module,/this\.definition\.elements\.push\(/);
+ assert.match(css,/\.pt-data-modal:not\(\[hidden\]\)/);
+ assert.match(css,/@media\(max-width:600px\)/);
+});
 test('manual template fields and existing binding types remain supported',()=>{
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
