@@ -1,6 +1,6 @@
 # PMS UI and Performance Audit
 
-- Generated: 2026-11-10T19:29:41.444Z
+- Generated: 2026-11-10T19:39:07.452Z
 - Base URL: http://127.0.0.1:4173/PRSPRO2/
 - Mode: authenticated-read-only
 - Overall: **needs-attention**
@@ -17,10 +17,10 @@
 | visibleFormsInventoried | 12 |
 | dynamicFormsInventoried | 11 |
 | formOpenersChecked | 13 |
-| visibleButtonsInventoried | 208 |
+| visibleButtonsInventoried | 174 |
 | visibleInputsAndControlsInventoried | 48 |
-| networkRequestsMeasured | 355 |
-| procurementApiRequestsMeasured | 7 |
+| networkRequestsMeasured | 332 |
+| procurementApiRequestsMeasured | 8 |
 | procurementApiFailedRequests | 0 |
 | procurementDiagnosticEndpointsMeasured | 5 |
 | failedNetworkRequests | 0 |
@@ -34,39 +34,39 @@
 
 | Route | Status | Ready ms | Settled ms | Forms | Buttons | Controls | Mobile overflow |
 |---|---|---:|---:|---:|---:|---:|---|
-| dashboard | loaded | 3474 | 6137 | 0 | 4 | 2 | no |
-| projects | loaded | 2420 | 5079 | 0 | 1 | 2 | no |
-| project-detail | loaded | 2923 | 5581 | 0 | 2 | 0 | no |
-| print-design | loaded | 3919 | 6580 | 1 | 17 | 7 | no |
-| print-output | loaded | 4461 | 7119 | 0 | 2 | 6 | no |
-| events | loaded | 3922 | 6578 | 0 | 7 | 2 | no |
-| workflows | loaded | 3949 | 6605 | 0 | 1 | 2 | no |
-| project-statuses | loaded | 3419 | 6078 | 0 | 9 | 1 | no |
-| event-types | loaded | 4446 | 7114 | 0 | 85 | 1 | no |
-| information-types | loaded | 3917 | 6576 | 0 | 1 | 1 | no |
-| procurement | loaded | 3441 | 29511 | 0 | 9 | 0 | no |
-| attachments | loaded | 3925 | 6583 | 0 | 1 | 2 | no |
-| reports | loaded | 6445 | 9107 | 0 | 8 | 12 | no |
-| users | loaded | 4924 | 7583 | 0 | 27 | 1 | no |
-| departments | loaded | 2914 | 5573 | 0 | 8 | 1 | no |
-| roles | loaded | 3440 | 6100 | 0 | 21 | 1 | no |
-| permissions | loaded | 3989 | 6646 | 0 | 0 | 1 | no |
-| audit | loaded | 3918 | 6576 | 0 | 1 | 1 | no |
-| settings | loaded | 4921 | 7579 | 0 | 1 | 3 | no |
-| admin | loaded | 6931 | 9589 | 0 | 3 | 2 | no |
+| dashboard | loaded | 4484 | 7145 | 0 | 4 | 2 | no |
+| projects | loaded | 3428 | 6085 | 0 | 1 | 2 | no |
+| project-detail | loaded | 3945 | 6603 | 0 | 2 | 0 | no |
+| print-design | loaded | 4918 | 7579 | 1 | 17 | 7 | no |
+| print-output | loaded | 8107 | 10764 | 0 | 2 | 6 | no |
+| events | loaded | 3923 | 6579 | 0 | 7 | 2 | no |
+| workflows | loaded | 5000 | 7658 | 0 | 1 | 2 | no |
+| project-statuses | loaded | 4411 | 7069 | 0 | 1 | 1 | no |
+| event-types | loaded | 3924 | 6591 | 0 | 85 | 1 | no |
+| information-types | loaded | 4452 | 7110 | 0 | 1 | 1 | no |
+| procurement | loaded | 4916 | 32995 | 0 | 9 | 0 | no |
+| attachments | loaded | 5425 | 8083 | 0 | 1 | 2 | no |
+| reports | loaded | 4436 | 7099 | 0 | 8 | 12 | no |
+| users | loaded | 2932 | 5587 | 0 | 1 | 1 | no |
+| departments | loaded | 3918 | 6576 | 0 | 8 | 1 | no |
+| roles | loaded | 4410 | 7067 | 0 | 21 | 1 | no |
+| permissions | loaded | 4404 | 7062 | 0 | 0 | 1 | no |
+| audit | loaded | 3410 | 6068 | 0 | 1 | 1 | no |
+| settings | loaded | 3412 | 6069 | 0 | 1 | 3 | no |
+| admin | loaded | 3415 | 6073 | 0 | 3 | 2 | no |
 
 ## Procurement backend diagnostics
 
-- Measured at: 2026-11-10T19:32:25.909Z
+- Measured at: 2026-11-10T19:41:57.919Z
 - Captured endpoints: 5
 
 | Endpoint | Browser | Backend | Repository / sheet details |
 |---|---:|---:|---|
-| /procurement/reports | 6201 ms | 4749 ms | /د/س/ت/ر/س/ی/ /3/0/3/5/ /// /ر/و/ت/ر/ /1/7/1/4/ /// /S/h/e/e/t/s/:/ /g/e/t/A/l/l/:/1/1/6/2/m/s/×/1/,/ /f/i/n/d/B/y/I/d/:/7/1/4/m/s/×/1/,/ /f/i/n/d/B/y/I/d/:/6/8/9/m/s/×/1/ |
-| /procurement/orders | 4651 ms | 2508 ms | /د/س/ت/ر/س/ی/ /1/7/8/8/ /// /ر/و/ت/ر/ /7/1/9/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/5/7/7/m/s/×/1/,/ /f/i/n/d/B/y/I/d/:/4/5/1/m/s/×/1/,/ /g/e/t/A/l/l/:/4/1/0/m/s/×/1/ |
-| /procurement/needs | 3620 ms | 2068 ms | /د/س/ت/ر/س/ی/ /1/5/2/4/ /// /ر/و/ت/ر/ /5/4/2/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/5/3/1/m/s/×/1/,/ /g/e/t/A/l/l/:/4/3/4/m/s/×/1/,/ /g/e/t/H/e/a/d/e/r/s/:/3/3/1/m/s/×/1/ |
-| /procurement/dashboard | 4830 ms | 3046 ms | /د/س/ت/ر/س/ی/ /2/1/0/4/ /// /ر/و/ت/ر/ /9/4/2/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/6/8/0/m/s/×/1/,/ /g/e/t/A/l/l/:/5/6/1/m/s/×/1/,/ /f/i/n/d/B/y/I/d/:/4/1/2/m/s/×/1/ |
-| /procurement/workspace | 3291 ms | 1508 ms | /د/س/ت/ر/س/ی/ /9/9/8/ /// /ر/و/ت/ر/ /5/0/8/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/3/3/1/m/s/×/1/,/ /g/e/t/A/l/l/:/2/2/4/m/s/×/1/,/ /f/i/n/d/B/y/I/d/:/2/1/1/m/s/×/1/ |
+| /procurement/reports | 5679 ms | 4143 ms | /د/س/ت/ر/س/ی/ /3/1/8/6/ /// /ر/و/ت/ر/ /9/5/6/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/1/3/5/4/m/s/×/1/,/ /g/e/t/A/l/l/:/9/1/3/m/s/×/1/,/ /g/e/t/H/e/a/d/e/r/s/:/8/3/6/m/s/×/1/ |
+| /procurement/orders | 3403 ms | 1658 ms | /د/س/ت/ر/س/ی/ /1/1/2/6/ /// /ر/و/ت/ر/ /5/3/2/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/3/8/2/m/s/×/1/,/ /g/e/t/A/l/l/:/2/6/8/m/s/×/1/,/ /g/e/t/A/l/l/:/2/2/7/m/s/×/1/ |
+| /procurement/needs | 4051 ms | 2564 ms | /د/س/ت/ر/س/ی/ /1/6/9/1/ /// /ر/و/ت/ر/ /8/7/2/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/8/9/5/m/s/×/1/,/ /g/e/t/A/l/l/:/4/4/9/m/s/×/1/,/ /g/e/t/S/h/e/e/t/:/4/3/9/m/s/×/2/ |
+| /procurement/dashboard | 4124 ms | 2406 ms | /د/س/ت/ر/س/ی/ /1/9/0/7/ /// /ر/و/ت/ر/ /4/9/9/ /// /S/h/e/e/t/s/:/ /g/e/t/A/l/l/:/7/3/6/m/s/×/1/,/ /f/i/n/d/B/y/I/d/:/6/8/2/m/s/×/1/,/ /g/e/t/H/e/a/d/e/r/s/:/6/5/1/m/s/×/1/ |
+| /procurement/workspace | 6848 ms | 1519 ms | /د/س/ت/ر/س/ی/ /1/0/5/8/ /// /ر/و/ت/ر/ /4/6/0/ /// /S/h/e/e/t/s/:/ /f/i/n/d/B/y/I/d/:/3/8/8/m/s/×/1/,/ /g/e/t/A/l/l/:/2/5/2/m/s/×/1/,/ /f/i/n/d/B/y/I/d/:/1/9/5/m/s/×/1/ |
 
 ## Coverage gaps
 
