@@ -1184,3 +1184,49 @@
 - Backend main پیش از ثبت این بایگانی: `629aba38b183cd27a62de8b97ba4863943483626`.
 - Frontend main پیش از ثبت این بایگانی: `01a3429391357c0a1a1932c595d0c18fd2ba1bf5`.
 - فایل‌های پیگیری پس از انتقال سابقه این فاز به همین سند، به عبارت `Ready for the next feature` بازنشانی می‌شوند.
+
+
+## 2026-11-10 — فاز پایداری Print Designer و اصلاح دو رشته اضافی HTML
+
+### محدوده و تصمیم معماری
+- مخازن عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION` و `Saeidesl/PRSPRO2BACKEND-PRODUCTION`؛ همه تغییرات از شاخه‌های feature و از طریق PR به `main` ادغام شدند.
+- هدف اصلی: جلوگیری از نمایش پیش‌نمایش کهنه، مدیریت امن ذخیره قالب و جلوگیری از باقی‌ماندن PDFهای بلااستفاده؛ بدون مسیر موازی یا تغییر قراردادهای موجود.
+- اصلاح پیگیری‌شده: رفع دو رشته literal اضافی `\\n` در HTML صفحه طراحی چاپ. این اصلاح صرفاً ساختار متن HTML را ترمیم کرد.
+- قابلیت‌های ورود PDF به‌عنوان پس‌زمینه، ورود تصویر به‌عنوان پس‌زمینه، افزودن تصویر مستقل، پیش‌نمایش، چاپ و دانلود حفظ شدند.
+
+### نقشه فنی Frontend
+- `pages/print-designer.html`: صفحه کتابخانه، فرم، بوم و پیش‌نمایش؛ ورودی‌های `pt-pdf-file` و `pt-image-file` و بخش `pt-pdf-import` حفظ شدند.
+- `js/modules/print-designer.js`، ماژول `PMS.Modules.PrintDesigner`:
+  - `clearLivePreview(message)`: باطل‌کردن sequence درخواست‌های async، لغو timer، پاک‌سازی state و Blob پیش‌نمایش و غیرفعال‌سازی چاپ.
+  - `resetForm()` و `editTemplate()`: پاک‌سازی preview قبلی هنگام تغییر فرم/قالب.
+  - `scheduleLivePreview()` و `renderLivePreview()`: جلوگیری از اعمال پاسخ قدیمی و پاک‌سازی هنگام نبود پروژه.
+  - `saveTemplate()`: در شکست ایجاد چندمرحله‌ای قالب، غیرفعال‌سازی جبرانی رکورد ساخته‌شده با API موجود؛ فایل پیوست فیزیکی حذف نمی‌شود.
+  - مسیرهای PDF موجود شامل `handleImportFile()`, `handlePdfFile()`, `loadTemplatePdf()`, `renderPdfBackgrounds()` حفظ شدند.
+- `css/print-template-library.css`: layout، واکنش‌گرایی و print media.
+- `index.html`: وابستگی‌های PDF.js/pdf-lib و cache-busting موجود.
+- `tests/print-template-library.test.js`: رگرسیون preview، reset، تغییر پروژه، rollback، PDF و تصاویر.
+
+### قرارداد Backend و داده
+- APIهای موجود حفظ شدند: `GET /print-templates`, `GET /print-templates/sources`, `POST /print-templates`, `GET/PUT/DELETE /print-templates/:id`, `POST /print-templates/preview`, `GET/POST /print-templates/:id/pdf`, مسیرهای images و resolve.
+- فایل PDF اصلی در Google Drive tenant-scoped و metadata در شیت موجود `36_PrintTemplates` نگهداری می‌شود؛ ساختار Sheet/API تغییر نکرد.
+- PDF اصلی در خروجی با pdf-lib حفظ و overlay المان‌های PMS روی آن اعمال می‌شود.
+
+### Implementation Logs، کنترل کیفیت و تحویل
+- Task 1 — Discovery & Planning: خواندن TODO5 و ARCHITECTURE هر دو مخزن، بررسی baseline، صفحه، ماژول‌ها، APIها، ذخیره‌سازی و تست‌ها؛ نقشه و یافته‌ها در TODO5 ثبت شد.
+- Task 2 — Stabilize preview and save lifecycle:
+  - در `js/modules/print-designer.js` تابع `clearLivePreview(message)` و invalidation پاسخ‌های async قدیمی اضافه شد؛ reset، تغییر قالب و پروژه خالی preview را پاک می‌کنند.
+  - شکست عملیات چندمرحله‌ای ساخت قالب با API موجود جبران می‌شود و رکورد ناقص غیرفعال می‌گردد؛ فایل‌های پیوست فیزیکی عمداً حذف نمی‌شوند.
+  - در Backend `PrintTemplateService.js` توابع `_isStorageKeyReferenced(storageKey, tenantId, excludedTemplateId)` و `_deleteStorageKeyIfUnreferenced(...)` افزوده شدند. در `uploadPdf()` فایل جدید ابتدا ذخیره و metadata ثبت می‌شود؛ در شکست update فایل بدون ارجاع پاک می‌شود؛ PDF قبلی فقط پس از موفقیت ثبت/audit و بررسی نبود reference در PDF یا `ImageAssetsJSON` سایر قالب‌ها حذف می‌شود.
+  - تست‌های `tests/print-template-library.test.js` و `tests/print-templates.test.js` برای این رفتارها توسعه یافتند؛ Sheet `36_PrintTemplates` و Router contract تغییر ساختاری نکردند.
+- Task 3 — Regression validation & delivery:
+  - Frontend checks و cross-repository QA موفق شدند؛ GitHub Pages برای نسخه پایدار قبلی منتشر شد.
+  - Backend checks و PMS agent suite موفق؛ workflow رسمی Google Apps Script برای commit `af0e82ccd2c169230e0e1785fe63b93d989f7e21` با نتیجه success تکمیل شد.
+  - Frontend PR #80 و Backend PR #52 با squash ادغام شدند؛ commitهای اصلی به‌ترتیب `c72744611252c1fa45f7feac34dc9ffd2e894cd1` و `af0e82ccd2c169230e0e1785fe63b93d989f7e21`.
+  - ممیزی جامع عملکرد UI در آن اجرای قبلی به علت authentication failure کامل نشد؛ این محدودیت در Log ثبت شد و تست عملی کاربر موفق بود.
+- Follow-up — Literal newline markers:
+  - دو رشته literal `\\n` در `pages/print-designer.html`، یکی بعد از `#pt-image-file` و دیگری بعد از `#pt-page-tabs`، به line break واقعی HTML تبدیل شدند.
+  - فقط HTML تغییر کرد؛ PDF، تصویر مستقل، API، داده و منطق اجرایی حذف یا تغییر نکردند.
+  - Frontend PR #81 با commit `698924bbf0d3a5115cef5c63c5f6c8688c51ceec` ادغام شد؛ Backend PR #53 صرفاً مستندسازی بود.
+  - در main شمار literal `\\n` صفر و ورودی‌های PDF/تصویر و بخش پس‌زمینه PDF حاضر بودند. Frontend checks، cross-repository QA و browser audit موفق شدند. Product Owner حذف دو عبارت و حفظ قابلیت‌ها را در نسخه زنده تأیید کرد.
+- همگام‌سازی سوابق: PR #83 فرانت‌اند و PR #55 بک‌اند Log تأیید کاربر را در TODO5 ثبت کردند؛ هر دو با موفقیت ادغام شدند.
+- هیچ داده عملیاتی، Sheet یا فایل Google Drive حذف یا migrate نشد.
