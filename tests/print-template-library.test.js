@@ -105,6 +105,8 @@ test('mobile template editor presents a guided workflow with collapsible tool pa
  assert.match(page,/مرحله ۱: طراحی صفحه/);
  assert.match(page,/مرحله ۲: تنظیم المان انتخاب‌شده/);
  assert.match(page,/افزودن اطلاعات/);
+ assert.doesNotMatch(page,/data-pt-action="add-field"/);
+ assert.doesNotMatch(module,/action === 'add-field'/);
  assert.match(page,/مرحله ۴: نام‌گذاری و ذخیره قالب/);
  assert.match(page,/<details class="[^"]*pt-saved-templates"/);
  assert.match(page,/<details class="pt-mobile-tools"/);
