@@ -42,5 +42,5 @@
 
 ## 📋 Macro-Task Queue & Implementation Log
 - [x] **Task 1 — Discovery & Planning:** بررسی مستندات و baseline دو مخزن، شناسایی مسیرها و stateها، مرور تست‌ها و ثبت نقشه فنی و یافته‌های تأییدشده.
-- [ ] **Task 2 — Stabilize preview and save lifecycle (IN PROGRESS):** پاک‌سازی preview و invalidate درخواست‌ها هنگام تغییر پروژه/Reset/قالب جدید؛ مدیریت خطا و rollback امن ذخیره چندمرحله‌ای؛ هماهنگی با Backend برای پاک‌سازی امن PDF قبلی پس از جایگزینی موفق.
+- [ ] **Task 2 — Stabilize preview and save lifecycle (IN PROGRESS):** پاک‌سازی preview و invalidate درخواست‌ها هنگام تغییر پروژه/Reset/قالب جدید؛ مدیریت خطا و غیرفعال‌سازی جبرانی رکورد قالب جدید در شکست ذخیره چندمرحله‌ای (بدون حذف فیزیکی فایل‌های عملیاتی)؛ هماهنگی با Backend برای پاک‌سازی امن PDF قبلی پس از جایگزینی موفق.
 - [ ] **Task 3 — Regression validation & delivery:** تست خودکار و سناریوهای عملی، بررسی عدم رگرسیون PDF/تصویر/Binding/خروجی، commit و push روی شاخه کاری و گزارش تست/انتشار.
