@@ -18,7 +18,6 @@ test('template library uses central CRUD and source catalog APIs',()=>{
  assert.match(page,/pt-binding-list/);
 });
 
-
 test('template bindings use stable project, central-information and form field identifiers',()=>{
  const module=read('js/modules/print-designer.js');
  assert.match(module,/sourceType: 'PROJECT_FIELD'/);
@@ -28,7 +27,6 @@ test('template bindings use stable project, central-information and form field i
  assert.match(module,/selection: 'LATEST'/);
 });
 
-
 test('document output resolves a shared template against the selected project',()=>{
  const module=read('js/modules/print-designer.js');
  const page=read('pages/print-output.html');
@@ -37,7 +35,6 @@ test('document output resolves a shared template against the selected project',(
  assert.ok(module.includes("PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/resolve'"));
  assert.match(module,/resolveOutput: async function/);
 });
-
 
 test('print routes no longer initialize the project detail module',()=>{
  const router=read('js/core/router.js');
@@ -49,7 +46,6 @@ test('print routes no longer initialize the project detail module',()=>{
  assert.doesNotMatch(router,/'print-output': 'ProjectDetail'/);
 });
 
-
 test('template library stylesheet is responsive and uses application theme variables',()=>{
  const css=read('css/print-template-library.css');
  assert.match(css,/@media\(max-width:900px\)/);
@@ -58,14 +54,12 @@ test('template library stylesheet is responsive and uses application theme varia
  assert.match(css,/var\(--border-color/);
 });
 
-
 test('print designer module parses and is loaded exactly once',()=>{
  const module=read('js/modules/print-designer.js');
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
 });
-
 
 
 test('visual editor module parses and exposes canvas interactions',()=>{
@@ -79,7 +73,6 @@ test('visual editor module parses and exposes canvas interactions',()=>{
  assert.match(css,/\.pt-canvas-element\.is-selected/);
  assert.match(css,/\.pt-editor-layout/);
 });
-
 
 test('visual editor persists page layout and supports editable table rows and layer order',()=>{
  const module=read('js/modules/print-designer.js');
@@ -100,7 +93,6 @@ test('visual editor persists page layout and supports editable table rows and la
  assert.match(module,/Definition: this\.definition/);
 });
 
-
 test('mobile template editor presents a guided workflow with collapsible tool panels',()=>{
  const page=read('pages/print-designer.html');
  const css=read('css/print-template-library.css');
@@ -118,18 +110,25 @@ test('mobile template editor presents a guided workflow with collapsible tool pa
 });
 
 
-
-test('print output page exposes an HTML document preview and browser print action',()=>{
- const page=read('pages/print-output.html');
- const module=read('js/modules/print-designer.js');
- const styles=read('css/print-template-library.css');
- assert.match(page,/id="pt-output-preview"/);
- assert.match(page,/id="pt-output-print"/);
- assert.doesNotMatch(page,/pt-output-download/);
- assert.match(module,/renderOutputDocument/);
- assert.match(module,/window\.print\(\)/);
- assert.match(styles,/body\.pt-printing/);
+test('print output page exposes a real document preview and print action',()=>{
+  const root=path.join(__dirname,'..');
+  const page=fs.readFileSync(path.join(root,'pages/print-output.html'),'utf8');
+  const module=fs.readFileSync(path.join(root,'js/modules/print-designer.js'),'utf8');
+  const styles=fs.readFileSync(path.join(root,'css/print-template-library.css'),'utf8');
+  assert.match(page,/id="pt-output-preview"/);
+  assert.match(page,/id="pt-output-print"/);
+  assert.match(module,/renderOutputDocument/);
+  assert.match(module,/loadOutputPdfPages: async function/);
+  assert.match(module,/generateSourcePdfOutput: async function/);
+  assert.match(module,/renderFinalPdfPreview: async function/);
+  assert.match(module,/downloadOutputPdf: function/);
+  assert.match(module,/pt-output-pdf-background/);
+  assert.match(module,/item\.pageIndex \|\| 0/);
+  assert.match(module,/window\.print\(\)/);
+  assert.match(page,/pt-output-download/);
+  assert.match(styles,/body\.pt-printing/);
 });
+
 
 test('drawing toolbar supports editable line, divider, rectangle and ellipse elements in editor and print output',()=>{
  const module=read('js/modules/print-designer.js');
@@ -146,7 +145,6 @@ test('drawing toolbar supports editable line, divider, rectangle and ellipse ele
 });
 
 
-
 test('print output resolves secure image attachments and waits for images before printing',()=>{
  const module=read('js/modules/print-designer.js');
  const css=read('css/print-template-library.css');
@@ -160,41 +158,42 @@ test('print output resolves secure image attachments and waits for images before
 });
 
 
-
 test('print output hides image helper copy and uses exact page size without forcing a trailing blank page',()=>{
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  assert.match(module,/pt-output-image-empty/);
  assert.doesNotMatch(module,/برای نمایش تصویر، منبع تصویر را به این المان متصل کن/);
  assert.match(module,/@page/);
- assert.ok(module.includes("--pt-print-height:'+safeHeight+'mm"), 'each HTML output page uses a bounded physical print height');
+ assert.ok(module.includes("--pt-print-height:'+safeHeight+'mm"), 'each PDF output page uses a bounded physical print height');
  assert.match(styles,/\.pt-section-title\{display:none!important\}/);
  assert.match(styles,/page-break-after:auto!important/);
 });
 
 
-
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-remove-background-import-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-remove-background-import-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261109-remove-field-detection-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261109-remove-field-detection-1'));
 });
 
 
-
-test('final print document omits the automatic form and project header',()=>{
+test('final print document omits the entire automatic form and project header',()=>{
  const module=read('js/modules/print-designer.js');
  assert.doesNotMatch(module,/pt-print-heading/);
+ assert.ok(module.includes("pageContent+'</article>'"), 'each RTL page wraps its PDF background and configured elements in one scalable content layer');
  assert.match(module,/pt-print-page-content/);
- assert.match(module,/pages\.push\('<article class="pt-print-page"/);
 });
 
-test('HTML print scales each complete page into the configured A4 printable area',()=>{
+
+test('mobile print scales each complete PDF page into a safe Letter/A4 printable area',()=>{
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
  const index=read('index.html');
- assert.ok(module.includes('safeWidth-margins.left-margins.right') || module.includes('safeWidth - margins.left - margins.right'));
- assert.ok(module.includes('safeHeight-margins.top-margins.bottom') || module.includes('safeHeight - margins.top - margins.bottom'));
+ assert.match(module,/const fitScale = overlayOnly \? 1 : Math\.max\(0\.01, Math\.min\(availableWidth \/ Math\.max\(1, spec\.width\), availableHeight \/ Math\.max\(1, spec\.height\)\)\)/);
+ assert.ok(module.includes('safeWidth - margins.left - margins.right'));
+ assert.ok(module.includes('safeHeight - margins.top - margins.bottom'));
+ assert.match(module,/const safeWidth = overlayOnly \? spec\.width : 210;/);
+ assert.match(module,/const safeHeight = overlayOnly \? spec\.height : 297;/);
  assert.match(module,/--pt-print-scale/);
  assert.match(module,/--pt-print-width/);
  assert.match(module,/pt-print-page-content/);
@@ -203,8 +202,9 @@ test('HTML print scales each complete page into the configured A4 printable area
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('remove-background-import-1'));
+ assert.ok(index.includes('remove-field-detection-1'));
 });
+
 
 test('print output exposes persistent user-configurable margins for all templates',()=>{
  const page=read('pages/print-output.html');
@@ -224,9 +224,8 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('remove-background-import-1'));
+ assert.ok(index.includes('remove-field-detection-1'));
 });
-
 
 
 test('print margin controls apply immediately to the rendered page and persist mobile input',()=>{
@@ -238,23 +237,42 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('remove-background-import-1'));
+ assert.ok(index.includes('remove-field-detection-1'));
 });
 
 
+test('manual PDF and image background import remains available',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const styles=read('css/print-template-library.css');
+ const index=read('index.html');
+ assert.ok(page.includes("application/pdf"));
+ assert.ok(page.includes("image/jpeg"));
+ assert.ok(page.includes("image/png"));
+ assert.match(page,/محل فیلدها را با ابزارهای دستی/);
+ assert.match(module,/handleImportFile: async function/);
+ assert.match(module,/imageFileToPdf: async function/);
+ assert.match(module,/Embed the original JPEG bytes/);
+ assert.match(module,/PNG is embedded losslessly/);
+ assert.match(module,/handlePdfFile: async function/);
+ assert.match(module,/loadTemplatePdf: async function/);
+ assert.equal(styles.includes(String.fromCharCode(112,116,45,115,109,97,114,116,45,100,101,116,101,99,116)),false);
+ assert.ok(index.includes('pdf.js/3.11.174/pdf.min.js'));
+});
 
-test('legacy field analysis and PDF background rendering assets are absent',()=>{
+test('legacy field analysis assets are absent while PDF tools remain',()=>{
  const sources=['pages/print-designer.html','js/modules/print-designer.js','css/print-template-library.css','index.html'].map(read);
  const forbidden=[
   String.fromCharCode(112,116,45,115,109,97,114,116,45,100,101,116,101,99,116),
   String.fromCharCode(114,117,110,83,109,97,114,116,68,101,116,101,99,116,105,111,110),
   String.fromCharCode(116,101,115,115,101,114,97,99,116),
   String.fromCharCode(84,101,115,115,101,114,97,99,116),
-  String.fromCharCode(79,67,82),
-  'pt-pdf-file','imageFileToPdf','handleImportFile','handlePdfFile','loadTemplatePdf',
-  'pdfjsLib','PDFLib','jspdf','html2canvas','generateSourcePdfOutput','pt-pdf-background'
+  String.fromCharCode(79,67,82)
  ];
- for(const source of sources) for(const token of forbidden) assert.equal(source.includes(token),false,'obsolete asset marker must be absent: '+token);
+ for(const source of sources) for(const token of forbidden) assert.equal(source.includes(token),false,'obsolete asset marker must be absent');
+ const module=sources[1];
+ assert.ok(module.includes('window.pdfjsLib.getDocument'));
+ assert.match(module,/imageFileToPdf: async function/);
 });
 
 test('manual template fields and existing binding types remain supported',()=>{
@@ -268,6 +286,78 @@ test('manual template fields and existing binding types remain supported',()=>{
  assert.match(module,/type === 'field'/);
  assert.ok(styles.includes('.pt-field-hint'));
  assert.ok(styles.includes('.pt-output-field'));
+});
+
+test('PDF output renders print backgrounds at 300 DPI and keeps PNG pages lossless',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/getPdfRenderScale: function/);
+ assert.match(module,/this\.getPdfRenderScale\(baseViewport,300\)/);
+ assert.match(module,/canvas\.toBlob\(result=>result\?resolve\(result\)/);
+ assert.match(module,/window\.URL\.createObjectURL\(blob\)/);
+ assert.doesNotMatch(module,/Math\.min\(2, 1800 \/ baseViewport\.width, 2400 \/ baseViewport\.height\)/);
+});
+
+test('source PDF output keeps original page objects and adds only a transparent PMS overlay',()=>{
+ const module=read('js/modules/print-designer.js');
+ const page=read('pages/print-output.html');
+ const styles=read('css/print-template-library.css');
+ const start=module.indexOf('generateSourcePdfOutput: async function');
+ const end=module.indexOf('renderFinalPdfPreview: async function',start);
+ assert.ok(start>=0&&end>start,'source PDF generation method exists');
+ const sourcePath=module.slice(start,end);
+ assert.match(sourcePath,/PDFLib\.PDFDocument\.load\(sourceBytes\)/);
+ assert.match(sourcePath,/pdfDocument\.getPages\(\)/);
+ assert.match(module,/pdfDocument\.embedPng\(pngBytes\)/);
+ assert.match(module,/drawPdfOverlayOnSourcePage/);
+ assert.match(module,/html2canvas\(node/);
+ assert.doesNotMatch(sourcePath,/pdfjsLib\.getDocument|page\.render\(/);
+ assert.match(module,/page\.drawImage\(image, this\.getPdfOverlayPlacement/);
+ assert.match(module,/page\.drawPage\(overlayPage, this\.getPdfOverlayPlacement/);
+ assert.match(module,/page\.getCropBox\(\)/);
+ assert.match(module,/page\.getRotation\(\)\.angle/);
+ assert.match(module,/hasSourcePdf/);
+ assert.match(module,/renderFinalPdfPreview\(outputBlob\)/);
+ assert.match(page,/id="pt-output-download"/);
+ assert.match(styles,/pt-output-overlay-render-host/);
+ assert.match(styles,/pt-output-final-page/);
+});
+
+test('source PDF overlay rendering waits for fonts and attached images and rejects missing source files',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/fetchOutputPdfBytes: async function/);
+ assert.match(module,/فایل PDF اصلی از فضای ذخیره‌سازی دریافت نشد/);
+ assert.match(module,/document\.fonts\.ready/);
+ assert.match(module,/if \(overlayOnly\) throw error/);
+ assert.match(module,/drawPdfOverlayOnSourcePage/);
+ assert.match(module,/تعداد صفحات PDF اصلی با مشخصات قالب یکسان نیست/);
+});
+
+test('original PDF output assets use versioned pinned browser libraries and refreshed cache keys',()=>{
+ const index=read('index.html');
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/pdf-lib@1\.17\.1/);
+ assert.match(module,/html2canvas\/1\.4\.1/);
+ assert.ok(index.includes('20261109-remove-field-detection-1'));
+});
+
+
+test('source PDF overlay aligns with rotated crop boxes without changing source page dimensions',()=>{
+ const sandbox={window:{PMS:{}},console};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const calls=[];
+ const page={
+  getCropBox:()=>({x:0,y:0,width:612,height:792}),
+  getRotation:()=>({angle:90}),
+  drawImage:(image,options)=>calls.push(options)
+ };
+ designer.drawPdfOverlayOnSourcePage(page,{}, {degrees:angle=>({angle})}, {width:279.4,height:215.9});
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].width,792);
+ assert.equal(calls[0].height,612);
+ assert.equal(calls[0].rotate.angle,-90);
+ assert.equal(calls[0].x,-90);
+ assert.equal(calls[0].y,90);
 });
 
 
@@ -290,15 +380,46 @@ test('template designer adds real image elements and uses dedicated tenant image
 });
 
 
-
 test('saved template image assets are loaded for output and embedded as image elements instead of empty placeholders',()=>{
  const module=read('js/modules/print-designer.js');
  assert.match(module,/await this\.loadTemplateImages\(template, definition\)/);
  assert.match(module,/item\.type === 'image' && this\.imageSources\[item\.assetId \|\| item\.id\]/);
  assert.match(module,/pt-output-image-content/);
- assert.match(module,/تصویر قالب در دسترس نیست/);
+ assert.match(module,/تصویر ثابت قالب بارگذاری نشده است/);
 });
 
+
+test('JPEG template image bytes are embedded directly without re-encoding or downscaling',async()=>{
+ const encoded=Buffer.from([0,1,2,255]).toString('base64');
+ const sandbox={window:{PMS:{},atob:value=>Buffer.from(value,'base64').toString('binary')},console,Buffer};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.imageSources={asset:'data:image/jpeg;base64,'+encoded};
+ let originalBytes=[],drawnImageOptions=null,drawnPageOptions=null;
+ const overlayPage={
+  drawImage:(image,options)=>{drawnImageOptions=options;}
+ };
+ const overlayDocument={
+  addPage:()=>overlayPage,
+  embedJpg:async bytes=>{originalBytes=Array.from(bytes);return{width:1200,height:800};},
+  embedPng:async()=>{throw new Error('PNG path must not be used for JPEG');},
+  save:async()=>new Uint8Array([37,80,68,70])
+ };
+ const PDFLib={PDFDocument:{create:async()=>overlayDocument},degrees:angle=>({angle})};
+ const pdfDocument={embedPdf:async()=>[{}]};
+ const targetPage={
+  getCropBox:()=>({x:0,y:0,width:595.28,height:841.89}),
+  getRotation:()=>({angle:0}),
+  drawPage:(page,options)=>{drawnPageOptions=options;}
+ };
+ await designer.drawTemplateImageOnSourcePage(pdfDocument,targetPage,
+  {id:'image-1',assetId:'asset',mimeType:'image/jpeg',x:10,y:20,width:60,height:40,fit:'contain'},
+  {width:210,height:297},PDFLib);
+ assert.deepEqual(originalBytes,[0,1,2,255]);
+ assert.equal(drawnImageOptions.width,60*72/25.4);
+ assert.equal(drawnImageOptions.height,40*72/25.4);
+ assert.ok(drawnPageOptions);
+});
 
 
 test('print designer renders live output beside the canvas using the selected project and unsaved definition',()=>{
@@ -315,16 +436,15 @@ test('print designer renders live output beside the canvas using the selected pr
  assert.match(module,/scheduleLivePreview: function/);
  assert.match(module,/livePreviewSequence/);
  assert.match(module,/PMS\.Api\.post\('\/print-templates\/preview'/);
- assert.match(module,/ProjectID:\s*projectId,[\s\S]*Definition:\s*definition/);
+ assert.match(module,/ProjectID: projectId,[\s\S]*Definition: definition/);
  const start=module.indexOf('    renderLivePreview: async function');
  const end=module.indexOf('    loadOutputOptions: async function',start);
  const preview=module.slice(start,end);
  assert.ok(start>=0&&end>start);
- assert.match(preview,/this\.renderOutputDocument\(template, result\.project \|\| \{\}, result\.data \|\| \{\}\)/);
- assert.doesNotMatch(preview,/generateSourcePdfOutput|pdfFile|Pdf\.HasFile/);
+ assert.match(preview,/this\.renderOutputDocument\(template, project, data\)/);
+ assert.match(preview,/this\.generateSourcePdfOutput\(template, project, data\)/);
  assert.doesNotMatch(preview,/saveTemplate\(|PMS\.Api\.(post|put)\('\/print-templates'\s*,/);
 });
-
 
 test('live preview exposes a print action and prints the current HTML preview without using the saved output route',()=>{
  const page=read('pages/print-designer.html');
@@ -332,8 +452,9 @@ test('live preview exposes a print action and prints the current HTML preview wi
  const styles=read('css/print-template-library.css');
  assert.match(page,/id="pt-live-preview-print" disabled/);
  assert.match(module,/printLivePreview: async function/);
- assert.doesNotMatch(module,/livePreviewPdfBlob|generateSourcePdfOutput|renderFinalPdfPreview/);
+ assert.match(module,/this\.livePreviewPdfBlob/);
  assert.match(module,/window\.print\(\)/);
+ assert.match(module,/window\.open\(printUrl, '_blank'\)/);
  assert.match(module,/this\.livePreviewReady/);
  assert.match(styles,/body\.pt-live-preview-printing #pt-live-preview-content/);
  assert.match(styles,/pt-live-preview-printing #pt-live-preview-content \.pt-print-page:last-child/);
@@ -343,7 +464,6 @@ test('live preview exposes a print action and prints the current HTML preview wi
  assert.ok(start>=0&&end>start);
  assert.doesNotMatch(printMethod,/saveTemplate\(|PMS\.Api\.(post|put)\(/);
 });
-
 
 test('live preview omits only the empty asset ID of a pending local image without mutating the editor definition',()=>{
  const sandbox={window:{PMS:{}},console};
@@ -363,45 +483,16 @@ test('live preview omits only the empty asset ID of a pending local image withou
  assert.equal(JSON.stringify(designer.definition),original);
 });
 
-
-test('PDF background import and source-PDF rendering are absent while direct page images remain supported',()=>{
- const page=read('pages/print-designer.html');
+test('live preview supports unsaved local PDF files and pending image assets without uploading or saving them',async()=>{
+ const sandbox={window:{PMS:{}},console,Uint8Array};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const localBytes=new Uint8Array([37,80,68,70,45,49]);
+ const loaded=await designer.fetchOutputPdfBytes('',{arrayBuffer:async()=>localBytes.buffer});
+ assert.deepEqual(Array.from(loaded),Array.from(localBytes));
  const module=read('js/modules/print-designer.js');
- const styles=read('css/print-template-library.css');
- const index=read('index.html');
- const output=read('pages/print-output.html');
- for(const token of ['pt-pdf-file','pt-pdf-import','application/pdf','pt-pdf-status']) assert.equal(page.includes(token),false,token);
- for(const token of ['handleImportFile','handlePdfFile','imageFileToPdf','loadTemplatePdf','renderPdfBackgrounds','pdfjsLib','jspdf','PDFLib','html2canvas','generateSourcePdfOutput','renderFinalPdfPreview','loadOutputPdfPages']) assert.equal(module.includes(token),false,token);
- assert.equal(index.includes('pdf.js/3.11.174'),false);
- assert.equal(styles.includes('pt-pdf-background'),false);
- assert.equal(output.includes('pt-output-download'),false);
- assert.match(page,/id="pt-image-file"/);
- assert.match(page,/data-pt-action="add-image">افزودن تصویر/);
- assert.match(module,/handleImageSelection: async function/);
- assert.match(module,/uploadPendingImages: async function/);
- assert.match(module,/loadTemplateImages: async function/);
- assert.match(module,/\/images\//);
- assert.match(module,/pt-canvas-image/);
- assert.match(module,/pt-output-image-content/);
- assert.match(module,/renderOutputDocument: async function/);
- assert.match(module,/window\.print\(\)/);
-});
-
-test('legacy PDF page metadata is not used by the editor or HTML output renderer',()=>{
- const module=read('js/modules/print-designer.js');
- assert.doesNotMatch(module,/\.pdf\b|Pdf\.|pdfFile|pdfDocument|page\.render/);
- assert.match(module,/pageCount = Math\.max\(1,/);
- assert.match(module,/pageIndex/);
-});
-
-test('print output renders only HTML pages and keeps browser print-to-PDF available',()=>{
- const page=read('pages/print-output.html');
- const module=read('js/modules/print-designer.js');
- assert.match(page,/id="pt-output-preview"/);
- assert.match(page,/id="pt-output-print"/);
- assert.doesNotMatch(page,/pt-output-download/);
- assert.match(module,/renderOutputDocument: async function/);
- assert.match(module,/printOutput: async function/);
- assert.match(module,/window\.print\(\)/);
- assert.doesNotMatch(module,/generateSourcePdfOutput|renderFinalPdfPreview|loadOutputPdfPages|PDFLib|pdfjsLib/);
+ assert.match(module,/this\.imageSources\[item\.assetId \|\| item\.id\]/);
+ assert.match(module,/this\.pendingImageFiles\[elementId\]/);
+ assert.match(module,/renderFinalPdfPreview: async function \(blob, rootId\)/);
+ assert.match(module,/this\.scheduleLivePreview\(650\)/);
 });
