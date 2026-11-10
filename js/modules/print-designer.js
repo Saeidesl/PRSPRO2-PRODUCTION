@@ -814,14 +814,15 @@
       if (!root) return;
       const selected = new Set(((this.definition && this.definition.bindings) || []).map(item => String(item.id)));
       const query = String(this.sourcePickerSearch || '').trim().toLocaleLowerCase();
-      const makeItem = (label, detail, binding) => ({ label: label, detail: detail, binding: binding });
+      const makeItem = (label, detail, binding, meta) => Object.assign({ label: label, detail: detail, binding: binding }, meta || {});
       let groups = [];
       if (this.sourcePickerTab === 'central') {
         const projectItems = (this.sources.projectFields || []).map(source => makeItem(source.label, 'اطلاعات پایه پروژه',
           { id: 'project_' + source.field, sourceType: 'PROJECT_FIELD', field: source.field }));
         const infoItems = (this.sources.informationTypes || []).map(source => makeItem(source.Name,
           'اطلاعات مرکزی · ' + source.Code,
-          { id: 'info_' + source.ID, sourceType: 'PROJECT_INFORMATION', informationTypeId: source.ID }));
+          { id: 'info_' + source.ID, sourceType: 'PROJECT_INFORMATION', informationTypeId: source.ID },
+          { dataType: source.DataType, cardinality: source.Cardinality, columns: source.Columns || [] }));
         groups = [
           { id: 'central-project', name: 'اطلاعات پایه پروژه', detail: 'مشخصات اصلی پرونده', items: projectItems },
           { id: 'central-information', name: 'اطلاعات مرکزی', detail: 'اطلاعات ثبت‌شده برای پروژه', items: infoItems }
@@ -829,9 +830,14 @@
       } else if (this.sourcePickerTab === 'forms') {
         groups = (this.sources.forms || []).map(form => ({
           id: 'form-' + form.ID, name: form.Name, detail: form.Code || 'فرم قابل استفاده مجدد',
-          items: (form.Fields || []).map(field => makeItem(field.Name, field.Code || field.DataType || '',
-            { id: 'form_' + form.ID + '_' + field.ID, sourceType: 'EVENT_FORM_FIELD',
-              formId: form.ID, fieldId: field.ID, informationTypeId: field.InformationTypeID, selection: 'LATEST' }))
+          items: (form.Fields || []).map(field => {
+            const infoType = (this.sources.informationTypes || []).find(type => String(type.ID) === String(field.InformationTypeID)) || {};
+            return makeItem(field.Name, field.Code || field.DataType || '',
+              { id: 'form_' + form.ID + '_' + field.ID, sourceType: 'EVENT_FORM_FIELD',
+                formId: form.ID, fieldId: field.ID, informationTypeId: field.InformationTypeID, selection: 'LATEST' },
+              { dataType: field.DataType || infoType.DataType, cardinality: field.Cardinality || infoType.Cardinality,
+                columns: infoType.Columns || [] });
+          })
         }));
       } else {
         groups = (this.sources.eventTypes || []).map(eventType => ({
@@ -927,19 +933,27 @@
       (items || []).forEach(source => {
         const binding = source && source.binding;
         if (!binding || existing.has(String(binding.id))) { skipped++; return; }
+        const isRepeatable = String(source.cardinality || '').toUpperCase() === 'MULTIPLE';
+        const isImage = String(source.dataType || '').toLowerCase() === 'image';
+        const elementType = isRepeatable ? 'table' : 'field';
+        const elementHeight = isImage ? 36 : (isRepeatable ? 38 : 12);
         let position = null;
         for (const pageIndex of pages) {
-          position = this.findFreeElementPosition(pageIndex, 82, 12);
+          position = this.findFreeElementPosition(pageIndex, 82, elementHeight);
           if (position) break;
         }
         if (!position) { noSpace++; return; }
         this.definition.bindings.push(Object.assign({}, binding, { label: source.label }));
         existing.add(String(binding.id));
+        const columns = (source.columns || []).map(column => column.Name || column.Code).filter(Boolean);
+        const columnKeys = (source.columns || []).map(column => column.Code || column.Name).filter(Boolean);
         this.definition.elements.push({
           id: 'el_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7),
-          type: 'field', text: source.label, label: source.label, showLabel: true, bindingId: binding.id,
+          type: elementType, text: source.label, label: source.label, showLabel: true, bindingId: binding.id,
           x: position.x, y: position.y, width: position.width, height: position.height,
-          pageIndex: position.pageIndex, fontSize: 10, align: 'right'
+          pageIndex: position.pageIndex, fontSize: 10, align: 'right',
+          columns: isRepeatable ? (columns.length ? columns : ['مقدار']) : [],
+          columnKeys: isRepeatable ? (columnKeys.length ? columnKeys : ['مقدار']) : [], rows: []
         });
         added++;
       });
@@ -1842,13 +1856,17 @@
           }
           const directTemplateImage = item.type === 'image' && !!(item.assetId || this.pendingImageFiles[item.id]) && !imageAttachment;
           const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
-          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+image+'</div>';
+          const imageLabel = item.type === 'field' && item.showLabel && item.label
+            ? '<div class="pt-output-field-label">' + this.esc(item.label) + ':</div>' : '';
+          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+imageLabel+image+'</div>';
         }
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
           const columns = item.columns || [];
           const tableRows = rows.map(row => {
-            const cells = Array.isArray(row) ? row : (row && typeof row === 'object' ? Object.values(row) : [row]);
+            const cells = Array.isArray(row) ? row : (row && typeof row === 'object'
+              ? (item.columnKeys || columns).map((key,i) => row[key] !== undefined ? row[key] : Object.values(row)[i])
+              : [row]);
             return '<tr>'+columns.map((_,i)=>'<td>'+this.esc(this.formatOutputValue(cells[i]))+'</td>').join('')+'</tr>';
           }).join('');
           return '<div class="pt-output-element pt-output-table" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
