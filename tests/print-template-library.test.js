@@ -212,7 +212,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('event-type-scoped-picker-1'));
+ assert.ok(index.includes('event-picker-visible-groups-1'));
 });
 
 
@@ -234,7 +234,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('event-type-scoped-picker-1'));
+ assert.ok(index.includes('event-picker-visible-groups-1'));
 });
 
 
@@ -247,7 +247,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('event-type-scoped-picker-1'));
+ assert.ok(index.includes('event-picker-visible-groups-1'));
 });
 
 
@@ -292,7 +292,7 @@ test('unified source picker groups central data, full forms and event fields in 
  for(const tab of ['central','forms','events']) assert.ok(page.includes('data-pt-source-tab="'+tab+'"'));
  assert.match(page,/افزودن اطلاعات/);
  assert.match(module,/eventTypes: Array\.isArray\(sources\.eventTypes\)/);
- assert.match(module,/eventType\.Forms \|\| \[\]/);
+ assert.match(module,/Array\.isArray\(eventType\.Forms\)/);
  assert.match(module,/eventTypeId: eventType\.ID, formId: form\.ID/);
  assert.match(module,/sourceType: 'EVENT_FORM_FIELD'/);
  assert.match(module,/EVENT_FIELD/);
@@ -645,6 +645,7 @@ test('event source groups always render a readable title when API labels use alt
   ],forms:[]}
  ]};
  designer.sourcePickerTab='events';
+ designer.expandedSourceGroups['event-ET-X']=true;
  designer.definition={elements:[]};
  designer.renderSources();
  assert.match(html,/عنوان نوع رویداد/);
