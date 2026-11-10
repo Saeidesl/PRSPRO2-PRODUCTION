@@ -89,6 +89,8 @@ test('visual editor persists page layout and supports editable table rows and la
  assert.match(module,/openDataPicker: function/);
  assert.match(module,/addSourceItems: function/);
  assert.match(module,/findFreeElementPosition: function/);
+ assert.match(module,/existingElements = new Set/);
+ assert.match(module,/this\.renderEditor\(\); this\.renderSources\(\); return this\.commitHistory\(\)/);
  assert.match(module,/sourceError/);
  assert.match(module,/اتصال/);
  assert.match(module,/pt-prop-selection/);
