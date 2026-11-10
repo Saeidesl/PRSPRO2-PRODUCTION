@@ -191,7 +191,7 @@
           const addGroup = event.target.closest('[data-pt-add-group]');
           if (addGroup) {
             const group = (this._sourcePickerGroups || [])[Number(addGroup.dataset.ptAddGroup)];
-            if (group) this.addSourceItems(group.items);
+            if (group) this.addSourceItems(this.sourcePickerSearch ? group.visibleItems : group.items);
             return;
           }
           const addItem = event.target.closest('[data-pt-add-item]');
@@ -851,7 +851,7 @@
         ? (group.items.length > 0 || this.sourcePickerTab === 'central')
         : (String(group.name || '').toLocaleLowerCase().includes(query) || group.visibleItems.length > 0));
       const flatItems = [];
-      groups.forEach((group, groupIndex) => group.visibleItems.forEach(item => {
+      groups.forEach(group => group.visibleItems.forEach(item => {
         flatItems.push(item);
       }));
       this._sourcePickerGroups = groups;
@@ -875,7 +875,6 @@
         root.innerHTML = '<p class="pt-data-empty">موردی در این دسته‌بندی پیدا نشد.</p>';
         return;
       }
-      let itemIndex = 0;
       root.innerHTML = groups.map((group, groupIndex) => {
         const added = group.items.filter(item => selected.has(String(item.binding.id))).length;
         const expanded = !!this.expandedSourceGroups[group.id] || !!query;
