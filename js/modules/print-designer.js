@@ -262,10 +262,6 @@
     handleEditorAction: function (action) {
       const selected = this.getSelectedOrById(this.selectedElementId);
       if (action === 'add-text') return this.createElement('text');
-      if (action === 'add-field') {
-        const binding = this.definition && this.definition.bindings && this.definition.bindings[0];
-        return this.createElement('field', { text: binding ? (binding.label || binding.id) : 'فیلد داده', bindingId: binding ? binding.id : '' });
-      }
       if (action === 'add-table') {
         const binding = this.definition && this.definition.bindings && this.definition.bindings.find(item => item.sourceType === 'EVENT_FORM_RESPONSE' || item.selection === 'ALL');
         return this.createElement('table', { bindingId: binding ? binding.id : '' });
