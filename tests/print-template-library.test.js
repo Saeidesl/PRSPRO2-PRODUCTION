@@ -182,7 +182,7 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261110-unified-data-picker-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261110-data-picker-modal-polish-1'));
  assert.ok(index.includes('js/modules/print-designer.js?v=20261110-unified-data-picker-1'));
 });
 
@@ -595,12 +595,12 @@ test('data source picker modal has bounded layout, an independently scrollable l
  const css=read('css/print-template-library.css');
  const page=read('pages/print-designer.html');
  const modal=css.slice(css.indexOf('/* Unified data source picker'),css.indexOf('.pt-output-field-label'));
- assert.match(modal,/grid-template-rows:\\s*auto\\s+auto\\s+auto\\s+auto\\s+minmax\\(0,\\s*1fr\\)/);
- assert.match(modal,/height:\\s*min\\(760px,\\s*calc\\(100dvh - 36px\\)\\)/);
+ assert.match(modal,/grid-template-rows:\s*auto\s+auto\s+auto\s+auto\s+minmax\(0,\s*1fr\)/);
+ assert.match(modal,/height:\s*min\(760px,\s*calc\(100dvh - 36px\)\)/);
  assert.match(modal,/\.pt-data-modal-dialog\s*\{[\s\S]*?overflow:\s*hidden/);
  assert.match(modal,/\.pt-data-picker-content\s*\{[\s\S]*?min-height:\s*0[\s\S]*?overflow:\s*auto/);
- assert.match(modal,/overscroll-behavior:\\s*contain/);
- assert.match(modal,/min-height:\\s*44px/);
+ assert.match(modal,/overscroll-behavior:\s*contain/);
+ assert.match(modal,/min-height:\s*44px/);
  assert.match(modal,/@media \(max-width: 700px\)/);
  assert.match(modal,/safe-area-inset-bottom/);
  assert.match(modal,/:focus-visible/);
