@@ -852,7 +852,7 @@
         : (String(group.name || '').toLocaleLowerCase().includes(query) || group.visibleItems.length > 0));
       const flatItems = [];
       groups.forEach((group, groupIndex) => group.visibleItems.forEach(item => {
-        flatItems.push(Object.assign({}, item, { groupId: group.id }));
+        flatItems.push(item);
       }));
       this._sourcePickerGroups = groups;
       this._sourcePickerItems = flatItems;
