@@ -181,13 +181,6 @@
           if (close || event.target === picker) { this.closeDataPicker(); return; }
           const tab = event.target.closest('[data-pt-source-tab]');
           if (tab) { this.sourcePickerTab = tab.dataset.ptSourceTab; this.renderSources(); return; }
-          const toggle = event.target.closest('[data-pt-group-toggle]');
-          if (toggle) {
-            const id = toggle.dataset.ptGroupToggle;
-            this.expandedSourceGroups[id] = !this.expandedSourceGroups[id];
-            this.renderSources();
-            return;
-          }
           const addGroup = event.target.closest('[data-pt-add-group]');
           if (addGroup) {
             const group = (this._sourcePickerGroups || [])[Number(addGroup.dataset.ptAddGroup)];
@@ -899,6 +892,18 @@
           groupIndex + '" aria-label="افزودن تمام اطلاعات ' + this.esc(group.name) + '"' + (groupAllAdded ? ' disabled' : '') +
           '>' + (groupAllAdded ? '✓' : '+') + '</button></div></div>' + itemsMarkup + '</section>';
       }).join('');
+      // Bind expansion directly to the freshly rendered group controls. This keeps
+      // disclosure behavior reliable and independent from the modal's other actions.
+      root.querySelectorAll('[data-pt-group-toggle]').forEach(button => {
+        button.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          const id = button.dataset.ptGroupToggle;
+          if (!id) return;
+          this.expandedSourceGroups[id] = !this.expandedSourceGroups[id];
+          this.renderSources();
+        });
+      });
     },
     findFreeElementPosition: function (pageIndex, width, height) {
       const dimensions = this.pageDimensions(pageIndex);
