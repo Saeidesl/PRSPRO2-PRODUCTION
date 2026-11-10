@@ -289,7 +289,7 @@
       }
       if (action === 'remove' && selected) {
         this.definition.elements = this.definition.elements.filter(item => item.id !== selected.id);
-        this.selectedElementId = ''; this.renderEditor(); return this.commitHistory();
+        this.selectedElementId = ''; this.renderEditor(); this.renderSources(); return this.commitHistory();
       }
       if ((action === 'layer-up' || action === 'layer-down') && selected) {
         const list = this.definition.elements;
@@ -812,7 +812,8 @@
     renderSources: function () {
       const root = document.getElementById('pt-data-picker-content');
       if (!root) return;
-      const selected = new Set(((this.definition && this.definition.bindings) || []).map(item => String(item.id)));
+      const selected = new Set(((this.definition && this.definition.elements) || [])
+        .filter(item => item.bindingId).map(item => String(item.bindingId)));
       const query = String(this.sourcePickerSearch || '').trim().toLocaleLowerCase();
       const makeItem = (label, detail, binding, meta) => Object.assign({ label: label, detail: detail, binding: binding }, meta || {});
       let groups = [];
@@ -926,13 +927,14 @@
     },
     addSourceItems: function (items) {
       if (!this.definition) this.definition = this.blankDefinition();
-      const existing = new Set((this.definition.bindings || []).map(item => String(item.id)));
+      const existingBindings = new Map((this.definition.bindings || []).map(item => [String(item.id), item]));
+      const existingElements = new Set((this.definition.elements || []).filter(item => item.bindingId).map(item => String(item.bindingId)));
       const pages = this.definition.pdf && Array.isArray(this.definition.pdf.pages)
         ? this.definition.pdf.pages.map((page, index) => index) : [Number(this.activePageIndex || 0)];
       let added = 0, skipped = 0, noSpace = 0;
       (items || []).forEach(source => {
         const binding = source && source.binding;
-        if (!binding || existing.has(String(binding.id))) { skipped++; return; }
+        if (!binding || existingElements.has(String(binding.id))) { skipped++; return; }
         const isRepeatable = String(source.cardinality || '').toUpperCase() === 'MULTIPLE';
         const isImage = String(source.dataType || '').toLowerCase() === 'image';
         const elementType = isRepeatable ? 'table' : 'field';
@@ -943,8 +945,12 @@
           if (position) break;
         }
         if (!position) { noSpace++; return; }
-        this.definition.bindings.push(Object.assign({}, binding, { label: source.label }));
-        existing.add(String(binding.id));
+        if (!existingBindings.has(String(binding.id))) {
+          const savedBinding = Object.assign({}, binding, { label: source.label });
+          this.definition.bindings.push(savedBinding);
+          existingBindings.set(String(binding.id), savedBinding);
+        }
+        existingElements.add(String(binding.id));
         const columns = (source.columns || []).map(column => column.Name || column.Code).filter(Boolean);
         const columnKeys = (source.columns || []).map(column => column.Code || column.Name).filter(Boolean);
         this.definition.elements.push({
