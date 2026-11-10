@@ -830,12 +830,26 @@
           })
         }));
       } else {
-        groups = (this.sources.eventTypes || []).map(eventType => ({
-          id: 'event-' + eventType.ID, name: eventType.Name, detail: [eventType.Code, eventType.Category].filter(Boolean).join(' · '),
-          items: (eventType.Fields || []).map(field => makeItem(field.label, 'اطلاعات عمومی رویداد',
+        groups = (this.sources.eventTypes || []).map(eventType => {
+          const eventFields = (eventType.Fields || []).map(field => makeItem(field.label, 'اطلاعات عمومی نوع رویداد',
             { id: 'event_' + eventType.ID + '_' + field.field, sourceType: 'EVENT_FIELD',
-              eventTypeId: eventType.ID, field: field.field, selection: 'LATEST' }))
-        }));
+              eventTypeId: eventType.ID, field: field.field, selection: 'LATEST' }));
+          const formFields = (eventType.Forms || []).flatMap(form => (form.Fields || []).map(field => {
+            const infoType = (this.sources.informationTypes || []).find(type =>
+              String(type.ID) === String(field.InformationTypeID)) || {};
+            return makeItem((form.Name || 'فرم') + ' · ' + field.Name, 'فرم متصل به این نوع رویداد',
+              { id: 'event_' + eventType.ID + '_form_' + form.ID + '_' + field.ID,
+                sourceType: 'EVENT_FORM_FIELD', eventTypeId: eventType.ID, formId: form.ID,
+                fieldId: field.ID, informationTypeId: field.InformationTypeID, selection: 'LATEST' },
+              { dataType: field.DataType || infoType.DataType,
+                cardinality: field.Cardinality || infoType.Cardinality, columns: infoType.Columns || [] });
+          }));
+          return {
+            id: 'event-' + eventType.ID, name: eventType.Name,
+            detail: [eventType.Code, eventType.Category].filter(Boolean).join(' · '),
+            items: eventFields.concat(formFields)
+          };
+        });
       }
       groups = groups.map(group => {
         const matchingItems = group.items.filter(item => !query ||
