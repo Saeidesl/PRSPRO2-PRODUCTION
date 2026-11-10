@@ -10,7 +10,8 @@ test('standalone print template library route uses its independent module',()=>{
   const module=read('js/modules/print-designer.js');
   const router=read('js/core/router.js');
   assert.match(page,/pt-template-form/);
-  assert.match(page,/pt-source-list/);
+  assert.match(page,/pt-data-picker-content/);
+  assert.ok(page.includes('id="pt-open-data-picker"'));
   assert.match(module,/initLibrary: async function/);
   assert.match(module,/PMS\.Api\.post\('\/print-templates'/);
   assert.match(router,/'print-design': 'PrintDesigner'/);
