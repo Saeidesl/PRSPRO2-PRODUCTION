@@ -835,7 +835,7 @@
           // A missing display label must never produce an apparently blank group.
           const eventTypeId = eventType.ID || eventType.id || eventType.EventTypeID;
           const eventTypeCode = eventType.Code || eventType.code || '';
-          const eventTypeName = eventType.Name || eventType.EventTypeName || eventType.name ||
+          const eventTypeName = eventType.Name || eventType.EventTypeName || eventType.eventTypeName || eventType.name ||
             eventTypeCode || eventTypeId || 'نوع رویداد بدون عنوان';
           const rawEventFields = Array.isArray(eventType.Fields) ? eventType.Fields :
             (Array.isArray(eventType.fields) ? eventType.fields : []);
