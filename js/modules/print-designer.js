@@ -937,7 +937,7 @@
         existing.add(String(binding.id));
         this.definition.elements.push({
           id: 'el_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7),
-          type: 'field', text: source.label, label: source.label, bindingId: binding.id,
+          type: 'field', text: source.label, label: source.label, showLabel: true, bindingId: binding.id,
           x: position.x, y: position.y, width: position.width, height: position.height,
           pageIndex: position.pageIndex, fontSize: 10, align: 'right'
         });
@@ -1818,6 +1818,9 @@
         const imageAttachment = this.findImageAttachment(raw);
         const isImage = item.type === 'image' || !!imageAttachment;
         const value = binding ? this.formatOutputValue(raw) : (item.text || '');
+        const fieldContent = item.type === 'field' && item.showLabel && item.label
+          ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> <span>' + this.esc(value) + '</span>'
+          : this.esc(value);
         const style = 'left:'+Number(item.x||0)+'mm;top:'+Number(item.y||0)+'mm;width:'+Number(item.width||30)+'mm;min-height:'+Number(item.height||15)+'mm;font-size:'+Number(item.fontSize||12)+'pt;text-align:'+this.esc(item.align||'right')+';color:'+this.esc(item.color||'#1f2937')+';background:'+this.esc(item.background||'transparent')+';';
         if (isImage) {
           let image = '';
@@ -1852,7 +1855,7 @@
         }
         if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
         if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
-        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" dir="auto" style="'+style+'">'+this.esc(value)+'</div>';
+        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" dir="auto" style="'+style+'">'+fieldContent+'</div>';
       };
       const pages = [];
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {
