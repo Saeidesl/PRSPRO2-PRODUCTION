@@ -60,7 +60,7 @@ test('print designer module parses and is loaded exactly once',()=>{
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
- assert.match(index,/20261110-unified-data-picker-1/);
+ assert.match(index,/20261110-event-type-scoped-picker-1/);
 });
 
 
