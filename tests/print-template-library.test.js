@@ -292,6 +292,9 @@ test('unified source picker groups central data, full forms and event fields in 
  assert.match(module,/this\.definition\.elements\.push\(/);
  assert.match(module,/item\.showLabel && item\.label/);
  assert.match(module,/showLabel: true/);
+ assert.match(module,/String\(source\.cardinality \|\| ''\)\.toUpperCase\(\) === 'MULTIPLE'/);
+ assert.match(module,/columnKeys: isRepeatable/);
+ assert.match(module,/pt-output-field-label/);
  assert.match(css,/\.pt-data-modal:not\(\[hidden\]\)/);
  assert.match(css,/@media\(max-width:600px\)/);
 });
