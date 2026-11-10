@@ -831,25 +831,47 @@
         }));
       } else {
         groups = (this.sources.eventTypes || []).map(eventType => {
-          const eventFields = (eventType.Fields || []).map(field => makeItem(field.label, 'اطلاعات عمومی نوع رویداد',
-            { id: 'event_' + eventType.ID + '_' + field.field, sourceType: 'EVENT_FIELD',
-              eventTypeId: eventType.ID, field: field.field, selection: 'LATEST' }));
-          const formFields = (eventType.Forms || []).flatMap(form => (form.Fields || []).map(field => {
-            const infoType = (this.sources.informationTypes || []).find(type =>
-              String(type.ID) === String(field.InformationTypeID)) || {};
-            return makeItem((form.Name || 'فرم') + ' · ' + field.Name, 'فرم متصل به این نوع رویداد',
-              { id: 'event_' + eventType.ID + '_form_' + form.ID + '_' + field.ID,
-                sourceType: 'EVENT_FORM_FIELD', eventTypeId: eventType.ID, formId: form.ID,
-                fieldId: field.ID, informationTypeId: field.InformationTypeID, selection: 'LATEST' },
-              { dataType: field.DataType || infoType.DataType,
-                cardinality: field.Cardinality || infoType.Cardinality, columns: infoType.Columns || [] });
-          }));
+          // Accept the canonical API shape and legacy/case-variant payloads.
+          // A missing display label must never produce an apparently blank group.
+          const eventTypeId = eventType.ID || eventType.id || eventType.EventTypeID;
+          const eventTypeCode = eventType.Code || eventType.code || '';
+          const eventTypeName = eventType.Name || eventType.EventTypeName || eventType.name ||
+            eventTypeCode || eventTypeId || 'نوع رویداد بدون عنوان';
+          const rawEventFields = Array.isArray(eventType.Fields) ? eventType.Fields :
+            (Array.isArray(eventType.fields) ? eventType.fields : []);
+          const rawForms = Array.isArray(eventType.Forms) ? eventType.Forms :
+            (Array.isArray(eventType.forms) ? eventType.forms : []);
+          const eventFields = rawEventFields.map(field => {
+            const fieldKey = field.field || field.Field || field.Code || field.Name;
+            const fieldLabel = field.label || field.Label || field.Name || fieldKey || 'اطلاعات رویداد';
+            return makeItem(fieldLabel, 'اطلاعات عمومی نوع رویداد',
+              { id: 'event_' + eventTypeId + '_' + fieldKey, sourceType: 'EVENT_FIELD',
+                eventTypeId: eventTypeId, field: fieldKey, selection: 'LATEST' });
+          }).filter(item => item.binding.field);
+          const formFields = rawForms.flatMap(form => {
+            const formId = form.ID || form.id || form.FormID;
+            const formName = form.Name || form.name || form.Code || 'فرم متصل';
+            const fields = Array.isArray(form.Fields) ? form.Fields : (Array.isArray(form.fields) ? form.fields : []);
+            return fields.map(field => {
+              const fieldId = field.ID || field.id || field.FieldID;
+              const informationTypeId = field.InformationTypeID || field.informationTypeId;
+              const fieldName = field.Name || field.name || field.Label || field.label || field.Code || 'فیلد فرم';
+              const infoType = (this.sources.informationTypes || []).find(type =>
+                String(type.ID) === String(informationTypeId)) || {};
+              return makeItem(formName + ' · ' + fieldName, 'فرم متصل به این نوع رویداد',
+                { id: 'event_' + eventTypeId + '_form_' + formId + '_' + fieldId,
+                  sourceType: 'EVENT_FORM_FIELD', eventTypeId: eventTypeId, formId: formId,
+                  fieldId: fieldId, informationTypeId: informationTypeId, selection: 'LATEST' },
+                { dataType: field.DataType || field.dataType || infoType.DataType,
+                  cardinality: field.Cardinality || field.cardinality || infoType.Cardinality, columns: infoType.Columns || [] });
+            }).filter(item => item.binding.formId && item.binding.fieldId);
+          });
           return {
-            id: 'event-' + eventType.ID, name: eventType.Name,
-            detail: [eventType.Code, eventType.Category].filter(Boolean).join(' · '),
+            id: 'event-' + eventTypeId, name: eventTypeName,
+            detail: [eventTypeCode, eventType.Category || eventType.category].filter(Boolean).join(' · '),
             items: eventFields.concat(formFields)
           };
-        });
+        }).filter(group => group.items.length > 0);
       }
       groups = groups.map(group => {
         const matchingItems = group.items.filter(item => !query ||
