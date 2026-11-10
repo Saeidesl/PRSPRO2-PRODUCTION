@@ -595,12 +595,12 @@ test('data source picker modal has bounded layout, an independently scrollable l
  const css=read('css/print-template-library.css');
  const page=read('pages/print-designer.html');
  const modal=css.slice(css.indexOf('/* Unified data source picker'),css.indexOf('.pt-output-field-label'));
- assert.match(modal,/grid-template-rows:auto auto auto auto minmax\(0,1fr\)/);
- assert.match(modal,/height:min\(760px,calc\(100dvh - 36px\)\)/);
+ assert.match(modal,/grid-template-rows:\\s*auto\\s+auto\\s+auto\\s+auto\\s+minmax\\(0,\\s*1fr\\)/);
+ assert.match(modal,/height:\\s*min\\(760px,\\s*calc\\(100dvh - 36px\\)\\)/);
  assert.match(modal,/\.pt-data-modal-dialog\{[\s\S]*?overflow:hidden/);
  assert.match(modal,/\.pt-data-picker-content\{[\s\S]*?min-height:0[\s\S]*?overflow:auto/);
- assert.match(modal,/overscroll-behavior:contain/);
- assert.match(modal,/min-height:44px/);
+ assert.match(modal,/overscroll-behavior:\\s*contain/);
+ assert.match(modal,/min-height:\\s*44px/);
  assert.match(modal,/@media \(max-width: 700px\)/);
  assert.match(modal,/safe-area-inset-bottom/);
  assert.match(modal,/:focus-visible/);
