@@ -627,3 +627,39 @@ test('data source groups expand and collapse through directly bound disclosure c
  assert.match(render,/this\.renderSources\(\)/);
  assert.doesNotMatch(module,/const toggle = event\.target\.closest\('\[data-pt-group-toggle\]'\)/);
 });
+
+
+test('event source groups always render a readable title when API labels use alternate field names',()=>{
+ const sandbox={window:{PMS:{}},console,document:{
+  getElementById:id=>id==='pt-data-picker-content'?root:id==='pt-source-count'?count:id==='pt-picker-selected-count'?selected:null,
+  querySelectorAll:()=>[]
+ }};
+ let html='';
+ const root={set innerHTML(value){html=value;},get innerHTML(){return html;},querySelectorAll:()=>[]};
+ const count={textContent:''},selected={textContent:''};
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ designer.sources={projectFields:[],informationTypes:[],forms:[],eventTypes:[
+  {id:'ET-X',eventTypeName:'عنوان نوع رویداد',code:'TYPE_X',fields:[
+   {field:'Description',label:'توضیحات'}
+  ],forms:[]}
+ ]};
+ designer.sourcePickerTab='events';
+ designer.definition={elements:[]};
+ designer.renderSources();
+ assert.match(html,/عنوان نوع رویداد/);
+ assert.match(html,/توضیحات/);
+ assert.match(html,/data-pt-group-toggle="event-ET-X"/);
+ assert.equal(count.textContent,'1 منبع در این دسته');
+});
+
+test('event source group headers keep visible touch-sized disclosure and action controls',()=>{
+ const css=read('css/print-template-library.css');
+ const start=css.indexOf('.pt-data-group-heading {');
+ const end=css.indexOf('.pt-data-group-count {',start);
+ const groupStyles=css.slice(start,end);
+ assert.match(groupStyles,/display:\s*flex/);
+ assert.match(groupStyles,/min-height:\s*48px/);
+ assert.match(groupStyles,/\.pt-data-group-title button[\s\S]*?min-height:\s*26px/);
+ assert.match(groupStyles,/\.pt-data-group-actions[\s\S]*?visibility:\s*visible/);
+});
