@@ -3,7 +3,10 @@
   const PMS = window.PMS = window.PMS || {};
   const PrintDesigner = {
     templates: [],
-    sources: { projectFields: [], informationTypes: [], forms: [] },
+    sources: { projectFields: [], informationTypes: [], forms: [], eventTypes: [] },
+    sourcePickerTab: 'central',
+    sourcePickerSearch: '',
+    expandedSourceGroups: Object.create(null),
     definition: null,
     editingId: '',
     busy: false,
@@ -152,6 +155,8 @@
         if (this.dragState) { this.dragState = null; this.commitHistory(); }
       });
       document.addEventListener('keydown', (event) => {
+        const picker = document.getElementById('pt-data-picker');
+        if (event.key === 'Escape' && picker && !picker.hidden) { this.closeDataPicker(); return; }
         if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
         const tag = event.target && event.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
@@ -163,6 +168,49 @@
         button.dataset.ptBound = '1';
         button.addEventListener('click', () => this.handleEditorAction(button.dataset.ptAction));
       });
+      const openPicker = document.getElementById('pt-open-data-picker');
+      if (openPicker && openPicker.dataset.bound !== '1') {
+        openPicker.dataset.bound = '1';
+        openPicker.addEventListener('click', () => this.openDataPicker());
+      }
+      const picker = document.getElementById('pt-data-picker');
+      if (picker && picker.dataset.bound !== '1') {
+        picker.dataset.bound = '1';
+        picker.addEventListener('click', event => {
+          const close = event.target.closest('[data-pt-picker-close]');
+          if (close || event.target === picker) { this.closeDataPicker(); return; }
+          const tab = event.target.closest('[data-pt-source-tab]');
+          if (tab) { this.sourcePickerTab = tab.dataset.ptSourceTab; this.renderSources(); return; }
+          const toggle = event.target.closest('[data-pt-group-toggle]');
+          if (toggle) {
+            const id = toggle.dataset.ptGroupToggle;
+            this.expandedSourceGroups[id] = !this.expandedSourceGroups[id];
+            this.renderSources();
+            return;
+          }
+          const addGroup = event.target.closest('[data-pt-add-group]');
+          if (addGroup) {
+            const group = (this._sourcePickerGroups || [])[Number(addGroup.dataset.ptAddGroup)];
+            if (group) this.addSourceItems(this.sourcePickerSearch ? group.visibleItems : group.items);
+            return;
+          }
+          const addItem = event.target.closest('[data-pt-add-item]');
+          if (addItem) {
+            const item = (this._sourcePickerItems || [])[Number(addItem.dataset.ptAddItem)];
+            if (item) this.addSourceItems([item]);
+          }
+        });
+      }
+      const pickerSearch = document.getElementById('pt-data-picker-search');
+      if (pickerSearch && pickerSearch.dataset.bound !== '1') {
+        pickerSearch.dataset.bound = '1';
+        pickerSearch.addEventListener('input', () => {
+          this.sourcePickerSearch = pickerSearch.value || '';
+          this.renderSources();
+          const search = document.getElementById('pt-data-picker-search');
+          if (search) { search.focus(); search.setSelectionRange(search.value.length, search.value.length); }
+        });
+      }
       ['pt-prop-text','pt-prop-binding','pt-prop-selection','pt-prop-x','pt-prop-y','pt-prop-width','pt-prop-height','pt-prop-font','pt-prop-align','pt-prop-columns','pt-prop-rows','pt-prop-color','pt-prop-background'].forEach(id => {
         const input = document.getElementById(id);
         if (!input || input.dataset.bound === '1') return;
@@ -214,10 +262,6 @@
     handleEditorAction: function (action) {
       const selected = this.getSelectedOrById(this.selectedElementId);
       if (action === 'add-text') return this.createElement('text');
-      if (action === 'add-field') {
-        const binding = this.definition && this.definition.bindings && this.definition.bindings[0];
-        return this.createElement('field', { text: binding ? (binding.label || binding.id) : 'فیلد داده', bindingId: binding ? binding.id : '' });
-      }
       if (action === 'add-table') {
         const binding = this.definition && this.definition.bindings && this.definition.bindings.find(item => item.sourceType === 'EVENT_FORM_RESPONSE' || item.selection === 'ALL');
         return this.createElement('table', { bindingId: binding ? binding.id : '' });
@@ -241,7 +285,7 @@
       }
       if (action === 'remove' && selected) {
         this.definition.elements = this.definition.elements.filter(item => item.id !== selected.id);
-        this.selectedElementId = ''; this.renderEditor(); return this.commitHistory();
+        this.selectedElementId = ''; this.renderEditor(); this.renderSources(); return this.commitHistory();
       }
       if ((action === 'layer-up' || action === 'layer-down') && selected) {
         const list = this.definition.elements;
@@ -274,7 +318,7 @@
         'pt-prop-width':'width','pt-prop-height':'height','pt-prop-font':'fontSize','pt-prop-align':'align','pt-prop-color':'color','pt-prop-background':'background' };
       if (id === 'pt-prop-selection') {
         const source = (this.definition.bindings || []).find(binding => binding.id === item.bindingId);
-        if (source && ['EVENT_FORM_FIELD','EVENT_FORM_RESPONSE'].includes(source.sourceType)) source.selection = value;
+        if (source && ['EVENT_FORM_FIELD','EVENT_FORM_RESPONSE','EVENT_FIELD'].includes(source.sourceType)) source.selection = value;
       } else if (id === 'pt-prop-columns') item.columns = String(value).split('|').map(part => part.trim()).filter(Boolean);
       else if (id === 'pt-prop-rows') item.rows = String(value).split(/\r?\n/).filter(line => line.trim()).map(line => line.split('|').map(part => part.trim()));
       else {
@@ -376,10 +420,15 @@
       if (tableProperties) tableProperties.hidden = item.type !== 'table';
       const selectionWrap = document.getElementById('pt-selection-wrap');
       const selectedBinding = (this.definition.bindings || []).find(source => source.id === item.bindingId);
-      const supportsSelection = selectedBinding && ['EVENT_FORM_FIELD','EVENT_FORM_RESPONSE'].includes(selectedBinding.sourceType);
+      const supportsSelection = selectedBinding && ['EVENT_FORM_FIELD','EVENT_FORM_RESPONSE','EVENT_FIELD'].includes(selectedBinding.sourceType);
       if (selectionWrap) selectionWrap.hidden = !supportsSelection;
       const selectionInput = document.getElementById('pt-prop-selection');
-      if (selectionInput && supportsSelection) selectionInput.value = selectedBinding.selection || 'LATEST';
+      if (selectionInput && supportsSelection) {
+        selectionInput.innerHTML = selectedBinding.sourceType === 'EVENT_FIELD'
+          ? '<option value="LATEST">آخرین رویداد</option><option value="ALL">تمام رویدادها</option>'
+          : '<option value="LATEST">آخرین پاسخ</option><option value="ALL">همه پاسخ‌ها (ردیف‌های تکرارشونده)</option><option value="EVENT">رویداد مشخص</option><option value="RESPONSE">پاسخ مشخص</option>';
+        selectionInput.value = selectedBinding.selection || 'LATEST';
+      }
       const columns = document.getElementById('pt-prop-columns');
       const rows = document.getElementById('pt-prop-rows');
       if (columns) columns.value = (item.columns || []).join(' | ');
@@ -715,11 +764,12 @@
         this.sources = {
           projectFields: Array.isArray(sources.projectFields) ? sources.projectFields : [],
           informationTypes: Array.isArray(sources.informationTypes) ? sources.informationTypes : [],
-          forms: Array.isArray(sources.forms) ? sources.forms : []
+          forms: Array.isArray(sources.forms) ? sources.forms : [],
+          eventTypes: Array.isArray(sources.eventTypes) ? sources.eventTypes : []
         };
         this.sourceError = '';
       } else {
-        this.sources = { projectFields: [], informationTypes: [], forms: [] };
+        this.sources = { projectFields: [], informationTypes: [], forms: [], eventTypes: [] };
         this.sourceError = results[1].reason && results[1].reason.message || 'دریافت منابع داده ناموفق بود.';
       }
       this.renderSources();
@@ -743,49 +793,190 @@
       this.renderSources();
       this.renderBindings();
     },
-    renderSources: function () {
-      const roots = ['pt-source-list','pt-editor-source-list'].map(id => document.getElementById(id)).filter(Boolean);
-      if (!roots.length) return;
-      const groups = [];
-      (this.sources.projectFields || []).forEach(source => groups.push({
-        key: 'project|' + source.field, label: source.label, detail: 'اطلاعات پایه پروژه',
-        binding: { id: 'project_' + source.field, sourceType: 'PROJECT_FIELD', field: source.field }
-      }));
-      (this.sources.informationTypes || []).forEach(source => groups.push({
-        key: 'info|' + source.ID, label: source.Name, detail: 'اطلاعات مرکزی · ' + source.Code,
-        binding: { id: 'info_' + source.ID, sourceType: 'PROJECT_INFORMATION', informationTypeId: source.ID }
-      }));
-      (this.sources.forms || []).forEach(form => (form.Fields || []).forEach(field => groups.push({
-        key: 'form|' + form.ID + '|' + field.ID, label: field.Name,
-        detail: 'فرم ' + form.Name + ' · ' + field.Code,
-        binding: { id: 'form_' + form.ID + '_' + field.ID, sourceType: 'EVENT_FORM_FIELD',
-          formId: form.ID, fieldId: field.ID, informationTypeId: field.InformationTypeID, selection: 'LATEST' }
-      })));
-      const markup = this.sourceError
-        ? '<p class="pt-empty-state is-error">' + this.esc(this.sourceError) + '</p>'
-        : (groups.length ? groups.map((item, index) =>
-          '<div class="pt-source-row"><div><strong>' + this.esc(item.label) + '</strong><small>' + this.esc(item.detail) +
-          '</small></div><button type="button" class="btn btn-secondary btn-sm" data-pt-add-source="' + index + '">اتصال</button></div>'
-        ).join('') : '<p class="pt-empty-state">منبع داده فعالی پیدا نشد. اطلاعات مرکزی یا فرم فعال تعریف کن.</p>');
-      roots.forEach(root => {
-        root.innerHTML = markup;
-        root.querySelectorAll('[data-pt-add-source]').forEach(button => button.addEventListener('click', () => {
-          const item = groups[Number(button.dataset.ptAddSource)];
-          if (item) this.addBinding(item.binding, item.label);
-        }));
-      });
-      const count = document.getElementById('pt-source-count');
-      if (count) count.textContent = this.sourceError ? 'خطا در دریافت منابع' : (groups.length + ' منبع قابل اتصال');
+    openDataPicker: function () {
+      const modal = document.getElementById('pt-data-picker');
+      if (!modal) return;
+      modal.hidden = false;
+      this.renderSources();
+      const search = document.getElementById('pt-data-picker-search');
+      if (search) window.setTimeout(() => search.focus(), 0);
     },
-    addBinding: function (binding, label) {
-      if (!this.definition) this.definition = this.blankDefinition();
-      if (this.definition.bindings.some(item => item.id === binding.id)) {
-        this.setStatus('pt-form-status', 'این منبع قبلاً به قالب اضافه شده است.');
+    closeDataPicker: function () {
+      const modal = document.getElementById('pt-data-picker');
+      if (modal) modal.hidden = true;
+    },
+    renderSources: function () {
+      const root = document.getElementById('pt-data-picker-content');
+      if (!root) return;
+      const selected = new Set(((this.definition && this.definition.elements) || [])
+        .filter(item => item.bindingId).map(item => String(item.bindingId)));
+      const query = String(this.sourcePickerSearch || '').trim().toLocaleLowerCase();
+      const makeItem = (label, detail, binding, meta) => Object.assign({ label: label, detail: detail, binding: binding }, meta || {});
+      let groups = [];
+      if (this.sourcePickerTab === 'central') {
+        const projectItems = (this.sources.projectFields || []).map(source => makeItem(source.label, 'اطلاعات پایه پروژه',
+          { id: 'project_' + source.field, sourceType: 'PROJECT_FIELD', field: source.field }));
+        const infoItems = (this.sources.informationTypes || []).map(source => makeItem(source.Name,
+          'اطلاعات مرکزی · ' + source.Code,
+          { id: 'info_' + source.ID, sourceType: 'PROJECT_INFORMATION', informationTypeId: source.ID },
+          { dataType: source.DataType, cardinality: source.Cardinality, columns: source.Columns || [] }));
+        groups = [
+          { id: 'central-project', name: 'اطلاعات پایه پروژه', detail: 'مشخصات اصلی پرونده', items: projectItems },
+          { id: 'central-information', name: 'اطلاعات مرکزی', detail: 'اطلاعات ثبت‌شده برای پروژه', items: infoItems }
+        ];
+      } else if (this.sourcePickerTab === 'forms') {
+        groups = (this.sources.forms || []).map(form => ({
+          id: 'form-' + form.ID, name: form.Name, detail: form.Code || 'فرم قابل استفاده مجدد',
+          items: (form.Fields || []).map(field => {
+            const infoType = (this.sources.informationTypes || []).find(type => String(type.ID) === String(field.InformationTypeID)) || {};
+            return makeItem(field.Name, field.Code || field.DataType || '',
+              { id: 'form_' + form.ID + '_' + field.ID, sourceType: 'EVENT_FORM_FIELD',
+                formId: form.ID, fieldId: field.ID, informationTypeId: field.InformationTypeID, selection: 'LATEST' },
+              { dataType: field.DataType || infoType.DataType, cardinality: field.Cardinality || infoType.Cardinality,
+                columns: infoType.Columns || [] });
+          })
+        }));
+      } else {
+        groups = (this.sources.eventTypes || []).map(eventType => ({
+          id: 'event-' + eventType.ID, name: eventType.Name, detail: [eventType.Code, eventType.Category].filter(Boolean).join(' · '),
+          items: (eventType.Fields || []).map(field => makeItem(field.label, 'اطلاعات عمومی رویداد',
+            { id: 'event_' + eventType.ID + '_' + field.field, sourceType: 'EVENT_FIELD',
+              eventTypeId: eventType.ID, field: field.field, selection: 'LATEST' }))
+        }));
+      }
+      groups = groups.map(group => {
+        const matchingItems = group.items.filter(item => !query ||
+          (String(group.name || '').toLocaleLowerCase().includes(query)) ||
+          (String(item.label || '').toLocaleLowerCase().includes(query)) ||
+          (String(item.detail || '').toLocaleLowerCase().includes(query)));
+        return Object.assign({}, group, { visibleItems: matchingItems });
+      }).filter(group => !query
+        ? (group.items.length > 0 || this.sourcePickerTab === 'central')
+        : (String(group.name || '').toLocaleLowerCase().includes(query) || group.visibleItems.length > 0));
+      const flatItems = [];
+      groups.forEach(group => group.visibleItems.forEach(item => {
+        flatItems.push(item);
+      }));
+      this._sourcePickerGroups = groups;
+      this._sourcePickerItems = flatItems;
+      const totalItems = groups.reduce((sum, group) => sum + group.items.length, 0);
+      const selectedCount = selected.size;
+      const count = document.getElementById('pt-source-count');
+      const selectedNode = document.getElementById('pt-picker-selected-count');
+      if (count) count.textContent = totalItems + ' منبع در این دسته';
+      if (selectedNode) selectedNode.textContent = selectedCount + ' مورد انتخاب‌شده';
+      document.querySelectorAll('[data-pt-source-tab]').forEach(button => {
+        const active = button.dataset.ptSourceTab === this.sourcePickerTab;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      if (this.sourceError) {
+        root.innerHTML = '<p class="pt-empty-state is-error">' + this.esc(this.sourceError) + '</p>';
         return;
       }
-      this.definition.bindings.push(Object.assign({}, binding, { label: label }));
-      this.renderBindings(); this.renderInspector(); this.renderCanvas(); this.commitHistory();
-      this.setStatus('pt-form-status', 'منبع داده متصل شد؛ اکنون از فهرست ویژگی‌های المان آن را انتخاب کن.');
+      if (!groups.length) {
+        root.innerHTML = '<p class="pt-data-empty">موردی در این دسته‌بندی پیدا نشد.</p>';
+        return;
+      }
+      root.innerHTML = groups.map((group, groupIndex) => {
+        const added = group.items.filter(item => selected.has(String(item.binding.id))).length;
+        const expanded = !!this.expandedSourceGroups[group.id] || !!query;
+        const itemsMarkup = expanded ? '<div class="pt-data-items">' + group.visibleItems.map(item => {
+          const index = flatItems.indexOf(item);
+          const exists = selected.has(String(item.binding.id));
+          return '<div class="pt-data-item"><div class="pt-data-item-label"><strong>' + this.esc(item.label) +
+            '</strong><small>' + this.esc(item.detail || '') + '</small></div><button type="button" class="pt-data-add' +
+            (exists ? ' is-added' : '') + '" data-pt-add-item="' + index + '" aria-label="' +
+            (exists ? 'قبلاً اضافه شده' : 'افزودن ' + this.esc(item.label)) + '"' + (exists ? ' disabled' : '') +
+            '>' + (exists ? '✓' : '+') + '</button></div>';
+        }).join('') + '</div>' : '';
+        const groupAllAdded = group.items.length > 0 && added === group.items.length;
+        return '<section class="pt-data-group"><div class="pt-data-group-heading"><div class="pt-data-group-title">' +
+          '<button type="button" data-pt-group-toggle="' + this.esc(group.id) + '" aria-expanded="' + (expanded ? 'true' : 'false') +
+          '">' + (expanded ? '▾ ' : '▸ ') + this.esc(group.name) + '</button><small>' + this.esc(group.detail || '') +
+          '</small></div><div class="pt-data-group-actions"><span class="pt-data-group-count">' + added + ' از ' + group.items.length +
+          '</span><button type="button" class="pt-data-add' + (groupAllAdded ? ' is-added' : '') + '" data-pt-add-group="' +
+          groupIndex + '" aria-label="افزودن تمام اطلاعات ' + this.esc(group.name) + '"' + (groupAllAdded ? ' disabled' : '') +
+          '>' + (groupAllAdded ? '✓' : '+') + '</button></div></div>' + itemsMarkup + '</section>';
+      }).join('');
+    },
+    findFreeElementPosition: function (pageIndex, width, height) {
+      const dimensions = this.pageDimensions(pageIndex);
+      const columnWidth = Math.min(82, Math.max(48, (dimensions.width - 36) / 2));
+      const xPositions = dimensions.width >= 130 ? [12, dimensions.width - columnWidth - 12] : [10];
+      const rowStep = height + 5;
+      const maxRows = Math.max(1, Math.floor((dimensions.height - 30) / rowStep));
+      const existing = (this.definition.elements || []).filter(item => Number(item.pageIndex || 0) === Number(pageIndex));
+      for (let row = 0; row < maxRows; row++) {
+        for (const x of xPositions) {
+          const y = 15 + row * rowStep;
+          const overlaps = existing.some(item => {
+            const ix = Number(item.x || 0), iy = Number(item.y || 0);
+            const iw = Number(item.width || 30), ih = Number(item.height || 15);
+            return x < ix + iw + 2 && x + columnWidth + 2 > ix &&
+              y < iy + ih + 2 && y + height + 2 > iy;
+          });
+          if (!overlaps) return { x: x, y: y, width: columnWidth, height: height, pageIndex: pageIndex };
+        }
+      }
+      return null;
+    },
+    addSourceItems: function (items) {
+      if (!this.definition) this.definition = this.blankDefinition();
+      const existingBindings = new Map((this.definition.bindings || []).map(item => [String(item.id), item]));
+      const existingElements = new Set((this.definition.elements || []).filter(item => item.bindingId).map(item => String(item.bindingId)));
+      const pages = this.definition.pdf && Array.isArray(this.definition.pdf.pages)
+        ? this.definition.pdf.pages.map((page, index) => index) : [Number(this.activePageIndex || 0)];
+      let added = 0, skipped = 0, noSpace = 0;
+      (items || []).forEach(source => {
+        const binding = source && source.binding;
+        if (!binding || existingElements.has(String(binding.id))) { skipped++; return; }
+        const isRepeatable = String(source.cardinality || '').toUpperCase() === 'MULTIPLE';
+        const isImage = String(source.dataType || '').toLowerCase() === 'image';
+        const elementType = isRepeatable ? 'table' : 'field';
+        const elementHeight = isImage ? 36 : (isRepeatable ? 38 : 12);
+        let position = null;
+        for (const pageIndex of pages) {
+          position = this.findFreeElementPosition(pageIndex, 82, elementHeight);
+          if (position) break;
+        }
+        if (!position) { noSpace++; return; }
+        if (!existingBindings.has(String(binding.id))) {
+          const savedBinding = Object.assign({}, binding, { label: source.label });
+          this.definition.bindings.push(savedBinding);
+          existingBindings.set(String(binding.id), savedBinding);
+        }
+        existingElements.add(String(binding.id));
+        const columns = (source.columns || []).map(column => column.Name || column.Code).filter(Boolean);
+        const columnKeys = (source.columns || []).map(column => column.Code || column.Name).filter(Boolean);
+        this.definition.elements.push({
+          id: 'el_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7),
+          type: elementType, text: source.label, label: source.label, showLabel: true, bindingId: binding.id,
+          x: position.x, y: position.y, width: position.width, height: position.height,
+          pageIndex: position.pageIndex, fontSize: 10, align: 'right',
+          columns: isRepeatable ? (columns.length ? columns : ['مقدار']) : [],
+          columnKeys: isRepeatable ? (columnKeys.length ? columnKeys : ['مقدار']) : [], rows: []
+        });
+        added++;
+      });
+      if (added) {
+        this.activePageIndex = Number(this.definition.elements[this.definition.elements.length - 1].pageIndex || 0);
+        this.selectedElementId = this.definition.elements[this.definition.elements.length - 1].id;
+        this.renderBindings();
+        this.renderEditor();
+        this.commitHistory();
+        this.renderSources();
+        this.scheduleLivePreview(0);
+      } else {
+        this.renderSources();
+      }
+      if (noSpace) this.setStatus('pt-form-status', added + ' مورد اضافه شد؛ برای ' + noSpace + ' مورد فضای خالی در صفحات موجود پیدا نشد.', true);
+      else if (added && skipped) this.setStatus('pt-form-status', added + ' مورد اضافه شد؛ ' + skipped + ' مورد قبلاً در قالب وجود داشت.');
+      else if (added) this.setStatus('pt-form-status', added + ' مورد با اتصال مستقیم به صفحه اضافه شد.');
+      else this.setStatus('pt-form-status', 'تمام موارد انتخاب‌شده قبلاً به قالب اضافه شده‌اند.');
+    },
+    addBinding: function (binding, label) {
+      this.addSourceItems([{ binding: binding, label: label || binding.label || binding.id }]);
     },
     renderBindings: function () {
       const root = document.getElementById('pt-binding-list');
@@ -1643,6 +1834,9 @@
         const imageAttachment = this.findImageAttachment(raw);
         const isImage = item.type === 'image' || !!imageAttachment;
         const value = binding ? this.formatOutputValue(raw) : (item.text || '');
+        const fieldContent = item.type === 'field' && item.showLabel && item.label
+          ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> <span>' + this.esc(value) + '</span>'
+          : this.esc(value);
         const style = 'left:'+Number(item.x||0)+'mm;top:'+Number(item.y||0)+'mm;width:'+Number(item.width||30)+'mm;min-height:'+Number(item.height||15)+'mm;font-size:'+Number(item.fontSize||12)+'pt;text-align:'+this.esc(item.align||'right')+';color:'+this.esc(item.color||'#1f2937')+';background:'+this.esc(item.background||'transparent')+';';
         if (isImage) {
           let image = '';
@@ -1664,20 +1858,24 @@
           }
           const directTemplateImage = item.type === 'image' && !!(item.assetId || this.pendingImageFiles[item.id]) && !imageAttachment;
           const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
-          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+image+'</div>';
+          const imageLabel = item.type === 'field' && item.showLabel && item.label
+            ? '<div class="pt-output-field-label">' + this.esc(item.label) + ':</div>' : '';
+          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+imageLabel+image+'</div>';
         }
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
           const columns = item.columns || [];
           const tableRows = rows.map(row => {
-            const cells = Array.isArray(row) ? row : (row && typeof row === 'object' ? Object.values(row) : [row]);
+            const cells = Array.isArray(row) ? row : (row && typeof row === 'object'
+              ? (item.columnKeys || columns).map((key,i) => row[key] !== undefined ? row[key] : Object.values(row)[i])
+              : [row]);
             return '<tr>'+columns.map((_,i)=>'<td>'+this.esc(this.formatOutputValue(cells[i]))+'</td>').join('')+'</tr>';
           }).join('');
           return '<div class="pt-output-element pt-output-table" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
         }
         if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
         if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
-        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" dir="auto" style="'+style+'">'+this.esc(value)+'</div>';
+        return '<div class="pt-output-element'+(item.type === 'field' ? ' pt-output-field' : '')+'" dir="auto" style="'+style+'">'+fieldContent+'</div>';
       };
       const pages = [];
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {

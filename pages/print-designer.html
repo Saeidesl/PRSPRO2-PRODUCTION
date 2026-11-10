@@ -24,7 +24,7 @@
           <button type="button" class="btn btn-secondary btn-sm" data-pt-action="redo">ازنو</button>
           <button type="button" class="btn btn-secondary btn-sm" data-pt-action="preview">پیش‌نمایش</button>
           <button type="button" class="btn btn-secondary btn-sm" data-pt-action="add-text">افزودن متن</button>
-          <button type="button" class="btn btn-secondary btn-sm" data-pt-action="add-field">افزودن فیلد داده</button>
+          <button type="button" class="btn btn-primary btn-sm" id="pt-open-data-picker">＋ افزودن اطلاعات</button>
           <button type="button" class="btn btn-secondary btn-sm" data-pt-action="add-table">افزودن جدول</button>
           <button type="button" class="btn btn-secondary btn-sm" data-pt-action="add-image">افزودن تصویر</button>
           <span class="pt-toolbar-divider" aria-hidden="true"></span>
@@ -33,6 +33,23 @@
           <button type="button" class="btn btn-secondary btn-sm" data-pt-action="add-rectangle">مستطیل</button>
           <button type="button" class="btn btn-secondary btn-sm" data-pt-action="add-ellipse">بیضی</button>
         </div>
+      </div>
+      <div id="pt-data-picker" class="pt-data-modal" hidden>
+        <div class="pt-data-modal-backdrop" data-pt-picker-close></div>
+        <section class="pt-data-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pt-data-picker-title">
+          <header class="pt-data-modal-header">
+            <div><h3 id="pt-data-picker-title">افزودن اطلاعات</h3><p>یک مجموعه کامل یا فیلدهای دلخواه را به صفحه اضافه کن.</p></div>
+            <button type="button" class="btn btn-quiet btn-sm" data-pt-picker-close aria-label="بستن پنجره">✕</button>
+          </header>
+          <nav class="pt-data-tabs" role="tablist" aria-label="دسته‌بندی اطلاعات">
+            <button type="button" class="is-active" role="tab" aria-selected="true" data-pt-source-tab="central">اطلاعات مرکزی</button>
+            <button type="button" role="tab" aria-selected="false" data-pt-source-tab="forms">اطلاعات فرم‌ها</button>
+            <button type="button" role="tab" aria-selected="false" data-pt-source-tab="events">اطلاعات رویدادها</button>
+          </nav>
+          <label class="pt-data-search"><span>جستجو</span><input id="pt-data-picker-search" type="search" placeholder="نام اطلاعات، فرم یا رویداد..." autocomplete="off"></label>
+          <div class="pt-data-picker-summary"><span id="pt-source-count">منابع آماده استفاده</span><span id="pt-picker-selected-count">۰ مورد انتخاب‌شده</span></div>
+          <div id="pt-data-picker-content" class="pt-data-picker-content"><div class="pt-empty-state">در حال دریافت منابع داده…</div></div>
+        </section>
       </div>
       <input id="pt-image-file" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden>
       <div class="pt-editor-settings" aria-label="تنظیمات صفحه">
@@ -49,7 +66,7 @@
           <div id="pt-inspector-fields" hidden>
             <label>عنوان / متن <input id="pt-prop-text" type="text" maxlength="500"></label>
             <label>منبع داده <select id="pt-prop-binding"><option value="">بدون اتصال</option></select></label>
-            <label id="pt-selection-wrap" hidden>نحوه انتخاب پاسخ فرم <select id="pt-prop-selection"><option value="LATEST">آخرین پاسخ</option><option value="ALL">همه پاسخ‌ها (ردیف‌های تکرارشونده)</option><option value="EVENT">رویداد مشخص</option><option value="RESPONSE">پاسخ مشخص</option></select></label>
+            <label id="pt-selection-wrap" hidden>نحوه انتخاب اطلاعات <select id="pt-prop-selection"><option value="LATEST">آخرین پاسخ</option><option value="ALL">همه پاسخ‌ها (ردیف‌های تکرارشونده)</option><option value="EVENT">رویداد مشخص</option><option value="RESPONSE">پاسخ مشخص</option></select></label>
             <div class="pt-inspector-grid">
               <label>موقعیت افقی <input id="pt-prop-x" type="number" min="0" step="1"></label>
               <label>موقعیت عمودی <input id="pt-prop-y" type="number" min="0" step="1"></label>
@@ -71,9 +88,6 @@
               <button type="button" class="btn btn-danger btn-sm" data-pt-action="remove">حذف المان</button>
             </div>
           </div></div></details>
-            <details class="pt-editor-source-picker"><summary><span>مرحله ۳: اتصال اطلاعات</span><small id="pt-source-count">منابع آماده استفاده</small></summary><div class="pt-source-picker-body">
-              <div id="pt-editor-source-list" class="pt-editor-source-list"><p class="pt-empty-state">در حال دریافت منابع داده…</p></div>
-            </div></details>
           <details class="pt-layer-details"><summary>لایه‌های صفحه</summary><div id="pt-layer-list" class="pt-layer-list"></div></details>
         </aside>
         <div class="pt-canvas-scroll"><div id="pt-design-canvas" class="pt-design-canvas" aria-label="بوم طراحی قالب"><div class="pt-canvas-empty">برای شروع، از نوار ابزار یک المان اضافه کن.</div></div></div>
@@ -110,10 +124,6 @@
         <p id="pt-form-status" class="pt-status" aria-live="polite"></p>
       </form>
     </div></section>
-    <section class="card pt-panel"><div class="card-body">
-      <h3 class="pt-section-title">راهنمای اتصال اطلاعات</h3>
-      <p class="text-muted">۱) از بخش «اتصال اطلاعات» یک منبع را اضافه کن. ۲) یک المان «فیلد داده» روی صفحه بساز. ۳) از قسمت تنظیم المان، منبع آن را انتخاب کن.</p>
-      <div id="pt-source-list" class="pt-source-list"><div class="pt-empty-state">فهرست منابع در مرحله ۳ نمایش داده می‌شود.</div></div>
-    </div></section>
+
   </div>
 </section>

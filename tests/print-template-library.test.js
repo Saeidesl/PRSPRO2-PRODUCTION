@@ -14,7 +14,8 @@ test('template library uses central CRUD and source catalog APIs',()=>{
  assert.ok(module.includes("PMS.Api.post('/print-templates'"));
  assert.ok(module.includes("PMS.Api.put('/print-templates/'"));
  assert.ok(module.includes("PMS.Api.delete('/print-templates/'"));
- assert.match(page,/pt-source-list/);
+ assert.match(page,/pt-data-picker-content/);
+ assert.match(page,/id="pt-open-data-picker"/);
  assert.match(page,/pt-binding-list/);
 });
 
@@ -59,6 +60,7 @@ test('print designer module parses and is loaded exactly once',()=>{
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
+ assert.match(index,/20261110-unified-data-picker-1/);
 });
 
 
@@ -68,7 +70,7 @@ test('visual editor module parses and exposes canvas interactions',()=>{
  const css=read('css/print-template-library.css');
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  for(const token of ['bindEditor: function','createElement: function','renderCanvas: function','renderInspector: function','commitHistory: function','undo: function','redo: function','pointermove','pointerup','data-pt-resize']) assert.ok(module.includes(token),token);
- for(const id of ['pt-design-canvas','pt-inspector-fields','pt-page-size','pt-page-orientation','pt-prop-columns','pt-prop-rows','pt-prop-color','pt-prop-background','pt-prop-selection','pt-layer-list','pt-editor-source-list','pt-source-count']) assert.ok(page.includes(id),id);
+ for(const id of ['pt-design-canvas','pt-inspector-fields','pt-page-size','pt-page-orientation','pt-prop-columns','pt-prop-rows','pt-prop-color','pt-prop-background','pt-prop-selection','pt-layer-list','pt-data-picker','pt-data-picker-content','pt-data-picker-search','pt-source-count']) assert.ok(page.includes(id),id);
  assert.match(css,/\.pt-design-canvas\{position:relative/);
  assert.match(css,/\.pt-canvas-element\.is-selected/);
  assert.match(css,/\.pt-editor-layout/);
@@ -84,7 +86,11 @@ test('visual editor persists page layout and supports editable table rows and la
  assert.match(module,/layer-down/);
  assert.match(module,/previewMode/);
  assert.match(module,/Promise\.allSettled/);
- assert.match(module,/pt-editor-source-list/);
+ assert.match(module,/openDataPicker: function/);
+ assert.match(module,/addSourceItems: function/);
+ assert.match(module,/findFreeElementPosition: function/);
+ assert.match(module,/existingElements = new Set/);
+ assert.match(module,/this\.renderEditor\(\); this\.renderSources\(\); return this\.commitHistory\(\)/);
  assert.match(module,/sourceError/);
  assert.match(module,/اتصال/);
  assert.match(module,/pt-prop-selection/);
@@ -95,14 +101,18 @@ test('visual editor persists page layout and supports editable table rows and la
 
 test('mobile template editor presents a guided workflow with collapsible tool panels',()=>{
  const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
  const css=read('css/print-template-library.css');
  assert.match(page,/مرحله ۱: طراحی صفحه/);
  assert.match(page,/مرحله ۲: تنظیم المان انتخاب‌شده/);
- assert.match(page,/مرحله ۳: اتصال اطلاعات/);
+ assert.match(page,/افزودن اطلاعات/);
+ assert.doesNotMatch(page,/data-pt-action="add-field"/);
+ assert.doesNotMatch(module,/action === 'add-field'/);
  assert.match(page,/مرحله ۴: نام‌گذاری و ذخیره قالب/);
  assert.match(page,/<details class="[^"]*pt-saved-templates"/);
  assert.match(page,/<details class="pt-mobile-tools"/);
- assert.match(page,/<details class="pt-editor-source-picker"/);
+ assert.match(page,/pt-data-modal-dialog/);
+ assert.doesNotMatch(page,/<details class="pt-editor-source-picker"/);
  assert.match(page,/<details class="pt-layer-details"/);
  assert.match(css,/@media\(max-width:700px\)/);
  assert.match(css,/\.pt-toolbar-actions\{display:grid/);
@@ -172,8 +182,8 @@ test('print output hides image helper copy and uses exact page size without forc
 
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
- assert.ok(index.includes('css/print-template-library.css?v=20261109-remove-field-detection-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261109-remove-field-detection-1'));
+ assert.ok(index.includes('css/print-template-library.css?v=20261110-unified-data-picker-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261110-unified-data-picker-1'));
 });
 
 
@@ -202,7 +212,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('remove-field-detection-1'));
+ assert.ok(index.includes('unified-data-picker-1'));
 });
 
 
@@ -224,7 +234,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('remove-field-detection-1'));
+ assert.ok(index.includes('unified-data-picker-1'));
 });
 
 
@@ -237,7 +247,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('remove-field-detection-1'));
+ assert.ok(index.includes('unified-data-picker-1'));
 });
 
 
@@ -275,6 +285,25 @@ test('legacy field analysis assets are absent while PDF tools remain',()=>{
  assert.match(module,/imageFileToPdf: async function/);
 });
 
+test('unified source picker groups central data, full forms and event fields in one modal',()=>{
+ const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
+ const css=read('css/print-template-library.css');
+ for(const tab of ['central','forms','events']) assert.ok(page.includes('data-pt-source-tab="'+tab+'"'));
+ assert.match(page,/افزودن اطلاعات/);
+ assert.match(module,/eventTypes: Array\.isArray\(sources\.eventTypes\)/);
+ assert.match(module,/EVENT_FIELD/);
+ assert.match(module,/addSourceItems: function/);
+ assert.match(module,/findFreeElementPosition: function/);
+ assert.match(module,/this\.definition\.elements\.push\(/);
+ assert.match(module,/item\.showLabel && item\.label/);
+ assert.match(module,/showLabel: true/);
+ assert.match(module,/String\(source\.cardinality \|\| ''\)\.toUpperCase\(\) === 'MULTIPLE'/);
+ assert.match(module,/columnKeys: isRepeatable/);
+ assert.match(module,/pt-output-field-label/);
+ assert.match(css,/\.pt-data-modal:not\(\[hidden\]\)/);
+ assert.match(css,/@media\(max-width:600px\)/);
+});
 test('manual template fields and existing binding types remain supported',()=>{
  const module=read('js/modules/print-designer.js');
  const styles=read('css/print-template-library.css');
@@ -337,7 +366,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261109-remove-field-detection-1'));
+ assert.ok(index.includes('20261110-unified-data-picker-1'));
 });
 
 
