@@ -805,6 +805,7 @@
       }));
     },
     resetForm: function () {
+      this.clearLivePreview('پیش‌نمایش برای قالب جدید آماده می‌شود.');
       const form = document.getElementById('pt-template-form');
       if (form) form.reset();
       this.editingId = '';
@@ -828,6 +829,7 @@
       this.setStatus('pt-form-status', '');
     },
     editTemplate: async function (id) {
+      this.clearLivePreview('در حال بارگذاری قالب انتخاب‌شده…');
       try {
         const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(id));
         const item = this.extract(response);
@@ -866,9 +868,10 @@
       };
       this.busy = true;
       this.setStatus('pt-form-status', 'در حال ذخیره قالب…');
+      let wasNew = !this.editingId;
+      let templateId = this.editingId;
+      let saveCommitted = false;
       try {
-        const wasNew = !this.editingId;
-        let templateId = this.editingId;
         const pendingIds = Object.keys(this.pendingImageFiles || {});
         if (wasNew) {
           const initialDefinition = JSON.parse(JSON.stringify(this.definition));
@@ -891,11 +894,21 @@
         } else if (!wasNew || pendingIds.length) {
           await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), Object.assign({},body,{Definition:this.definition}));
         }
+        saveCommitted = true;
         this.resetForm();
         await this.loadLibrary();
         this.setStatus('pt-library-status', 'قالب با موفقیت ذخیره شد.');
       } catch (error) {
-        this.setStatus('pt-form-status', error.message || 'ذخیره قالب ناموفق بود.', true);
+        let message = error.message || 'ذخیره قالب ناموفق بود.';
+        if (!saveCommitted && wasNew && templateId) {
+          try {
+            await PMS.Api.delete('/print-templates/' + encodeURIComponent(templateId));
+            message += ' قالب ناقص به‌صورت غیرفعال علامت‌گذاری شد و در کتابخانه فعال نمایش داده نمی‌شود.';
+          } catch (rollbackError) {
+            message += ' همچنین غیرفعال‌سازی قالب ناقص ناموفق بود؛ شناسه قالب: ' + templateId;
+          }
+        }
+        this.setStatus('pt-form-status', message, true);
       } finally { this.busy = false; }
     },
     deleteTemplate: async function (id) {
@@ -1048,6 +1061,19 @@
         expand.addEventListener('click', () => this.toggleLivePreviewExpanded());
       }
     },
+    clearLivePreview: function (message) {
+      this.livePreviewSequence = (Number(this.livePreviewSequence) || 0) + 1;
+      if (this.livePreviewTimer) window.clearTimeout(this.livePreviewTimer);
+      this.livePreviewTimer = null;
+      this.livePreviewPending = false;
+      this.livePreviewReady = false;
+      this.clearLivePreviewPdf();
+      const root = document.getElementById('pt-live-preview-content');
+      if (root) root.innerHTML = '<div class="pt-empty-state">برای مشاهده خروجی واقعی، یک پروژه انتخاب کن.</div>';
+      const printButton = document.getElementById('pt-live-preview-print');
+      if (printButton) printButton.disabled = true;
+      if (message) this.setStatus('pt-live-preview-status', message);
+    },
     clearLivePreviewPdf: function () {
       this.livePreviewPdfBlob = null;
     },
@@ -1096,8 +1122,20 @@
     },
     scheduleLivePreview: function (delay) {
       const select = document.getElementById('pt-live-preview-project');
-      if (!select || !select.value) return;
+      if (this.livePreviewTimer) window.clearTimeout(this.livePreviewTimer);
+      this.livePreviewTimer = null;
       this.livePreviewSequence += 1;
+      if (!select || !select.value) {
+        this.livePreviewPending = false;
+        this.livePreviewReady = false;
+        this.clearLivePreviewPdf();
+        const root = document.getElementById('pt-live-preview-content');
+        if (root) root.innerHTML = '<div class="pt-empty-state">برای مشاهده خروجی واقعی، یک پروژه انتخاب کن.</div>';
+        const button = document.getElementById('pt-live-preview-print');
+        if (button) button.disabled = true;
+        this.setStatus('pt-live-preview-status', 'برای مشاهده خروجی واقعی، یک پروژه انتخاب کن.');
+        return;
+      }
       this.livePreviewPending = true;
       this.livePreviewReady = false;
       const printButton = document.getElementById('pt-live-preview-print');
@@ -1158,6 +1196,11 @@
           this.clearLivePreviewPdf();
           this.livePreviewPdfBlob = outputBlob;
           await this.renderFinalPdfPreview(outputBlob, 'pt-live-preview-content');
+          if (requestId !== this.livePreviewSequence) {
+            root.innerHTML = '<div class="pt-empty-state">برای مشاهده خروجی واقعی، یک پروژه انتخاب کن.</div>';
+            this.clearLivePreviewPdf();
+            return;
+          }
         } else {
           this.clearLivePreviewPdf();
           const outputHtml = await this.renderOutputDocument(template, project, data);
