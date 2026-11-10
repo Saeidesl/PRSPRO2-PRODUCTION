@@ -589,3 +589,14 @@ test('new-template save failures deactivate the partially created template witho
  assert.match(module,/PMS\.Api\.delete\('\/print-templates\/' \+ encodeURIComponent\(templateId\)\)/);
  assert.match(module,/قالب ناقص به‌صورت غیرفعال علامت‌گذاری شد/);
 });
+
+
+test('data picker keeps source groups in a horizontal rail and scrolls expanded fields independently',()=>{
+ const styles=read('css/print-template-library.css');
+ assert.match(styles,/\.pt-data-picker-content\{[\s\S]*?flex-flow:row nowrap/);
+ assert.match(styles,/overflow-x:auto/);
+ assert.match(styles,/\.pt-data-group\{[\s\S]*?flex:0 0 clamp\(/);
+ assert.match(styles,/\.pt-data-items\{[\s\S]*?overflow-y:auto/);
+ assert.match(styles,/max-height:min\(38vh,330px\)/);
+ assert.match(styles,/@media\(max-width:600px\)/);
+});
