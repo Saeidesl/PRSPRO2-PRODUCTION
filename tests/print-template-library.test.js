@@ -101,6 +101,7 @@ test('visual editor persists page layout and supports editable table rows and la
 
 test('mobile template editor presents a guided workflow with collapsible tool panels',()=>{
  const page=read('pages/print-designer.html');
+ const module=read('js/modules/print-designer.js');
  const css=read('css/print-template-library.css');
  assert.match(page,/مرحله ۱: طراحی صفحه/);
  assert.match(page,/مرحله ۲: تنظیم المان انتخاب‌شده/);
