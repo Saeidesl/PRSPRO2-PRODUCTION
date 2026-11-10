@@ -525,7 +525,7 @@ test('clearing the live preview invalidates in-flight work and removes stale out
  assert.equal(designer.livePreviewReady,false);
  assert.equal(designer.livePreviewPdfBlob,null);
  assert.equal(nodes['pt-live-preview-print'].disabled,true);
- assert.match(nodes['pt-live-preview-content'].innerHTML,/انتخاب پروژه/);
+ assert.match(nodes['pt-live-preview-content'].innerHTML,/پروژه انتخاب/);
 });
 
 test('scheduling live preview without a selected project invalidates previous results instead of retaining stale content',()=>{
@@ -550,7 +550,7 @@ test('scheduling live preview without a selected project invalidates previous re
  assert.equal(designer.livePreviewReady,false);
  assert.equal(designer.livePreviewPdfBlob,null);
  assert.equal(nodes['pt-live-preview-print'].disabled,true);
- assert.match(nodes['pt-live-preview-content'].innerHTML,/انتخاب پروژه/);
+ assert.match(nodes['pt-live-preview-content'].innerHTML,/پروژه انتخاب/);
 });
 
 test('new-template save failures deactivate the partially created template without undoing a committed save',()=>{
