@@ -290,6 +290,8 @@ test('unified source picker groups central data, full forms and event fields in 
  assert.match(module,/addSourceItems: function/);
  assert.match(module,/findFreeElementPosition: function/);
  assert.match(module,/this\.definition\.elements\.push\(/);
+ assert.match(module,/item\.showLabel && item\.label/);
+ assert.match(module,/showLabel: true/);
  assert.match(css,/\.pt-data-modal:not\(\[hidden\]\)/);
  assert.match(css,/@media\(max-width:600px\)/);
 });
