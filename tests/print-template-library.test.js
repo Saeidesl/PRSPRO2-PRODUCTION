@@ -589,3 +589,27 @@ test('new-template save failures deactivate the partially created template witho
  assert.match(module,/PMS\.Api\.delete\('\/print-templates\/' \+ encodeURIComponent\(templateId\)\)/);
  assert.match(module,/قالب ناقص به‌صورت غیرفعال علامت‌گذاری شد/);
 });
+
+
+test('data source picker modal has bounded layout, an independently scrollable list and accessible touch targets',()=>{
+ const css=read('css/print-template-library.css');
+ const page=read('pages/print-designer.html');
+ const modal=css.slice(css.indexOf('/* Unified data source picker'),css.indexOf('.pt-output-field-label'));
+ assert.match(modal,/grid-template-rows:auto auto auto auto minmax\(0,1fr\)/);
+ assert.match(modal,/height:min\(760px,calc\(100dvh - 36px\)\)/);
+ assert.match(modal,/\.pt-data-modal-dialog\{[\s\S]*?overflow:hidden/);
+ assert.match(modal,/\.pt-data-picker-content\{[\s\S]*?min-height:0[\s\S]*?overflow:auto/);
+ assert.match(modal,/overscroll-behavior:contain/);
+ assert.match(modal,/min-height:44px/);
+ assert.match(modal,/@media \(max-width: 700px\)/);
+ assert.match(modal,/safe-area-inset-bottom/);
+ assert.match(modal,/:focus-visible/);
+ assert.match(page,/role="dialog" aria-modal="true"/);
+});
+
+test('data source picker modal styles remain isolated from the A4 canvas and print output',()=>{
+ const css=read('css/print-template-library.css');
+ const modal=css.slice(css.indexOf('/* Unified data source picker'),css.indexOf('.pt-output-field-label'));
+ assert.doesNotMatch(modal,/\.pt-design-canvas|\.pt-print-page|@media print/);
+ assert.match(modal,/prefers-reduced-motion/);
+});
