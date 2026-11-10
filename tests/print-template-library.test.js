@@ -664,3 +664,14 @@ test('event source group headers keep visible touch-sized disclosure and action 
  assert.match(groupStyles,/\.pt-data-group-title button[\s\S]*?min-height:\s*26px/);
  assert.match(groupStyles,/\.pt-data-group-actions[\s\S]*?visibility:\s*visible/);
 });
+
+
+test('data picker keeps source groups horizontally scrollable and expanded fields independently scrollable',()=>{
+ const styles=read('css/print-template-library.css');
+ assert.match(styles,/\.pt-data-picker-content\{[\s\S]*?flex-flow:row nowrap/);
+ assert.match(styles,/overflow-x:auto/);
+ assert.match(styles,/\.pt-data-group\{[\s\S]*?flex:0 0 clamp\(/);
+ assert.match(styles,/\.pt-data-items\{[\s\S]*?overflow-y:auto/);
+ assert.match(styles,/max-height:min\(38vh,330px\)/);
+ assert.match(styles,/@media\(max-width:600px\)/);
+});
