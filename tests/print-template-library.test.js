@@ -293,7 +293,7 @@ test('unified source picker groups central data, full forms and event fields in 
  assert.match(page,/افزودن اطلاعات/);
  assert.match(module,/eventTypes: Array\.isArray\(sources\.eventTypes\)/);
  assert.match(module,/Array\.isArray\(eventType\.Forms\)/);
- assert.match(module,/eventTypeId: eventType\.ID, formId: form\.ID/);
+ assert.match(module,/eventTypeId: eventTypeId, formId: formId/);
  assert.match(module,/sourceType: 'EVENT_FORM_FIELD'/);
  assert.match(module,/EVENT_FIELD/);
  assert.match(module,/addSourceItems: function/);
@@ -640,9 +640,9 @@ test('event source groups always render a readable title when API labels use alt
  vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
  const designer=sandbox.window.PMS.Modules.PrintDesigner;
  designer.sources={projectFields:[],informationTypes:[],forms:[],eventTypes:[
-  {id:'ET-X',eventTypeName:'عنوان نوع رویداد',code:'TYPE_X',fields:[
+  {ID:'ET-X',Name:'عنوان نوع رویداد',Code:'TYPE_X',Fields:[
    {field:'Description',label:'توضیحات'}
-  ],forms:[]}
+  ],Forms:[]}
  ]};
  designer.sourcePickerTab='events';
  designer.expandedSourceGroups['event-ET-X']=true;
