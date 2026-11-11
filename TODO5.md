@@ -81,6 +81,14 @@
 
 ### Task 2 — Shared Cache و حفظ وضعیت صفحات (IN PROGRESS)
 - تکمیل رفتار cache موجود به‌جای ساخت سیستم موازی.
+- پیشرفت پیاده‌سازی:
+  - `js/core/api.js`: گزینه `refreshCached: false` اضافه شد؛ در cache hit معتبر، تابع بدون اجرای `Api.get` داده را فوری برمی‌گرداند. در cache miss/expiry مسیر GET فعلی و ذخیره TTL حفظ می‌شود؛ رفتار پیش‌فرض سایر مصرف‌کنندگان تغییر نکرده است.
+  - `js/modules/projects.js`: فهرست پروژه با TTL سی‌ثانیه و lookup وضعیت‌ها با TTL شصت‌ثانیه cache-first شدند.
+  - `js/modules/events.js`: فهرست رویداد با TTL پانزده‌ثانیه، انواع رویداد با TTL شصت‌ثانیه و `/projects?view=event-picker` با cache مستقل سی‌ثانیه‌ای cache-first شدند. نتیجه picker cache‌شده نیز پس از دریافت render می‌شود و cache آن پس از ثبت رویداد invalid می‌شود.
+  - `js/modules/attachments.js`: فهرست `GET /attachments` با TTL شصت‌ثانیه از همان `Api.getCached` دریافت می‌شود؛ پس از upload، invalidation فعلی باعث fetch تازه خواهد شد.
+  - `index.html`: cache-busting چهار ماژول تغییرکرده به‌روزرسانی شد.
+  - تست‌های `tests/shared-page-cache.test.js` و `tests/event-project-picker-performance.test.js` اضافه/اصلاح شدند؛ تست‌های CI هنوز در وضعیت queued هستند و نتیجه موفق گزارش نشده است.
+  - PR فرانت‌اند #104 به‌صورت Draft ایجاد شده؛ هنوز merge یا deploy انجام نشده است.
 - تعریف سیاست cache hit بدون درخواست شبکه در navigation عادی، TTL کنترل‌شده، refresh پس‌زمینه فقط در موعد لازم و force refresh دستی.
 - یکپارچه‌سازی کلید و query برای `/projects` و `/projects?view=event-picker` بدون اشتراک پاسخ‌های ناسازگار.
 - انتقال ماژول فایل‌ها به الگوی مشترک cache و حذف GET تکراری در ورود مجدد.
