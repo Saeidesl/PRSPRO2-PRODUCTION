@@ -115,6 +115,12 @@ test('mobile template editor presents a guided workflow with collapsible tool pa
  assert.doesNotMatch(page,/<details class="pt-editor-source-picker"/);
  assert.match(page,/<details class="pt-layer-details"/);
  assert.match(css,/@media\(max-width:700px\)/);
+ const panelsIndex=page.indexOf('class="pt-editor-panels"');
+ const canvasLayoutIndex=page.indexOf('class="pt-editor-layout"');
+ assert.ok(panelsIndex>=0 && canvasLayoutIndex>panelsIndex,'editing panels must appear above the canvas layout');
+ assert.doesNotMatch(page,/<aside class="pt-editor-inspector"/,'the side inspector must be removed');
+ assert.match(css,/\.pt-editor-panels\{display:grid;grid-template-columns:minmax\(0,1\.4fr\) minmax\(260px,\.8fr\)/);
+ assert.match(css,/\.pt-editor-workspace\.pt-preview-mode \.pt-editor-panels\{display:none!important\}/);
  assert.match(css,/\.pt-toolbar-actions\{display:grid/);
  assert.match(css,/\.pt-mobile-tools-body/);
 });
