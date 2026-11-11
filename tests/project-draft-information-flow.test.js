@@ -43,7 +43,7 @@ test('project list and detail distinguish drafts from production projects', () =
 
 test('project assets use cache-busting for the unified project entry', () => {
   const source = read('index.html');
-  assert.match(source, /projects\.js\?v=20261111-project-created-at-datetime-2/);
+  assert.match(source, /projects\.js\?v=20261111-project-created-at-datetime-3/);
   assert.match(source, /project-detail\.js\?v=20261107-project-event-history-shortcut-placement-1/);
 });
 
