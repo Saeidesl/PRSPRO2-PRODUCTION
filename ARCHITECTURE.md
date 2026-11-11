@@ -1230,3 +1230,30 @@
   - در main شمار literal `\\n` صفر و ورودی‌های PDF/تصویر و بخش پس‌زمینه PDF حاضر بودند. Frontend checks، cross-repository QA و browser audit موفق شدند. Product Owner حذف دو عبارت و حفظ قابلیت‌ها را در نسخه زنده تأیید کرد.
 - همگام‌سازی سوابق: PR #83 فرانت‌اند و PR #55 بک‌اند Log تأیید کاربر را در TODO5 ثبت کردند؛ هر دو با موفقیت ادغام شدند.
 - هیچ داده عملیاتی، Sheet یا فایل Google Drive حذف یا migrate نشد.
+
+## 2026-11-11 — انتخاب ساعت در فرم ایجاد پروژه
+
+### محدوده و تصمیم معماری
+- مخزن عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `main`.
+- هدف: استفاده مجدد از تقویم جلالی/ساعت موجود برای ثبت تاریخ و ساعت ایجاد پروژه؛ بدون فرم یا مسیر موازی.
+- فقط فرم ایجاد پروژه به انتخاب ساعت مجهز شد؛ فرم ویرایش همچنان date-only باقی ماند تا رفتار فعلی و قرارداد ویرایش تغییر نکند.
+
+### نقشه فنی Frontend
+- `js/components/jalali-calendar.js`، کامپوننت مشترک `window.PMS.JalaliCalendar`:
+  - ورودی `datetime-local` را شناسایی می‌کند و پس از انتخاب روز، مرحله انتخاب ساعت و دقیقه را با `renderTimePicker()` نمایش می‌دهد.
+  - انتخاب ساعت/دقیقه تا تأیید نهایی در state موقت نگه داشته می‌شود؛ `setValue()` مقدار را روی input اصلی commit کرده و رویدادهای `input/change` را منتشر می‌کند.
+  - از همان کامپوننت و stylesheet موجود `css/jalali-calendar.css` استفاده شد؛ تقویم یا time picker موازی ایجاد نشد.
+- `js/modules/projects.js`:
+  - `Projects.openCreateForm(editProject, options)`: فیلد موجود `#new-project-created-at[name="CreatedAt"]` در حالت ایجاد `datetime-local` و در حالت ویرایش `date` است.
+  - `Projects.createProject(modal)`: مقدار محلی انتخاب‌شده در حالت ایجاد با `new Date(value).toISOString()` به UTC تبدیل و از همان payload و مسیر موجود `POST /projects` ارسال می‌شود.
+  - در حالت ویرایش، مقدار تاریخ با `.slice(0, 10)` به فیلد date محدود می‌ماند و قرارداد فعلی `PUT /projects/:id` تغییر نمی‌کند.
+- `js/modules/events.js` و `Events.submitEvent()`: الگوی تبدیل datetime-local به ISO UTC در ثبت رویداد مرجع سازگاری باقی ماند.
+- `index.html`: cache key ماژول پروژه به `20261111-project-created-at-datetime-3` به‌روزرسانی شد.
+- تست‌ها: `tests/project-created-at-datetime.test.js` و به‌روزرسانی `tests/project-draft-information-flow.test.js`؛ تست‌های مشترک تقویم جلالی/ساعت نیز برای date-only و datetime-local حفظ شدند.
+
+### یکپارچه‌سازی، انتشار و پذیرش
+- Frontend PR #94 با squash merge commit `1111665d490f4b533eadc53fdcdb60f3a049a85a` در `main` ادغام شد.
+- انتشار GitHub Pages در run `43013102190` موفق شد؛ URL محیط: `https://saeidesl.github.io/PRSPRO2-PRODUCTION/`.
+- نسخه Pages در زمان انتشار commit `7bdad3e6ca8310ebb3b32fd72cca7381ed99ca4a` بود و مرحله deploy با نتیجه success گزارش شد.
+- تست نهایی Product Owner در نسخه عملیاتی برای انتخاب تاریخ، ساعت، دقیقه و ذخیره پروژه موفق تأیید شد.
+- فرم ویرایش date-only، APIهای موجود و ساختار داده بدون تغییر باقی ماندند.
