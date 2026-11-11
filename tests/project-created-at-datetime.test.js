@@ -12,7 +12,7 @@ const index = read('index.html');
 
 test('new project creation uses the existing shared datetime-local picker while edit remains date-only', () => {
   assert.match(projects, /type="\$\{isEditMode \? 'date' : 'datetime-local'\}"/);
-  assert.match(projects, /تاریخ و ساعت ایجاد پروژه/);
+  assert.match(projects, /\$\{isEditMode \? 'تاریخ ایجاد پروژه' : 'تاریخ و ساعت ایجاد پروژه'\}/);
   assert.match(calendar, /input\[type="datetime-local"\]/);
   assert.match(calendar, /function renderTimePicker\(\)/);
   assert.match(projects, /createdAtInput\.value = String\(editProject\.CreatedAt \|\| editProject\.createdAt \|\| ''\)\.slice\(0, 10\)/);
