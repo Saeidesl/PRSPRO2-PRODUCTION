@@ -660,6 +660,8 @@
           '/project-dashboard/lookups',
           'dashboard_project_lookups_v2',
           {
+            cacheTtl: 60000,
+            refreshCached: false,
             onRefresh: (freshData) => applyLookups(freshData)
           }
         );
@@ -785,6 +787,8 @@
           '/projects',
           CACHE_KEY,
           {
+            cacheTtl: 30000,
+            refreshCached: false,
             onRefresh: (data) => {
               this.projects = this.normalizeProjects(data);
               if (window.PMS && window.PMS.Events) window.PMS.Events.projectOptionsToken = '';
