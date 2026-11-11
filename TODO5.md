@@ -31,13 +31,14 @@
 - `TelegramBotService.js`
   - `sendMessage`: ارسال پیام به Telegram Bot API.
   - `registerTenantChat`: نگاشت شناسه چت به Tenant در Script Property.
+  - `armTenantRegistration`: کشف تنها Tenant فعال و فعال‌سازی پنجره pairing ده‌دقیقه‌ای.
   - `notifyEvent`: اعلان رویداد به چت‌های Tenant.
   - `_formatNotificationForms_`: خواندن snapshot و پاسخ فرم‌ها از `FormRepository.findResponsesByEvent`.
   - `_formatNotificationValue_` و `_notificationAttachmentLabel_`: قالب‌بندی داده‌ها و بررسی metadata فایل؛ نسخه فعلی نام فایل را نمایش می‌دهد و فایل واقعی را ارسال نمی‌کند.
   - `_splitNotificationMessage_`: تقسیم پیام بلند به قطعات قابل ارسال.
-  - `setupPolling`, `pollUpdates`: دریافت فرمان‌های ربات با polling.
+  - `setupPolling`, `pollUpdates`, `_processUpdate_`: دریافت فرمان‌ها با polling و اتصال یک‌باره اولین گفت‌وگوی خصوصی در پنجره pairing.
 - `Code.js`
-  - `runTelegramBotSetup()` در `Code.js` توکن را با پنجره ورودی دریافت می‌کند؛ `TelegramBotService.configureBotToken()` هویت `@PRS_Production_Notifications_Bot` را با `getMe` اعتبارسنجی، توکن را فقط در Script Properties ذخیره و polling یک‌دقیقه‌ای را فعال می‌کند.
+  - `runTelegramTenantRegistration()` در `Code.js` پنجره اتصال ده‌دقیقه‌ای را برای تنها Tenant فعال از شیت `01_Tenants` باز می‌کند؛ اولین `/start` در گفت‌وگوی خصوصی، Chat ID را از Telegram update گرفته و با `registerTenantChat()` به Tenant متصل می‌کند. اگر Tenant فعال صفر یا بیش از یک مورد باشد، اتصال متوقف می‌شود.
   - `runTelegramWebhookSetup()`، `runTelegramPolling()` و `runTelegramWebhookInfo()` نقاط اجرای تنظیم/عیب‌یابی polling هستند.
   - webhook ورودی در `doPost` از API اصلی تفکیک شده است؛ راهکار polling برای اجتناب از محدودیت 401 endpoint ناشناس Apps Script موجود است.
 
@@ -61,7 +62,8 @@
 - Script Properties موجود در طراحی:
   - `TELEGRAM_BOT_TOKEN` (از طریق `runTelegramBotSetup()`؛ هرگز در کد/Log/GitHub ذخیره نمی‌شود)
   - `TELEGRAM_WEBHOOK_SECRET` (فقط برای webhook؛ polling موجود است)
-  - `TELEGRAM_TENANT_CHAT_IDS` (JSON نگاشت TenantID به آرایه chat ID)
+  - `TELEGRAM_TENANT_CHAT_IDS` (JSON نگاشت TenantID به آرایه chat ID؛ توسط pairing خودکار مدیریت می‌شود)
+  - `TELEGRAM_PENDING_TENANT_ID`, `TELEGRAM_PENDING_REGISTRATION_EXPIRES_AT` (وضعیت موقت pairing ده‌دقیقه‌ای)
   - هیچ توکن یا secret نباید در GitHub commit شود.
 
 ### استقرار و آزمون
