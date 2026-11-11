@@ -1216,7 +1216,7 @@
 
             <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
               <label for="new-project-created-at">تاریخ و ساعت ایجاد پروژه <span style="color:var(--color-text-secondary);font-size:12px;">(اختیاری)</span></label>
-              <input type="datetime-local" id="new-project-created-at" name="CreatedAt" style="width:100%;box-sizing:border-box;">
+              <input type="${isEditMode ? 'date' : 'datetime-local'}" id="new-project-created-at" name="CreatedAt" style="width:100%;box-sizing:border-box;">
               <small style="display:block;margin-top:5px;color:var(--color-text-secondary);">اگر تاریخ انتخاب نشود، تاریخ و زمان فعلی به‌صورت خودکار ثبت می‌شود.</small>
             </div>
 
@@ -1821,18 +1821,7 @@
           if (projectCode) projectCode.value = String(editProject.ProjectCode || '');
           if (titleInput) titleInput.value = String(editProject.Title || editProject.Name || '');
           if (quantityInput) quantityInput.value = editProject.Quantity === undefined || editProject.Quantity === null ? '' : String(editProject.Quantity);
-          if (createdAtInput) {
-            const rawCreatedAt = String(editProject.CreatedAt || editProject.createdAt || '').trim();
-            const parsedCreatedAt = rawCreatedAt ? new Date(rawCreatedAt) : null;
-            if (parsedCreatedAt && !Number.isNaN(parsedCreatedAt.getTime())) {
-              const pad = (value) => String(value).padStart(2, '0');
-              createdAtInput.value = parsedCreatedAt.getFullYear() + '-' +
-                pad(parsedCreatedAt.getMonth() + 1) + '-' + pad(parsedCreatedAt.getDate()) + 'T' +
-                pad(parsedCreatedAt.getHours()) + ':' + pad(parsedCreatedAt.getMinutes());
-            } else {
-              createdAtInput.value = rawCreatedAt.slice(0, 16);
-            }
-          }
+          if (createdAtInput) createdAtInput.value = String(editProject.CreatedAt || editProject.createdAt || '').slice(0, 10);
           if (descriptionInput) descriptionInput.value = String(editProject.Description || '');
           if (workflowSelect) workflowSelect.value = String(editProject.WorkflowID || '');
           const parseIds = (value) => {
@@ -2202,15 +2191,15 @@
             routerForAttachments.permissions.indexOf('ATTACHMENT_UPLOAD') !== -1)));
 
       const createdAtLocal = String(createdAtInput && createdAtInput.value || '').trim();
-      let createdAtISO = '';
-      if (createdAtLocal) {
+      let createdAtValue = createdAtLocal;
+      if (createdAtLocal && createdAtInput && createdAtInput.type === 'datetime-local') {
         const createdAtDate = new Date(createdAtLocal);
         if (Number.isNaN(createdAtDate.getTime())) {
           this.showFormError(modal, 'تاریخ و ساعت ایجاد پروژه معتبر نیست.');
-          if (createdAtInput) createdAtInput.focus();
+          createdAtInput.focus();
           return;
         }
-        createdAtISO = createdAtDate.toISOString();
+        createdAtValue = createdAtDate.toISOString();
       }
 
       const project = {
@@ -2220,7 +2209,7 @@
         WorkflowID: workflowSelect.value,
         SourceProjectID: String((modal.querySelector('#new-project-reference') || {}).value || ''),
         Description: descriptionInput.value.trim(),
-        CreatedAt: createdAtISO,
+        CreatedAt: createdAtValue,
         AvailableDepartmentIDs: selectedDepartments,
         AllowedUserIDs: selectedUsers,
         NotifyEnabled: !!(notifyInput && notifyInput.checked),
