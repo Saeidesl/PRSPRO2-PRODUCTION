@@ -1215,8 +1215,8 @@
             </div>
 
             <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
-              <label for="new-project-created-at">تاریخ ایجاد پروژه <span style="color:var(--color-text-secondary);font-size:12px;">(اختیاری)</span></label>
-              <input type="date" id="new-project-created-at" name="CreatedAt" style="width:100%;box-sizing:border-box;">
+              <label for="new-project-created-at">${isEditMode ? 'تاریخ ایجاد پروژه' : 'تاریخ و ساعت ایجاد پروژه'} <span style="color:var(--color-text-secondary);font-size:12px;">(اختیاری)</span></label>
+              <input type="${isEditMode ? 'date' : 'datetime-local'}" id="new-project-created-at" name="CreatedAt" style="width:100%;box-sizing:border-box;">
               <small style="display:block;margin-top:5px;color:var(--color-text-secondary);">اگر تاریخ انتخاب نشود، تاریخ و زمان فعلی به‌صورت خودکار ثبت می‌شود.</small>
             </div>
 
@@ -2138,6 +2138,7 @@
       const codeInput = modal.querySelector('#new-project-code');
       const titleInput = modal.querySelector('#new-project-title');
       const quantityInput = modal.querySelector('#new-project-quantity');
+      const createdAtInput = modal.querySelector('#new-project-created-at');
       const workflowSelect = modal.querySelector('#new-project-workflow');
       const descriptionInput = modal.querySelector('#new-project-description');
       const departmentsSelect = modal.querySelector('#new-project-departments');
@@ -2189,6 +2190,18 @@
           (Array.isArray(routerForAttachments.permissions) &&
             routerForAttachments.permissions.indexOf('ATTACHMENT_UPLOAD') !== -1)));
 
+      const createdAtLocal = String(createdAtInput && createdAtInput.value || '').trim();
+      let createdAtValue = createdAtLocal;
+      if (createdAtLocal && createdAtInput && createdAtInput.type === 'datetime-local') {
+        const createdAtDate = new Date(createdAtLocal);
+        if (Number.isNaN(createdAtDate.getTime())) {
+          this.showFormError(modal, 'تاریخ و ساعت ایجاد پروژه معتبر نیست.');
+          createdAtInput.focus();
+          return;
+        }
+        createdAtValue = createdAtDate.toISOString();
+      }
+
       const project = {
         ProjectCode: codeInput.value.trim(),
         Title: titleInput.value.trim(),
@@ -2196,7 +2209,7 @@
         WorkflowID: workflowSelect.value,
         SourceProjectID: String((modal.querySelector('#new-project-reference') || {}).value || ''),
         Description: descriptionInput.value.trim(),
-        CreatedAt: String((modal.querySelector('#new-project-created-at') || {}).value || '').trim(),
+        CreatedAt: createdAtValue,
         AvailableDepartmentIDs: selectedDepartments,
         AllowedUserIDs: selectedUsers,
         NotifyEnabled: !!(notifyInput && notifyInput.checked),
