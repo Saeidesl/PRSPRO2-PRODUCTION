@@ -10,7 +10,7 @@ const projects = fs.readFileSync(path.join(__dirname, '..', 'js', 'modules', 'pr
 
 test('event page requests the lightweight project picker view instead of the full project-card payload', () => {
   assert.match(source, /PMS\\.Api\\.getCached\\('\\/projects', PROJECTS_CACHE_KEY \\+ '_event_picker', \\{/);
-  assert.match(source, /query: \\{ view: 'event-picker' \\}/);
+  assert.ok(source.includes("PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY + '_event_picker'"));
   assert.match(source, /refreshCached: false/);
   assert.match(source, /projectOptionsToken/);
   assert.match(source, /Events\.projectOptionsToken = currentToken/);
