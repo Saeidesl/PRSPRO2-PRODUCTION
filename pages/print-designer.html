@@ -59,37 +59,44 @@
       </div>
       <div id="pt-page-tabs" class="pt-page-tabs" aria-label="انتخاب صفحه"></div>
       <div class="pt-editor-preview-layout">
+      <div class="pt-editor-panels" aria-label="ابزارهای ویرایش قالب">
+        <details class="pt-mobile-tools">
+          <summary>مرحله ۲: تنظیم المان انتخاب‌شده</summary>
+          <div class="pt-mobile-tools-body">
+            <div id="pt-inspector-empty" class="pt-empty-state">برای تنظیم، یک المان را روی صفحه انتخاب کن.</div>
+            <div id="pt-inspector-fields" hidden>
+              <label>عنوان / متن <input id="pt-prop-text" type="text" maxlength="500"></label>
+              <label>منبع داده <select id="pt-prop-binding"><option value="">بدون اتصال</option></select></label>
+              <label id="pt-selection-wrap" hidden>نحوه انتخاب اطلاعات <select id="pt-prop-selection"><option value="LATEST">آخرین پاسخ</option><option value="ALL">همه پاسخ‌ها (ردیف‌های تکرارشونده)</option><option value="EVENT">رویداد مشخص</option><option value="RESPONSE">پاسخ مشخص</option></select></label>
+              <div class="pt-inspector-grid">
+                <label>موقعیت افقی <input id="pt-prop-x" type="number" min="0" step="1"></label>
+                <label>موقعیت عمودی <input id="pt-prop-y" type="number" min="0" step="1"></label>
+                <label>عرض <input id="pt-prop-width" type="number" min="5" step="1"></label>
+                <label>ارتفاع <input id="pt-prop-height" type="number" min="5" step="1"></label>
+                <label>اندازه قلم <input id="pt-prop-font" type="number" min="7" max="72" step="1"></label>
+                <label>تراز <select id="pt-prop-align"><option value="right">راست</option><option value="center">وسط</option><option value="left">چپ</option></select></label>
+                <label>رنگ متن <input id="pt-prop-color" type="color" value="#1f2937"></label>
+                <label>رنگ زمینه <input id="pt-prop-background" type="color" value="#ffffff"></label>
+              </div>
+              <div id="pt-table-properties" hidden>
+                <label>عنوان ستون‌ها (با | جدا کن) <input id="pt-prop-columns" type="text" placeholder="عنوان | مقدار | توضیحات"></label>
+                <label>ردیف‌های جدول (هر خط یک ردیف، ستون‌ها با | جدا شوند)<textarea id="pt-prop-rows" rows="4" placeholder="ردیف اول | مقدار | توضیح"></textarea></label>
+              </div>
+              <div class="pt-inspector-actions">
+                <button type="button" class="btn btn-secondary btn-sm" data-pt-action="layer-up">لایه جلو</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-pt-action="layer-down">لایه عقب</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-pt-action="duplicate">تکثیر</button>
+                <button type="button" class="btn btn-danger btn-sm" data-pt-action="remove">حذف المان</button>
+              </div>
+            </div>
+          </div>
+        </details>
+        <details class="pt-layer-details">
+          <summary>لایه‌های صفحه</summary>
+          <div id="pt-layer-list" class="pt-layer-list"></div>
+        </details>
+      </div>
       <div class="pt-editor-layout">
-        <aside class="pt-editor-inspector">
-          <details class="pt-mobile-tools"><summary>مرحله ۲: تنظیم المان انتخاب‌شده</summary><div class="pt-mobile-tools-body">
-          <div id="pt-inspector-empty" class="pt-empty-state">برای تنظیم، یک المان را روی صفحه انتخاب کن.</div>
-          <div id="pt-inspector-fields" hidden>
-            <label>عنوان / متن <input id="pt-prop-text" type="text" maxlength="500"></label>
-            <label>منبع داده <select id="pt-prop-binding"><option value="">بدون اتصال</option></select></label>
-            <label id="pt-selection-wrap" hidden>نحوه انتخاب اطلاعات <select id="pt-prop-selection"><option value="LATEST">آخرین پاسخ</option><option value="ALL">همه پاسخ‌ها (ردیف‌های تکرارشونده)</option><option value="EVENT">رویداد مشخص</option><option value="RESPONSE">پاسخ مشخص</option></select></label>
-            <div class="pt-inspector-grid">
-              <label>موقعیت افقی <input id="pt-prop-x" type="number" min="0" step="1"></label>
-              <label>موقعیت عمودی <input id="pt-prop-y" type="number" min="0" step="1"></label>
-              <label>عرض <input id="pt-prop-width" type="number" min="5" step="1"></label>
-              <label>ارتفاع <input id="pt-prop-height" type="number" min="5" step="1"></label>
-              <label>اندازه قلم <input id="pt-prop-font" type="number" min="7" max="72" step="1"></label>
-              <label>تراز <select id="pt-prop-align"><option value="right">راست</option><option value="center">وسط</option><option value="left">چپ</option></select></label>
-              <label>رنگ متن <input id="pt-prop-color" type="color" value="#1f2937"></label>
-              <label>رنگ زمینه <input id="pt-prop-background" type="color" value="#ffffff"></label>
-            </div>
-            <div id="pt-table-properties" hidden>
-              <label>عنوان ستون‌ها (با | جدا کن) <input id="pt-prop-columns" type="text" placeholder="عنوان | مقدار | توضیحات"></label>
-              <label>ردیف‌های جدول (هر خط یک ردیف، ستون‌ها با | جدا شوند)<textarea id="pt-prop-rows" rows="4" placeholder="ردیف اول | مقدار | توضیح"></textarea></label>
-            </div>
-            <div class="pt-inspector-actions">
-              <button type="button" class="btn btn-secondary btn-sm" data-pt-action="layer-up">لایه جلو</button>
-              <button type="button" class="btn btn-secondary btn-sm" data-pt-action="layer-down">لایه عقب</button>
-              <button type="button" class="btn btn-secondary btn-sm" data-pt-action="duplicate">تکثیر</button>
-              <button type="button" class="btn btn-danger btn-sm" data-pt-action="remove">حذف المان</button>
-            </div>
-          </div></div></details>
-          <details class="pt-layer-details"><summary>لایه‌های صفحه</summary><div id="pt-layer-list" class="pt-layer-list"></div></details>
-        </aside>
         <div class="pt-canvas-scroll"><div id="pt-design-canvas" class="pt-design-canvas" aria-label="بوم طراحی قالب"><div class="pt-canvas-empty">برای شروع، از نوار ابزار یک المان اضافه کن.</div></div></div>
       </div>
       <section class="pt-live-preview-panel" aria-label="پیش‌نمایش زنده خروجی چاپ">
