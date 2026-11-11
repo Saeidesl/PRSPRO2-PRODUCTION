@@ -10,30 +10,19 @@ const projects = read('js/modules/projects.js');
 const calendar = read('js/components/jalali-calendar.js');
 const index = read('index.html');
 
-test('project create and edit form uses the existing shared datetime-local picker', () => {
-  assert.match(projects, /<input type="datetime-local" id="new-project-created-at" name="CreatedAt"/);
+test('new project creation uses the existing shared datetime-local picker while edit remains date-only', () => {
+  assert.match(projects, /type="\$\{isEditMode \? 'date' : 'datetime-local'\}"/);
   assert.match(projects, /تاریخ و ساعت ایجاد پروژه/);
   assert.match(calendar, /input\[type="datetime-local"\]/);
   assert.match(calendar, /function renderTimePicker\(\)/);
+  assert.match(projects, /createdAtInput\.value = String\(editProject\.CreatedAt \|\| editProject\.createdAt \|\| ''\)\.slice\(0, 10\)/);
 });
 
-test('project datetime is converted to ISO UTC using the same browser-local Date behavior as event submission', () => {
+test('new project datetime is converted to ISO UTC using the same browser-local Date behavior as event submission', () => {
+  assert.match(projects, /createdAtInput\.type === 'datetime-local'/);
   assert.match(projects, /const createdAtDate = new Date\(createdAtLocal\)/);
-  assert.match(projects, /createdAtISO = createdAtDate\.toISOString\(\)/);
-  assert.match(projects, /CreatedAt: createdAtISO/);
-});
-
-test('editing a project restores both local date and local time from the stored timestamp', () => {
-  const editStart = projects.indexOf('const rawCreatedAt = String(editProject.CreatedAt');
-  const editEnd = projects.indexOf('if (descriptionInput)', editStart);
-  const editBlock = projects.slice(editStart, editEnd);
-  assert.ok(editStart >= 0 && editEnd > editStart);
-  assert.match(editBlock, /getFullYear\(\)/);
-  assert.match(editBlock, /getMonth\(\)/);
-  assert.match(editBlock, /getDate\(\)/);
-  assert.match(editBlock, /getHours\(\)/);
-  assert.match(editBlock, /getMinutes\(\)/);
-  assert.doesNotMatch(editBlock, /slice\(0,\s*10\)/);
+  assert.match(projects, /createdAtValue = createdAtDate\.toISOString\(\)/);
+  assert.match(projects, /CreatedAt: createdAtValue/);
 });
 
 test('shared picker is loaded before project module and retains its established implementation', () => {
