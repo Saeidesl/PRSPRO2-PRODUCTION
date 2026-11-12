@@ -31,12 +31,13 @@ test('created project refreshes the shared picker cache and rerenders existing q
 });
 
 test('created project highlights its card and focuses the existing register action in the unified list', () => {
-  assert.match(events, /this\.activateQueue\(queue\)/);
-  assert.match(events, /card\.scrollIntoView\(/);
-  assert.match(events, /card\.querySelector\('\.event-queue-register-button'\)/);
-  assert.match(events, /focusTarget\.focus\(/);
-  assert.match(events, /is-newly-created/);
-  assert.match(events, /is-next-action/);
+  assert.ok(events.includes('data-event-project-card'));
+  assert.ok(!events.includes('this.activateQueue(queue)'));
+  assert.ok(events.includes('card.scrollIntoView('));
+  assert.ok(events.includes("card.querySelector('.event-queue-register-button')"));
+  assert.ok(events.includes('focusTarget.focus('));
+  assert.ok(events.includes('is-newly-created'));
+  assert.ok(events.includes('is-next-action'));
 });
 
 test('created-project highlight respects reduced-motion preferences', () => {
