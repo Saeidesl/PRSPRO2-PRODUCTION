@@ -2210,8 +2210,13 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
           (name.includes('طراحی') && name.includes('الگوسازی'));
       }).map((department) => String(department.ID || department.Id || department.id || '')).filter(Boolean);
       if (!isEditMode && !defaultDepartments.length && this._projectFormDepartments && this._projectFormDepartments.length) {
-        const firstDepartment = this._projectFormDepartments[0];
-        defaultDepartments.push(String(firstDepartment.ID || firstDepartment.Id || firstDepartment.id || ''));
+        const router = window.PMS && window.PMS.Router;
+        const currentUser = router && typeof router.getUser === 'function' ? router.getUser() : {};
+        const userDepartmentId = String(currentUser && currentUser.DepartmentID || '');
+        const preferredDepartment = this._projectFormDepartments.find((department) =>
+          String(department.ID || department.Id || department.id || '') === userDepartmentId
+        ) || this._projectFormDepartments[0];
+        defaultDepartments.push(String(preferredDepartment.ID || preferredDepartment.Id || preferredDepartment.id || ''));
       }
       const selectedDepartments = selectedDepartmentInputs.length ? selectedDepartmentInputs : (isEditMode ? [] : defaultDepartments.filter(Boolean));
       const selectedUsers = usersSelect ? Array.from(usersSelect.selectedOptions).map((option) => option.value).filter(Boolean) : [];
