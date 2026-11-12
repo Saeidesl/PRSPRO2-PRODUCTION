@@ -1245,7 +1245,7 @@
               <small style="display:block;margin-top:5px;color:var(--color-text-secondary);">اگر تاریخ انتخاب نشود، تاریخ و زمان فعلی به‌صورت خودکار ثبت می‌شود.</small>
             </div>
 
-            <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
+${isEditMode ? `            <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
               <label for="new-project-quantity">
                 تعداد پیشنهادی <span style="color:var(--color-text-secondary);font-size:12px;">(اختیاری)</span>
               </label>
@@ -1261,7 +1261,9 @@
               >
             </div>
 
-            <div class="filter-group form-group project-form-field project-workflow-field" data-project-workflow-field style="margin-bottom:16px;">
+` : ''}
+
+                        <div class="filter-group form-group project-form-field project-workflow-field" data-project-workflow-field style="margin-bottom:16px;">
               <label for="new-project-workflow">
                 گردش کار پروژه <span style="color:var(--color-danger);">*</span>
               </label>
@@ -1288,7 +1290,7 @@
               <small style="display:block;margin-top:6px;color:var(--color-text-secondary);">اطلاعات مرجع بر اساس سیاست گردش‌کار تولید تکراری استفاده می‌شود؛ رویدادها و سوابق تولید مستقل می‌مانند.</small>
             </div>
 
-            <div class="filter-group form-group project-form-field" style="margin-bottom:20px;">
+${isEditMode ? `            <div class="filter-group form-group project-form-field" style="margin-bottom:20px;">
               <label for="new-project-description">
                 توضیحات
               </label>
@@ -1302,7 +1304,9 @@
               ></textarea>
             </div>
 
-            <div id="new-project-departments-setting" class="filter-group form-group project-form-field" style="margin-bottom:18px;">
+` : ''}
+
+            ${isEditMode ? `            <div id="new-project-departments-setting" class="filter-group form-group project-form-field" style="margin-bottom:18px;">
               <label>واحدهای مجاز برای مشاهده پروژه و ثبت رویداد <span style="color:var(--color-danger);">*</span></label>
               <div id="new-project-departments" class="project-access-grid" role="group" aria-label="انتخاب واحدهای مجاز" aria-describedby="new-project-departments-help"><div class="project-lookup-loading">در حال دریافت واحدها…</div></div>
               <small id="new-project-departments-help" style="display:block;margin-top:6px;color:var(--color-text-secondary);">حداقل یک واحد را انتخاب کنید.</small>
@@ -1354,7 +1358,9 @@
             </div>
 
 
-            <div class="project-form-actions" style="
+` : ''}
+
+                        <div class="project-form-actions" style="
               display:flex;
               justify-content:flex-start;
               gap:10px;
@@ -1431,9 +1437,9 @@
       }
       const projectSettingsKey = projectSettingsStorageKey();
       const getSelectedDepartmentIds = () => Array.from(modal.querySelectorAll('input[name="AvailableDepartmentIDs"]:checked')).map((input) => input.value).filter(Boolean);
-      const getSelectedUserIds = () => Array.from(modal.querySelector('#new-project-users').selectedOptions).map((option) => option.value).filter(Boolean);
+      const getSelectedUserIds = () => { const select = modal.querySelector('#new-project-users'); return select ? Array.from(select.selectedOptions).map((option) => option.value).filter(Boolean) : []; };
       const saveProjectSettings = () => {
-        const settings = { departmentIds:getSelectedDepartmentIds(), userIds:getSelectedUserIds(), notifyEnabled:!!modal.querySelector('#new-project-notify').checked, status:String((modal.querySelector('#new-project-status') || {}).value || '') };
+        const settings = { departmentIds:getSelectedDepartmentIds(), userIds:getSelectedUserIds(), notifyEnabled:!!(modal.querySelector('#new-project-notify') && modal.querySelector('#new-project-notify').checked), status:String((modal.querySelector('#new-project-status') || {}).value || '') };
         if (!isEditMode) {
           try { localStorage.setItem(projectSettingsKey, JSON.stringify(settings)); } catch (error) {}
         }
@@ -1734,6 +1740,15 @@
         const projectStatuses = Array.isArray(lookupData.projectStatuses) ? lookupData.projectStatuses.slice() : [];
         this._projectFormDepartments = departments;
         this._projectFormStatuses = projectStatuses;
+        const activeDefaultStatus = projectStatuses.find((status) => {
+          const code = String(status.Code || status.StatusCode || '').trim().toUpperCase();
+          const name = String(status.Name || status.Title || '').trim();
+          const value = String(status.ID || status.Id || status.id || '').trim().toUpperCase();
+          return code === 'ACTIVE' || value === 'ACTIVE' || name === 'فعال';
+        });
+        this._projectFormDefaultStatus = activeDefaultStatus
+          ? String(activeDefaultStatus.Code || activeDefaultStatus.StatusCode || activeDefaultStatus.ID || activeDefaultStatus.Id || activeDefaultStatus.id || '')
+          : '';
         if (isEditMode && editProject.Status) {
           const currentStatus = String(editProject.Status);
           const hasCurrentStatus = projectStatuses.some((item) =>
@@ -1801,14 +1816,14 @@
         if (!workflowSelect.dataset.referencePolicyBound) { workflowSelect.dataset.referencePolicyBound = 'true'; workflowSelect.addEventListener('change', syncReferenceVisibility); }
         syncReferenceVisibility();
 
-        departmentsSelect.innerHTML = departments.map((department) => {
+        if (departmentsSelect) departmentsSelect.innerHTML = departments.map((department) => {
           const id = department.ID || department.Id || department.id;
           const name = department.Name || department.Title || department.Code || id;
           return '<label class="project-access-option"><input type="checkbox" name="AvailableDepartmentIDs" value="' +
             this.escape(id) + '"><span>' + this.escape(name) + '</span></label>';
         }).join('');
 
-        usersSelect.innerHTML = users.map((user) => {
+        if (usersSelect) usersSelect.innerHTML = users.map((user) => {
           const id = user.ID || user.Id || user.id;
           const name = user.Name || user.FullName || user.Username || id;
           return '<option value="' + this.escape(id) + '">' + this.escape(name) + '</option>';
@@ -1827,7 +1842,7 @@
           String(department.Code || '').toUpperCase() === 'DESIGN' ||
           String(department.Name || '').includes('طراحی')
         );
-        if (designDepartment) {
+        if (designDepartment && departmentsSelect) {
           const designId = String(designDepartment.ID || designDepartment.Id || designDepartment.id);
           const designCheckbox = Array.from(
             departmentsSelect.querySelectorAll('input[name="AvailableDepartmentIDs"]')
@@ -2173,8 +2188,21 @@
       const fileNameInput = modal.querySelector('#new-project-filename');
       const attachmentTypeInput = modal.querySelector('#new-project-attachment-type');
       const notifyInput = modal.querySelector('#new-project-notify');
-      const selectedDepartments = Array.from(modal.querySelectorAll('input[name="AvailableDepartmentIDs"]:checked')).map((input) => input.value).filter(Boolean);
-      const selectedUsers = Array.from(usersSelect.selectedOptions).map((option) => option.value).filter(Boolean);
+      const isEditMode = modal.dataset.editMode === 'true';
+      const selectedDepartmentInputs = Array.from(modal.querySelectorAll('input[name="AvailableDepartmentIDs"]:checked')).map((input) => input.value).filter(Boolean);
+      const defaultDepartments = (this._projectFormDepartments || []).filter((department) => {
+        const code = String(department.Code || department.DepartmentCode || '').trim().toUpperCase();
+        const name = String(department.Name || department.Title || '').trim();
+        return code === 'SYSTEM_MANAGEMENT' || code === 'MANAGEMENT_SYSTEM' || code === 'SYSTEM_ADMINISTRATION' ||
+          name.includes('مدیریت سیستم') || name.includes('طراحی و الگوسازی') ||
+          (name.includes('طراحی') && name.includes('الگوسازی'));
+      }).map((department) => String(department.ID || department.Id || department.id || '')).filter(Boolean);
+      if (!isEditMode && !defaultDepartments.length && this._projectFormDepartments && this._projectFormDepartments.length) {
+        const firstDepartment = this._projectFormDepartments[0];
+        defaultDepartments.push(String(firstDepartment.ID || firstDepartment.Id || firstDepartment.id || ''));
+      }
+      const selectedDepartments = selectedDepartmentInputs.length ? selectedDepartmentInputs : (isEditMode ? [] : defaultDepartments.filter(Boolean));
+      const selectedUsers = usersSelect ? Array.from(usersSelect.selectedOptions).map((option) => option.value).filter(Boolean) : [];
       const selectedFile = fileInput && fileInput.files ? fileInput.files[0] : null;
       const submitButton = modal.querySelector('#project-create-submit');
       const progressBox = modal.querySelector('#project-create-progress');
@@ -2231,15 +2259,15 @@
       const project = {
         ProjectCode: codeInput.value.trim(),
         Title: titleInput.value.trim(),
-        Quantity: quantityInput.value.trim() === '' ? '' : Number(quantityInput.value),
+        Quantity: quantityInput && quantityInput.value.trim() !== '' ? Number(quantityInput.value) : '',
         WorkflowID: workflowSelect.value,
         SourceProjectID: String((modal.querySelector('#new-project-reference') || {}).value || ''),
-        Description: descriptionInput.value.trim(),
+        Description: descriptionInput ? descriptionInput.value.trim() : '',
         CreatedAt: createdAtValue,
         AvailableDepartmentIDs: selectedDepartments,
         AllowedUserIDs: selectedUsers,
-        NotifyEnabled: !!(notifyInput && notifyInput.checked),
-        Status: String((modal.querySelector('#new-project-status') || {}).value || '')
+        NotifyEnabled: notifyInput ? !!notifyInput.checked : true,
+        Status: String((modal.querySelector('#new-project-status') || {}).value || this._projectFormDefaultStatus || '')
       };
       // New projects always receive a user-entered temporary or final code.
       // Legacy drafts can still be completed in place without changing their ID.
@@ -2264,7 +2292,7 @@
         return;
       }
 
-      if (quantityInput.value.trim() !== '' &&
+      if (quantityInput && quantityInput.value.trim() !== '' &&
           (!Number.isFinite(project.Quantity) || project.Quantity < 1 || !Number.isInteger(project.Quantity))) {
         this.showFormError(modal, 'تعداد پروژه باید یک عدد صحیح بزرگ‌تر از صفر باشد.');
         quantityInput.focus();
