@@ -2464,33 +2464,6 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
           };
         }
 
-        let attachmentWarning = '';
-        if (selectedFile) {
-          updateProgress('پروژه ثبت شد؛ در حال بارگذاری فایل پیوست...', 'loading');
-          try {
-            const base64 = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onerror = () => reject(new Error('خواندن فایل ناموفق بود.'));
-              reader.onload = () => {
-                const result = String(reader.result || '');
-                const comma = result.indexOf(',');
-                if (comma < 0) reject(new Error('ساختار فایل نامعتبر است.'));
-                else resolve(result.slice(comma + 1));
-              };
-              reader.readAsDataURL(selectedFile);
-            });
-            await window.PMS.Api.post('/projects/' + encodeURIComponent(createdId) + '/attachments', {
-              FileName: buildProjectAttachmentName(project.ProjectCode, selectedFile),
-              MimeType: selectedFile.type || 'application/octet-stream',
-              Base64: base64,
-              AttachmentType: selectedAttachmentType
-            });
-            this.invalidateProjectCardAttachmentMetadata(createdId);
-          } catch (attachmentError) {
-            attachmentWarning = ' پروژه ایجاد شد، اما بارگذاری فایل ناموفق بود: ' + this.getErrorMessage(attachmentError);
-          }
-        }
-
         const exists = this.projects.some((item) => {
           return String(item.ID || item.Id || item.id) === createdId;
         });
@@ -2519,7 +2492,7 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
           ? ' اطلاعات مرکزی منتقل‌شده: ' + copiedReferenceCount + ' مورد.' +
             (skippedReferenceFiles ? ' موارد فایل غیرتصویری خارج از محدوده انتقال: ' + skippedReferenceNames + '.' : '')
           : '';
-        alert('پروژه با موفقیت ثبت شد.' + referenceCopyMessage + attachmentWarning);
+        alert('پروژه با موفقیت ثبت شد.' + referenceCopyMessage);
 
         // Refresh the list only when the user is allowed to view projects.
         const router = window.PMS.Router;
