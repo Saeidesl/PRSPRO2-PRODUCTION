@@ -30,7 +30,7 @@ test('created project refreshes the shared picker cache and rerenders existing q
   assert.match(events, /this\.renderFilters\(\);[\s\S]*?this\.applyFilters\(\)/);
 });
 
-test('created project activates its actual queue and focuses the existing register action', () => {
+test('created project highlights its card and focuses the existing register action in the unified list', () => {
   assert.match(events, /this\.activateQueue\(queue\)/);
   assert.match(events, /card\.scrollIntoView\(/);
   assert.match(events, /card\.querySelector\('\.event-queue-register-button'\)/);
@@ -46,8 +46,8 @@ test('created-project highlight respects reduced-motion preferences', () => {
   const reducedMotionBlock = css.slice(reducedMotionIndex, reducedMotionIndex + 500);
   assert.match(reducedMotionBlock, /\.event-queue-project\.is-newly-created/);
   assert.match(reducedMotionBlock, /animation:\s*none/);
-  assert.match(index, /events\.css\?v=20261112-created-project-focus-1/);
-  assert.match(index, /events\.js\?v=20261112-events-create-project-focus-1/);
+  assert.match(index, /events\.css\?v=20261113-unified-project-cards-1/);
+  assert.match(index, /events\.js\?v=20261113-unified-project-cards-1/);
 });
 
 test('events flow keeps the existing project and event API paths', () => {
