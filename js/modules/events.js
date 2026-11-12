@@ -132,7 +132,6 @@
           clearEventDependentDataCache();
         });
       }
-      this.activateQueue('progress');
 
       const permissions = PMS.Router && Array.isArray(PMS.Router.permissions)
         ? PMS.Router.permissions : [];
@@ -295,13 +294,6 @@
           return;
         }
 
-        const queueTab = target.closest('.event-queue-tab');
-        if (queueTab) {
-          event.preventDefault();
-          Events.activateQueue(queueTab.dataset.queue);
-          return;
-        }
-
         if (target.closest('#event-create-button')) {
           event.preventDefault();
           Events.openForm();
@@ -387,22 +379,6 @@
           }
           return;
         }
-        const current = event.target && event.target.closest
-          ? event.target.closest('.event-queue-tab') : null;
-        if (!current) return;
-        const tabs = Array.from(document.querySelectorAll('.event-queue-tab:not([disabled])'));
-        const index = tabs.indexOf(current);
-        if (index < 0) return;
-        let nextIndex = index;
-        if (event.key === 'ArrowLeft') nextIndex = (index + 1) % tabs.length;
-        else if (event.key === 'ArrowRight') nextIndex = (index - 1 + tabs.length) % tabs.length;
-        else if (event.key === 'Home') nextIndex = 0;
-        else if (event.key === 'End') nextIndex = tabs.length - 1;
-        else return;
-        event.preventDefault();
-        const next = tabs[nextIndex];
-        Events.activateQueue(next.dataset.queue);
-        next.focus();
       });
 
       [
@@ -611,9 +587,7 @@
     clearUnresolvedSkeletons: function () {
       const targets = [
         { id: 'events-recent-projects', label: 'فهرست پروژه‌ها' },
-        { id: 'event-queue-pending', label: 'صف پروژه‌های در انتظار اقدام' },
-        { id: 'event-queue-progress', label: 'صف پروژه‌های در حال انجام' },
-        { id: 'event-queue-completed', label: 'صف پروژه‌های تکمیل‌شده' }
+        { id: 'event-queue-all', label: 'فهرست پروژه‌ها' }
       ];
       targets.forEach(function (target) {
         const container = document.getElementById(target.id);
@@ -1086,8 +1060,6 @@
         });
       if (!card) return;
 
-      const queue = String(card.getAttribute('data-queue') || 'pending');
-      this.activateQueue(queue);
       card.classList.add('is-newly-created');
       card.setAttribute('tabindex', '-1');
 
@@ -1171,132 +1143,77 @@
 
     renderProjectQueues: function () {
       if (!this.projectsLoaded) return;
+      const container = document.getElementById('event-queue-all');
+      if (!container) return;
       const user = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
       const userId = String(user.ID || user.Id || user.id || '');
       const departmentId = String(user.DepartmentID || user.departmentId || '');
       const typeMap = new Map();
       this.eventTypes.forEach(function (type) { typeMap.set(Events.idOf(type), type); });
-
-      // Aggregate project activity once; latest-event selection is independently testable.
       const activityByProject = new Map();
       const latestEventByProject = this.getLatestEventByProject(this.events);
-
       this.events.forEach(function (event) {
         if (String(event.Status || 'ACTIVE').toUpperCase() === 'VOID') return;
         const projectId = String(event.ProjectID || '').trim();
         if (!projectId) return;
-
-        const belongsToUser = !!userId && (
-          String(event.PerformedBy || '') === userId ||
-          String(event.CreatedBy || '') === userId
-        );
-        const belongsToDepartment = !!departmentId &&
-          String(event.DepartmentID || '') === departmentId;
-        const related = departmentId
-          ? belongsToDepartment || belongsToUser
-          : belongsToUser;
+        const belongsToUser = !!userId && (String(event.PerformedBy || '') === userId || String(event.CreatedBy || '') === userId);
+        const belongsToDepartment = !!departmentId && String(event.DepartmentID || '') === departmentId;
+        const related = departmentId ? belongsToDepartment || belongsToUser : belongsToUser;
         if (!related) return;
-
         let activity = activityByProject.get(projectId);
-        if (!activity) {
-          activity = { hasRelated: false, completed: false };
-          activityByProject.set(projectId, activity);
-        }
+        if (!activity) { activity = { hasRelated: false, completed: false }; activityByProject.set(projectId, activity); }
         activity.hasRelated = true;
         const type = typeMap.get(String(event.EventTypeID || ''));
-        if (event.IsWorkCompletion === true ||
-            String(event.IsWorkCompletion).toLowerCase() === 'true' ||
-            String(event.IsWorkCompletion) === '1' ||
-            (!!type && (type.IsWorkCompletion === true ||
-              String(type.IsWorkCompletion).toLowerCase() === 'true' ||
-              String(type.IsWorkCompletion) === '1'))) {
-          activity.completed = true;
-        }
+        if (event.IsWorkCompletion === true || String(event.IsWorkCompletion).toLowerCase() === 'true' ||
+            String(event.IsWorkCompletion) === '1' || (!!type && (type.IsWorkCompletion === true ||
+            String(type.IsWorkCompletion).toLowerCase() === 'true' || String(type.IsWorkCompletion) === '1'))) activity.completed = true;
       });
-
-      const queues = { pending: [], progress: [], completed: [] };
-      this.projects.forEach(function (project) {
-        const projectId = Events.idOf(project);
-        if (!projectId) return;
-        const activity = activityByProject.get(projectId);
-        queues[activity && activity.completed ? 'completed' :
-          activity && activity.hasRelated ? 'progress' : 'pending'].push(project);
-      });
-
-      const definitions = [
-        { key: 'pending', label: 'در انتظار اقدام', id: 'event-queue-pending', countId: 'event-queue-pending-count', empty: 'پروژه‌ای در انتظار اقدام نیست.' },
-        { key: 'progress', label: 'در حال انجام', id: 'event-queue-progress', countId: 'event-queue-progress-count', empty: 'پروژه‌ای در حال انجام نیست.' },
-        { key: 'completed', label: 'تکمیل‌شده', id: 'event-queue-completed', countId: 'event-queue-completed-count', empty: 'هنوز پروژه‌ای با رویداد پایان کار ثبت نشده است.' }
-      ];
-      definitions.forEach(function (definition) {
-        const container = document.getElementById(definition.id);
-        const count = document.getElementById(definition.countId);
-        if (!container) return;
-        container.removeAttribute('aria-busy');
-        const items = queues[definition.key];
-        if (count) count.textContent = String(items.length).replace(/\d/g, function (digit) { return '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]; });
-        if (!items.length) {
-          container.innerHTML = '<p class="event-queue-empty">' + Events.escape(definition.empty) + '</p>';
-          return;
-        }
-        container.innerHTML = items.map(function (project) {
-          const id = Events.idOf(project);
-          const code = project.ProjectCode || id;
-          const title = project.Title || project.Name || project.ProjectName || 'بدون عنوان';
-          const status = String(project.CurrentStepStatus || project.Status || '').trim();
-          const statusTone = Events.getProjectStatusTone(status);
-          const latest = latestEventByProject.get(id);
-          const latestEvent = latest && latest.event;
-          const eventType = latestEvent
-            ? (latestEvent.EventTypeName || (typeMap.get(String(latestEvent.EventTypeID || '')) || {}).Name ||
-              (typeMap.get(String(latestEvent.EventTypeID || '')) || {}).Code || 'رویداد ثبت‌شده')
-            : '';
-          const eventCreator = latestEvent ? Events.creatorValue(latestEvent) : '';
-          const eventDate = latestEvent
-            ? Events.formatDate(latestEvent.CreatedAt || latestEvent.OccurredAt)
-            : '';
-          const primaryAction = definition.key === 'completed'
-            ? '<button type="button" class="btn btn-secondary event-queue-change-request-button">درخواست ثبت تغییرات</button>'
-            : (Events.canCreateEvents
-              ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '">ثبت رویداد برای این پروژه</button>'
-              : '');
-          const historyAction = Events.canViewEventHistory
-            ? '<button type="button" class="btn btn-secondary event-queue-history-button" data-project-id="' + Events.escape(id) + '">رویدادهای ثبت‌شده برای این پروژه</button>'
-            : '';
-          const queueActions = [primaryAction, historyAction].filter(Boolean).join('');
-          return '<article class="event-queue-project queue-' + definition.key + '" data-queue="' + definition.key + '" data-event-project-card="' + Events.escape(id) + '">' +
-            '<div class="event-queue-project-main">' +
-              '<div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
-                '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" role="button" tabindex="0" aria-label="نمایش بزرگ تصویر پروژه" hidden>' +
-                '<span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span>' +
-              '</div>' +
-              '<div class="event-queue-project-copy">' +
-                '<strong>' + Events.escape(code) + ' — ' + Events.escape(title) + '</strong>' +
-                (status ? '<span class="event-queue-project-status-badge status-' + statusTone + '" title="وضعیت پروژه">' + Events.escape(status) + '</span>' : '') +
-              '</div>' +
-            '</div>' +
-            (latestEvent
-              ? '<div class="event-queue-latest-event"><span class="event-queue-latest-label">آخرین رویداد</span>' +
-                '<strong>' + Events.escape(eventType) + '</strong>' +
-                '<span>' + Events.escape(eventCreator) + (eventDate ? ' · ' + Events.escape(eventDate) : '') + '</span></div>'
-              : '<div class="event-queue-latest-event is-empty"><span class="event-queue-latest-label">آخرین رویداد</span><span>هنوز رویدادی ثبت نشده است.</span></div>') +
-            (queueActions
-              ? '<div class="event-queue-project-actions">' + queueActions + '</div>'
-              : '') +
-            '</article>';
-        }).join('');
-      });
-
-      this.loadQueueProjectImages(this.projects);
+      const projects = this.projects.filter(function (project) { return !!Events.idOf(project); });
+      container.removeAttribute('aria-busy');
+      if (!projects.length) {
+        container.innerHTML = '<p class="event-queue-empty">پروژه‌ای برای نمایش در دسترس نیست.</p>';
+        return;
+      }
+      const markup = projects.map(function (project) {
+        const id = Events.idOf(project);
+        const code = project.ProjectCode || id;
+        const title = project.Title || project.Name || project.ProjectName || 'بدون عنوان';
+        const activity = activityByProject.get(id);
+        const queueKey = activity && activity.completed ? 'completed' : activity && activity.hasRelated ? 'progress' : 'pending';
+        const queueLabel = queueKey === 'completed' ? 'تکمیل‌شده' : queueKey === 'progress' ? 'در حال انجام' : 'در انتظار اقدام';
+        const tone = queueKey === 'completed' ? 'completed' : queueKey === 'progress' ? 'active' : 'waiting';
+        const status = String(project.CurrentStepStatus || project.Status || queueLabel).trim();
+        const latest = latestEventByProject.get(id);
+        const latestEvent = latest && latest.event;
+        const eventType = latestEvent ? (latestEvent.EventTypeName || (typeMap.get(String(latestEvent.EventTypeID || '')) || {}).Name ||
+          (typeMap.get(String(latestEvent.EventTypeID || '')) || {}).Code || 'رویداد ثبت‌شده') : '';
+        const eventCreator = latestEvent ? Events.creatorValue(latestEvent) : '';
+        const eventDate = latestEvent ? Events.formatDate(latestEvent.CreatedAt || latestEvent.OccurredAt) : '';
+        const primaryAction = queueKey === 'completed'
+          ? '<button type="button" class="btn btn-secondary event-queue-change-request-button"><span aria-hidden="true">↻</span><span>درخواست تغییر</span></button>'
+          : (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">＋</span><span>ثبت رویداد</span></button>' : '');
+        const historyAction = Events.canViewEventHistory
+          ? '<button type="button" class="btn btn-secondary event-queue-history-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">◷</span><span>رویدادهای ثبت‌شده</span></button>' : '';
+        const viewAction = '<button type="button" class="btn btn-secondary event-queue-view-button" aria-disabled="true" title="اتصال این قابلیت در تسک بعدی انجام می‌شود"><span aria-hidden="true">◉</span><span>مشاهده</span></button>';
+        const actions = [primaryAction, historyAction, viewAction].filter(Boolean).join('');
+        return '<article class="event-queue-project event-project-card-unified queue-' + queueKey + '" data-queue="' + queueKey + '" data-event-project-card="' + Events.escape(id) + '">' +
+          '<div class="event-queue-project-main"><div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
+          '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" role="button" tabindex="0" aria-label="نمایش بزرگ تصویر پروژه" hidden><span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span></div>' +
+          '<div class="event-queue-project-copy"><span class="event-queue-project-code-label">کد پروژه</span><strong class="event-queue-project-code">' + Events.escape(code) +
+          '</strong><span class="event-queue-project-title">' + Events.escape(title) + '</span><span class="event-queue-project-status-badge status-' + tone +
+          '" title="وضعیت پروژه">' + Events.escape(status) + '</span></div></div>' +
+          (latestEvent ? '<div class="event-queue-latest-event"><span class="event-queue-latest-label">آخرین رویداد</span><strong>' + Events.escape(eventType) +
+          '</strong><span>' + Events.escape(eventCreator) + (eventDate ? ' · ' + Events.escape(eventDate) : '') + '</span></div>' :
+          '<div class="event-queue-latest-event is-empty"><span class="event-queue-latest-label">آخرین رویداد</span><span>هنوز رویدادی ثبت نشده است.</span></div>') +
+          (actions ? '<div class="event-queue-project-actions">' + actions + '</div>' : '') + '</article>';
+      }).join('');
+      if (container.innerHTML !== markup) container.innerHTML = markup;
+      this.loadQueueProjectImages(projects);
     },
 
     loadQueueProjectImages: async function (projects) {
       const projectModule = PMS.Modules && PMS.Modules.Projects;
-      const containers = [
-        document.getElementById('event-queue-pending'),
-        document.getElementById('event-queue-progress'),
-        document.getElementById('event-queue-completed')
-      ].filter(Boolean);
+      const containers = [document.getElementById('event-queue-all')].filter(Boolean);
       const requestId = ++this.queueProjectImageRequestId;
       if (this.queueProjectImageObserver) this.queueProjectImageObserver.disconnect();
       if (!projectModule || typeof projectModule.getProjectCardAttachments !== 'function') return;
@@ -1390,11 +1307,7 @@
         (typeof router.isAdmin === 'function' && router.isAdmin()) ||
         (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
       ));
-      const containers = [
-        document.getElementById('event-queue-pending'),
-        document.getElementById('event-queue-progress'),
-        document.getElementById('event-queue-completed')
-      ].filter(Boolean);
+      const containers = [document.getElementById('event-queue-all')].filter(Boolean);
       containers.forEach(function (container) {
         container.querySelectorAll('[data-event-project-media]').forEach(function (media) {
           const projectId = String(media.getAttribute('data-event-project-media') || '');
