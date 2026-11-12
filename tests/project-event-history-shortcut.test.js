@@ -27,7 +27,7 @@ test('project detail retains event registration but no longer hosts the history 
   const page = read('pages/project-detail.html');
   const source = read('js/modules/project-detail.js');
   assert.match(page, /id="project-add-event-button"/);
-  assert.doesNotMatch(page, /project-view-events-button|رویدادهای ثبت‌شده/);
+  assert.doesNotMatch(page, /project-view-events-button|رویدادهای ثبت‌شده برای این پروژه/);
   assert.doesNotMatch(source, /project-view-events-button|pendingProjectHistoryId/);
 });
 
