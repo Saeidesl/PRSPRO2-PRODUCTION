@@ -87,8 +87,8 @@
   - `js/modules/events.js`: فهرست رویداد با TTL پانزده‌ثانیه، انواع رویداد با TTL شصت‌ثانیه و `/projects?view=event-picker` با cache مستقل سی‌ثانیه‌ای cache-first شدند. نتیجه picker cache‌شده نیز پس از دریافت render می‌شود و cache آن پس از ثبت رویداد invalid می‌شود.
   - `js/modules/attachments.js`: فهرست `GET /attachments` با TTL شصت‌ثانیه از همان `Api.getCached` دریافت می‌شود؛ پس از upload، invalidation فعلی باعث fetch تازه خواهد شد.
   - `index.html`: cache-busting چهار ماژول تغییرکرده به‌روزرسانی شد.
-  - تست‌های `tests/shared-page-cache.test.js` و `tests/event-project-picker-performance.test.js` اضافه/اصلاح شدند؛ تست‌های CI هنوز در وضعیت queued هستند و نتیجه موفق گزارش نشده است.
-  - PR فرانت‌اند #104 به‌صورت Draft ایجاد شده؛ هنوز merge یا deploy انجام نشده است.
+  - تست‌های `tests/shared-page-cache.test.js` و `tests/event-project-picker-performance.test.js` اضافه/اصلاح شدند؛ CI نهایی Frontend، agent suite، cross-repository QA و UI/performance audit روی commit `cd0ced0ef52ba34ac06fbadddca0fc04f697790c` موفق شدند.
+  - PR فرانت‌اند #104 با squash merge در `main` ادغام شد (merge commit `833e3a1ebb1e7e9965fa784d390dbb01763c67dc`) و GitHub Pages deployment run `43184842781` و Pages build run `43184842894` موفق شدند.
 - تعریف سیاست cache hit بدون درخواست شبکه در navigation عادی، TTL کنترل‌شده، refresh پس‌زمینه فقط در موعد لازم و force refresh دستی.
 - یکپارچه‌سازی کلید و query برای `/projects` و `/projects?view=event-picker` بدون اشتراک پاسخ‌های ناسازگار.
 - انتقال ماژول فایل‌ها به الگوی مشترک cache و حذف GET تکراری در ورود مجدد.
@@ -99,6 +99,8 @@
 - *Log:* پس از تأیید تست زنده Product Owner، Task 2 تکمیل شد. در Frontend فایل‌های `js/core/api.js` (گزینه `refreshCached:false` در `Api.getCached` برای cache hit بدون GET پس‌زمینه)، `js/modules/projects.js` (cache-first فهرست پروژه و lookup وضعیت‌ها)، `js/modules/events.js` (cache-first رویدادها، انواع رویداد و `/projects?view=event-picker`)، `js/modules/attachments.js` (cache-first فهرست پیوست‌ها)، `js/core/router.js` (ذخیره و بازیابی جستجو، فیلتر، مرتب‌سازی، تب، وضعیت پنل و موقعیت اسکرول؛ پاک‌سازی snapshot در reset نشست) و `index.html` (cache-busting assetها) تغییر کردند. تست‌های `tests/shared-page-cache.test.js` و `tests/event-project-picker-performance.test.js` و تست‌های رگرسیون وابسته به asset/API به‌روزرسانی شدند. Frontend PR #104 با روش squash در `main` ادغام شد؛ merge commit: `833e3a1ebb1e7e9965fa784d390dbb01763c67dc`. Frontend GitHub Pages deployment run `43183779308` با نتیجه success منتشر شد؛ URL: `https://saeidesl.github.io/PRSPRO2-PRODUCTION/`. تست‌های خودکار Frontend، Cross-Repository QA، Browser Regression و UI/Performance Audit موفق شدند. Product Owner جابه‌جایی بین صفحات پروژه‌ها/رویدادها/فایل‌ها و حفظ state را در نسخه زنده تست و موفق تأیید کرد. Backend runtime، API contract، permissions، Google Sheets schema و داده‌های عملیاتی تغییر نکردند.
 
 ### Task 3 — Invalidation هدفمند، آزمون و تحویل (IN PROGRESS)
+- وضعیت جاری: بخشی از invalidation پروژه‌ها و پیوست‌ها در commitهای `c831dcb3228f5c3c373d29148430e185e396b66e` تا `cd0ced0ef52ba34ac06fbadddca0fc04f697790c` روی `main` ثبت و در GitHub Pages منتشر شده است. برای ادامه کنترل‌شده، شاخه `feat/shared-page-cache-invalidation` از `main` با مبنای `40949911c6fd62f69555a7b3ec6520ef361e94c0` ساخته شد؛ تغییرات تکمیلی و تست‌های invalidation در این شاخه در حال آماده‌سازی است.
+- تغییرات تکمیلی شاخه: پاک‌سازی cache جزئیات پیوست پروژه در upload/delete، invalidation کش‌های event/dashboard پس از upload فایل رویداد، invalidation پس از upload از فرم جزئیات پروژه، و جلوگیری از invalidation زودهنگام در پاسخ ناموفق ویرایش پروژه. Backend runtime/API/DB تغییری ندارد.
 - پس از create/update project، ثبت event و upload/delete attachment فقط cacheهای وابسته به‌روزرسانی/باطل شوند.
 - بررسی همگامی داده در صفحات پروژه، رویداد و فایل و جزئیات پروژه.
 - آزمون شبکه: اولین ورود، رفت‌وبرگشت چندباره، عبور TTL، refresh دستی، ثبت/ویرایش هم‌زمان، نشست جدید، خطای شبکه و موبایل.
