@@ -2263,14 +2263,48 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
 
       const createdAtLocal = String(createdAtInput && createdAtInput.value || '').trim();
       let createdAtValue = createdAtLocal;
-      if (createdAtLocal && createdAtInput && createdAtInput.type === 'datetime-local') {
-        const createdAtDate = new Date(createdAtLocal);
-        if (Number.isNaN(createdAtDate.getTime())) {
+      if (createdAtLocal) {
+        // datetime-local values are browser-local and contain no timezone.
+        // Normalize by value shape, not input.type: some embedded/mobile
+        // browsers report a different type while retaining the same value.
+        const localDateTime = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(createdAtLocal);
+        if (localDateTime) {
+          const year = Number(localDateTime[1]);
+          const month = Number(localDateTime[2]);
+          const day = Number(localDateTime[3]);
+          const hour = Number(localDateTime[4]);
+          const minute = Number(localDateTime[5]);
+          const second = Number(localDateTime[6] || 0);
+          const millisecond = Number(String(localDateTime[7] || '').padEnd(3, '0') || 0);
+          const createdAtDate = new Date(year, month - 1, day, hour, minute, second, millisecond);
+          const isValidLocalDate = createdAtDate.getFullYear() === year &&
+            createdAtDate.getMonth() === month - 1 &&
+            createdAtDate.getDate() === day &&
+            createdAtDate.getHours() === hour &&
+            createdAtDate.getMinutes() === minute &&
+            createdAtDate.getSeconds() === second;
+          if (!isValidLocalDate || Number.isNaN(createdAtDate.getTime())) {
+            this.showFormError(modal, 'تاریخ و ساعت ایجاد پروژه معتبر نیست.');
+            createdAtInput.focus();
+            return;
+          }
+          createdAtValue = createdAtDate.toISOString();
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(createdAtLocal)) {
+          // Preserve legacy date-only edit values; the backend normalizes them.
+          createdAtValue = createdAtLocal;
+        } else if (/(?:Z|[+-]\d{2}:\d{2})$/i.test(createdAtLocal)) {
+          const zonedDate = new Date(createdAtLocal);
+          if (Number.isNaN(zonedDate.getTime())) {
+            this.showFormError(modal, 'تاریخ و ساعت ایجاد پروژه معتبر نیست.');
+            createdAtInput.focus();
+            return;
+          }
+          createdAtValue = zonedDate.toISOString();
+        } else {
           this.showFormError(modal, 'تاریخ و ساعت ایجاد پروژه معتبر نیست.');
           createdAtInput.focus();
           return;
         }
-        createdAtValue = createdAtDate.toISOString();
       }
 
       const project = {
