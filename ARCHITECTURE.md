@@ -1400,3 +1400,31 @@
 - Product Owner پس از انتشار، دانلود تصویر قدیمی و تصویر جدید را در نسخه عملیاتی تست و موفقیت را در 2026-11-12 تأیید کرد.
 - Taskهای پیاده‌سازی و Regression Validation پذیرفته شدند؛ فاز با درخواست صریح Product Owner در 2026-11-12 بسته شد.
 - هیچ انتشار Backend لازم نبود و هیچ داده عملیاتی حذف، جابه‌جا یا migrate نشد.
+
+
+## 2026-11-12 — تکمیل و بستن فاز انیمیشن پیشرفت ایجاد پروژه در صفحه رویدادها
+
+### محدوده و نتیجه نهایی
+- مخزن عملیاتی Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `main`.
+- قابلیت: فرم مشترک ایجاد پروژه که از صفحه رویدادها باز می‌شود، همان انیمیشن پیشرفت ثبت پروژه را مانند صفحه پروژه‌ها نمایش می‌دهد.
+- Product Owner تست نسخه عملیاتی را در 2026-11-12 موفق اعلام کرد؛ Task 5 پذیرفته شد و فاز با درخواست صریح Product Owner بسته شد.
+
+### نقشه فنی و تغییرات Frontend
+- `js/modules/projects.js`:
+  - `Projects.openCreateForm(editProject, options)`: در ابتدای بازشدن فرم، `this.ensureProjectStyles()` را فراخوانی می‌کند تا استایل‌های progress modal حتی وقتی ماژول Projects از صفحه Events و بدون اجرای `Projects.init()` استفاده می‌شود، حاضر باشند.
+  - `Projects.ensureProjectStyles()`: همان تزریق idempotent استایل‌های progress موجود را انجام می‌دهد؛ UI یا مسیر ثبت موازی ایجاد نشد.
+- `index.html`: cache key ماژول Projects به `20261112-project-create-progress-1` تغییر کرد.
+- `tests/events-project-create-progress.test.js`: رگرسیون بارگذاری استایل پیش از ساخت modal، وجود progress UI و رعایت `prefers-reduced-motion` را پوشش می‌دهد.
+- `tests/project-created-at-datetime.test.js` و `tests/project-draft-information-flow.test.js`: assertionهای cache-busting با نسخه asset جدید هماهنگ شدند.
+
+### قراردادها و اجزای بدون تغییر
+- مسیرهای موجود حفظ شدند: `POST /projects`، `GET /projects?view=event-picker`، `GET /events` و `GET /event-types`.
+- ماژول‌های `js/modules/events.js` و `js/modules/projects.js` از همان جریان‌های مشترک استفاده می‌کنند.
+- Backend runtime، `Router.js`، `ProjectService.js`، `ProjectValidator.js`، شیت `08_Projects`، API payloadها، permissionها و داده عملیاتی تغییری نکردند؛ انتشار Backend لازم نبود.
+
+### آزمون، ادغام و انتشار
+- PR Frontend #119 با squash در `main` ادغام شد؛ merge commit: `5b5cf7b370d82e1bdb57b675ed6b96f075564267`.
+- Frontend checks، PMS frontend agent suite و PMS cross-repository QA پس از ادغام موفق شدند؛ runها: `43296139482`، `43296139466` و `43296139443`.
+- انتشار GitHub Pages با run `43296139497` و Pages build/deployment با run `43296137639` موفق شدند.
+- Product Owner تست عملیاتی فرم ایجاد پروژه از صفحه رویدادها و نمایش انیمیشن پیشرفت را موفق تأیید کرد. Live browser verification مستقل در این محیط انجام نشده است؛ پذیرش عملیاتی بر اساس تست مستقیم Product Owner ثبت می‌شود.
+- ثبت نهایی پذیرش Task 5 در `TODO5.md` با commit `9bde6dfbc4101ccfdc2ec77414c3a3caf4479c4e` انجام شد.
