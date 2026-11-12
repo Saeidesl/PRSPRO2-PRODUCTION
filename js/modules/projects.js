@@ -2267,7 +2267,7 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
         // datetime-local values are browser-local and contain no timezone.
         // Normalize by value shape, not input.type: some embedded/mobile
         // browsers report a different type while retaining the same value.
-        const localDateTime = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})(?::(\\d{2})(?:\\.(\\d{1,3}))?)?$/.exec(createdAtLocal);
+        const localDateTime = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(createdAtLocal);
         if (localDateTime) {
           const year = Number(localDateTime[1]);
           const month = Number(localDateTime[2]);
@@ -2289,10 +2289,10 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
             return;
           }
           createdAtValue = createdAtDate.toISOString();
-        } else if (/^\\d{4}-\\d{2}-\\d{2}$/.test(createdAtLocal)) {
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(createdAtLocal)) {
           // Preserve legacy date-only edit values; the backend normalizes them.
           createdAtValue = createdAtLocal;
-        } else if (/(?:Z|[+-]\\d{2}:\\d{2})$/i.test(createdAtLocal)) {
+        } else if (/(?:Z|[+-]\d{2}:\d{2})$/i.test(createdAtLocal)) {
           const zonedDate = new Date(createdAtLocal);
           if (Number.isNaN(zonedDate.getTime())) {
             this.showFormError(modal, 'تاریخ و ساعت ایجاد پروژه معتبر نیست.');
