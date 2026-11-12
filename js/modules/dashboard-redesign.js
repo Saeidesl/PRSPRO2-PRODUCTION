@@ -1263,7 +1263,7 @@
             '<div class="dash-project-badges"><span class="dash-badge dash-badge-stage">' + this.escape(stage) + '</span>' +
             (project.CurrentStepStatus ? '<span class="dash-badge">' + this.escape(project.CurrentStepStatus) + '</span>' : '') +
               '<span class="dash-badge dash-badge-status ' + statusClass + '"><span aria-hidden="true">●</span> ' + this.escape(statusLabel) + '</span>' +
-              ((project.TotalQuantity || project.ProjectQuantity) ? '<span class="dash-badge">تعداد: ' + this.escape(project.TotalQuantity || project.ProjectQuantity) + '</span>' : '') + '</div>' +
+              ((project.Quantity || project.TotalQuantity || project.ProjectQuantity) ? '<span class="dash-badge">تعداد: ' + this.escape(project.Quantity || project.TotalQuantity || project.ProjectQuantity) + '</span>' : '') + '</div>' +
             '<div class="dash-project-activity">آخرین فعالیت: ' + this.escape(this.formatExactDate(last)) + ' — ' + this.escape(this.relativeTime(last)) + '</div>' +
           '</div><span class="dash-project-chevron" aria-hidden="true">⌄</span>' +
         '</button>';
