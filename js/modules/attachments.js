@@ -1476,6 +1476,7 @@
         target.style.textAlign = 'right';
         target.style.padding = '12px';
         target.innerHTML = MODULE.sanitizePreviewHtml(rendered.value || '<p>محتوای متنی قابل نمایش نیست.</p>');
+        target.dataset.previewState = 'loaded';
       } else if (extension === 'xlsx' || extension === 'xls' || mime.indexOf('spreadsheet') !== -1 || mime.indexOf('excel') !== -1) {
         const XLSX = await MODULE.loadPreviewLibrary('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
         const workbook = XLSX.read(await result.blob.arrayBuffer(), { type: 'array' });
@@ -1494,8 +1495,10 @@
           sheet.innerHTML = MODULE.sanitizePreviewHtml(XLSX.utils.sheet_to_html(workbook.Sheets[sheetName]));
           target.appendChild(sheet);
         });
+        target.dataset.previewState = 'loaded';
       } else {
         URL.revokeObjectURL(objectUrl);
+        target.dataset.previewState = 'error';
         delete target.dataset.inlineObjectUrl;
         target.textContent = 'پیش‌نمایش این نوع فایل در صفحه پشتیبانی نمی‌شود؛ از دکمه نمایش فایل استفاده کنید.';
       }
