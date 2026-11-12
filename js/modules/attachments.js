@@ -1210,6 +1210,20 @@
     });
   };
 
+  MODULE.extractWorkspaceList = function (response, keys) {
+    let data = Api && typeof Api.extractData === 'function' ? Api.extractData(response) : response;
+    for (let depth = 0; depth < 5 && data && !Array.isArray(data); depth += 1) {
+      let next = null;
+      for (let i = 0; i < keys.length; i += 1) {
+        if (Array.isArray(data[keys[i]])) { next = data[keys[i]]; break; }
+      }
+      if (!next && data.data && typeof data.data === 'object') next = data.data;
+      if (!next) break;
+      data = next;
+    }
+    return Array.isArray(data) ? data : [];
+  };
+
   const originalLoad = MODULE.load;
   MODULE.load = async function () {
     await originalLoad.call(MODULE);
@@ -1217,8 +1231,7 @@
       const projectResponse = await Api.getCached('/projects', Cache.keys.PROJECTS || 'projects', {
         cacheTtl: 60000, refreshCached: false
       });
-      MODULE.state.projects = MODULE.normalize(projectResponse && projectResponse.data !== undefined
-        ? projectResponse.data : projectResponse);
+      MODULE.state.projects = MODULE.extractWorkspaceList(projectResponse, ['projects', 'items', 'results']);
     } catch (error) {
       MODULE.state.projects = [];
       console.warn('Attachment project list unavailable:', error);
@@ -1227,8 +1240,7 @@
       const eventResponse = await Api.getCached('/events', Cache.keys.EVENTS || 'events', {
         cacheTtl: 60000, refreshCached: false
       });
-      MODULE.state.events = MODULE.normalize(eventResponse && eventResponse.data !== undefined
-        ? eventResponse.data : eventResponse);
+      MODULE.state.events = MODULE.extractWorkspaceList(eventResponse, ['events', 'items', 'results']);
     } catch (error) {
       MODULE.state.events = [];
     }
