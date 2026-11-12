@@ -49,3 +49,17 @@ test('dynamic event filters retain their previous selection after options load',
   assert.match(events, /getPageStateValue\(select\.id\)/);
   assert.match(events, /const previous = select\.value \|\| remembered/);
 });
+
+test('project create, edit and settings mutations invalidate shared project caches before reload', () => {
+  assert.ok(projects.includes('invalidateProjectDataCaches: function (projectId)'));
+  assert.ok(projects.includes("CACHE_KEY + '_event_picker'"));
+  assert.ok(projects.includes('this.invalidateProjectDataCaches(projectId)'));
+  assert.ok(projects.includes('this.invalidateProjectDataCaches(created.ID || created.Id || created.id)'));
+  assert.ok(projects.includes("cache.remove(window.PMS.Cache.keys.ATTACHMENTS || 'attachments')"));
+});
+
+test('project attachment uploads invalidate project-card metadata as well as the global attachment list', () => {
+  assert.ok(attachments.includes('Cache.remove(MODULE.cacheKey)'));
+  assert.ok(attachments.includes("kind === 'PROJECT'"));
+  assert.ok(attachments.includes('invalidateProjectCardAttachmentMetadata(entityId)'));
+});
