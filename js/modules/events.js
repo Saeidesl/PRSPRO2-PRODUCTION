@@ -138,6 +138,7 @@
         ? PMS.Router.permissions : [];
       const isAdmin = !!(PMS.Router && typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin());
       this.canCreateEvents = isAdmin || permissions.indexOf('EVENT_CREATE') !== -1;
+      this.canCreateProjects = isAdmin || permissions.indexOf('PROJECT_CREATE') !== -1;
       this.canViewEventHistory = isAdmin || permissions.indexOf('EVENT_VIEW') !== -1;
       this.canAccessProjectOptions = isAdmin ||
         permissions.indexOf('PROJECT_VIEW') !== -1 ||
@@ -145,6 +146,8 @@
 
       const createButton = document.getElementById('event-create-button');
       if (createButton) createButton.hidden = !this.canCreateEvents;
+      const createProjectButton = document.getElementById('events-create-project-button');
+      if (createProjectButton) createProjectButton.hidden = !this.canCreateProjects;
       const entryGrid = document.querySelector('.event-entry-grid');
       if (entryGrid) entryGrid.hidden = !this.canCreateEvents;
       const projectEntry = document.querySelector('[data-event-entry="project"]');
@@ -207,6 +210,21 @@
 
       document.addEventListener('click', function (event) {
         const target = event.target;
+
+        const createProjectButton = target.closest('#events-create-project-button');
+        if (createProjectButton) {
+          event.preventDefault();
+          if (!Events.canCreateProjects) return;
+          const projectModule = PMS.Modules && PMS.Modules.Projects;
+          if (!projectModule || typeof projectModule.openCreateForm !== 'function') {
+            if (PMS.Alert && typeof PMS.Alert.error === 'function') {
+              PMS.Alert.error('فرم ایجاد پروژه در دسترس نیست. صفحه را دوباره بارگذاری کنید.');
+            }
+            return;
+          }
+          projectModule.openCreateForm();
+          return;
+        }
 
         const clearFiltersButton = target.closest('#events-clear-filters');
         if (clearFiltersButton) {
