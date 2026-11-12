@@ -448,10 +448,8 @@
           ['عنوان پروژه', title],
           ['وضعیت', labelStatus(project.StatusName || project.StatusLabel || project.Status)],
           ['مرحله فعلی', currentStep],
-          ['تعداد اولیه', project.Quantity],
           ['تاریخ ایجاد', formatDate(project.CreatedAt)],
           ['آخرین به‌روزرسانی', formatDate(project.UpdatedAt)],
-          ['توضیحات', project.Description]
         ];
         const rows = details.map(([label, value]) =>
           '<tr><th>' + escapeHtml(label) + '</th><td>' + escapeHtml(value) + '</td></tr>'
@@ -520,9 +518,6 @@
         ).trim();
         const title = String(project.Title || project.Name || 'بدون عنوان').trim();
         const code = String(project.ProjectCode || id).trim();
-        const quantity = project.Quantity !== undefined && project.Quantity !== null && String(project.Quantity).trim() !== ''
-          ? String(project.Quantity).trim()
-          : 'نامشخص';
         const projectUrl = window.location.origin + window.location.pathname + '#project-detail/' + encodeURIComponent(id);
         const shareText = [
           'اطلاعات پروژه — سامانه مدیریت تولید',
@@ -530,7 +525,6 @@
           'عنوان: ' + title,
           'وضعیت: ' + status,
           'مرحله فعلی: ' + stage,
-          'تعداد: ' + quantity,
           'مشاهده پروژه: ' + projectUrl
         ].join('\n');
 
@@ -1245,23 +1239,6 @@
               <small style="display:block;margin-top:5px;color:var(--color-text-secondary);">${isEditMode ? 'اگر تاریخ انتخاب نشود، تاریخ و زمان فعلی به‌صورت خودکار ثبت می‌شود.' : 'تاریخ و ساعت فعلی به‌صورت پیش‌فرض ثبت شده و قابل تغییر است.'}</small>
             </div>
 
-${isEditMode ? `            <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
-              <label for="new-project-quantity">
-                تعداد پیشنهادی <span style="color:var(--color-text-secondary);font-size:12px;">(اختیاری)</span>
-              </label>
-              <input
-                type="number"
-                id="new-project-quantity"
-                name="Quantity"
-                min="1"
-                step="1"
-                inputmode="numeric"
-                placeholder="تعداد پیشنهادی قطعات"
-                style="width:100%;box-sizing:border-box;"
-              >
-            </div>
-
-` : ''}
 
                         <div class="filter-group form-group project-form-field project-workflow-field" data-project-workflow-field style="margin-bottom:16px;">
               <label for="new-project-workflow">
@@ -1290,21 +1267,6 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
               <small style="display:block;margin-top:6px;color:var(--color-text-secondary);">اطلاعات مرجع بر اساس سیاست گردش‌کار تولید تکراری استفاده می‌شود؛ رویدادها و سوابق تولید مستقل می‌مانند.</small>
             </div>
 
-${isEditMode ? `            <div class="filter-group form-group project-form-field" style="margin-bottom:20px;">
-              <label for="new-project-description">
-                توضیحات
-              </label>
-
-              <textarea
-                id="new-project-description"
-                name="Description"
-                rows="3"
-                placeholder="توضیحات اختیاری درباره پروژه"
-                style="width:100%;box-sizing:border-box;resize:vertical;"
-              ></textarea>
-            </div>
-
-` : ''}
 
             ${isEditMode ? `            <div id="new-project-departments-setting" class="filter-group form-group project-form-field" style="margin-bottom:18px;">
               <label>واحدهای مجاز برای مشاهده پروژه و ثبت رویداد <span style="color:var(--color-danger);">*</span></label>
@@ -1725,8 +1687,6 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
         const preserveEditInputs = isEditMode && modal.dataset.lookupUserInteracted === 'true'
           ? {
               title: String((modal.querySelector('#new-project-title') || {}).value || ''),
-              quantity: String((modal.querySelector('#new-project-quantity') || {}).value || ''),
-              description: String((modal.querySelector('#new-project-description') || {}).value || ''),
               notify: !!(modal.querySelector('#new-project-notify') || {}).checked
             }
           : null;
@@ -1867,15 +1827,11 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
           // user's defaults. Project code and workflow remain locked.
           const projectCode = modal.querySelector('#new-project-code');
           const titleInput = modal.querySelector('#new-project-title');
-          const quantityInput = modal.querySelector('#new-project-quantity');
           const createdAtInput = modal.querySelector('#new-project-created-at');
-          const descriptionInput = modal.querySelector('#new-project-description');
           const statusSelectForEdit = modal.querySelector('#new-project-status');
           if (projectCode) projectCode.value = String(editProject.ProjectCode || '');
           if (titleInput) titleInput.value = String(editProject.Title || editProject.Name || '');
-          if (quantityInput) quantityInput.value = editProject.Quantity === undefined || editProject.Quantity === null ? '' : String(editProject.Quantity);
           if (createdAtInput) createdAtInput.value = String(editProject.CreatedAt || editProject.createdAt || '').slice(0, 10);
-          if (descriptionInput) descriptionInput.value = String(editProject.Description || '');
           if (workflowSelect) workflowSelect.value = String(editProject.WorkflowID || '');
           const parseIds = (value) => {
             if (Array.isArray(value)) return value.map(String);
@@ -2190,10 +2146,8 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
       const isDraftEditing = modal.dataset.draftMode === 'true';
       const codeInput = modal.querySelector('#new-project-code');
       const titleInput = modal.querySelector('#new-project-title');
-      const quantityInput = modal.querySelector('#new-project-quantity');
       const createdAtInput = modal.querySelector('#new-project-created-at');
       const workflowSelect = modal.querySelector('#new-project-workflow');
-      const descriptionInput = modal.querySelector('#new-project-description');
       const departmentsSelect = modal.querySelector('#new-project-departments');
       const usersSelect = modal.querySelector('#new-project-users');
       const fileInput = modal.querySelector('#new-project-file');
@@ -2310,10 +2264,8 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
       const project = {
         ProjectCode: codeInput.value.trim(),
         Title: titleInput.value.trim(),
-        Quantity: quantityInput && quantityInput.value.trim() !== '' ? Number(quantityInput.value) : '',
         WorkflowID: workflowSelect.value,
         SourceProjectID: String((modal.querySelector('#new-project-reference') || {}).value || ''),
-        Description: descriptionInput ? descriptionInput.value.trim() : '',
         CreatedAt: createdAtValue,
         AvailableDepartmentIDs: selectedDepartments,
         AllowedUserIDs: selectedUsers,
@@ -2340,13 +2292,6 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
       if (!project.Title) {
         this.showFormError(modal, 'نام پروژه را وارد کن.');
         titleInput.focus();
-        return;
-      }
-
-      if (quantityInput && quantityInput.value.trim() !== '' &&
-          (!Number.isFinite(project.Quantity) || project.Quantity < 1 || !Number.isInteger(project.Quantity))) {
-        this.showFormError(modal, 'تعداد پروژه باید یک عدد صحیح بزرگ‌تر از صفر باشد.');
-        quantityInput.focus();
         return;
       }
 
@@ -2724,9 +2669,6 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
         const permissions = router && Array.isArray(router.permissions) ? router.permissions : [];
         const canViewThisProject = !isDraft || !!(router && ((typeof router.isAdmin === 'function' && router.isAdmin()) || permissions.indexOf('PROJECT_VIEW') !== -1));
         const canEditThisProject = this.canEditProjects() || (isDraft && this.canCreateOrEditProjects());
-        const quantity = project.Quantity !== undefined && project.Quantity !== null && project.Quantity !== ''
-          ? 'تعداد: ' + this.escape(project.Quantity.toLocaleString ? project.Quantity.toLocaleString('fa-IR') : project.Quantity)
-          : '';
         const cardInformationHtml = (Array.isArray(project.CardInformation) ? project.CardInformation : []).map((info) => {
           const value = info && info.Value;
           let display = '';
@@ -2762,7 +2704,6 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
                   <span class="project-list-badge ${stateClass}"><span aria-hidden="true">●</span> ${this.escape(statusLabel)}</span>
                   <span class="project-list-badge">مرحله: ${this.escape(step)}</span>
                   ${project.CurrentStepStatus ? '<span class="project-list-badge">وضعیت مرحله: ' + this.escape(project.CurrentStepStatus) + '</span>' : ''}
-                  ${quantity ? '<span class="project-list-badge">' + quantity + '</span>' : ''}
                   ${cardInformationHtml}
                 </div>
                 <div class="project-list-card-activity">آخرین بروزرسانی: ${this.escape(this.formatDate(project.UpdatedAt))}</div>
