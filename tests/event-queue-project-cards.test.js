@@ -70,6 +70,8 @@ test('project status is represented by one narrow edge and a status badge', () =
   const source = read('js/modules/events.js');
   const css = read('css/events.css');
   assert.match(source, /queueLabel = queueKey === 'completed'/);
+  assert.match(source, /title="وضعیت پروژه">' \+ Events\.escape\(queueLabel\)/);
+  assert.doesNotMatch(source, /Events\.escape\(status\) \+ '<\\/span>/);
   assert.match(source, /event-queue-project-status-badge status-/);
   assert.match(css, /border-right:4px solid var\(--project-status-color/);
   assert.match(css, /queue-pending\{--project-status-color:#D99028\}/);
@@ -96,6 +98,6 @@ test('newly created project highlighting works without switching a removed queue
 
 test('event module asset versions are refreshed for the unified card UI', () => {
   const html = read('index.html');
-  assert.match(html, /css\/events\.css\?v=20261113-unified-project-cards-1/);
-  assert.match(html, /js\/modules\/events\.js\?v=20261113-unified-project-cards-1/);
+  assert.match(html, /css\/events\.css\?v=20261113-unified-project-cards-status-label-2/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261113-unified-project-cards-status-label-2/);
 });
