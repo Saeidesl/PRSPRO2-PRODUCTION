@@ -2101,3 +2101,34 @@
   #event-configured-forms-section,
   .event-forms-a4-close { transition: none !important; animation: none !important; }
 }
+
+
+/* پروژه‌ای که همین لحظه از مرکز رویدادها ساخته شده است */
+.event-queue-project.is-newly-created {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .16), var(--shadow-card, 0 8px 24px rgba(15, 23, 42, .10));
+  animation: event-created-project-pulse 1.4s ease-in-out 2;
+}
+.event-queue-register-button.is-next-action {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary, #fff);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, .18);
+  font-weight: 800;
+}
+.event-queue-register-button.is-next-action:focus-visible,
+.event-queue-project.is-newly-created:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 4px;
+}
+@keyframes event-created-project-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(59, 130, 246, .12), var(--shadow-card, 0 8px 24px rgba(15, 23, 42, .10)); }
+  50% { box-shadow: 0 0 0 6px rgba(59, 130, 246, .22), var(--shadow-card, 0 8px 24px rgba(15, 23, 42, .10)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-queue-project.is-newly-created,
+  .event-queue-register-button.is-next-action {
+    animation: none !important;
+    transition: none !important;
+  }
+}

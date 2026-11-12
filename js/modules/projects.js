@@ -1154,6 +1154,9 @@
       if (isDraftMode) modal.dataset.draftMode = 'true';
       if (isEditMode) modal.dataset.projectId = editProjectId;
       if (options && options.settingsOnly && isEditMode) modal.dataset.settingsOnly = 'true';
+      if (options && typeof options.onCreated === 'function' && !isEditMode) {
+        modal._onCreated = options.onCreated;
+      }
 
       modal.style.cssText = [
         'position:fixed',
@@ -2533,6 +2536,16 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
         }
         modal.remove();
 
+        // The project and any reference-copy work are complete. Follow-up UI work
+        // must never turn a successful project creation into a failed submission.
+        if (typeof modal._onCreated === 'function') {
+          try {
+            await modal._onCreated(created);
+          } catch (callbackError) {
+            console.warn('Project creation follow-up failed:', callbackError);
+          }
+        }
+
         const referenceSummary = created.ReferenceCopySummary || {};
         const copiedReferenceCount = Array.isArray(referenceSummary.copied) ? referenceSummary.copied.length : 0;
         const skippedReferenceFiles = Array.isArray(referenceSummary.skippedFiles) ? referenceSummary.skippedFiles.length : 0;
@@ -2555,7 +2568,9 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
                router.permissions.indexOf('PROJECT_CREATE') !== -1)))
         );
 
-        if (canViewProjects) {
+        // The Events page owns its targeted picker refresh through onCreated.
+        // Avoid an unrelated full project-list GET when this form was opened there.
+        if (canViewProjects && typeof modal._onCreated !== 'function') {
           this.loadProjects();
         }
 

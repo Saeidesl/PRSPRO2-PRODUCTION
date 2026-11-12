@@ -22,7 +22,8 @@ test('create-project action is gated by the existing PROJECT_CREATE permission',
 
 test('events page delegates project creation to the existing Projects form module', () => {
   assert.match(events, /target\.closest\('#events-create-project-button'\)/);
-  assert.match(events, /projectModule\.openCreateForm\(\)/);
+  assert.match(events, /projectModule\.openCreateForm\(null, \{/);
+  assert.match(events, /onCreated: function \(project\)/);
   assert.match(projects, /openCreateForm: async function \(editProject, options\)/);
   assert.match(projects, /PMS\.Api\.post\('\/projects', project\)/);
 });

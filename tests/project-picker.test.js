@@ -39,6 +39,6 @@ test('project picker supports filtering, empty state, accessibility, and respons
   assert.match(source, /aria-expanded/);
   assert.match(styles, /\.event-project-picker-panel/);
   assert.match(styles, /@media \(max-width: 640px\)/);
-  assert.match(index, /events\.css\?v=20261109-event-form-a4-confirm-1/);
-  assert.match(index, /events\.js\?v=20261112-page-state-events-1/);
+  assert.match(index, /events\.css\?v=20261112-created-project-focus-1/);
+  assert.match(index, /events\.js\?v=20261112-events-create-project-focus-1/);
 });

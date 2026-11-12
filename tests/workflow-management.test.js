@@ -49,7 +49,7 @@ test('event registration displays current workflow step requirements', () => {
 
 test('event module cache version is refreshed for workflow progress', () => {
   const html = read('index.html');
-  assert.match(html, /js\/modules\/events\.js\?v=20261112-page-state-events-1/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261112-events-create-project-focus-1/);
 });
 
 
