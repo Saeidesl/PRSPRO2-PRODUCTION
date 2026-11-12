@@ -7,6 +7,7 @@ const test = require('node:test');
 
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const api = read('js/core/api.js');
+const router = read('js/core/router.js');
 const projects = read('js/modules/projects.js');
 const events = read('js/modules/events.js');
 const attachments = read('js/modules/attachments.js');
@@ -32,4 +33,19 @@ test('events page caches its history, event types and lightweight project picker
 
 test('attachments page reuses its cached list and only fetches after expiry or invalidation', () => {
   assert.match(attachments, /Api\.getCached\([\s\S]*?'\/attachments',[\s\S]*?cacheTtl: 60000,[\s\S]*?refreshCached: false/);
+});
+
+test('navigation restores safe filters, tabs and scroll without persisting form drafts', () => {
+  assert.match(router, /getPageStateControls: function/);
+  assert.match(router, /capturePageState: function/);
+  assert.match(router, /restorePageState: function/);
+  assert.match(router, /pageStates = Object\.create\(null\)/);
+  assert.match(router, /scrollY: Number\(window\.scrollY \|\| 0\)/);
+  assert.match(router, /activeQueue/);
+  assert.doesNotMatch(router, /localStorage\.setItem\([^\n]*pageStates/);
+});
+
+test('dynamic event filters retain their previous selection after options load', () => {
+  assert.match(events, /getPageStateValue\(select\.id\)/);
+  assert.match(events, /const previous = select\.value \|\| remembered/);
 });
