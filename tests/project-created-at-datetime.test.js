@@ -22,7 +22,7 @@ test('new project datetime is converted to ISO UTC using the same browser-local 
   assert.match(projects, /createdAtInput\.type === 'datetime-local'/);
   assert.match(projects, /const createdAtDate = new Date\(createdAtLocal\)/);
   assert.match(projects, /createdAtValue = createdAtDate\.toISOString\(\)/);
-  assert.match(index, /projects\.js\?v=20261111-project-created-at-datetime-3/);
+  assert.match(index, /projects\.js\?v=20261111-shared-cache-projects-1/);
   assert.match(projects, /CreatedAt: createdAtValue/);
 });
 
