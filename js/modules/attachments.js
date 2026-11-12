@@ -626,51 +626,65 @@
     },
 
 
+    loadPreviewLibrary: function (url, globalName) {
+      if (window[globalName]) return Promise.resolve(window[globalName]);
+      const key = 'pms-preview-' + globalName;
+      if (window[key]) return window[key];
+      window[key] = new Promise(function (resolve, reject) {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = true;
+        script.onload = function () {
+          if (window[globalName]) resolve(window[globalName]);
+          else reject(new Error('کتابخانه پیش‌نمایش بارگذاری شد اما آماده نیست.'));
+        };
+        script.onerror = function () {
+          delete window[key];
+          reject(new Error('بارگذاری ابزار پیش‌نمایش فایل ناموفق بود.'));
+        };
+        document.head.appendChild(script);
+      });
+      return window[key];
+    },
+
+    fetchAttachmentBlob: async function (attachmentId) {
+      const response = await Api.get('/attachments/' + encodeURIComponent(attachmentId) + '/download');
+      const data = Api.extractData(response) || {};
+      const remoteUrl = data.url || data.downloadUrl || data.DownloadUrl;
+      if (remoteUrl) return { url: remoteUrl, data: data };
+      const base64 = data.Base64 || data.base64;
+      if (!base64) throw new Error('سرور محتوای فایل را برنگرداند.');
+      const mimeType = data.MimeType || data.mimeType || 'application/octet-stream';
+      const cleanBase64 = String(base64).replace(/^data:[^,]*;base64,/, '');
+      const binary = window.atob(cleanBase64);
+      const chunks = [];
+      const chunkSize = 8192;
+      for (let offset = 0; offset < binary.length; offset += chunkSize) {
+        const length = Math.min(chunkSize, binary.length - offset);
+        const bytes = new Uint8Array(length);
+        for (let i = 0; i < length; i += 1) bytes[i] = binary.charCodeAt(i);
+        chunks.push(bytes);
+      }
+      return {
+        blob: new Blob(chunks, { type: mimeType }),
+        data: data
+      };
+    },
+
     download: async function (attachmentId) {
       if (!attachmentId) {
         alert('شناسه فایل مشخص نیست.');
         return;
       }
-
+      let objectUrl = '';
       try {
-        // Backend download endpoint returns file metadata and Base64 content.
-        const response = await Api.get(
-          '/attachments/' +
-          encodeURIComponent(attachmentId) +
-          '/download'
-        );
-        const data = Api.extractData(response) || {};
-
-        // Keep compatibility with a URL-based response if the backend changes.
-        const url = data.url || data.downloadUrl || data.DownloadUrl;
-        if (url) {
-          window.open(url, '_blank', 'noopener');
+        const result = await this.fetchAttachmentBlob(attachmentId);
+        if (result.url) {
+          window.open(result.url, '_blank', 'noopener');
           return;
         }
-
-        const base64 = data.Base64 || data.base64;
-        if (!base64) {
-          throw new Error('سرور اطلاعات دانلود یا محتوای فایل را برنگرداند.');
-        }
-
-        const mimeType = data.MimeType || data.mimeType || 'application/octet-stream';
-        const fileName = data.FileName || data.fileName || ('attachment-' + attachmentId);
-        const cleanBase64 = String(base64).replace(/^data:[^,]*;base64,/, '');
-        const binary = window.atob(cleanBase64);
-        const chunks = [];
-        const chunkSize = 8192;
-
-        for (let offset = 0; offset < binary.length; offset += chunkSize) {
-          const length = Math.min(chunkSize, binary.length - offset);
-          const bytes = new Uint8Array(length);
-          for (let i = 0; i < length; i++) {
-            bytes[i] = binary.charCodeAt(offset + i);
-          }
-          chunks.push(bytes);
-        }
-
-        const blob = new Blob(chunks, { type: mimeType });
-        const objectUrl = window.URL.createObjectURL(blob);
+        const fileName = result.data.FileName || result.data.fileName || ('attachment-' + attachmentId);
+        objectUrl = window.URL.createObjectURL(result.blob);
         const link = document.createElement('a');
         link.href = objectUrl;
         link.download = fileName;
@@ -678,13 +692,113 @@
         document.body.appendChild(link);
         link.click();
         link.remove();
-
-        window.setTimeout(function () {
-          window.URL.revokeObjectURL(objectUrl);
-        }, 1000);
       } catch (error) {
         console.error('Attachment Download Error:', error);
         alert(error.message || 'خطا در دریافت فایل.');
+      } finally {
+        if (objectUrl) window.setTimeout(function () { window.URL.revokeObjectURL(objectUrl); }, 30000);
+      }
+    },
+
+    preview: async function (attachmentId) {
+      if (!attachmentId) return;
+      const existing = document.getElementById('attachment-preview-modal');
+      if (existing) existing.remove();
+      const modal = document.createElement('div');
+      modal.id = 'attachment-preview-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = '<section class="modal" role="dialog" aria-modal="true" aria-labelledby="attachment-preview-title" style="width:min(1100px,96vw);height:min(92vh,900px);display:flex;flex-direction:column;overflow:hidden">' +
+        '<header class="modal-header"><h3 id="attachment-preview-title">پیش‌نمایش فایل</h3><div style="display:flex;gap:8px;align-items:center"><button type="button" class="btn btn-secondary" id="attachment-preview-download">دانلود فایل</button><button type="button" class="modal-close" id="attachment-preview-close" aria-label="بستن">×</button></div></header>' +
+        '<div id="attachment-preview-content" style="flex:1;min-height:0;overflow:auto;padding:12px;display:flex;align-items:center;justify-content:center"><div class="loading-spinner" aria-label="در حال دریافت فایل"></div></div></section>';
+      document.body.appendChild(modal);
+      const content = modal.querySelector('#attachment-preview-content');
+      const close = function () {
+        modal.remove();
+        if (modal._objectUrl) window.URL.revokeObjectURL(modal._objectUrl);
+        document.removeEventListener('keydown', onKeyDown);
+      };
+      const onKeyDown = function (event) { if (event.key === 'Escape') close(); };
+      modal.querySelector('#attachment-preview-close').addEventListener('click', close);
+      modal.addEventListener('click', function (event) { if (event.target === modal) close(); });
+      document.addEventListener('keydown', onKeyDown);
+      modal.querySelector('#attachment-preview-download').addEventListener('click', function () {
+        MODULE.download(attachmentId);
+      });
+      try {
+        const result = await this.fetchAttachmentBlob(attachmentId);
+        if (!document.body.contains(modal)) return;
+        if (result.url) {
+          content.innerHTML = '<p style="text-align:center">این فایل به‌صورت آدرس خارجی ارائه شده است. برای مشاهده، آن را در برگه جدید باز کنید.</p>';
+          const open = document.createElement('a');
+          open.href = result.url;
+          open.target = '_blank';
+          open.rel = 'noopener noreferrer';
+          open.className = 'btn btn-primary';
+          open.textContent = 'بازکردن فایل';
+          content.appendChild(open);
+          return;
+        }
+        const blob = result.blob;
+        const data = result.data || {};
+        const fileName = String(data.FileName || data.fileName || 'file');
+        const mime = String(data.MimeType || data.mimeType || blob.type || '').toLowerCase();
+        const extension = (fileName.split('.').pop() || '').toLowerCase();
+        const url = window.URL.createObjectURL(blob);
+        modal._objectUrl = url;
+        modal.querySelector('#attachment-preview-title').textContent = fileName;
+        if (mime.indexOf('image/') === 0 || ['jpg','jpeg','png','webp','gif'].indexOf(extension) !== -1) {
+          const image = document.createElement('img');
+          image.src = url;
+          image.alt = fileName;
+          image.style.cssText = 'display:block;max-width:100%;max-height:100%;object-fit:contain;margin:auto';
+          content.appendChild(image);
+          image.addEventListener('click', function () {
+            image.style.maxHeight = image.style.maxHeight === '100%' ? 'none' : '100%';
+          });
+        } else if (mime === 'application/pdf' || extension === 'pdf') {
+          const frame = document.createElement('iframe');
+          frame.src = url + '#toolbar=1&navpanes=0';
+          frame.title = fileName;
+          frame.style.cssText = 'width:100%;height:100%;min-height:65vh;border:0;background:#fff';
+          content.appendChild(frame);
+        } else if (extension === 'docx' || mime.indexOf('wordprocessingml') !== -1) {
+          const mammoth = await this.loadPreviewLibrary('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js', 'mammoth');
+          const arrayBuffer = await blob.arrayBuffer();
+          const rendered = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+          content.style.display = 'block';
+          content.style.direction = 'rtl';
+          content.style.textAlign = 'right';
+          content.innerHTML = '<article class="attachment-docx-preview" style="max-width:850px;margin:0 auto;padding:24px;background:#fff;color:#222;line-height:1.9"></article>';
+          content.querySelector('article').innerHTML = rendered.value || '<p>محتوای متنی قابل نمایش نیست.</p>';
+        } else if (extension === 'xlsx' || extension === 'xls' || mime.indexOf('spreadsheet') !== -1 || mime.indexOf('excel') !== -1) {
+          const XLSX = await this.loadPreviewLibrary('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
+          const workbook = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
+          content.style.display = 'block';
+          content.style.direction = 'rtl';
+          content.innerHTML = '';
+          workbook.SheetNames.forEach(function (sheetName) {
+            const heading = document.createElement('h4');
+            heading.textContent = sheetName;
+            content.appendChild(heading);
+            const table = document.createElement('div');
+            table.style.cssText = 'overflow:auto;margin-bottom:24px;background:var(--color-surface)';
+            const html = XLSX.utils.sheet_to_html(workbook.Sheets[sheetName], { editable: false });
+            table.innerHTML = html;
+            const renderedTable = table.querySelector('table');
+            if (renderedTable) renderedTable.style.cssText = 'border-collapse:collapse;width:100%;direction:rtl';
+            content.appendChild(table);
+          });
+        } else {
+          content.innerHTML = '<div style="text-align:center"><p>پیش‌نمایش این نوع فایل در مرورگر پشتیبانی نمی‌شود.</p><p>می‌توانید فایل اصلی را با دکمه «دانلود فایل» دریافت کنید.</p></div>';
+        }
+      } catch (error) {
+        console.error('Attachment Preview Error:', error);
+        if (document.body.contains(modal)) {
+          content.innerHTML = '';
+          const message = document.createElement('p');
+          message.textContent = error.message || 'نمایش فایل ناموفق بود. لطفاً فایل را دانلود کنید.';
+          content.appendChild(message);
+        }
       }
     },
 
@@ -1288,7 +1402,7 @@
         });
         container.querySelectorAll('[data-attachment-open]').forEach(function (button) {
           button.addEventListener('click', function () {
-            MODULE.download(button.getAttribute('data-attachment-open'));
+            MODULE.preview(button.getAttribute('data-attachment-open'));
           });
         });
         return;
