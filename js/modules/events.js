@@ -222,7 +222,11 @@
             }
             return;
           }
-          projectModule.openCreateForm();
+          projectModule.openCreateForm(null, {
+            onCreated: function (project) {
+              return Events.handleCreatedProject(project);
+            }
+          });
           return;
         }
 
@@ -1038,6 +1042,75 @@
         if (element) element.value = id === 'event-history-scope' ? 'mine' : '';
       });
       this.applyFilters();
+    },
+
+    handleCreatedProject: async function (project) {
+      const projectId = this.idOf(project);
+      if (!projectId) return;
+
+      const cacheKey = PROJECTS_CACHE_KEY + '_event_picker';
+      const sessionToken = PMS.Api.getToken() || '';
+
+      try {
+        // Bypass the just-invalidated shared cache exactly once so the new
+        // project is classified by the same server-backed picker projection.
+        PMS.Api.invalidate(cacheKey);
+        this.projectOptionsToken = '';
+        const freshProjects = await PMS.Api.getFresh('/projects', cacheKey, {
+          query: { view: 'event-picker' },
+          trackSync: false
+        });
+        this.projects = this.normalize(freshProjects);
+        this.projectsLoaded = true;
+        this.projectOptionsToken = sessionToken;
+
+        if (!this.findById(this.projects, projectId)) {
+          this.projects.unshift(project);
+        }
+        this.renderFilters();
+        this.applyFilters();
+      } catch (refreshError) {
+        // The POST has already succeeded. Keep the returned project visible
+        // as a local fallback and never surface a false "creation failed".
+        console.warn('Created project queue refresh failed:', refreshError);
+        this.projects = this.projects || [];
+        if (!this.findById(this.projects, projectId)) this.projects.unshift(project);
+        this.projectsLoaded = true;
+        this.renderFilters();
+        this.applyFilters();
+      }
+
+      const card = Array.from(document.querySelectorAll('[data-event-project-card]'))
+        .find(function (element) {
+          return String(element.getAttribute('data-event-project-card') || '') === projectId;
+        });
+      if (!card) return;
+
+      const queue = String(card.getAttribute('data-queue') || 'pending');
+      this.activateQueue(queue);
+      card.classList.add('is-newly-created');
+      card.setAttribute('tabindex', '-1');
+
+      const registerButton = card.querySelector('.event-queue-register-button');
+      if (registerButton) registerButton.classList.add('is-next-action');
+
+      const reducedMotion = !!(window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      if (typeof card.scrollIntoView === 'function') {
+        card.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+      }
+
+      const focusTarget = registerButton || card;
+      try {
+        focusTarget.focus({ preventScroll: true });
+      } catch (focusError) {
+        focusTarget.focus();
+      }
+
+      window.setTimeout(function () {
+        if (card.isConnected) card.classList.remove('is-newly-created');
+        if (registerButton && registerButton.isConnected) registerButton.classList.remove('is-next-action');
+      }, 4200);
     },
 
     activateQueue: function (key) {
