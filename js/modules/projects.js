@@ -1230,8 +1230,8 @@
 
           <form id="project-create-form" class="project-form-layout">
             <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
-              <label for="new-project-code">کد پروژه <span style="color:var(--color-danger);">*</span></label>
-              <input type="text" id="new-project-code" name="ProjectCode" required maxlength="100" autocomplete="off" placeholder="کد موقت یا قطعی پروژه را وارد کنید" style="width:100%;box-sizing:border-box;">
+              <label for="new-project-code">کد موقت پروژه <span style="color:var(--color-danger);">*</span></label>
+              <input type="text" id="new-project-code" name="ProjectCode" required maxlength="100" autocomplete="off" placeholder="کد موقت پروژه را وارد کنید" style="width:100%;box-sizing:border-box;">
               <small style="display:block;margin-top:5px;color:var(--color-text-secondary);">فعلاً کد موقت دلخواه وارد کنید؛ هر زمان کد قطعی مشخص شد، همین فیلد را ویرایش کنید.</small>
             </div>
             <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
@@ -1391,6 +1391,18 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
       document.body.appendChild(modal);
       this.modal = modal;
 
+      // New projects start with the current local date and time; the user can
+      // adjust it before saving. Keep legacy date-only edit behavior unchanged.
+      if (!isEditMode) {
+        const createdAtField = modal.querySelector('#new-project-created-at');
+        if (createdAtField && !createdAtField.value) {
+          const now = new Date();
+          const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+            .toISOString().slice(0, 16);
+          createdAtField.value = localDateTime;
+        }
+      }
+
       // Ensure the workflow selector is visibly present in the standard new-project form.
       const workflowField = modal.querySelector('[data-project-workflow-field]');
       const projectTitleField = modal.querySelector('#new-project-title');
@@ -1414,7 +1426,7 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
         '<div id="project-create-settings-content"></div>' +
         '<div id="project-settings-error" class="alert alert-danger" hidden style="margin-top:12px"></div>' +
         '<div style="display:flex;justify-content:flex-start;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--color-border)"><button type="button" class="btn btn-primary" data-settings-save>ذخیره تنظیمات</button><button type="button" class="btn btn-light" data-settings-cancel>بستن</button></div></div>';
-      modal.appendChild(settingsModal);
+      if (isEditMode) modal.appendChild(settingsModal);
       const editReadiness = { lookupsLoaded: !isEditMode, attachmentsLoaded: !isEditMode };
       const editSubmitButton = modal.querySelector('#project-create-submit');
       const updateEditSubmitReadiness = () => {
