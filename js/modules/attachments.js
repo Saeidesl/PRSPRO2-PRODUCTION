@@ -1157,6 +1157,170 @@
   };
 
 
+
+  // Project-oriented attachment workspace; keeps the existing API, cache and upload flow.
+  MODULE.state.projects = [];
+  MODULE.state.events = [];
+  MODULE.state.selectedProjectId = '';
+
+  MODULE.ensureProjectWorkspaceStyles = function () {
+    if (document.getElementById('attachments-project-workspace-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'attachments-project-workspace-styles';
+    style.textContent = [
+      '#attachments-project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:14px}',
+      '.attachment-project-card{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0;padding:16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);color:var(--color-text);text-align:right;cursor:pointer;transition:.18s}',
+      '.attachment-project-card:hover{border-color:var(--color-primary);box-shadow:var(--shadow-md);transform:translateY(-1px)}',
+      '.attachment-project-card:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}',
+      '.attachment-project-card-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--color-surface-hover);font-size:22px}',
+      '.attachment-project-card-title{font-weight:700;font-size:14px;overflow-wrap:anywhere}',
+      '.attachment-project-card-code,.attachment-project-card-meta{font-size:12px;color:var(--color-text-secondary)}',
+      '.attachment-project-card-meta{display:flex;justify-content:space-between;width:100%;gap:8px;margin-top:4px}',
+      '.attachment-project-workspace-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}',
+      '.attachment-project-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px}',
+      '.attachment-project-file{min-width:0;padding:12px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface)}',
+      '.attachment-project-file-name{font-size:13px;font-weight:600;overflow-wrap:anywhere;margin-top:8px}',
+      '.attachment-project-file-meta{font-size:11px;color:var(--color-text-secondary);margin-top:5px}',
+      '@media(max-width:600px){#attachments-project-grid,.attachment-project-files{grid-template-columns:1fr}}'
+    ].join('');
+    document.head.appendChild(style);
+  };
+
+  MODULE.projectId = function (item) {
+    return String(item && (item.ID || item.Id || item.id || item.ProjectID || item.projectId) || '');
+  };
+  MODULE.projectTitle = function (item) {
+    return String(item && (item.Title || item.ProjectName || item.Name || item.TitleName) || 'پروژه بدون عنوان');
+  };
+  MODULE.projectCode = function (item) {
+    return String(item && (item.ProjectCode || item.Code || '') || '');
+  };
+  MODULE.projectFiles = function (projectId) {
+    const eventIds = Object.create(null);
+    (MODULE.state.events || []).forEach(function (event) {
+      const parentId = String(event.ProjectID || event.ProjectId || event.projectId || '');
+      const eventId = String(event.ID || event.Id || event.id || event.EventID || '');
+      if (parentId === String(projectId) && eventId) eventIds[eventId] = true;
+    });
+    return MODULE.state.attachments.filter(function (item) {
+      const type = String(item.EntityType || item.entityType || '').toUpperCase();
+      const entityId = String(item.EntityID || item.entityID || '');
+      return (type === 'PROJECT' && entityId === String(projectId)) ||
+        (type === 'EVENT' && !!eventIds[entityId]);
+    });
+  };
+
+  const originalLoad = MODULE.load;
+  MODULE.load = async function () {
+    await originalLoad.call(MODULE);
+    try {
+      const projectResponse = await Api.getCached('/projects', Cache.keys.PROJECTS || 'projects', {
+        cacheTtl: 60000, refreshCached: false
+      });
+      MODULE.state.projects = MODULE.normalize(projectResponse && projectResponse.data !== undefined
+        ? projectResponse.data : projectResponse);
+    } catch (error) {
+      MODULE.state.projects = [];
+      console.warn('Attachment project list unavailable:', error);
+    }
+    try {
+      const eventResponse = await Api.getCached('/events', Cache.keys.EVENTS || 'events', {
+        cacheTtl: 60000, refreshCached: false
+      });
+      MODULE.state.events = MODULE.normalize(eventResponse && eventResponse.data !== undefined
+        ? eventResponse.data : eventResponse);
+    } catch (error) {
+      MODULE.state.events = [];
+    }
+    MODULE.render();
+  };
+
+  MODULE.render = function () {
+    const container = document.getElementById('attachments-table-container');
+    const empty = document.getElementById('attachments-empty');
+    if (!container) return;
+    MODULE.ensureProjectWorkspaceStyles();
+    MODULE.showLoading(false);
+    MODULE.hideError();
+
+    if (MODULE.state.selectedProjectId) {
+      const project = MODULE.state.projects.find(function (item) {
+        return MODULE.projectId(item) === String(MODULE.state.selectedProjectId);
+      });
+      if (!project) MODULE.state.selectedProjectId = '';
+      else {
+        const files = MODULE.projectFiles(MODULE.state.selectedProjectId);
+        const fileCards = files.map(function (item) {
+          const id = String(item.ID || item.id || '');
+          const mime = String(item.MimeType || item.mimeType || '').toLowerCase();
+          const icon = mime.indexOf('image/') === 0 ? '🖼️' : (mime === 'application/pdf' ? '📕' : '📄');
+          return '<article class="attachment-project-file"><div class="attachment-project-card-icon" aria-hidden="true">' + icon + '</div>' +
+            '<div class="attachment-project-file-name">' + MODULE.escapeHtml(item.FileName || item.fileName || 'بدون نام') + '</div>' +
+            '<div class="attachment-project-file-meta">' + MODULE.formatFileSize(item.FileSize || item.fileSize) + ' · ' +
+            MODULE.escapeHtml(item.UploadedAt || item.uploadedAt || '') + '</div>' +
+            '<div style="margin-top:10px"><button type="button" class="btn btn-sm btn-light" data-attachment-open="' +
+            MODULE.escapeHtml(id) + '">مشاهده فایل</button></div></article>';
+        }).join('');
+        container.innerHTML = '<section><header class="attachment-project-workspace-header"><div><h3 style="margin:0">' +
+          MODULE.escapeHtml(MODULE.projectTitle(project)) + '</h3><small>کد پروژه: ' +
+          MODULE.escapeHtml(MODULE.projectCode(project) || '—') + ' · ' + files.length + ' فایل</small></div>' +
+          '<button type="button" class="btn btn-secondary" id="attachments-back-to-projects">← بازگشت به پروژه‌ها</button></header>' +
+          (files.length ? '<div class="attachment-project-files">' + fileCards + '</div>' :
+            '<div class="table-empty">برای این پروژه فایلی ثبت نشده است.</div>') + '</section>';
+        container.hidden = false;
+        if (empty) empty.hidden = true;
+        const back = container.querySelector('#attachments-back-to-projects');
+        if (back) back.addEventListener('click', function () {
+          MODULE.state.selectedProjectId = '';
+          MODULE.render();
+        });
+        container.querySelectorAll('[data-attachment-open]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            MODULE.download(button.getAttribute('data-attachment-open'));
+          });
+        });
+        return;
+      }
+    }
+
+    const search = String(MODULE.state.search || '').toLowerCase();
+    const projects = MODULE.state.projects.filter(function (project) {
+      const id = MODULE.projectId(project);
+      const files = MODULE.projectFiles(id);
+      const title = MODULE.projectTitle(project).toLowerCase();
+      const code = MODULE.projectCode(project).toLowerCase();
+      return (!search || title.indexOf(search) !== -1 || code.indexOf(search) !== -1) &&
+        (!MODULE.state.filter || files.length > 0);
+    });
+    if (!projects.length) {
+      container.innerHTML = '';
+      container.hidden = true;
+      if (empty) {
+        empty.textContent = search ? 'پروژه‌ای با این مشخصات پیدا نشد.' :
+          'پروژه‌ای دارای فایل برای نمایش وجود ندارد.';
+        empty.hidden = false;
+      }
+      return;
+    }
+    if (empty) empty.hidden = true;
+    container.innerHTML = '<div id="attachments-project-grid">' + projects.map(function (project) {
+      const id = MODULE.projectId(project);
+      const count = MODULE.projectFiles(id).length;
+      return '<button type="button" class="attachment-project-card" data-project-id="' + MODULE.escapeHtml(id) + '">' +
+        '<span class="attachment-project-card-icon" aria-hidden="true">📁</span>' +
+        '<span class="attachment-project-card-title">' + MODULE.escapeHtml(MODULE.projectTitle(project)) + '</span>' +
+        '<span class="attachment-project-card-code">کد پروژه: ' + MODULE.escapeHtml(MODULE.projectCode(project) || 'بدون کد') + '</span>' +
+        '<span class="attachment-project-card-meta"><span>' + count + ' فایل</span><span>مشاهده فایل‌ها ←</span></span></button>';
+    }).join('') + '</div>';
+    container.hidden = false;
+    container.querySelectorAll('[data-project-id]').forEach(function (card) {
+      card.addEventListener('click', function () {
+        MODULE.state.selectedProjectId = card.getAttribute('data-project-id') || '';
+        MODULE.render();
+      });
+    });
+  };
+
    window.PMS.Attachments =
     MODULE;
 
