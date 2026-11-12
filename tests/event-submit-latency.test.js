@@ -39,5 +39,5 @@ test('multiple images upload in bounded batches and preserve selection order', (
 });
 
 test('event submit asset cache-busting version is refreshed', () => {
-  assert.match(index, /js\/modules\/events\.js\?v=20261113-unified-project-cards-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261113-unified-project-cards-status-label-2/);
 });

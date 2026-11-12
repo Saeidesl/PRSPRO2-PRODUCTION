@@ -1160,7 +1160,7 @@
         const queueKey = activity && activity.completed ? 'completed' : activity && activity.hasRelated ? 'progress' : 'pending';
         const queueLabel = queueKey === 'completed' ? 'تکمیل‌شده' : queueKey === 'progress' ? 'در حال انجام' : 'در انتظار اقدام';
         const tone = queueKey === 'completed' ? 'completed' : queueKey === 'progress' ? 'active' : 'waiting';
-        const status = String(project.CurrentStepStatus || project.Status || queueLabel).trim();
+
         const latest = latestEventByProject.get(id);
         const latestEvent = latest && latest.event;
         const eventType = latestEvent ? (latestEvent.EventTypeName || (typeMap.get(String(latestEvent.EventTypeID || '')) || {}).Name ||
@@ -1179,7 +1179,7 @@
           '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" role="button" tabindex="0" aria-label="نمایش بزرگ تصویر پروژه" hidden><span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span></div>' +
           '<div class="event-queue-project-copy"><span class="event-queue-project-code-label">کد پروژه</span><strong class="event-queue-project-code">' + Events.escape(code) +
           '</strong><span class="event-queue-project-title">' + Events.escape(title) + '</span><span class="event-queue-project-status-badge status-' + tone +
-          '" title="وضعیت پروژه">' + Events.escape(status) + '</span></div></div>' +
+          '" title="وضعیت پروژه">' + Events.escape(queueLabel) + '</span></div></div>' +
           (latestEvent ? '<div class="event-queue-latest-event"><span class="event-queue-latest-label">آخرین رویداد</span><strong>' + Events.escape(eventType) +
           '</strong><span>' + Events.escape(eventCreator) + (eventDate ? ' · ' + Events.escape(eventDate) : '') + '</span></div>' :
           '<div class="event-queue-latest-event is-empty"><span class="event-queue-latest-label">آخرین رویداد</span><span>هنوز رویدادی ثبت نشده است.</span></div>') +
