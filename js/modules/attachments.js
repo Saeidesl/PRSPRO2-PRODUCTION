@@ -880,6 +880,11 @@
           if (kind === 'PROJECT' && window.PMS && window.PMS.Projects &&
               typeof window.PMS.Projects.invalidateProjectCardAttachmentMetadata === 'function') {
             window.PMS.Projects.invalidateProjectCardAttachmentMetadata(entityId);
+          } else if (kind === 'EVENT' && window.PMS && window.PMS.Api) {
+            window.PMS.Api.invalidateMany([
+              window.PMS.Cache.keys.EVENTS,
+              window.PMS.Cache.keys.DASHBOARD
+            ]);
           }
           status.textContent = 'فایل با موفقیت بارگذاری شد.';
           await MODULE.load();
