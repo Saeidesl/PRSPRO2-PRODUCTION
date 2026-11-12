@@ -40,5 +40,5 @@ test('event card styling follows the project list responsive grid and theme toke
   assert.match(css, /var\(--color-border\)/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(index, /events\.css\?v=20261109-event-form-a4-confirm-1/);
-  assert.match(index, /modules\/events\.js\?v=20261109-event-form-a4-confirm-1/);
+  assert.match(index, /modules\/events\.js\?v=20261112-page-state-events-1/);
 });
