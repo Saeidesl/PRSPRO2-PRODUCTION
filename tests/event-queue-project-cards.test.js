@@ -98,6 +98,6 @@ test('newly created project highlighting works without switching a removed queue
 
 test('event module asset versions are refreshed for the unified card UI', () => {
   const html = read('index.html');
-  assert.match(html, /css\/events\.css\?v=20261113-unified-project-cards-status-label-2/);
-  assert.match(html, /js\/modules\/events\.js\?v=20261113-unified-project-cards-status-label-2/);
+  assert.match(html, /css\/events\.css\?v=20261113-three-project-statuses-1/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261113-three-project-statuses-1/);
 });
