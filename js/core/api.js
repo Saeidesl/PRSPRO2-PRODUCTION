@@ -480,10 +480,22 @@
         if (!metadata || !metadata.expiresAt) cached = null;
       }
 
-      const freshPromise = this.get(path, options);
+      const freshPromise = cached !== null && options.refreshCached === false
+        ? null
+        : this.get(path, options);
 
       if (cached !== null) {
         this.markCacheShown();
+
+        // Navigation cache hits must not contact the backend unless the caller
+        // explicitly opts into background revalidation.
+        if (options.refreshCached === false) {
+          return {
+            data: cached,
+            cached: true,
+            refreshing: false
+          };
+        }
 
         freshPromise
           .then(function (response) {

@@ -13,7 +13,7 @@ test('project creators can load their own draft projects without PROJECT_VIEW', 
   assert.ok(source.includes("permissions.indexOf('PROJECT_VIEW') !== -1 ||"));
   assert.ok(source.includes("permissions.indexOf('PROJECT_CREATE') !== -1;"));
   assert.ok(source.includes("if (canLoadProjectOptions) {"));
-  assert.ok(source.includes("PMS.Api.get('/projects'"));
+  assert.ok(source.includes("PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY + '_event_picker'"));
   assert.ok(source.includes("query: { view: 'event-picker' }"));
 });
 

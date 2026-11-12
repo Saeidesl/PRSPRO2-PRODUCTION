@@ -158,16 +158,18 @@
 
       try {
 
-        const response =
-          await Api.get(
-            '/attachments'
-          );
+        const result = await Api.getCached(
+          '/attachments',
+          this.cacheKey,
+          {
+            cacheTtl: 60000,
+            refreshCached: false
+          }
+        );
 
-
-        const data =
-          Api.extractData(
-            response
-          );
+        const data = result && result.data !== undefined
+          ? result.data
+          : result;
 
 
         const attachments =
@@ -180,15 +182,13 @@
           attachments;
 
 
-        if (Cache) {
-
+        if (Cache && result && result.cached === false) {
           Cache.set(
             this.cacheKey,
-            attachments
+            attachments,
+            { ttl: 60000 }
           );
-
         }
-
 
         this.render();
 

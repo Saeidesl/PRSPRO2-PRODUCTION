@@ -508,6 +508,7 @@
           requests.push(
             PMS.Api.getCached('/events', CACHE_KEY, {
               cacheTtl: 15000,
+              refreshCached: false,
               onRefresh: function (data) {
                 Events.events = Events.normalize(data);
                 Events.eventsLoaded = true;
@@ -525,13 +526,11 @@
         if (canLoadProjectOptions) {
           resultKeys.push('projects');
           requests.push(
-            PMS.Api.get('/projects', {
-              query: { view: 'event-picker' }
-            }).then(function (response) {
-              return {
-                data: PMS.Api.extractData(response),
-                cached: false
-              };
+            PMS.Api.getCached('/projects', PROJECTS_CACHE_KEY + '_event_picker', {
+              query: { view: 'event-picker' },
+              cacheTtl: 30000,
+              refreshCached: false,
+              trackSync: false
             })
           );
         }
@@ -541,6 +540,7 @@
           requests.push(
             PMS.Api.getCached('/event-types', EVENT_TYPES_CACHE_KEY, {
               cacheTtl: 60000,
+              refreshCached: false,
               onRefresh: function (data) {
                 Events.eventTypes = Events.normalize(data);
                 Events.scheduleRefreshRender();
@@ -551,23 +551,27 @@
 
         const results = await Promise.all(requests);
         let hasFreshResult = false;
+        let hasPickerResult = false;
         results.forEach(function (result, index) {
-          if (!result || result.cached !== false) return;
+          if (!result) return;
 
-          hasFreshResult = true;
           const key = resultKeys[index];
-          if (key === 'events') { Events.events = Events.normalize(result.data); Events.eventsLoaded = true; }
           if (key === 'projects') {
             Events.projects = Events.normalize(result.data);
             Events.projectsLoaded = true;
             Events.projectOptionsToken = currentToken;
+            hasPickerResult = true;
           }
-          if (key === 'types') Events.eventTypes = Events.normalize(result.data);
+          if (result.cached === false) {
+            hasFreshResult = true;
+            if (key === 'events') { Events.events = Events.normalize(result.data); Events.eventsLoaded = true; }
+            if (key === 'types') Events.eventTypes = Events.normalize(result.data);
+          }
         });
 
-        // Cache hits were already rendered above. Only render here when this
-        // request batch supplied data that was not available in the cache.
-        if (hasFreshResult) {
+        // A cached picker result may be the only project data available on
+        // this visit, so render it once after resolving the cache lookup.
+        if (hasFreshResult || hasPickerResult) {
           this.renderFilters();
           this.applyFilters();
         }
@@ -660,7 +664,10 @@
         })]);
         if (select.dataset.pmsOptionsSignature === signature) return;
 
-        const previous = select.value;
+        const remembered = PMS.Router && typeof PMS.Router.getPageStateValue === 'function'
+          ? PMS.Router.getPageStateValue(select.id)
+          : '';
+        const previous = select.value || remembered;
         const fragment = document.createDocumentFragment();
 
         const first = document.createElement('option');
@@ -3826,6 +3833,7 @@
         PMS.Api.invalidateMany([
           CACHE_KEY,
           PROJECTS_CACHE_KEY,
+          PROJECTS_CACHE_KEY + '_event_picker',
           EVENT_TYPES_CACHE_KEY,
           'dashboard_projects_lookup',
           'dashboard_shared_lookups_v2',

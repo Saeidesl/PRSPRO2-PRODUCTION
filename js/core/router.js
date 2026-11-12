@@ -33,6 +33,7 @@
     },
 
     currentPage: null,
+    pageStates: Object.create(null),
     layoutRendered: false,
     handling: false,
     pending: false,
@@ -218,7 +219,8 @@ getBaseUrl: function () {
 
     resetAuthState: function () {
       Router.authGeneration += 1;
-      Router.permissions = [];
+      Router.pageStates = Object.create(null);
+      Router.permissions = []
       Router.permissionsLoaded = false;
       Router.permissionsRequest = null;
       Router.serverIsAdmin = false;
@@ -450,6 +452,124 @@ getBaseUrl: function () {
       }
     },
 
+    // Keep only safe, page-level navigation preferences in memory.
+    // Form drafts, passwords, files and modal contents are deliberately excluded.
+    getPageStateControls: function (page) {
+      const controls = {
+        projects: ['project-status-filter', 'project-search'],
+        events: [
+          'events-project-search', 'event-history-sort', 'event-search',
+          'event-history-scope', 'event-project-filter', 'event-creator-filter',
+          'event-department-filter', 'event-type-filter', 'event-status-filter',
+          'event-created-from', 'event-created-to', 'event-occurred-from', 'event-occurred-to'
+        ],
+        attachments: ['attachment-entity-filter', 'attachment-search']
+      };
+      return controls[page] || [];
+    },
+
+    capturePageState: function () {
+      const page = String(Router.currentPage || '').split('/')[0];
+      const ids = Router.getPageStateControls(page);
+      if (!ids.length) return;
+
+      const values = {};
+      ids.forEach(function (id) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        values[id] = element.type === 'checkbox' || element.type === 'radio'
+          ? { checked: !!element.checked }
+          : { value: String(element.value == null ? '' : element.value) };
+      });
+
+      const activeQueue = page === 'events'
+        ? document.querySelector('.event-queue-tab.is-active')
+        : null;
+      const filterPanel = page === 'events'
+        ? document.getElementById('events-filter-content')
+        : null;
+      const scrollContainers = {};
+      if (page === 'projects' || page === 'events' || page === 'attachments') {
+        document.querySelectorAll('.table-wrapper, .event-queue-list').forEach(function (element) {
+          if (!element.id) return;
+          scrollContainers[element.id] = { top: element.scrollTop, left: element.scrollLeft };
+        });
+      }
+
+      Router.pageStates[page] = {
+        values: values,
+        activeQueue: activeQueue ? String(activeQueue.getAttribute('data-queue') || '') : '',
+        filtersExpanded: !!(filterPanel && !filterPanel.hidden),
+        scrollX: Number(window.scrollX || 0),
+        scrollY: Number(window.scrollY || 0),
+        scrollContainers: scrollContainers
+      };
+    },
+
+    getPageStateValue: function (id) {
+      const page = String(Router.currentPage || '').split('/')[0];
+      const state = Router.pageStates[page];
+      const item = state && state.values ? state.values[id] : null;
+      return item && Object.prototype.hasOwnProperty.call(item, 'value') ? item.value : '';
+    },
+
+    restorePageState: function (page) {
+      const state = Router.pageStates[page];
+      if (!state) return;
+
+      Router.getPageStateControls(page).forEach(function (id) {
+        const element = document.getElementById(id);
+        const saved = state.values && state.values[id];
+        if (!element || !saved) return;
+        if (Object.prototype.hasOwnProperty.call(saved, 'checked')) {
+          element.checked = saved.checked;
+        } else if (element.tagName !== 'SELECT' || Array.from(element.options).some(function (option) {
+          return option.value === saved.value;
+        })) {
+          element.value = saved.value;
+        }
+
+        // Dynamic event filter options are restored by Events.renderFilters
+        // after their authorized option lists have been loaded.
+        if (element.value === saved.value) {
+          const eventName = element.tagName === 'SELECT' ? 'change' : 'input';
+          element.dispatchEvent(new Event(eventName, { bubbles: true }));
+        }
+      });
+
+      if (page === 'events') {
+        const tabs = document.querySelectorAll('.event-queue-tab');
+        tabs.forEach(function (tab) {
+          if (String(tab.getAttribute('data-queue') || '') === state.activeQueue &&
+              typeof window.PMS.Events?.activateQueue === 'function') {
+            window.PMS.Events.activateQueue(state.activeQueue);
+          }
+        });
+        const panel = document.getElementById('events-filter-content');
+        const toggle = document.getElementById('events-filter-toggle');
+        if (panel && toggle && !panel.hidden !== state.filtersExpanded) toggle.click();
+      }
+
+      const restoreScroll = function () {
+        window.scrollTo(state.scrollX || 0, state.scrollY || 0);
+        Object.keys(state.scrollContainers || {}).forEach(function (key) {
+          const saved = state.scrollContainers[key];
+          const element = document.getElementById(key);
+          if (element && saved) {
+            element.scrollTop = saved.top || 0;
+            element.scrollLeft = saved.left || 0;
+          }
+        });
+      };
+      if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(restoreScroll);
+        });
+      } else {
+        window.setTimeout(restoreScroll, 0);
+      }
+    },
+
     loadPage: async function (page, route) {
       const content = document.getElementById('page-content');
 
@@ -473,6 +593,8 @@ getBaseUrl: function () {
         return;
       }
 
+      Router.capturePageState();
+
       try {
         const pageUrl = Router.resolveUrl(pagePath);
         const response = await fetch(pageUrl, { cache: 'no-store' });
@@ -495,6 +617,7 @@ getBaseUrl: function () {
         }
 
         Router.initPageModule(page);
+        Router.restorePageState(page);
       } catch (error) {
         console.error('Router Error:', error);
 
