@@ -1,9 +1,9 @@
 ## 🎯 Current Objective
-ساده‌سازی فرم «ایجاد پروژه جدید» در نسخه عملیاتی؛ فرم ایجاد فقط چهار ورودی قابل مشاهده داشته باشد: کد موقت پروژه، نام پروژه، تاریخ و ساعت ایجاد پروژه، گردش کار پروژه. قوانین ایجاد، مجوزها، یکپارچگی گردش‌کار، ثبت تاریخ، یکتایی کد و سازگاری رکوردهای موجود باید حفظ شوند. مسیرهای فرم ویرایش و تنظیمات پروژه‌های موجود بدون نیازسنجی حذف نشوند.
+حذف کامل فیلدهای قدیمی پروژه `Description` و `Quantity` از رابط کاربری، payload و نمایش پروژه؛ هماهنگی با Backend و schema جدید تا فرم ویرایش نیز ورودی بلااستفاده نداشته باشد. فرم ایجاد ساده‌شده و سایر جریان‌های پروژه حفظ شوند.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 ### مخازن و شاخه
-- Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION`؛ شاخه فاز: `feature/simplify-project-create-form-20261112`؛ مبنا: `main` با آخرین commit بررسی‌شده `632799ed71792b4db7bcf2a56676a19ed974091b`.
+- Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION`؛ شاخه فاز: `feature/remove-project-description-quantity-20261112`؛ مبنا: `main` با آخرین commit بررسی‌شده `632799ed71792b4db7bcf2a56676a19ed974091b`.
 - Backend عملیاتی: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`؛ شاخه فاز: `feature/simplify-project-create-form-20261112`؛ مبنا: `main` با آخرین commit بررسی‌شده `6c7b8b35eb47be2c0095a0409b6179840597d1e0`.
 - هر دو مخزن مجاز و قابل دسترسی‌اند؛ شاخه پیش‌فرض هر دو `main` است. پیاده‌سازی این فاز روی شاخه feature انجام می‌شود و تا تأیید Product Owner به main ادغام نمی‌شود.
 - Backend: Google Apps Script V8 + Google Sheets؛ Frontend: HTML/CSS/JavaScript؛ API از `PMS.Api` و `Router.js`.
@@ -58,3 +58,12 @@
 - [x] **Task 4 — Regression, Integration & Handoff:** بررسی syntax و کنترل‌های ایستا موفق بود؛ Product Owner تست زنده فرم ایجاد پروژه را تأیید کرد.
   - *Log:* Frontend `js/modules/projects.js` و Backend `ProjectService.js` پس از ادغام در main استفاده شدند؛ تست زنده سناریوی ایجاد پروژه توسط Product Owner موفق اعلام شد. کد پروژه، نام، تاریخ/ساعت، گردش‌کار و شرط پروژه مرجع REPEAT تأیید شدند. این تأیید جایگزین گزارش CI مستقل نیست.
   - *Log:* Frontend: `js/modules/projects.js` — تبدیل تاریخ بر اساس قالب واقعی مقدار ورودی انجام می‌شود، نه `input.type`؛ زمان محلی `YYYY-MM-DDTHH:mm[:ss[.SSS]]` با کنترل اجزای تاریخ به ISO UTC تبدیل می‌شود؛ تاریخ legacy بدون ساعت و timestamp دارای timezone نیز پشتیبانی می‌شوند و تاریخ/ساعت نامعتبر رد می‌شوند. `index.html` cache-busting به `20261112-project-createdat-normalize-2` تغییر کرد. این اصلاح روی مبنای به‌روز `main` اعمال شد و سایر تغییرات موجود فرم/صفحه حفظ شدند. Backend، API و ساختار Sheets تغییری نکردند.
+
+
+### فاز جاری — حذف فیلدهای توضیحات و تعداد پیشنهادی پروژه
+- [x] **Task 5 — Frontend Dependency Discovery:** ردیابی مصرف فیلدهای پروژه در فرم ایجاد/ویرایش، کارت‌ها، جزئیات، چاپ، اشتراک‌گذاری و داشبورد.
+  - *Log:* `js/modules/projects.js` شامل markup و payload ویرایش، گزارش چاپ، اشتراک‌گذاری و کارت پروژه بود؛ `js/modules/project-detail.js` جزئیات پروژه را نمایش می‌داد؛ `js/modules/dashboard-redesign.js` مقدار `project.Quantity` را در کارت داشبورد مصرف می‌کرد. توضیحات رویداد و تعدادهای محاسباتی/تولیدی خارج از محدوده باقی ماندند.
+- [x] **Task 6 — Remove Obsolete Project UI Fields:** حذف ورودی‌های توضیحات/تعداد از ویرایش، payload، جزئیات، چاپ، اشتراک‌گذاری و نمایش کارت‌ها؛ حفظ تعدادهای محاسباتی غیرمرتبط.
+  - *Log:* `js/modules/projects.js` — حذف کنترل‌های `#new-project-quantity` و `#new-project-description`، خواندن/اعتبارسنجی/ارسال payload، ردیف‌های گزارش چاپ و متن اشتراک‌گذاری و badge تعداد پروژه؛ `js/modules/project-detail.js` — حذف دو ردیف اطلاعات پروژه؛ `js/modules/dashboard-redesign.js` — حذف فقط fallback به `project.Quantity` و حفظ `TotalQuantity` و `ProjectQuantity`. `index.html` و `pages/dashboard.html` برای cache-busting فایل‌های تغییرکرده به‌روزرسانی شدند. Syntax و تست رگرسیون هنوز در حال بررسی است.
+- [ ] **Task 7 — Frontend/Backend Integration & Handoff (IN PROGRESS):** اجرای بررسی‌های ایستا/نحوی، کنترل سازگاری پاسخ API و تست UI پس از انتشار هماهنگ با Backend.
+  - *Log:* تغییرات روی شاخه `feature/remove-project-description-quantity-20261112` ثبت شده‌اند؛ هنوز PR، ادغام و انتشار GitHub Pages انجام نشده است.
