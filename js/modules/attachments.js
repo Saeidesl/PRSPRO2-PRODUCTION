@@ -626,51 +626,105 @@
     },
 
 
+    sanitizePreviewHtml: function (html) {
+      const parsed = new DOMParser().parseFromString(String(html || ''), 'text/html');
+      const allowed = {P:1,BR:1,DIV:1,SPAN:1,H1:1,H2:1,H3:1,H4:1,H5:1,H6:1,STRONG:1,B:1,EM:1,I:1,U:1,UL:1,OL:1,LI:1,BLOCKQUOTE:1,TABLE:1,THEAD:1,TBODY:1,TR:1,TH:1,TD:1,A:1,IMG:1,HR:1,PRE:1,CODE:1,SUB:1,SUP:1};
+      const clean = function (node) {
+        const fragment = document.createDocumentFragment();
+        Array.prototype.forEach.call(node.childNodes, function (child) {
+          if (child.nodeType === 3) { fragment.appendChild(document.createTextNode(child.nodeValue || '')); return; }
+          if (child.nodeType !== 1) return;
+          if (!allowed[child.tagName]) { fragment.appendChild(clean(child)); return; }
+          const element = document.createElement(child.tagName.toLowerCase());
+          if (child.tagName === 'A') {
+            const href = child.getAttribute('href') || '';
+            if (/^https?:\/\//i.test(href)) {
+              element.setAttribute('href', href);
+              element.setAttribute('target', '_blank');
+              element.setAttribute('rel', 'noopener noreferrer');
+            }
+          }
+          if (child.tagName === 'TH' || child.tagName === 'TD') {
+            ['colspan','rowspan'].forEach(function (key) {
+              const value = child.getAttribute(key);
+              if (value && /^\d{1,3}$/.test(value)) element.setAttribute(key, value);
+            });
+          }
+          if (child.tagName === 'IMG') {
+            const src = child.getAttribute('src') || '';
+            if (!/^data:image\/(png|jpeg|gif|webp);base64,/i.test(src)) return;
+            element.setAttribute('src', src);
+            element.setAttribute('alt', child.getAttribute('alt') || '');
+          }
+          element.appendChild(clean(child));
+          fragment.appendChild(element);
+        });
+        return fragment;
+      };
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(clean(parsed.body));
+      return wrapper.innerHTML;
+    },
+
+    loadPreviewLibrary: function (url, globalName) {
+      if (window[globalName]) return Promise.resolve(window[globalName]);
+      const key = 'pms-preview-' + globalName;
+      if (window[key]) return window[key];
+      window[key] = new Promise(function (resolve, reject) {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = true;
+        script.onload = function () {
+          if (window[globalName]) resolve(window[globalName]);
+          else reject(new Error('کتابخانه پیش‌نمایش بارگذاری شد اما آماده نیست.'));
+        };
+        script.onerror = function () {
+          delete window[key];
+          reject(new Error('بارگذاری ابزار پیش‌نمایش فایل ناموفق بود.'));
+        };
+        document.head.appendChild(script);
+      });
+      return window[key];
+    },
+
+    fetchAttachmentBlob: async function (attachmentId) {
+      const response = await Api.get('/attachments/' + encodeURIComponent(attachmentId) + '/download');
+      const data = Api.extractData(response) || {};
+      const remoteUrl = data.url || data.downloadUrl || data.DownloadUrl;
+      if (remoteUrl) return { url: remoteUrl, data: data };
+      const base64 = data.Base64 || data.base64;
+      if (!base64) throw new Error('سرور محتوای فایل را برنگرداند.');
+      const mimeType = data.MimeType || data.mimeType || 'application/octet-stream';
+      const cleanBase64 = String(base64).replace(/^data:[^,]*;base64,/, '');
+      const binary = window.atob(cleanBase64);
+      const chunks = [];
+      const chunkSize = 8192;
+      for (let offset = 0; offset < binary.length; offset += chunkSize) {
+        const length = Math.min(chunkSize, binary.length - offset);
+        const bytes = new Uint8Array(length);
+        for (let i = 0; i < length; i += 1) bytes[i] = binary.charCodeAt(i);
+        chunks.push(bytes);
+      }
+      return {
+        blob: new Blob(chunks, { type: mimeType }),
+        data: data
+      };
+    },
+
     download: async function (attachmentId) {
       if (!attachmentId) {
         alert('شناسه فایل مشخص نیست.');
         return;
       }
-
+      let objectUrl = '';
       try {
-        // Backend download endpoint returns file metadata and Base64 content.
-        const response = await Api.get(
-          '/attachments/' +
-          encodeURIComponent(attachmentId) +
-          '/download'
-        );
-        const data = Api.extractData(response) || {};
-
-        // Keep compatibility with a URL-based response if the backend changes.
-        const url = data.url || data.downloadUrl || data.DownloadUrl;
-        if (url) {
-          window.open(url, '_blank', 'noopener');
+        const result = await this.fetchAttachmentBlob(attachmentId);
+        if (result.url) {
+          window.open(result.url, '_blank', 'noopener');
           return;
         }
-
-        const base64 = data.Base64 || data.base64;
-        if (!base64) {
-          throw new Error('سرور اطلاعات دانلود یا محتوای فایل را برنگرداند.');
-        }
-
-        const mimeType = data.MimeType || data.mimeType || 'application/octet-stream';
-        const fileName = data.FileName || data.fileName || ('attachment-' + attachmentId);
-        const cleanBase64 = String(base64).replace(/^data:[^,]*;base64,/, '');
-        const binary = window.atob(cleanBase64);
-        const chunks = [];
-        const chunkSize = 8192;
-
-        for (let offset = 0; offset < binary.length; offset += chunkSize) {
-          const length = Math.min(chunkSize, binary.length - offset);
-          const bytes = new Uint8Array(length);
-          for (let i = 0; i < length; i++) {
-            bytes[i] = binary.charCodeAt(offset + i);
-          }
-          chunks.push(bytes);
-        }
-
-        const blob = new Blob(chunks, { type: mimeType });
-        const objectUrl = window.URL.createObjectURL(blob);
+        const fileName = result.data.FileName || result.data.fileName || ('attachment-' + attachmentId);
+        objectUrl = window.URL.createObjectURL(result.blob);
         const link = document.createElement('a');
         link.href = objectUrl;
         link.download = fileName;
@@ -678,13 +732,110 @@
         document.body.appendChild(link);
         link.click();
         link.remove();
-
-        window.setTimeout(function () {
-          window.URL.revokeObjectURL(objectUrl);
-        }, 1000);
       } catch (error) {
         console.error('Attachment Download Error:', error);
         alert(error.message || 'خطا در دریافت فایل.');
+      } finally {
+        if (objectUrl) window.setTimeout(function () { window.URL.revokeObjectURL(objectUrl); }, 30000);
+      }
+    },
+
+    preview: async function (attachmentId) {
+      if (!attachmentId) return;
+      const existing = document.getElementById('attachment-preview-modal');
+      if (existing) existing.remove();
+      const modal = document.createElement('div');
+      modal.id = 'attachment-preview-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = '<section class="modal" role="dialog" aria-modal="true" aria-labelledby="attachment-preview-title" style="width:min(1100px,96vw);height:min(92vh,900px);display:flex;flex-direction:column;overflow:hidden">' +
+        '<header class="modal-header"><h3 id="attachment-preview-title">پیش‌نمایش فایل</h3><div style="display:flex;gap:8px;align-items:center"><button type="button" class="btn btn-secondary" id="attachment-preview-download">دانلود فایل</button><button type="button" class="modal-close" id="attachment-preview-close" aria-label="بستن">×</button></div></header>' +
+        '<div id="attachment-preview-content" style="flex:1;min-height:0;overflow:auto;padding:12px;display:flex;align-items:center;justify-content:center"><div class="loading-spinner" aria-label="در حال دریافت فایل"></div></div></section>';
+      document.body.appendChild(modal);
+      const content = modal.querySelector('#attachment-preview-content');
+      const close = function () {
+        modal.remove();
+        if (modal._objectUrl) window.URL.revokeObjectURL(modal._objectUrl);
+        document.removeEventListener('keydown', onKeyDown);
+      };
+      const onKeyDown = function (event) { if (event.key === 'Escape') close(); };
+      modal.querySelector('#attachment-preview-close').addEventListener('click', close);
+      modal.addEventListener('click', function (event) { if (event.target === modal) close(); });
+      document.addEventListener('keydown', onKeyDown);
+      modal.querySelector('#attachment-preview-download').addEventListener('click', function () {
+        MODULE.download(attachmentId);
+      });
+      try {
+        const result = await this.fetchAttachmentBlob(attachmentId);
+        if (!document.body.contains(modal)) return;
+        if (result.url) {
+          const frame = document.createElement('iframe');
+          frame.src = result.url;
+          frame.title = 'پیش‌نمایش فایل';
+          frame.style.cssText = 'width:100%;height:100%;min-height:65vh;border:0;background:#fff';
+          content.appendChild(frame);
+          return;
+        }
+        const blob = result.blob;
+        const data = result.data || {};
+        const fileName = String(data.FileName || data.fileName || 'file');
+        const mime = String(data.MimeType || data.mimeType || blob.type || '').toLowerCase();
+        const extension = (fileName.split('.').pop() || '').toLowerCase();
+        const url = window.URL.createObjectURL(blob);
+        modal._objectUrl = url;
+        modal.querySelector('#attachment-preview-title').textContent = fileName;
+        if (mime.indexOf('image/') === 0 || ['jpg','jpeg','png','webp','gif'].indexOf(extension) !== -1) {
+          const image = document.createElement('img');
+          image.src = url;
+          image.alt = fileName;
+          image.style.cssText = 'display:block;max-width:100%;max-height:100%;object-fit:contain;margin:auto';
+          content.appendChild(image);
+          image.addEventListener('click', function () {
+            image.style.maxHeight = image.style.maxHeight === '100%' ? 'none' : '100%';
+          });
+        } else if (mime === 'application/pdf' || extension === 'pdf') {
+          const frame = document.createElement('iframe');
+          frame.src = url + '#toolbar=1&navpanes=0';
+          frame.title = fileName;
+          frame.style.cssText = 'width:100%;height:100%;min-height:65vh;border:0;background:#fff';
+          content.appendChild(frame);
+        } else if (extension === 'docx' || mime.indexOf('wordprocessingml') !== -1) {
+          const mammoth = await this.loadPreviewLibrary('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js', 'mammoth');
+          const arrayBuffer = await blob.arrayBuffer();
+          const rendered = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+          content.style.display = 'block';
+          content.style.direction = 'rtl';
+          content.style.textAlign = 'right';
+          content.innerHTML = '<article class="attachment-docx-preview" style="max-width:850px;margin:0 auto;padding:24px;background:#fff;color:#222;line-height:1.9"></article>';
+          content.querySelector('article').innerHTML = MODULE.sanitizePreviewHtml(rendered.value || '<p>محتوای متنی قابل نمایش نیست.</p>');
+        } else if (extension === 'xlsx' || extension === 'xls' || mime.indexOf('spreadsheet') !== -1 || mime.indexOf('excel') !== -1) {
+          const XLSX = await this.loadPreviewLibrary('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
+          const workbook = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
+          content.style.display = 'block';
+          content.style.direction = 'rtl';
+          content.innerHTML = '';
+          workbook.SheetNames.forEach(function (sheetName) {
+            const heading = document.createElement('h4');
+            heading.textContent = sheetName;
+            content.appendChild(heading);
+            const table = document.createElement('div');
+            table.style.cssText = 'overflow:auto;margin-bottom:24px;background:var(--color-surface)';
+            const html = XLSX.utils.sheet_to_html(workbook.Sheets[sheetName], { editable: false });
+            table.innerHTML = MODULE.sanitizePreviewHtml(html);
+            const renderedTable = table.querySelector('table');
+            if (renderedTable) renderedTable.style.cssText = 'border-collapse:collapse;width:100%;direction:rtl';
+            content.appendChild(table);
+          });
+        } else {
+          content.innerHTML = '<div style="text-align:center"><p>پیش‌نمایش این نوع فایل در مرورگر پشتیبانی نمی‌شود.</p><p>می‌توانید فایل اصلی را با دکمه «دانلود فایل» دریافت کنید.</p></div>';
+        }
+      } catch (error) {
+        console.error('Attachment Preview Error:', error);
+        if (document.body.contains(modal)) {
+          content.innerHTML = '';
+          const message = document.createElement('p');
+          message.textContent = error.message || 'نمایش فایل ناموفق بود. لطفاً فایل را دانلود کنید.';
+          content.appendChild(message);
+        }
       }
     },
 
@@ -868,7 +1019,7 @@
           const response = await Api.post('/attachments', {
             EntityType: kind,
             EntityID: entityId,
-            FileName: finalName.replace(/[\\/:*?"<>|]/g, '_').slice(0, 180),
+            FileName: finalName.replace(/[\/:*?"<>|]/g, '_').slice(0, 180),
             MimeType: mimeType,
             Base64: dataUrl
           });
@@ -1156,6 +1307,182 @@
 
   };
 
+
+
+  // Project-oriented attachment workspace; keeps the existing API, cache and upload flow.
+  MODULE.state.projects = [];
+  MODULE.state.events = [];
+  MODULE.state.selectedProjectId = '';
+
+  MODULE.ensureProjectWorkspaceStyles = function () {
+    if (document.getElementById('attachments-project-workspace-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'attachments-project-workspace-styles';
+    style.textContent = [
+      '#attachments-project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:14px}',
+      '.attachment-project-card{display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-width:0;padding:16px;border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);color:var(--color-text);text-align:right;cursor:pointer;transition:.18s}',
+      '.attachment-project-card:hover{border-color:var(--color-primary);box-shadow:var(--shadow-md);transform:translateY(-1px)}',
+      '.attachment-project-card:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}',
+      '.attachment-project-card-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--color-surface-hover);font-size:22px}',
+      '.attachment-project-card-title{font-weight:700;font-size:14px;overflow-wrap:anywhere}',
+      '.attachment-project-card-code,.attachment-project-card-meta{font-size:12px;color:var(--color-text-secondary)}',
+      '.attachment-project-card-meta{display:flex;justify-content:space-between;width:100%;gap:8px;margin-top:4px}',
+      '.attachment-project-workspace-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}',
+      '.attachment-project-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px}',
+      '.attachment-project-file{min-width:0;padding:12px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface)}',
+      '.attachment-project-file-name{font-size:13px;font-weight:600;overflow-wrap:anywhere;margin-top:8px}',
+      '.attachment-project-file-meta{font-size:11px;color:var(--color-text-secondary);margin-top:5px}',
+      '@media(max-width:600px){#attachments-project-grid,.attachment-project-files{grid-template-columns:1fr}}'
+    ].join('');
+    document.head.appendChild(style);
+  };
+
+  MODULE.projectId = function (item) {
+    return String(item && (item.ID || item.Id || item.id || item.ProjectID || item.projectId) || '');
+  };
+  MODULE.projectTitle = function (item) {
+    return String(item && (item.Title || item.ProjectName || item.Name || item.TitleName) || 'پروژه بدون عنوان');
+  };
+  MODULE.projectCode = function (item) {
+    return String(item && (item.ProjectCode || item.Code || '') || '');
+  };
+  MODULE.projectFiles = function (projectId) {
+    const eventIds = Object.create(null);
+    (MODULE.state.events || []).forEach(function (event) {
+      const parentId = String(event.ProjectID || event.ProjectId || event.projectId || '');
+      const eventId = String(event.ID || event.Id || event.id || event.EventID || '');
+      if (parentId === String(projectId) && eventId) eventIds[eventId] = true;
+    });
+    return MODULE.state.attachments.filter(function (item) {
+      const type = String(item.EntityType || item.entityType || '').toUpperCase();
+      const entityId = String(item.EntityID || item.entityID || '');
+      return (type === 'PROJECT' && entityId === String(projectId)) ||
+        (type === 'EVENT' && !!eventIds[entityId]);
+    });
+  };
+
+  MODULE.extractWorkspaceList = function (response, keys) {
+    let data = Api && typeof Api.extractData === 'function' ? Api.extractData(response) : response;
+    for (let depth = 0; depth < 5 && data && !Array.isArray(data); depth += 1) {
+      let next = null;
+      for (let i = 0; i < keys.length; i += 1) {
+        if (Array.isArray(data[keys[i]])) { next = data[keys[i]]; break; }
+      }
+      if (!next && data.data && typeof data.data === 'object') next = data.data;
+      if (!next) break;
+      data = next;
+    }
+    return Array.isArray(data) ? data : [];
+  };
+
+  const originalLoad = MODULE.load;
+  MODULE.load = async function () {
+    await originalLoad.call(MODULE);
+    try {
+      const projectResponse = await Api.getCached('/projects', Cache.keys.PROJECTS || 'projects', {
+        cacheTtl: 60000, refreshCached: false
+      });
+      MODULE.state.projects = MODULE.extractWorkspaceList(projectResponse, ['projects', 'items', 'results']);
+    } catch (error) {
+      MODULE.state.projects = [];
+      console.warn('Attachment project list unavailable:', error);
+    }
+    try {
+      const eventResponse = await Api.getCached('/events', Cache.keys.EVENTS || 'events', {
+        cacheTtl: 60000, refreshCached: false
+      });
+      MODULE.state.events = MODULE.extractWorkspaceList(eventResponse, ['events', 'items', 'results']);
+    } catch (error) {
+      MODULE.state.events = [];
+    }
+    MODULE.render();
+  };
+
+  MODULE.render = function () {
+    const container = document.getElementById('attachments-table-container');
+    const empty = document.getElementById('attachments-empty');
+    if (!container) return;
+    MODULE.ensureProjectWorkspaceStyles();
+    MODULE.showLoading(false);
+    MODULE.hideError();
+
+    if (MODULE.state.selectedProjectId) {
+      const project = MODULE.state.projects.find(function (item) {
+        return MODULE.projectId(item) === String(MODULE.state.selectedProjectId);
+      });
+      if (!project) MODULE.state.selectedProjectId = '';
+      else {
+        const files = MODULE.projectFiles(MODULE.state.selectedProjectId);
+        const fileCards = files.map(function (item) {
+          const id = String(item.ID || item.id || '');
+          const mime = String(item.MimeType || item.mimeType || '').toLowerCase();
+          const icon = mime.indexOf('image/') === 0 ? '🖼️' : (mime === 'application/pdf' ? '📕' : '📄');
+          return '<article class="attachment-project-file"><div class="attachment-project-card-icon" aria-hidden="true">' + icon + '</div>' +
+            '<div class="attachment-project-file-name">' + MODULE.escapeHtml(item.FileName || item.fileName || 'بدون نام') + '</div>' +
+            '<div class="attachment-project-file-meta">' + MODULE.formatFileSize(item.FileSize || item.fileSize) + ' · ' +
+            MODULE.escapeHtml(item.UploadedAt || item.uploadedAt || '') + '</div>' +
+            '<div style="margin-top:10px"><button type="button" class="btn btn-sm btn-light" data-attachment-open="' +
+            MODULE.escapeHtml(id) + '">مشاهده فایل</button></div></article>';
+        }).join('');
+        container.innerHTML = '<section><header class="attachment-project-workspace-header"><div><h3 style="margin:0">' +
+          MODULE.escapeHtml(MODULE.projectTitle(project)) + '</h3><small>کد پروژه: ' +
+          MODULE.escapeHtml(MODULE.projectCode(project) || '—') + ' · ' + files.length + ' فایل</small></div>' +
+          '<button type="button" class="btn btn-secondary" id="attachments-back-to-projects">← بازگشت به پروژه‌ها</button></header>' +
+          (files.length ? '<div class="attachment-project-files">' + fileCards + '</div>' :
+            '<div class="table-empty">برای این پروژه فایلی ثبت نشده است.</div>') + '</section>';
+        container.hidden = false;
+        if (empty) empty.hidden = true;
+        const back = container.querySelector('#attachments-back-to-projects');
+        if (back) back.addEventListener('click', function () {
+          MODULE.state.selectedProjectId = '';
+          MODULE.render();
+        });
+        container.querySelectorAll('[data-attachment-open]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            MODULE.preview(button.getAttribute('data-attachment-open'));
+          });
+        });
+        return;
+      }
+    }
+
+    const search = String(MODULE.state.search || '').toLowerCase();
+    const projects = MODULE.state.projects.filter(function (project) {
+      const id = MODULE.projectId(project);
+      const files = MODULE.projectFiles(id);
+      const title = MODULE.projectTitle(project).toLowerCase();
+      const code = MODULE.projectCode(project).toLowerCase();
+      return (!search || title.indexOf(search) !== -1 || code.indexOf(search) !== -1) &&
+        (!MODULE.state.filter || files.length > 0);
+    });
+    if (!projects.length) {
+      container.innerHTML = '';
+      container.hidden = true;
+      if (empty) {
+        empty.textContent = search ? 'پروژه‌ای با این مشخصات پیدا نشد.' :
+          'پروژه‌ای دارای فایل برای نمایش وجود ندارد.';
+        empty.hidden = false;
+      }
+      return;
+    }
+    if (empty) empty.hidden = true;
+    container.innerHTML = '<div id="attachments-project-grid">' + projects.map(function (project) {
+      const id = MODULE.projectId(project);
+      const count = MODULE.projectFiles(id).length;
+      return '<button type="button" class="attachment-project-card" data-project-id="' + MODULE.escapeHtml(id) + '">' +
+        '<span class="attachment-project-card-icon" aria-hidden="true">📁</span>' +
+        '<span class="attachment-project-card-title">' + MODULE.escapeHtml(MODULE.projectTitle(project)) + '</span>' +
+        '<span class="attachment-project-card-code">کد پروژه: ' + MODULE.escapeHtml(MODULE.projectCode(project) || 'بدون کد') + '</span>' +
+        '<span class="attachment-project-card-meta"><span>' + count + ' فایل</span><span>مشاهده فایل‌ها ←</span></span></button>';
+    }).join('') + '</div>';
+    container.hidden = false;
+    container.querySelectorAll('[data-project-id]').forEach(function (card) {
+      card.addEventListener('click', function () {
+        MODULE.state.selectedProjectId = card.getAttribute('data-project-id') || '';
+        MODULE.render();
+      });
+    });
+  };
 
    window.PMS.Attachments =
     MODULE;
