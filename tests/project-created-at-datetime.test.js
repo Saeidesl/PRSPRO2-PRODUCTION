@@ -27,7 +27,7 @@ test('project datetime normalization uses the value shape and rejects invalid lo
   assert.match(projects, /createdAtValue = createdAtDate\.toISOString\(\)/);
   assert.match(projects, /Preserve legacy date-only edit values/);
   assert.match(projects, /zonedDate\.toISOString\(\)/);
-  assert.match(index, /projects\.js\?v=20261112-project-createdat-normalize-2/);
+  assert.match(index, /projects\.js\?v=20261112-project-create-progress-1/);
   assert.match(projects, /CreatedAt: createdAtValue/);
 });
 
