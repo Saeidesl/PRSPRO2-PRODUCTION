@@ -1132,6 +1132,10 @@
       const result = window.PMS.Api.extractData ? window.PMS.Api.extractData(response) : (response && response.data) || response;
       const attachment = result && (result.attachment || result.Attachment);
       if (!attachment || !(attachment.ID || attachment.Id)) throw new Error('اطلاعات فایل بارگذاری‌شده دریافت نشد.');
+      const projectsModule = window.PMS && window.PMS.Projects;
+      if (projectsModule && typeof projectsModule.invalidateProjectCardAttachmentMetadata === 'function') {
+        projectsModule.invalidateProjectCardAttachmentMetadata(this.projectId);
+      }
       return {AttachmentID: attachment.ID || attachment.Id, FileName: attachment.FileName || file.name,
         MimeType: attachment.MimeType || mime, FileSize: Number(attachment.FileSize || file.size), AttachmentType: 'INFORMATION'};
     },

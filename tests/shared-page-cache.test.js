@@ -11,6 +11,7 @@ const router = read('js/core/router.js');
 const projects = read('js/modules/projects.js');
 const events = read('js/modules/events.js');
 const attachments = read('js/modules/attachments.js');
+const projectDetail = read('js/modules/project-detail.js');
 
 test('cache-first getCached returns valid cached data without starting a GET request', () => {
   assert.match(api, /options\.refreshCached === false/);
@@ -62,4 +63,22 @@ test('project attachment uploads invalidate project-card metadata as well as the
   assert.ok(attachments.includes('Cache.remove(MODULE.cacheKey)'));
   assert.ok(attachments.includes("kind === 'PROJECT'"));
   assert.ok(attachments.includes('invalidateProjectCardAttachmentMetadata(entityId)'));
+});
+
+test('event submission invalidates event, project picker, project detail and dashboard caches', () => {
+  assert.match(events, /PMS\.Api\.post\('\/events', payload\)[\s\S]*?clearEventDependentDataCache\(\)/);
+  assert.ok(events.includes('PROJECTS_CACHE_KEY + \'_event_picker\''));
+  assert.match(events, /PROJECT_EVENTS\s*\+\s*['\"]_['\"]\s*\+\s*String\(projectId\)/);
+  assert.match(events, /PROJECT_EVENTS\s*\+\s*['\"]_['\"]\s*\+\s*String\(projectId\)\s*\+\s*['\"]_DETAILS['\"]/);
+  assert.ok(events.includes('PMS.Cache.keys.DASHBOARD'));
+});
+
+test('project attachment upload and delete invalidate shared and per-project attachment caches', () => {
+  assert.ok(projects.includes("cache.remove('project_attachments_' + id)"));
+  assert.match(projects, /Api\.delete\('\/attachments\/'[\s\S]*?invalidateProjectCardAttachmentMetadata\(projectId\)/);
+  assert.ok(projectDetail.includes('invalidateProjectCardAttachmentMetadata(this.projectId)'));
+});
+
+test('event attachment uploads invalidate event history and dashboard caches', () => {
+  assert.match(attachments, /kind === 'EVENT'[\s\S]*?Cache\.keys\.EVENTS[\s\S]*?Cache\.keys\.DASHBOARD/);
 });

@@ -918,6 +918,7 @@
       this.projectCardAttachmentsPromise = null;
       if (projectId !== undefined && projectId !== null && String(projectId)) {
         const id = String(projectId);
+        cache && cache.remove('project_attachments_' + id);
         delete this.projectCardImages[id];
         delete this.projectCardImageAttachments[id];
         this.projectCardImageStates[id] = 'loading';
@@ -1552,10 +1553,10 @@
               Status: settings.status
             };
             const response = await window.PMS.Api.put('/projects/' + encodeURIComponent(projectId), payload);
-            this.invalidateProjectDataCaches(projectId);
             if (response && response.success === false) {
               throw new Error(this.getErrorMessage(response) || 'ذخیره تنظیمات ناموفق بود.');
             }
+            this.invalidateProjectDataCaches(projectId);
 
             const updated = this.extractCreatedProject(response) ||
               (response && response.data && typeof response.data === 'object' ? response.data : {});
@@ -2348,8 +2349,8 @@
           const projectId = String(modal.dataset.projectId || '');
           if (!projectId) throw new Error('شناسه پروژه برای ویرایش مشخص نیست.');
           const response = await window.PMS.Api.put('/projects/' + encodeURIComponent(projectId), project);
-          this.invalidateProjectDataCaches(projectId);
           if (response && response.success === false) throw new Error(this.getErrorMessage(response) || 'ذخیره تغییرات ناموفق بود.');
+          this.invalidateProjectDataCaches(projectId);
           const updated = this.extractCreatedProject(response) || (response && response.data && typeof response.data === 'object' ? response.data : {});
           const existingProject = this.projects.find((item) => String(item.ID || item.Id || item.id) === projectId);
           if (existingProject) Object.assign(existingProject, project, updated);

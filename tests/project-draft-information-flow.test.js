@@ -43,8 +43,8 @@ test('project list and detail distinguish drafts from production projects', () =
 
 test('project assets use cache-busting for the unified project entry', () => {
   const source = read('index.html');
-  assert.match(source, /projects\.js\?v=20261112-project-cache-invalidation-1/);
-  assert.match(source, /project-detail\.js\?v=20261107-project-event-history-shortcut-placement-1/);
+  assert.match(source, /projects\.js\?v=20261112-project-cache-invalidation-2/);
+  assert.match(source, /project-detail\.js\?v=20261112-project-detail-attachment-cache-1/);
 });
 
 
