@@ -66,6 +66,6 @@ test('progress modal keeps keyboard focus contained and allows Escape only after
 });
 
 test('event progress assets use refreshed cache-busting versions', () => {
-  assert.match(index, /events\.css\?v=20261113-unified-project-cards-1/);
-  assert.match(index, /js\/modules\/events\.js\?v=20261113-unified-project-cards-1/);
+  assert.match(index, /events\.css\?v=20261113-unified-project-cards-status-label-2/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261113-unified-project-cards-status-label-2/);
 });
