@@ -490,9 +490,9 @@ getBaseUrl: function () {
         : null;
       const scrollContainers = {};
       if (page === 'projects' || page === 'events' || page === 'attachments') {
-        document.querySelectorAll('.table-wrapper, .event-queue-list').forEach(function (element, index) {
-          const key = element.id || (element.className + ':' + index);
-          scrollContainers[key] = { top: element.scrollTop, left: element.scrollLeft };
+        document.querySelectorAll('.table-wrapper, .event-queue-list').forEach(function (element) {
+          if (!element.id) return;
+          scrollContainers[element.id] = { top: element.scrollTop, left: element.scrollLeft };
         });
       }
 
