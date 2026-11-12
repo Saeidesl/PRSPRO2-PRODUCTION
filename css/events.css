@@ -2140,11 +2140,11 @@
 .events-page .event-project-card-unified.queue-pending{--project-status-color:#D99028}
 .events-page .event-project-card-unified.queue-progress{--project-status-color:#3989D6}
 .events-page .event-project-card-unified.queue-completed{--project-status-color:#269B70}
-.events-page .event-project-card-unified .event-queue-project-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;min-width:0;align-items:stretch;min-height:164px}
+.events-page .event-project-card-unified .event-queue-project-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);direction:ltr;gap:0;min-width:0;align-items:stretch;min-height:164px}
 .events-page .event-project-card-unified .event-queue-project-media{grid-column:1;grid-row:1;position:relative;width:100%;min-width:0;min-height:164px;height:100%;overflow:hidden;border-radius:9px 0 0 9px;background:var(--color-surface-alt)}
 .events-page .event-project-card-unified .event-queue-project-media img{display:block;width:100%;height:100%;min-height:164px;object-fit:cover;cursor:zoom-in}
 .events-page .event-project-card-unified .event-queue-project-image-placeholder{display:flex;width:100%;min-height:164px;height:100%;align-items:center;justify-content:center;padding:8px;color:var(--color-text-muted);font-size:11px;text-align:center}
-.events-page .event-project-card-unified .event-queue-project-copy{grid-column:2;grid-row:1;display:flex;min-width:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:10px 12px}
+.events-page .event-project-card-unified .event-queue-project-copy{direction:rtl;grid-column:2;grid-row:1;display:flex;min-width:0;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:10px 12px}
 .events-page .event-project-card-unified .event-queue-project-code-label{color:var(--color-text-muted);font-size:11px;font-weight:650}
 .events-page .event-project-card-unified .event-queue-project-code{color:var(--color-text);font-size:clamp(15px,1.4vw,19px);font-weight:850;line-height:1.55;overflow-wrap:anywhere}
 .events-page .event-project-card-unified .event-queue-project-title{color:var(--color-text-secondary);font-size:13px;font-weight:600;line-height:1.7;overflow-wrap:anywhere}
