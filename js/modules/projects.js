@@ -2568,7 +2568,9 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
                router.permissions.indexOf('PROJECT_CREATE') !== -1)))
         );
 
-        if (canViewProjects) {
+        // The Events page owns its targeted picker refresh through onCreated.
+        // Avoid an unrelated full project-list GET when this form was opened there.
+        if (canViewProjects && typeof modal._onCreated !== 'function') {
           this.loadProjects();
         }
 
