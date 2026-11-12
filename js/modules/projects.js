@@ -1140,6 +1140,9 @@
     // ========================================================
 
     openCreateForm: async function (editProject, options) {
+      // The shared project form is also opened from routes that do not initialize Projects.
+      // Ensure its progress animation styles exist before the modal can be submitted.
+      this.ensureProjectStyles();
       if (this.modal) {
         this.modal.remove();
       }
