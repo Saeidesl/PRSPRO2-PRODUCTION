@@ -1240,9 +1240,9 @@
             </div>
 
             <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
-              <label for="new-project-created-at">${isEditMode ? 'تاریخ ایجاد پروژه' : 'تاریخ و ساعت ایجاد پروژه'} <span style="color:var(--color-text-secondary);font-size:12px;">(اختیاری)</span></label>
-              <input type="${isEditMode ? 'date' : 'datetime-local'}" id="new-project-created-at" name="CreatedAt" style="width:100%;box-sizing:border-box;">
-              <small style="display:block;margin-top:5px;color:var(--color-text-secondary);">اگر تاریخ انتخاب نشود، تاریخ و زمان فعلی به‌صورت خودکار ثبت می‌شود.</small>
+              <label for="new-project-created-at">${isEditMode ? 'تاریخ ایجاد پروژه' : 'تاریخ و ساعت ایجاد پروژه'} ${isEditMode ? '<span style="color:var(--color-text-secondary);font-size:12px;">(اختیاری)</span>' : '<span style="color:var(--color-danger);">*</span>'}</label>
+              <input type="${isEditMode ? 'date' : 'datetime-local'}" id="new-project-created-at" name="CreatedAt" ${isEditMode ? '' : 'required'} style="width:100%;box-sizing:border-box;">
+              <small style="display:block;margin-top:5px;color:var(--color-text-secondary);">${isEditMode ? 'اگر تاریخ انتخاب نشود، تاریخ و زمان فعلی به‌صورت خودکار ثبت می‌شود.' : 'تاریخ و ساعت فعلی به‌صورت پیش‌فرض ثبت شده و قابل تغییر است.'}</small>
             </div>
 
 ${isEditMode ? `            <div class="filter-group form-group project-form-field" style="margin-bottom:16px;">
