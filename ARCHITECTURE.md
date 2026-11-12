@@ -1321,3 +1321,58 @@
 - Backend PR #67 با commit `69520aa5fec78d3d597be29bd7c1187e5491bb15` صرفاً برای ثبت TODO5 و نقشه فنی فاز بود؛ هیچ فایل runtime بک‌اند تغییر نکرد.
 - هیچ API، Sheet، ستون، migration یا داده عملیاتی جدید/حذف‌شده‌ای وجود ندارد.
 - تأیید کاربر به‌عنوان پذیرش عملیاتی ثبت شد؛ این Log ادعای مستقل درباره اجرای deployment جدید GitHub Pages یا تغییر deployment بک‌اند ندارد.
+
+
+## 2026-11-12 — بهینه‌سازی کش مشترک صفحات پروژه‌ها، رویدادها و فایل‌ها
+
+### محدوده، نتیجه و تصمیم معماری
+- مخزن عملیاتی Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `main`.
+- مخزن عملیاتی Backend: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`، شاخه `main`.
+- هدف: جلوگیری از GETهای تکراری در جابه‌جایی بین صفحات پروژه‌ها، رویدادها و فایل‌ها، نمایش فوری داده معتبر cache‌شده، حفظ وضعیت صفحه و invalidation دقیق پس از عملیات تغییردهنده.
+- تصمیم اصلی: گسترش همان `PMS.Api` و `PMS.Cache` موجود؛ هیچ سیستم cache موازی، API جدید، تغییر Backend runtime، تغییر permission، تغییر Google Sheets schema یا migration ایجاد نشد.
+- Cache صرفاً برای بهبود تجربه UI است و جایگزین مجوزهای Router/Backend یا منبع داده اصلی نمی‌شود. جداسازی نشست، query و پاک‌سازی در reset نشست باید حفظ شود.
+
+### نقشه فنی، فایل‌ها و توابع
+- `js/core/api.js`:
+  - `Api.getCached(path, cacheKey, options)`: با گزینه `refreshCached: false` در صورت وجود cache معتبر، داده را بدون GET پس‌زمینه برمی‌گرداند؛ در cache miss/expiry، مسیر درخواست و TTL قبلی حفظ می‌شود.
+  - مسیرهای موجود `Api.get`, `Api.getFresh`, `Api.invalidate`, `Api.invalidateMany` برای خواندن تازه و invalidation باقی مانده‌اند.
+- `js/core/cache.js`:
+  - `PMS.Cache` و ذخیره‌سازی موجود localStorage با پیشوند `PMS_CACHE_` و metadata نسخه/زمان/انقضا استفاده می‌شوند؛ ساختار ذخیره‌سازی موازی اضافه نشد.
+- `js/modules/projects.js`:
+  - `Projects.loadProjects()` و lookupهای پروژه از cache-first استفاده می‌کنند.
+  - invalidation پس از create/edit/settings فقط بعد از پاسخ موفق API انجام می‌شود.
+  - `invalidateProjectCardAttachmentMetadata(projectId)` metadata کارت و cache پیوست‌های همان پروژه با کلید `project_attachments_<id>` را پاک می‌کند.
+- `js/modules/events.js`:
+  - داده `/events`، `/event-types` و `/projects?view=event-picker` از cache مشترک و TTLهای تعریف‌شده استفاده می‌کنند.
+  - پس از ثبت رویداد، cacheهای وابسته با مسیر موجود invalid می‌شوند.
+- `js/modules/attachments.js`:
+  - `Attachments.load()` فهرست `GET /attachments` را با cache مشترک بارگذاری می‌کند.
+  - upload پیوست رویداد cacheهای `PMS.Cache.keys.EVENTS` و `PMS.Cache.keys.DASHBOARD` را invalidate می‌کند.
+  - upload پیوست پروژه helper `invalidateProjectCardAttachmentMetadata(entityId)` را اجرا می‌کند.
+- `js/modules/project-detail.js`:
+  - پس از upload از فرم جزئیات پروژه، helper invalidation metadata کارت و پیوست‌های همان پروژه فراخوانی می‌شود.
+- `js/core/router.js`:
+  - snapshot وضعیت جستجو، فیلتر، مرتب‌سازی، تب، پنل فیلتر و scroll حفظ/بازیابی می‌شود؛ reset نشست snapshot را پاک می‌کند.
+- `index.html`:
+  - cache-busting assetهای تغییرکرده به‌روزرسانی شد؛ نسخه‌های نهایی ثبت‌شده:
+    - projects: `20261112-project-cache-invalidation-2`
+    - attachments: `20261112-attachment-cache-invalidation-2`
+    - project-detail: `20261112-project-detail-attachment-cache-1`
+- صفحات مصرف‌کننده: `pages/projects.html`, `pages/events.html`, `pages/attachments.html` و جزئیات پروژه.
+- APIهای موجود و بدون تغییر قرارداد: `GET /projects`, `GET /projects?view=event-picker`, `GET /events`, `GET /event-types`, `GET /attachments`, `GET /project-dashboard/lookups`, `GET /workflows/:workflowId/steps`, `GET /projects/:projectId/attachments`, `POST /projects`, `PUT /projects/:id`, `POST /events`, `POST /projects/:projectId/attachments`, `DELETE /attachments/:attachmentId`.
+- منابع داده Backend بدون تغییر: `08_Projects`, `15_Attachments` و فایل‌های باینری Google Drive؛ اطلاعات پروژه `30_ProjectInformation` و `31_ProjectInformationHistory`؛ شیت‌های رویداد/فرم موجود.
+
+### تست‌ها، پذیرش و انتشار
+- تست‌های افزوده/اصلاح‌شده: `tests/shared-page-cache.test.js`, `tests/event-project-picker-performance.test.js` و assertionهای cache-busting در تست‌های رگرسیون پروژه/قالب‌ساز.
+- Frontend PR #104 با squash در `main` ادغام شد؛ merge commit: `833e3a1ebb1e7e9965fa784d390dbb01763c67dc`. GitHub Pages انتشار آن موفق بود.
+- Frontend PR #105 با squash در `main` ادغام شد؛ merge commit: `c441965b92364733ac98d1c64aca3eebbbc5a41e`؛ PR شامل ۱۲ فایل و ۱۴ commit بود.
+- بررسی‌های PR #105 شامل Frontend checks، cross-repository QA، frontend agent suite، print designer regression، browser audit و UI/performance audit با نتیجه success تکمیل شدند.
+- پس از ادغام #105، Frontend checks، cross-repository QA، print designer regression و frontend agent suite موفق شدند. GitHub Pages publish run `43188981314` و Pages build/deployment run `43188980054` با نتیجه success تکمیل شدند.
+- ممیزی جامع UI/performance پس از ادغام با run `43188981159` در وضعیت cancelled خاتمه یافت؛ این run به‌عنوان تست موفق گزارش نمی‌شود. بررسی‌های اصلی CI و انتشار موفق بوده‌اند.
+- Product Owner تست زنده چهار سناریو را تأیید کرد: upload فایل پروژه و مشاهده به‌روز در صفحه فایل‌ها/کارت؛ اتصال فایل به رویداد و مشاهده اطلاعات تازه؛ ویرایش پروژه و مشاهده فهرست به‌روز؛ حذف پیوست و همگامی فهرست/جزئیات/تصویر کارت.
+- هیچ تغییر Backend runtime، API contract، permission، tenant isolation، Google Sheets schema یا داده عملیاتی انجام نشد.
+
+### Implementation Logs
+- Task 1 — Discovery & Planning: رفتار Router، `Api.getCached`، مصرف GET در ماژول‌ها و cache موجود بررسی شد؛ نتیجه، منشأ Frontend مسئله و عدم نیاز baseline به تغییر Backend/DB بود.
+- Task 2 — Shared Cache و حفظ وضعیت صفحات: `js/core/api.js`, `js/modules/projects.js`, `js/modules/events.js`, `js/modules/attachments.js`, `js/core/router.js`, `index.html` و تست‌های مرتبط تغییر کردند؛ PR #104 ادغام و توسط Product Owner در نسخه منتشرشده تست و تأیید شد.
+- Task 3 — Invalidation هدفمند و تحویل: `js/modules/projects.js`, `js/modules/attachments.js`, `js/modules/project-detail.js`, `index.html` و تست‌های مرتبط تکمیل شدند؛ PR #105 ادغام و چهار سناریوی عملیاتی توسط Product Owner تأیید شد.
