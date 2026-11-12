@@ -22,7 +22,7 @@ test('project follow-up runs only after create and reference-copy success', () =
   assert.match(projects, /canViewProjects && typeof modal\._onCreated !== 'function'/);
 });
 
-test('created project refreshes the shared picker cache and rerenders existing queues', () => {
+test('created project refreshes the shared picker cache and rerenders the unified list', () => {
   assert.match(events, /handleCreatedProject: async function \(project\)/);
   assert.match(events, /PMS\.Api\.invalidate\(cacheKey\)/);
   assert.match(events, /PMS\.Api\.getFresh\('\/projects', cacheKey, \{/);
@@ -30,13 +30,14 @@ test('created project refreshes the shared picker cache and rerenders existing q
   assert.match(events, /this\.renderFilters\(\);[\s\S]*?this\.applyFilters\(\)/);
 });
 
-test('created project activates its actual queue and focuses the existing register action', () => {
-  assert.match(events, /this\.activateQueue\(queue\)/);
-  assert.match(events, /card\.scrollIntoView\(/);
-  assert.match(events, /card\.querySelector\('\.event-queue-register-button'\)/);
-  assert.match(events, /focusTarget\.focus\(/);
-  assert.match(events, /is-newly-created/);
-  assert.match(events, /is-next-action/);
+test('created project highlights its card and focuses the existing register action in the unified list', () => {
+  assert.ok(events.includes('data-event-project-card'));
+  assert.ok(!events.includes('this.activateQueue(queue)'));
+  assert.ok(events.includes('card.scrollIntoView('));
+  assert.ok(events.includes("card.querySelector('.event-queue-register-button')"));
+  assert.ok(events.includes('focusTarget.focus('));
+  assert.ok(events.includes('is-newly-created'));
+  assert.ok(events.includes('is-next-action'));
 });
 
 test('created-project highlight respects reduced-motion preferences', () => {
@@ -46,8 +47,8 @@ test('created-project highlight respects reduced-motion preferences', () => {
   const reducedMotionBlock = css.slice(reducedMotionIndex, reducedMotionIndex + 500);
   assert.match(reducedMotionBlock, /\.event-queue-project\.is-newly-created/);
   assert.match(reducedMotionBlock, /animation:\s*none/);
-  assert.match(index, /events\.css\?v=20261112-created-project-focus-1/);
-  assert.match(index, /events\.js\?v=20261112-events-create-project-focus-1/);
+  assert.match(index, /events\.css\?v=20261113-unified-project-cards-1/);
+  assert.match(index, /events\.js\?v=20261113-unified-project-cards-1/);
 });
 
 test('events flow keeps the existing project and event API paths', () => {

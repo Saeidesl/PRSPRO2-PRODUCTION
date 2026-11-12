@@ -12,7 +12,7 @@ test('project cards on the events page expose history beside project event regis
   assert.match(source, /event-queue-project-actions/);
   assert.match(source, /event-queue-register-button/);
   assert.match(source, /event-queue-history-button/);
-  assert.match(source, /رویدادهای ثبت‌شده برای این پروژه/);
+  assert.match(source, /رویدادهای ثبت‌شده/);
   assert.match(source, /data-project-id=.*Events\.escape\(id\)/);
 });
 
@@ -47,7 +47,7 @@ test('project history action applies the selected project across all permitted e
 test('clearing history filters removes the selected project filter', () => {
   const source = read('js/modules/events.js');
   const start = source.indexOf('clearHistoryFilters: function');
-  const end = source.indexOf('activateQueue: function', start);
+  const end = source.indexOf('getLatestEventByProject: function', start);
   const method = source.slice(start, end);
   assert.match(method, /'event-project-filter'/);
   assert.match(method, /element\.value = id === 'event-history-scope' \? 'mine' : ''/);
@@ -56,7 +56,7 @@ test('clearing history filters removes the selected project filter', () => {
 test('project and events modules use refreshed production assets', () => {
   const index = read('index.html');
   assert.match(index, /project-detail\.js\?v=20261112-project-detail-attachment-cache-1/);
-  assert.match(index, /events\.js\?v=20261112-events-create-project-focus-1/);
+  assert.match(index, /events\.js\?v=20261113-unified-project-cards-1/);
 });
 
 test('events route grants access to users who can view or create events', () => {
