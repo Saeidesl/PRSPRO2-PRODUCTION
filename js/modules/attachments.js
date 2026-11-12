@@ -695,18 +695,18 @@
       const base64 = data.Base64 || data.base64;
       if (!base64) throw new Error('سرور محتوای فایل را برنگرداند.');
       const mimeType = data.MimeType || data.mimeType || 'application/octet-stream';
-      const cleanBase64 = String(base64).replace(/^data:[^,]*;base64,/, '');
-      const binary = window.atob(cleanBase64);
-      const chunks = [];
-      const chunkSize = 8192;
-      for (let offset = 0; offset < binary.length; offset += chunkSize) {
-        const length = Math.min(chunkSize, binary.length - offset);
-        const bytes = new Uint8Array(length);
-        for (let i = 0; i < length; i += 1) bytes[i] = binary.charCodeAt(i);
-        chunks.push(bytes);
-      }
+      // Decode through the browser's data-URL pipeline, matching the proven
+      // project-thumbnail rendering path and avoiding manual atob byte assembly.
+      const normalizedBase64 = String(base64)
+        .replace(/^data:[^,]*;base64,/, '')
+        .replace(/\s+/g, '');
+      const dataUrl = 'data:' + mimeType + ';base64,' + normalizedBase64;
+      const blobResponse = await fetch(dataUrl);
+      if (!blobResponse.ok) throw new Error('تبدیل محتوای فایل ناموفق بود.');
+      const blob = await blobResponse.blob();
+      if (!blob || blob.size < 1) throw new Error('محتوای فایل خالی دریافت شد.');
       return {
-        blob: new Blob(chunks, { type: mimeType }),
+        blob: blob,
         data: data
       };
     },
