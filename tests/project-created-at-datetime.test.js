@@ -18,11 +18,16 @@ test('new project creation uses the existing shared datetime-local picker while 
   assert.match(projects, /createdAtInput\.value = String\(editProject\.CreatedAt \|\| editProject\.createdAt \|\| ''\)\.slice\(0, 10\)/);
 });
 
-test('new project datetime is converted to ISO UTC using the same browser-local Date behavior as event submission', () => {
-  assert.match(projects, /createdAtInput\.type === 'datetime-local'/);
-  assert.match(projects, /const createdAtDate = new Date\(createdAtLocal\)/);
+test('project datetime normalization uses the value shape and rejects invalid local calendar values', () => {
+  assert.match(projects, /const localDateTime = \/\^\(\\d\{4\}\)-\(\\d\{2\}\)-\(\\d\{2\}\)T\(\\d\{2\}\):\(\\d\{2\}\)/);
+  assert.doesNotMatch(projects, /createdAtInput\.type === 'datetime-local'/);
+  assert.match(projects, /createdAtDate\.getFullYear\(\) === year/);
+  assert.match(projects, /createdAtDate\.getMonth\(\) === month - 1/);
+  assert.match(projects, /createdAtDate\.getDate\(\) === day/);
   assert.match(projects, /createdAtValue = createdAtDate\.toISOString\(\)/);
-  assert.match(index, /projects\.js\?v=20261112-project-cache-invalidation-2/);
+  assert.match(projects, /Preserve legacy date-only edit values/);
+  assert.match(projects, /zonedDate\.toISOString\(\)/);
+  assert.match(index, /projects\.js\?v=20261112-project-createdat-normalize-2/);
   assert.match(projects, /CreatedAt: createdAtValue/);
 });
 
