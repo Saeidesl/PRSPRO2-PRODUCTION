@@ -1332,7 +1332,13 @@
       '.attachment-project-file{min-width:0;padding:12px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-surface)}',
       '.attachment-project-file-name{font-size:13px;font-weight:600;overflow-wrap:anywhere;margin-top:8px}',
       '.attachment-project-file-meta{font-size:11px;color:var(--color-text-secondary);margin-top:5px}',
-      '@media(max-width:600px){#attachments-project-grid,.attachment-project-files{grid-template-columns:1fr}}'
+      '.attachment-inline-preview{display:flex;align-items:center;justify-content:center;min-height:150px;max-height:360px;overflow:auto;margin-top:10px;border:1px solid var(--color-border);border-radius:9px;background:var(--color-surface-hover);color:var(--color-text-secondary);font-size:12px;text-align:center}',
+      '.attachment-inline-preview img{display:block;max-width:100%;max-height:340px;object-fit:contain}',
+      '.attachment-inline-preview iframe{display:block;width:100%;height:320px;border:0;background:#fff}',
+      '.attachment-inline-preview table{border-collapse:collapse;width:100%;font-size:12px}',
+      '.attachment-inline-preview th,.attachment-inline-preview td{border:1px solid #d5d5d5;padding:5px;white-space:pre-wrap}',
+      '.attachment-project-file-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}',
+      '@media(max-width:600px){#attachments-project-grid,.attachment-project-files{grid-template-columns:1fr}.attachment-inline-preview iframe{height:280px}}'
     ].join('');
     document.head.appendChild(style);
   };
@@ -1398,6 +1404,110 @@
     MODULE.render();
   };
 
+  MODULE.renderInlinePreview = async function (attachmentId, target) {
+    if (!attachmentId || !target || target.dataset.previewState === 'loading' || target.dataset.previewState === 'loaded') return;
+    target.dataset.previewState = 'loading';
+    target.textContent = 'در حال دریافت پیش‌نمایش...';
+    try {
+      const result = await MODULE.fetchAttachmentBlob(attachmentId);
+      if (!target.isConnected) return;
+      const meta = result.data || {};
+      const fileName = String(meta.FileName || meta.fileName || target.dataset.fileName || 'file');
+      const mime = String(meta.MimeType || meta.mimeType || target.dataset.mimeType || (result.blob && result.blob.type) || '').toLowerCase();
+      const extension = (fileName.split('.').pop() || '').toLowerCase();
+      const isImage = mime.indexOf('image/') === 0 || ['jpg','jpeg','png','webp','gif','bmp'].indexOf(extension) !== -1;
+      const isPdf = mime === 'application/pdf' || extension === 'pdf';
+      target.innerHTML = '';
+      target.dataset.previewState = 'loaded';
+      if (result.url) {
+        if (isImage) {
+          const image = document.createElement('img');
+          image.src = result.url;
+          image.alt = fileName;
+          target.appendChild(image);
+        } else if (isPdf) {
+          const frame = document.createElement('iframe');
+          frame.src = result.url;
+          frame.title = fileName;
+          target.appendChild(frame);
+        } else {
+          target.textContent = 'پیش‌نمایش مستقیم این فایل از نشانی امن سرور در دسترس نیست.';
+        }
+        return;
+      }
+      const objectUrl = URL.createObjectURL(result.blob);
+      target.dataset.inlineObjectUrl = objectUrl;
+      if (isImage) {
+        const image = document.createElement('img');
+        image.src = objectUrl;
+        image.alt = fileName;
+        target.appendChild(image);
+      } else if (isPdf) {
+        const frame = document.createElement('iframe');
+        frame.src = objectUrl + '#toolbar=1&navpanes=0';
+        frame.title = fileName;
+        target.appendChild(frame);
+      } else if (extension === 'docx' || mime.indexOf('wordprocessingml') !== -1) {
+        const mammoth = await MODULE.loadPreviewLibrary('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js', 'mammoth');
+        const rendered = await mammoth.convertToHtml({ arrayBuffer: await result.blob.arrayBuffer() });
+        if (!target.isConnected) { URL.revokeObjectURL(objectUrl); return; }
+        target.style.display = 'block';
+        target.style.direction = 'rtl';
+        target.style.textAlign = 'right';
+        target.style.padding = '12px';
+        target.innerHTML = MODULE.sanitizePreviewHtml(rendered.value || '<p>محتوای متنی قابل نمایش نیست.</p>');
+      } else if (extension === 'xlsx' || extension === 'xls' || mime.indexOf('spreadsheet') !== -1 || mime.indexOf('excel') !== -1) {
+        const XLSX = await MODULE.loadPreviewLibrary('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
+        const workbook = XLSX.read(await result.blob.arrayBuffer(), { type: 'array' });
+        if (!target.isConnected) { URL.revokeObjectURL(objectUrl); return; }
+        target.style.display = 'block';
+        target.style.direction = 'rtl';
+        target.style.padding = '10px';
+        target.innerHTML = '';
+        workbook.SheetNames.forEach(function (sheetName) {
+          const heading = document.createElement('strong');
+          heading.textContent = sheetName;
+          target.appendChild(heading);
+          const sheet = document.createElement('div');
+          sheet.style.overflow = 'auto';
+          sheet.style.marginBottom = '12px';
+          sheet.innerHTML = MODULE.sanitizePreviewHtml(XLSX.utils.sheet_to_html(workbook.Sheets[sheetName]));
+          target.appendChild(sheet);
+        });
+      } else {
+        URL.revokeObjectURL(objectUrl);
+        delete target.dataset.inlineObjectUrl;
+        target.textContent = 'پیش‌نمایش این نوع فایل در صفحه پشتیبانی نمی‌شود؛ از دکمه نمایش فایل استفاده کنید.';
+      }
+    } catch (error) {
+      console.error('Inline Attachment Preview Error:', error);
+      if (target.isConnected) {
+        target.dataset.previewState = 'error';
+        target.textContent = error.message || 'دریافت پیش‌نمایش فایل ناموفق بود.';
+      }
+    }
+  };
+
+  MODULE.mountInlinePreviews = function (container) {
+    const targets = Array.prototype.slice.call(container.querySelectorAll('[data-inline-preview]'));
+    const load = function (target) {
+      MODULE.renderInlinePreview(target.getAttribute('data-inline-preview'), target);
+    };
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            observer.unobserve(entry.target);
+            load(entry.target);
+          }
+        });
+      }, { rootMargin: '180px' });
+      targets.forEach(function (target) { observer.observe(target); });
+    } else {
+      targets.forEach(load);
+    }
+  };
+
   MODULE.render = function () {
     const container = document.getElementById('attachments-table-container');
     const empty = document.getElementById('attachments-empty');
@@ -1417,12 +1527,16 @@
           const id = String(item.ID || item.id || '');
           const mime = String(item.MimeType || item.mimeType || '').toLowerCase();
           const icon = mime.indexOf('image/') === 0 ? '🖼️' : (mime === 'application/pdf' ? '📕' : '📄');
+          const fileName = String(item.FileName || item.fileName || 'بدون نام');
           return '<article class="attachment-project-file"><div class="attachment-project-card-icon" aria-hidden="true">' + icon + '</div>' +
-            '<div class="attachment-project-file-name">' + MODULE.escapeHtml(item.FileName || item.fileName || 'بدون نام') + '</div>' +
+            '<div class="attachment-project-file-name">' + MODULE.escapeHtml(fileName) + '</div>' +
             '<div class="attachment-project-file-meta">' + MODULE.formatFileSize(item.FileSize || item.fileSize) + ' · ' +
             MODULE.escapeHtml(item.UploadedAt || item.uploadedAt || '') + '</div>' +
-            '<div style="margin-top:10px"><button type="button" class="btn btn-sm btn-light" data-attachment-open="' +
-            MODULE.escapeHtml(id) + '">مشاهده فایل</button></div></article>';
+            '<div class="attachment-inline-preview" data-inline-preview="' + MODULE.escapeHtml(id) + '" data-file-name="' +
+            MODULE.escapeHtml(fileName) + '" data-mime-type="' + MODULE.escapeHtml(mime) + '">پیش‌نمایش هنگام نمایش کارت بارگذاری می‌شود...</div>' +
+            '<div class="attachment-project-file-actions"><button type="button" class="btn btn-sm btn-light" data-attachment-open="' +
+            MODULE.escapeHtml(id) + '">نمایش بزرگ‌تر</button><button type="button" class="btn btn-sm btn-secondary" data-attachment-download="' +
+            MODULE.escapeHtml(id) + '">دانلود فایل</button></div></article>';
         }).join('');
         container.innerHTML = '<section><header class="attachment-project-workspace-header"><div><h3 style="margin:0">' +
           MODULE.escapeHtml(MODULE.projectTitle(project)) + '</h3><small>کد پروژه: ' +
@@ -1442,6 +1556,12 @@
             MODULE.preview(button.getAttribute('data-attachment-open'));
           });
         });
+        container.querySelectorAll('[data-attachment-download]').forEach(function (button) {
+          button.addEventListener('click', function () {
+            MODULE.download(button.getAttribute('data-attachment-download'));
+          });
+        });
+        MODULE.mountInlinePreviews(container);
         return;
       }
     }
