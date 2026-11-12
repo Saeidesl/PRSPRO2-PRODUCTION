@@ -700,7 +700,7 @@
       // atob, which can produce a blank/corrupt download on some mobile browsers.
       const normalizedBase64 = String(base64)
         .replace(/^data:[^,]*;base64,/, '')
-        .replace(/\\s+/g, '');
+        .replace(/\s+/g, '');
       const dataUrl = 'data:' + mimeType + ';base64,' + normalizedBase64;
       const blobResponse = await fetch(dataUrl);
       if (!blobResponse.ok) throw new Error('تبدیل محتوای فایل ناموفق بود.');
