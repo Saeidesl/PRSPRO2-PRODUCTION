@@ -40,5 +40,5 @@ test('event type loading state is responsive, theme-aware, and uses the refreshe
   assert.match(styles, /var\(--color-surface-alt\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
   assert.match(index, /events\.css\?v=20261109-event-form-a4-confirm-1/);
-  assert.match(index, /events\.js\?v=20261109-event-form-a4-confirm-1/);
+  assert.match(index, /events\.js\?v=20261112-page-state-events-1/);
 });
