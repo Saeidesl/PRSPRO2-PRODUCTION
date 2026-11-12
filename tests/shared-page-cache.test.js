@@ -68,8 +68,8 @@ test('project attachment uploads invalidate project-card metadata as well as the
 test('event submission invalidates event, project picker, project detail and dashboard caches', () => {
   assert.match(events, /PMS\.Api\.post\('\/events', payload\)[\s\S]*?clearEventDependentDataCache\(\)/);
   assert.ok(events.includes('PROJECTS_CACHE_KEY + \'_event_picker\''));
-  assert.ok(events.includes('PMS.Cache.keys.PROJECT_EVENTS + \'_\' + String(projectId)')));
-  assert.ok(events.includes('PMS.Cache.keys.PROJECT_EVENTS + \'_\' + String(projectId) + \'_DETAILS\''));
+  assert.match(events, /PROJECT_EVENTS\\s*\\+\\s*['\"]_['\"]\\s*\\+\\s*String\\(projectId\\)/);
+  assert.match(events, /PROJECT_EVENTS\\s*\\+\\s*['\"]_['\"]\\s*\\+\\s*String\\(projectId\\)\\s*\\+\\s*['\"]_DETAILS['\"]/);
   assert.ok(events.includes('PMS.Cache.keys.DASHBOARD'));
 });
 
