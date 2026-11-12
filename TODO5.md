@@ -1,60 +1,51 @@
 ## 🎯 Current Objective
-ساده‌سازی فرم «ایجاد پروژه جدید» در نسخه عملیاتی؛ فرم ایجاد فقط چهار ورودی قابل مشاهده داشته باشد: کد موقت پروژه، نام پروژه، تاریخ و ساعت ایجاد پروژه، گردش کار پروژه. قوانین ایجاد، مجوزها، یکپارچگی گردش‌کار، ثبت تاریخ، یکتایی کد و سازگاری رکوردهای موجود باید حفظ شوند. مسیرهای فرم ویرایش و تنظیمات پروژه‌های موجود بدون نیازسنجی حذف نشوند.
+افزودن امکان «ایجاد پروژه جدید» به صفحه رویدادها با استفاده از فرم و مسیر عملیاتی موجود؛ پس از ثبت موفق، نمایش پروژه در صف مناسب، فوکوس خودکار روی کارت و دکمه «ثبت رویداد» و راهنمای بصری ملایم. کاربر مجاز باید بتواند بدون جابه‌جایی صفحه، ایجاد پروژه و ثبت اولین رویداد را پشت سر هم انجام دهد.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 ### مخازن و شاخه
-- Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION`؛ شاخه فاز: `feature/simplify-project-create-form-20261112`؛ مبنا: `main` با آخرین commit بررسی‌شده `632799ed71792b4db7bcf2a56676a19ed974091b`.
-- Backend عملیاتی: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`؛ شاخه فاز: `feature/simplify-project-create-form-20261112`؛ مبنا: `main` با آخرین commit بررسی‌شده `6c7b8b35eb47be2c0095a0409b6179840597d1e0`.
-- هر دو مخزن مجاز و قابل دسترسی‌اند؛ شاخه پیش‌فرض هر دو `main` است. پیاده‌سازی این فاز روی شاخه feature انجام می‌شود و تا تأیید Product Owner به main ادغام نمی‌شود.
-- Backend: Google Apps Script V8 + Google Sheets؛ Frontend: HTML/CSS/JavaScript؛ API از `PMS.Api` و `Router.js`.
+- Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION`؛ شاخه فاز: `feature/events-create-project-flow-20261112`؛ مبنا: `main` با آخرین commit بررسی‌شده `4f258bf4a1e1957b9ea31702fbda890c4c9e7ce1`.
+- Backend عملیاتی: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`؛ شاخه فاز: `feature/events-create-project-flow-20261112`؛ مبنا: `main` با آخرین commit بررسی‌شده `2902eaae4cc7f563799deb58a0b371cf190297c8`.
+- شاخه feature در هر دو مخزن از `main` ساخته شده است؛ هیچ تغییر مستقیمی روی `main` انجام نمی‌شود.
+- Frontend: HTML/CSS/JavaScript؛ Backend: Google Apps Script V8 + Google Sheets؛ درخواست‌ها از `PMS.Api` و مسیریابی سرور از `Router.js`.
 
 ### Frontend — مسیرهای واقعی کشف‌شده
-- `pages/projects.html`: دکمه `#project-create-button` نقطه ورود ایجاد پروژه است.
+- `pages/events.html`: میزبان صفحه مرکز عملیات رویدادها؛ header دارای `.page-header-actions`؛ مسیرهای ورود `.event-entry-grid`؛ صف‌های پروژه با شناسه‌های `event-queue-pending`, `event-queue-progress`, `event-queue-completed`.
+- `css/events.css`: استایل صفحه رویداد، دکمه‌های ورود، کارت‌های صف و breakpointهای موبایل؛ محل افزودن استایل کارت/دکمه تازه‌ساخته‌شده و رعایت `prefers-reduced-motion`.
+- `js/modules/events.js`:
+  - `Events.init()`: مجوزهای `EVENT_CREATE`, `PROJECT_VIEW`, `PROJECT_CREATE` و بارگذاری داده.
+  - `Events.bindEvents()`: delegated click handler برای دکمه‌های صفحه؛ مسیر فعلی `.event-queue-register-button` شناسه پروژه را به `preselectedProjectId` منتقل و `openForm()` را اجرا می‌کند.
+  - `Events.load()`: داده رویداد، پروژه‌ها و انواع رویداد را با `PMS.Api.getCached` و cache مشترک بارگذاری می‌کند؛ پروژه‌ها از `GET /projects?view=event-picker` با کلید `PROJECTS_CACHE_KEY + '_event_picker'` می‌آیند.
+  - `Events.renderProjectQueues()`: پروژه‌ها را در صف‌های pending/progress/completed رندر می‌کند؛ پروژه بدون رویداد مرتبط در صف pending قرار می‌گیرد؛ دکمه ثبت رویداد با کلاس `.event-queue-register-button` ساخته می‌شود.
+  - `Events.activateQueue(key)`: تب و panel صف را فعال می‌کند.
+  - `Events.openForm()`: فرم موجود رویداد را باز می‌کند و با `preselectedProjectId` پروژه را از قبل انتخاب می‌کند.
 - `js/modules/projects.js`:
-  - `Projects.init()`: نمایش دکمه بر اساس `PROJECT_CREATE` و بارگذاری فهرست.
-  - `Projects.bindEvents()`: اتصال دکمه به `openCreateForm()`.
-  - `Projects.openCreateForm(editProject, options)`: ساخت DOM فرم مشترک ایجاد/ویرایش؛ شاخه ایجاد با `isEditMode=false` و شاخه ویرایش/تکمیل پیش‌نویس با `isEditMode=true`.
-  - فیلدهای فعلی: `#new-project-code`, `#new-project-title`, `#new-project-created-at`, `#new-project-quantity`, `#new-project-workflow`, `#new-project-reference`, `#new-project-description`, `#new-project-departments`, `#new-project-users`, `#new-project-status`, `#new-project-file`, `#new-project-attachment-type`, `#new-project-notify`.
-  - `renderProjectLookups()`: دریافت و نمایش workflow، department، user، status و reference project؛ انتخاب پیش‌فرض اولین workflow یا `pms_default_project_workflow_v1`؛ تعیین پیش‌فرض برخی واحدها.
-  - `createProject(modal)`: ساخت payload و POST به `/projects`؛ مدیریت تاریخ محلی به ISO؛ ادامه کپی اطلاعات برای WorkflowType=REPEAT؛ بارگذاری فایل؛ invalidation cache.
-  - `projectSettingsStorageKey()`, `saveProjectSettings()`, `applySavedProjectSettings()` و `openSettings()`: تنظیمات پیش‌فرض ایجاد و تنظیمات ویرایش؛ تفکیک مسیر ایجاد از ویرایش الزامی است.
-  - `openProjectEditForm()`, `loadProjectEditAttachments()`, `deleteProjectEditAttachment()`: مسیر ویرایش و پیوست‌های پروژه؛ خارج از محدوده حذف مگر وابستگی مستقیم اثبات شود.
-- `css/project-form.css`: چیدمان فرم ایجاد/ویرایش و modal؛ selectorهای مشترک نباید با حذف فیلدهای ایجاد، فرم ویرایش را خراب کنند.
-- `index.html`: بارگذاری `css/project-form.css` و `js/modules/projects.js`؛ cache-busting پس از تغییر باید به‌روزرسانی شود.
-- تقویم/ساعت: ورودی فعلی ایجاد از نوع `datetime-local` و تبدیل در `createProject()` به ISO؛ پیاده‌سازی تقویم/ساعت مورد استفاده در فرم رویداد باید در صورت تغییر کنترل، مجدداً بررسی و همان رفتار موجود استفاده شود.
+  - `Projects.openCreateForm(editProject, options)`: فرم مشترک و عملیاتی ایجاد/ویرایش را می‌سازد؛ در حالت ایجاد `editProject` خالی است؛ lookupها، گردش‌کار و قوانین فعلی را بارگذاری می‌کند.
+  - `Projects.createProject(modal)`: اعتبارسنجی فعلی، payload و `POST /projects`، پردازش انتقال اطلاعات مرجع در صورت نیاز، بستن modal، پیام موفقیت و refresh فهرست پروژه را انجام می‌دهد.
+  - `Projects.invalidateProjectDataCaches()`: cacheهای وابسته به پروژه را پس از ثبت موفق invalid می‌کند؛ ارتباط با `PMS.Events.projectOptionsToken` برای بی‌اعتبارسازی projection صفحه رویداد حفظ شود.
+  - فرم ایجاد اخیر فقط چهار ورودی اصلی دارد؛ منطق فرم ویرایش/تکمیل پیش‌نویس نباید تحت تأثیر قرار گیرد.
+- `index.html`: بارگذاری `css/events.css`, `js/modules/projects.js` و `js/modules/events.js`؛ پس از تغییر assetها cache-busting باید به‌روزرسانی شود.
+- تست موجود `tests/event-project-picker-performance.test.js`: قرارداد cache و projection انتخاب پروژه را کنترل می‌کند؛ تست‌های رگرسیون جدید در کنار آن افزوده شوند.
 
 ### Backend — مسیرها و قراردادهای واقعی کشف‌شده
-- `Router.js`:
-  - `GET /project-form/lookups` با مجوز `PROJECT_CREATE` و اتصال به `ProjectService.projectFormLookups(params)`.
-  - `POST /projects` با مجوز `PROJECT_CREATE` و اتصال به `ProjectService.create(body, params)`.
-  - `GET /workflows` برای انتخاب گردش‌کار با مجوزهای `WORKFLOW_MANAGE` یا `PROJECT_CREATE` یا `SYSTEM_SETTINGS`.
-- `ProjectService.js`:
-  - `projectFormLookups(params)` اکنون workflows، departments، users، informationTypes، referenceProjects و projectStatuses را برمی‌گرداند.
-  - `create(project, params)` قواعد Tenant، گردش‌کار فعال/منتشرشده، نسخه گردش‌کار، مرحله اول، کد یکتا با قفل، وضعیت، دسترسی واحدها/کاربران، پروژه مرجع برای REPEAT، Audit و اعلان را اعمال می‌کند.
-  - `_normalizeCreatedAt_(value, fallback)` تاریخ/ساعت ورودی را اعتبارسنجی و ISO ذخیره می‌کند؛ تاریخ بدون ساعت برای سازگاری legacy پشتیبانی می‌شود.
-  - مسیر `RecordState=DRAFT` همچنان برای پیش‌نویس‌های قدیمی/سازگاری باقی می‌ماند؛ فرم جدید فعلی پروژه را مستقیماً ACTIVE می‌سازد.
-- `ProjectValidator.js`:
-  - `validateCreate()` کد، عنوان، WorkflowID و برای پروژه ACTIVE حداقل یک `AvailableDepartmentIDs` را الزامی می‌کند؛ Quantity/Description اختیاری‌اند.
-  - `validateUpdate()` قواعد تکمیل پیش‌نویس و ویرایش را کنترل می‌کند؛ نباید با ساده‌سازی فرم ایجاد تضعیف شود.
-- شیت عملیاتی `08_Projects`: فیلدهای اصلی شامل `ProjectCode`, `Title`, `WorkflowID`, `WorkflowVersion`, `CurrentStepID`, `Status`, `AvailableDepartmentIDs`, `AllowedUserIDs`, `NotifyEnabled`, `CreatedAt`, `RecordState` و شناسه‌های Tenant/Creator است؛ حذف ستون یا داده مطرح نیست.
-- API ایجاد فعلی: `POST /projects` با payload شامل فیلدهای فرم و تنظیمات داخلی؛ قرارداد باید فقط به اندازه لازم تغییر کند و خواندن/ویرایش رکوردهای قبلی سازگار بماند.
-- قوانین مهم کشف‌شده: کد در سطح Tenant یکتا و case-insensitive است؛ workflow باید متعلق به همان Tenant، فعال و منتشرشده و دارای مرحله اول باشد؛ پروژه REPEAT در حال حاضر به `SourceProjectID` نیاز دارد؛ پروژه ACTIVE حداقل یک واحد مجاز نیاز دارد؛ وضعیت در صورت عدم ارسال از پیش‌فرض سرور تعیین می‌شود؛ تاریخ در Backend نرمال می‌شود.
-- تصمیم تأییدشده Product Owner: برای گردش‌کارهای عادی فرم فقط چهار فیلد اصلی دارد؛ فقط هنگام انتخاب گردش‌کار از نوع `REPEAT`، فیلد «پروژه مرجع» به‌صورت شرطی نمایش داده و طبق قانون فعلی اجباری می‌شود.
+- `Router.js`: `POST /projects` با مجوز `PROJECT_CREATE` به `ProjectService.create(body, params)` متصل است؛ فهرست پروژه‌ها و view انتخاب پروژه در مسیرهای موجود مدیریت می‌شود.
+- `ProjectService.js`: `create(project, params)` قواعد tenant، یکتایی کد، گردش‌کار فعال/منتشرشده و مرحله اول، واحدهای مجاز، Audit و اعلان را اجرا می‌کند؛ فهرست view=event-picker داده لازم برای صفحه رویداد را برمی‌گرداند.
+- `ProjectValidator.js`: اعتبارسنجی ساخت پروژه و قواعد ACTIVE؛ بدون نیاز به تغییر برای این قابلیت.
+- شیت `08_Projects`: ذخیره‌سازی پروژه؛ هیچ ستون، migration یا تغییر داده‌ای برای این قابلیت لازم نیست.
+- قراردادهای مورد استفاده و بدون تغییر: `POST /projects`, `GET /projects?view=event-picker`, `GET /events`, `GET /event-types`.
+- تصمیم Discovery: قابلیت باید با همان فرم و API موجود پیاده شود؛ تغییر Backend runtime یا Google Sheets در baseline لازم نیست. در صورت کشف نیاز واقعی، پیش از تغییر، قرارداد موجود بازبینی خواهد شد.
 
 ### اصول اجرا و اعتبارسنجی
-- فقط مخازن عملیاتی فوق و شاخه feature همین فاز؛ عدم تغییر مخازن توسعه و عدم push/merge مستقیم به `main`.
-- هیچ حذف یا migration در داده‌های `08_Projects` انجام نشود.
-- فرم ایجاد و فرم ویرایش دو مسیر مجزا در یک ماژول‌اند؛ ساده‌سازی create نباید تنظیمات، پیوست‌ها، تکمیل DRAFT یا ویرایش پروژه‌های قدیمی را حذف کند.
-- حفظ مجوز `PROJECT_CREATE`، tenant isolation، کنترل یکتایی کد، گردش‌کار منتشرشده/مرحله اول، تاریخ/ساعت، Audit، Telegram notification و مسیر reference-copy در صورت حفظ REPEAT.
-- تست‌های موجود و تست‌های رگرسیون Frontend/Backend باید قبل از درخواست تست زنده اجرا شوند.
+- فقط دو مخزن عملیاتی مجاز و شاخه feature فوق؛ عدم تغییر مخازن توسعه و عدم push/merge به `main` بدون تأیید.
+- دکمه ایجاد پروژه فقط برای دارنده `PROJECT_CREATE` نمایش داده شود؛ ثبت رویداد همچنان تابع `EVENT_CREATE` و کنترل مجوز Backend باقی بماند.
+- callback تکمیل ایجاد باید فقط پس از ثبت کامل پروژه و عملیات وابسته موفق اجرا شود؛ خطای refresh/focus نباید نتیجه ثبت پروژه را به‌اشتباه ناموفق جلوه دهد.
+- refresh صف باید cache مشترک را رعایت کند و از GETهای غیرضروری/تکراری جلوگیری کند.
+- فوکوس خودکار باید کارت تازه‌ساخته‌شده و دکمه ثبت رویداد را در صف درست پیدا کند؛ وضعیت فیلتر/تب و دسترسی‌ها بررسی شود.
+- انیمیشن کوتاه، کم‌تحرک، سازگار با تم روشن/تاریک و `prefers-reduced-motion` باشد.
+- فرم ویرایش پروژه، ثبت رویداد، ثبت مستقل، فرم‌های پویا، cache و permissionهای موجود نباید regression داشته باشند.
 
 ## 📋 Macro-Task Queue & Implementation Log
-- [x] **Task 1 — Discovery & Planning:** بررسی شاخه‌ها/آخرین commitها، TODO5 و ARCHITECTURE هر دو مخزن؛ ردیابی فرم، lookup، payload، API، اعتبارسنجی و ذخیره‌سازی؛ ثبت محدوده و ریسک‌های سازگاری.
-  - *Log:* Frontend: `pages/projects.html`, `js/modules/projects.js` (`init`, `bindEvents`, `openCreateForm`, `renderProjectLookups`, `createProject`, `openProjectEditForm`), `css/project-form.css`, `index.html`. Backend: `Router.js` (`GET /project-form/lookups`, `POST /projects`), `ProjectService.js` (`projectFormLookups`, `create`, `_normalizeCreatedAt_`), `ProjectValidator.js` (`validateCreate`, `validateUpdate`), Sheet `08_Projects`. آخرین commitها: FE `632799ed71792b4db7bcf2a56676a19ed974091b`؛ BE `6c7b8b35eb47be2c0095a0409b6179840597d1e0`. TODO5 و ARCHITECTURE هر دو مخزن خوانده شد.
-- [x] **Task 2 — Simplify Create UI & Frontend Flow:** مسیر ایجاد از امکانات ویرایش جدا شد؛ فقط چهار ورودی اصلی و فیلد مرجع شرطی REPEAT در UI ایجاد باقی ماند؛ ورودی تعداد، توضیحات، واحدها/کاربران/وضعیت، فایل و اعلان از markup ایجاد حذف شد. مسیر ویرایش و پیوست‌های موجود حفظ شد.
-  - *Log:* Frontend: `js/modules/projects.js` — `openCreateForm()` markup فرم را برای ایجاد به چهار فیلد محدود کرد؛ `renderProjectLookups()` workflow پیش‌فرض و مرجع شرطی REPEAT را حفظ کرد؛ `createProject()` مقدارهای داخلی واحد مجاز (ابتدا واحدهای مدیریتی/طراحی، و در نبود آن‌ها واحد کاربر جاری)، وضعیت پیش‌فرض و اعلان را بدون نمایش فیلدها تأمین کرد، تاریخ/ساعت محلی فعلی را به‌عنوان مقدار اولیه فرم قرار داد و مسیر بارگذاری پیوست را از ایجاد حذف کرد؛ فرم ویرایش/تکمیل پیش‌نویس و بارگذاری فایل آن بدون تغییر رفتار حفظ شد. `index.html` نسخه asset ماژول را برای جلوگیری از cache قدیمی به‌روزرسانی کرد. بررسی syntax هر دو فایل JavaScript مرتبط موفق بود.
-- [x] **Task 3 — Backend Contract & Business-Rule Compatibility:** قرارداد ایجاد `POST /projects` و اعتبارسنجی‌های موجود حفظ شد؛ فقط داده‌های lookup غیرلازم حذف و بارگذاری پروژه‌های مرجع به وجود گردش‌کار `REPEAT` محدود شد. هیچ تغییری در schema یا داده‌های شیت ایجاد نشد.
-  - *Log:* Backend: `ProjectService.js` — `projectFormLookups(params)` دیگر فهرست کاربران و انواع اطلاعات را نمی‌خواند/برنمی‌گرداند؛ `referenceProjects` فقط وقتی محاسبه می‌شود که حداقل یک گردش‌کار منتشرشده از نوع `REPEAT` وجود داشته باشد؛ فیلتر Tenant و دسترسی کاربر برای پروژه‌های مرجع حفظ شد. `Router.js`، `ProjectValidator.js`، `ProjectService.create()` و قرارداد `POST /projects` دست‌نخورده ماندند؛ بنابراین مجوز `PROJECT_CREATE`، اعتبارسنجی کد و یکتایی اتمیک، workflow فعال/منتشرشده و مرحله اول، اعتبارسنجی واحدهای مجاز، تاریخ، Audit و اعلان حفظ شدند. بررسی syntax فایل‌های JavaScript موفق بود.
-- [x] **Task 4 — Regression, Integration & Handoff:** بررسی syntax و کنترل‌های ایستا موفق بود؛ Product Owner تست زنده فرم ایجاد پروژه را تأیید کرد.
-  - *Log:* Frontend `js/modules/projects.js` و Backend `ProjectService.js` پس از ادغام در main استفاده شدند؛ تست زنده سناریوی ایجاد پروژه توسط Product Owner موفق اعلام شد. کد پروژه، نام، تاریخ/ساعت، گردش‌کار و شرط پروژه مرجع REPEAT تأیید شدند. این تأیید جایگزین گزارش CI مستقل نیست.
-  - *Log:* Frontend: `js/modules/projects.js` — تبدیل تاریخ بر اساس قالب واقعی مقدار ورودی انجام می‌شود، نه `input.type`؛ زمان محلی `YYYY-MM-DDTHH:mm[:ss[.SSS]]` با کنترل اجزای تاریخ به ISO UTC تبدیل می‌شود؛ تاریخ legacy بدون ساعت و timestamp دارای timezone نیز پشتیبانی می‌شوند و تاریخ/ساعت نامعتبر رد می‌شوند. `index.html` cache-busting به `20261112-project-createdat-normalize-2` تغییر کرد. این اصلاح روی مبنای به‌روز `main` اعمال شد و سایر تغییرات موجود فرم/صفحه حفظ شدند. Backend، API و ساختار Sheets تغییری نکردند.
+- [x] **Task 1 — Discovery & Planning:** بررسی TODO5 و ARCHITECTURE هر دو مخزن، شاخه‌ها و commitهای مبنا؛ ردیابی فرم ایجاد، صف پروژه‌ها، مسیر ثبت رویداد، cache، مجوزها و قراردادهای Backend.
+  - *Log:* Frontend: `pages/events.html`, `css/events.css`, `js/modules/events.js` (`init`, `bindEvents`, `load`, `renderProjectQueues`, `activateQueue`, `openForm`), `js/modules/projects.js` (`openCreateForm`, `createProject`, `invalidateProjectDataCaches`), `index.html`, تست `tests/event-project-picker-performance.test.js`. Backend: `Router.js`, `ProjectService.js`, `ProjectValidator.js`, Sheet `08_Projects`. مبنا: FE `4f258bf4a1e1957b9ea31702fbda890c4c9e7ce1` و BE `2902eaae4cc7f563799deb58a0b371cf190297c8`. قراردادهای `POST /projects` و `GET /projects?view=event-picker` موجودند؛ تغییر Backend/DB در baseline لازم نیست.
+- [ ] **Task 2 — اتصال فرم ایجاد پروژه موجود به صفحه رویدادها (IN PROGRESS):** افزودن دکمه با کنترل مجوز `PROJECT_CREATE`؛ فراخوانی `Projects.openCreateForm()` با callback محدود به ایجاد؛ حفظ کامل مسیر فعلی فرم، اعتبارسنجی، API و ویرایش پروژه.
+- [ ] **Task 3 — نمایش، فوکوس و راهنمای بصری پروژه تازه‌ساخته‌شده:** refresh هدفمند داده پروژه در Events؛ قرار دادن پروژه در صف مناسب؛ scroll/focus کارت و دکمه ثبت رویداد؛ انیمیشن ملایم با پشتیبانی reduced-motion و تم‌ها.
+- [ ] **Task 4 — Regression, Integration & Handoff:** اجرای تست‌های Frontend و QA بین‌مخزنی؛ بررسی permission، قرارداد API، cache، ثبت پروژه/رویداد و موبایل؛ تحویل برای تست زنده Product Owner. Backend runtime و DB فقط در صورت اثبات نیاز تغییر می‌کنند.
