@@ -19,6 +19,7 @@ test('project follow-up runs only after create and reference-copy success', () =
   const referenceSummary = projects.indexOf('const referenceSummary = created.ReferenceCopySummary', success);
   assert.ok(created >= 0 && success > created && callback > success && referenceSummary > callback);
   assert.match(projects, /catch \(callbackError\)[\s\S]*?console\.warn\('Project creation follow-up failed:'/);
+  assert.match(projects, /canViewProjects && typeof modal\._onCreated !== 'function'/);
 });
 
 test('created project refreshes the shared picker cache and rerenders existing queues', () => {
