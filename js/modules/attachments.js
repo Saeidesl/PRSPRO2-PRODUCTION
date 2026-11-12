@@ -877,6 +877,10 @@
             throw new Error(result.message || result.error || 'بارگذاری فایل ناموفق بود.');
           }
           if (Cache && typeof Cache.remove === 'function') Cache.remove(MODULE.cacheKey);
+          if (kind === 'PROJECT' && window.PMS && window.PMS.Projects &&
+              typeof window.PMS.Projects.invalidateProjectCardAttachmentMetadata === 'function') {
+            window.PMS.Projects.invalidateProjectCardAttachmentMetadata(entityId);
+          }
           status.textContent = 'فایل با موفقیت بارگذاری شد.';
           await MODULE.load();
           window.setTimeout(close, 350);
