@@ -54,4 +54,29 @@ test('events flow keeps the existing project and event API paths', () => {
   assert.match(projects, /PMS\.Api\.post\('\/projects', project\)/);
   assert.doesNotMatch(events, /PMS\.Api\.post\(['"]\/projects['"]/);
   assert.match(events, /\.event-queue-register-button/);
+});test('created project highlights its card and focuses the existing register action in the unified list', () => {
+  assert.match(events, /data-event-project-card/);
+  assert.doesNotMatch(events, /this\\.activateQueue\\(queue\\)/);
+  assert.match(events, /card\\.scrollIntoView\\(/);
+  assert.match(events, /card\\.querySelector\\('\\.event-queue-register-button'\\)/);
+  assert.match(events, /focusTarget\\.focus\\(/);
+  assert.match(events, /is-newly-created/);
+  assert.match(events, /is-next-action/);
+});
+
+test('created-project highlight respects reduced-motion preferences', () => {
+  assert.match(events, /prefers-reduced-motion: reduce/);
+  const reducedMotionIndex = css.lastIndexOf('@media (prefers-reduced-motion: reduce)');
+  assert.ok(reducedMotionIndex >= 0);
+  const reducedMotionBlock = css.slice(reducedMotionIndex, reducedMotionIndex + 500);
+  assert.match(reducedMotionBlock, /\.event-queue-project\.is-newly-created/);
+  assert.match(reducedMotionBlock, /animation:\s*none/);
+  assert.match(index, /events\.css\?v=20261113-unified-project-cards-1/);
+  assert.match(index, /events\.js\?v=20261113-unified-project-cards-1/);
+});
+
+test('events flow keeps the existing project and event API paths', () => {
+  assert.match(projects, /PMS\.Api\.post\('\/projects', project\)/);
+  assert.doesNotMatch(events, /PMS\.Api\.post\(['"]\/projects['"]/);
+  assert.match(events, /\.event-queue-register-button/);
 });
