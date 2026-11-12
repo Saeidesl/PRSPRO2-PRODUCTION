@@ -664,7 +664,10 @@
         })]);
         if (select.dataset.pmsOptionsSignature === signature) return;
 
-        const previous = select.value;
+        const remembered = PMS.Router && typeof PMS.Router.getPageStateValue === 'function'
+          ? PMS.Router.getPageStateValue(select.id)
+          : '';
+        const previous = select.value || remembered;
         const fragment = document.createDocumentFragment();
 
         const first = document.createElement('option');
