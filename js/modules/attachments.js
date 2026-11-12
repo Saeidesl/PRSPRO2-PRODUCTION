@@ -626,6 +626,46 @@
     },
 
 
+    sanitizePreviewHtml: function (html) {
+      const parsed = new DOMParser().parseFromString(String(html || ''), 'text/html');
+      const allowed = {P:1,BR:1,DIV:1,SPAN:1,H1:1,H2:1,H3:1,H4:1,H5:1,H6:1,STRONG:1,B:1,EM:1,I:1,U:1,UL:1,OL:1,LI:1,BLOCKQUOTE:1,TABLE:1,THEAD:1,TBODY:1,TR:1,TH:1,TD:1,A:1,IMG:1,HR:1,PRE:1,CODE:1,SUB:1,SUP:1};
+      const clean = function (node) {
+        const fragment = document.createDocumentFragment();
+        Array.prototype.forEach.call(node.childNodes, function (child) {
+          if (child.nodeType === 3) { fragment.appendChild(document.createTextNode(child.nodeValue || '')); return; }
+          if (child.nodeType !== 1) return;
+          if (!allowed[child.tagName]) { fragment.appendChild(clean(child)); return; }
+          const element = document.createElement(child.tagName.toLowerCase());
+          if (child.tagName === 'A') {
+            const href = child.getAttribute('href') || '';
+            if (/^https?:\\/\\//i.test(href)) {
+              element.setAttribute('href', href);
+              element.setAttribute('target', '_blank');
+              element.setAttribute('rel', 'noopener noreferrer');
+            }
+          }
+          if (child.tagName === 'TH' || child.tagName === 'TD') {
+            ['colspan','rowspan'].forEach(function (key) {
+              const value = child.getAttribute(key);
+              if (value && /^\\d{1,3}$/.test(value)) element.setAttribute(key, value);
+            });
+          }
+          if (child.tagName === 'IMG') {
+            const src = child.getAttribute('src') || '';
+            if (!/^data:image\\/(png|jpeg|gif|webp);base64,/i.test(src)) return;
+            element.setAttribute('src', src);
+            element.setAttribute('alt', child.getAttribute('alt') || '');
+          }
+          element.appendChild(clean(child));
+          fragment.appendChild(element);
+        });
+        return fragment;
+      };
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(clean(parsed.body));
+      return wrapper.innerHTML;
+    },
+
     loadPreviewLibrary: function (url, globalName) {
       if (window[globalName]) return Promise.resolve(window[globalName]);
       const key = 'pms-preview-' + globalName;
@@ -769,7 +809,7 @@
           content.style.direction = 'rtl';
           content.style.textAlign = 'right';
           content.innerHTML = '<article class="attachment-docx-preview" style="max-width:850px;margin:0 auto;padding:24px;background:#fff;color:#222;line-height:1.9"></article>';
-          content.querySelector('article').innerHTML = rendered.value || '<p>محتوای متنی قابل نمایش نیست.</p>';
+          content.querySelector('article').innerHTML = MODULE.sanitizePreviewHtml(rendered.value || '<p>محتوای متنی قابل نمایش نیست.</p>');
         } else if (extension === 'xlsx' || extension === 'xls' || mime.indexOf('spreadsheet') !== -1 || mime.indexOf('excel') !== -1) {
           const XLSX = await this.loadPreviewLibrary('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX');
           const workbook = XLSX.read(await blob.arrayBuffer(), { type: 'array' });
@@ -783,7 +823,7 @@
             const table = document.createElement('div');
             table.style.cssText = 'overflow:auto;margin-bottom:24px;background:var(--color-surface)';
             const html = XLSX.utils.sheet_to_html(workbook.Sheets[sheetName], { editable: false });
-            table.innerHTML = html;
+            table.innerHTML = MODULE.sanitizePreviewHtml(html);
             const renderedTable = table.querySelector('table');
             if (renderedTable) renderedTable.style.cssText = 'border-collapse:collapse;width:100%;direction:rtl';
             content.appendChild(table);
