@@ -2313,14 +2313,16 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
       }
 
       if (!project.AvailableDepartmentIDs.length) {
-        this.showFormError(modal, 'حداقل یک واحد مجاز برای پروژه انتخاب کن.');
-        const settingsOverlay = modal.querySelector('#project-create-settings-modal');
-        if (settingsOverlay) {
-          settingsOverlay.style.display = 'flex';
-          const settingsError = settingsOverlay.querySelector('#project-settings-error');
-          if (settingsError) { settingsError.textContent = 'حداقل یک واحد مجاز انتخاب کنید.'; settingsError.hidden = false; }
+        this.showFormError(modal, 'هیچ واحد فعالی برای تخصیص دسترسی پروژه پیدا نشد. ابتدا واحدهای فعال سامانه را بررسی کنید.');
+        if (isEditMode) {
+          const settingsOverlay = modal.querySelector('#project-create-settings-modal');
+          if (settingsOverlay) {
+            settingsOverlay.style.display = 'flex';
+            const settingsError = settingsOverlay.querySelector('#project-settings-error');
+            if (settingsError) { settingsError.textContent = 'حداقل یک واحد مجاز انتخاب کنید.'; settingsError.hidden = false; }
+          }
+          if (departmentsSelect) departmentsSelect.focus();
         }
-        if (departmentsSelect) departmentsSelect.focus();
         return;
       }
       if (project.Status === '' && isEditMode) {
