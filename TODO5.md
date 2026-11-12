@@ -79,7 +79,7 @@
 - فایل‌های بررسی‌شده: `index.html`, `pages/projects.html`, `pages/events.html`, `pages/attachments.html`, `js/core/router.js`, `js/core/api.js`, `js/core/cache.js`, `js/modules/projects.js`, `js/modules/events.js`, `js/modules/attachments.js`, `js/modules/project-images.js`.
 - Log: Router هر بار DOM را از نو می‌سازد؛ `getCached` در هر بار استفاده refresh می‌کند؛ ماژول رویدادها برای event-picker و ماژول فایل‌ها برای attachments GET مستقیم دارند. Task 1 صرفاً Discovery بود و هیچ فایل runtime تغییر نکرد.
 
-### Task 2 — Shared Cache و حفظ وضعیت صفحات (IN PROGRESS)
+### Task 2 — Shared Cache و حفظ وضعیت صفحات [x]
 - تکمیل رفتار cache موجود به‌جای ساخت سیستم موازی.
 - پیشرفت پیاده‌سازی:
   - `js/core/api.js`: گزینه `refreshCached: false` اضافه شد؛ در cache hit معتبر، تابع بدون اجرای `Api.get` داده را فوری برمی‌گرداند. در cache miss/expiry مسیر GET فعلی و ذخیره TTL حفظ می‌شود؛ رفتار پیش‌فرض سایر مصرف‌کنندگان تغییر نکرده است.
@@ -96,7 +96,9 @@
 - ایزوله‌سازی داده cache بر اساس نشست/کاربر و پاک‌سازی امن هنگام logout، auth-expired و تغییر token.
 - حفظ APIها، permissions، فرم‌ها، ثبت رویداد، upload/delete و رفتار موبایل.
 
-### Task 3 — Invalidation هدفمند، آزمون و تحویل
+- *Log:* پس از تأیید تست زنده Product Owner، Task 2 تکمیل شد. در Frontend فایل‌های `js/core/api.js` (گزینه `refreshCached:false` در `Api.getCached` برای cache hit بدون GET پس‌زمینه)، `js/modules/projects.js` (cache-first فهرست پروژه و lookup وضعیت‌ها)، `js/modules/events.js` (cache-first رویدادها، انواع رویداد و `/projects?view=event-picker`)، `js/modules/attachments.js` (cache-first فهرست پیوست‌ها)، `js/core/router.js` (ذخیره و بازیابی جستجو، فیلتر، مرتب‌سازی، تب، وضعیت پنل و موقعیت اسکرول؛ پاک‌سازی snapshot در reset نشست) و `index.html` (cache-busting assetها) تغییر کردند. تست‌های `tests/shared-page-cache.test.js` و `tests/event-project-picker-performance.test.js` و تست‌های رگرسیون وابسته به asset/API به‌روزرسانی شدند. Frontend PR #104 با روش squash در `main` ادغام شد؛ merge commit: `833e3a1ebb1e7e9965fa784d390dbb01763c67dc`. Frontend GitHub Pages deployment run `43183779308` با نتیجه success منتشر شد؛ URL: `https://saeidesl.github.io/PRSPRO2-PRODUCTION/`. تست‌های خودکار Frontend، Cross-Repository QA، Browser Regression و UI/Performance Audit موفق شدند. Product Owner جابه‌جایی بین صفحات پروژه‌ها/رویدادها/فایل‌ها و حفظ state را در نسخه زنده تست و موفق تأیید کرد. Backend runtime، API contract، permissions، Google Sheets schema و داده‌های عملیاتی تغییر نکردند.
+
+### Task 3 — Invalidation هدفمند، آزمون و تحویل (IN PROGRESS)
 - پس از create/update project، ثبت event و upload/delete attachment فقط cacheهای وابسته به‌روزرسانی/باطل شوند.
 - بررسی همگامی داده در صفحات پروژه، رویداد و فایل و جزئیات پروژه.
 - آزمون شبکه: اولین ورود، رفت‌وبرگشت چندباره، عبور TTL، refresh دستی، ثبت/ویرایش هم‌زمان، نشست جدید، خطای شبکه و موبایل.
