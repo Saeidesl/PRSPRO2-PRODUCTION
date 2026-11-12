@@ -1283,7 +1283,7 @@
           value ?? ''
         )
           .replace(
-            /\/g,
+            /\\/g,
             '\\\\'
           )
           .replace(
