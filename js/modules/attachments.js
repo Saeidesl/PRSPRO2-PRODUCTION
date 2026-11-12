@@ -638,7 +638,7 @@
           const element = document.createElement(child.tagName.toLowerCase());
           if (child.tagName === 'A') {
             const href = child.getAttribute('href') || '';
-            if (/^https?:\\/\\//i.test(href)) {
+            if (/^https?:\/\//i.test(href)) {
               element.setAttribute('href', href);
               element.setAttribute('target', '_blank');
               element.setAttribute('rel', 'noopener noreferrer');
@@ -647,12 +647,12 @@
           if (child.tagName === 'TH' || child.tagName === 'TD') {
             ['colspan','rowspan'].forEach(function (key) {
               const value = child.getAttribute(key);
-              if (value && /^\\d{1,3}$/.test(value)) element.setAttribute(key, value);
+              if (value && /^\d{1,3}$/.test(value)) element.setAttribute(key, value);
             });
           }
           if (child.tagName === 'IMG') {
             const src = child.getAttribute('src') || '';
-            if (!/^data:image\\/(png|jpeg|gif|webp);base64,/i.test(src)) return;
+            if (!/^data:image\/(png|jpeg|gif|webp);base64,/i.test(src)) return;
             element.setAttribute('src', src);
             element.setAttribute('alt', child.getAttribute('alt') || '');
           }
@@ -768,14 +768,11 @@
         const result = await this.fetchAttachmentBlob(attachmentId);
         if (!document.body.contains(modal)) return;
         if (result.url) {
-          content.innerHTML = '<p style="text-align:center">این فایل به‌صورت آدرس خارجی ارائه شده است. برای مشاهده، آن را در برگه جدید باز کنید.</p>';
-          const open = document.createElement('a');
-          open.href = result.url;
-          open.target = '_blank';
-          open.rel = 'noopener noreferrer';
-          open.className = 'btn btn-primary';
-          open.textContent = 'بازکردن فایل';
-          content.appendChild(open);
+          const frame = document.createElement('iframe');
+          frame.src = result.url;
+          frame.title = 'پیش‌نمایش فایل';
+          frame.style.cssText = 'width:100%;height:100%;min-height:65vh;border:0;background:#fff';
+          content.appendChild(frame);
           return;
         }
         const blob = result.blob;
@@ -1022,7 +1019,7 @@
           const response = await Api.post('/attachments', {
             EntityType: kind,
             EntityID: entityId,
-            FileName: finalName.replace(/[\\/:*?"<>|]/g, '_').slice(0, 180),
+            FileName: finalName.replace(/[\/:*?"<>|]/g, '_').slice(0, 180),
             MimeType: mimeType,
             Base64: dataUrl
           });
@@ -1286,7 +1283,7 @@
           value ?? ''
         )
           .replace(
-            /\\/g,
+            /\/g,
             '\\\\'
           )
           .replace(
