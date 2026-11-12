@@ -1965,7 +1965,7 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
       } catch (error) {
         if (this.modal !== modal) return;
         workflowSelect.innerHTML = '<option value="">خطا در دریافت اطلاعات فرم</option>';
-        departmentsSelect.innerHTML = '<div class="project-lookup-error">دریافت واحدها ناموفق بود.</div>';
+        if (departmentsSelect) departmentsSelect.innerHTML = '<div class="project-lookup-error">دریافت واحدها ناموفق بود.</div>';
         this.showFormError(
           modal,
           'دریافت اطلاعات فرم ایجاد پروژه ناموفق بود. دوباره تلاش کنید. ' +
@@ -2320,10 +2320,10 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
           const settingsError = settingsOverlay.querySelector('#project-settings-error');
           if (settingsError) { settingsError.textContent = 'حداقل یک واحد مجاز انتخاب کنید.'; settingsError.hidden = false; }
         }
-        departmentsSelect.focus();
+        if (departmentsSelect) departmentsSelect.focus();
         return;
       }
-      if (project.Status === '') {
+      if (project.Status === '' && isEditMode) {
         this.showFormError(modal, modal.dataset.editMode === 'true' ? 'وضعیت پروژه را در تنظیمات انتخاب کن.' : 'وضعیت پروژه پس از ایجاد را در تنظیمات انتخاب کن.');
         const settingsOverlay = modal.querySelector('#project-create-settings-modal');
         if (settingsOverlay) {
