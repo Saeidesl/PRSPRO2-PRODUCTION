@@ -66,22 +66,24 @@ test('project card gives visual priority to project code and adds the non-functi
   assert.doesNotMatch(source, /target\.closest\('\.event-queue-view-button'\)/);
 });
 
-test('project status is represented by one narrow edge and a status badge', () => {
+test('three independent project statuses are displayed without changing the narrow status edge', () => {
   const source = read('js/modules/events.js');
   const css = read('css/events.css');
   assert.match(source, /queueLabel = queueKey === 'completed'/);
-  assert.match(source, /title="وضعیت پروژه">' \+ Events\.escape\(queueLabel\)/);
-  assert.doesNotMatch(source, /Events\.escape\(status\) \+ '<\\/span>/);
-  assert.match(source, /event-queue-project-status-badge status-/);
-  assert.match(css, /border-right:4px solid var\(--project-status-color/);
-  assert.match(css, /queue-pending\{--project-status-color:#D99028\}/);
-  assert.match(css, /queue-progress\{--project-status-color:#3989D6\}/);
-  assert.match(css, /queue-completed\{--project-status-color:#269B70\}/);
-  assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
+  assert.match(source, /title="وضعیت اجرا"/);
+  assert.match(source, /title="وضعیت کلی پروژه"/);
+  assert.match(source, /title="وضعیت پروژه در مرحله"/);
+  assert.match(source, /OverallStatusName/);
+  assert.match(source, /CurrentStepStatus/);
+  assert.match(source, /event-queue-project-statuses/);
+  assert.match(css, /border-right:4px solid var\\(--project-status-color/);
+  assert.match(css, /queue-pending\\{--project-status-color:#D99028\\}/);
+  assert.match(css, /queue-progress\\{--project-status-color:#3989D6\\}/);
+  assert.match(css, /queue-completed\\{--project-status-color:#269B70\\}/);
+  assert.match(css, /grid-template-columns:minmax\\(0,1fr\\) minmax\\(0,1fr\\)/);
   assert.match(css, /direction:ltr/);
   assert.match(css, /direction:rtl/);
 });
-
 test('completed projects keep the existing change-request action and other projects keep event registration', () => {
   const source = read('js/modules/events.js');
   assert.match(source, /queueKey === 'completed'[\s\S]*?event-queue-change-request-button/);
