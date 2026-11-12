@@ -1733,8 +1733,6 @@
             this.detailRow('وضعیت تکمیل پرونده', isDraft ? 'پیش‌نویس؛ رویدادهای مجاز می‌توانند پیش از تکمیل ثبت شوند.' : 'تکمیل‌شده') +
             this.detailRow('کد پروژه', project.ProjectCode) +
             this.detailRow('عنوان پروژه', project.Title) +
-            this.detailRow('تعداد اولیه', project.Quantity) +
-            this.detailRow('توضیحات', project.Description) +
             this.detailRow('شناسه فرایند', project.WorkflowID) +
             this.detailRow(
               'مرحله فعلی',
