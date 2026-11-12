@@ -76,11 +76,11 @@ test('three independent project statuses are displayed without changing the narr
   assert.match(source, /OverallStatusName/);
   assert.match(source, /CurrentStepStatus/);
   assert.match(source, /event-queue-project-statuses/);
-  assert.match(css, /border-right:4px solid var\\(--project-status-color/);
-  assert.match(css, /queue-pending\\{--project-status-color:#D99028\\}/);
-  assert.match(css, /queue-progress\\{--project-status-color:#3989D6\\}/);
-  assert.match(css, /queue-completed\\{--project-status-color:#269B70\\}/);
-  assert.match(css, /grid-template-columns:minmax\\(0,1fr\\) minmax\\(0,1fr\\)/);
+  assert.match(css, /border-right:4px solid var\(--project-status-color/);
+  assert.match(css, /queue-pending\{--project-status-color:#D99028\}/);
+  assert.match(css, /queue-progress\{--project-status-color:#3989D6\}/);
+  assert.match(css, /queue-completed\{--project-status-color:#269B70\}/);
+  assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
   assert.match(css, /direction:ltr/);
   assert.match(css, /direction:rtl/);
 });
