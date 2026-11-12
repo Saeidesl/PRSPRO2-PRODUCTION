@@ -22,7 +22,7 @@ test('project detail explains conflict resolution using current reference inform
 
 test('project detail module cache is refreshed for automatic reference synchronization', () => {
   const source = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-  assert.match(source, /project-detail\.js\?v=20261107-project-event-history-shortcut-placement-1/);
+  assert.match(source, /project-detail\.js\?v=20261112-project-detail-attachment-cache-1/);
 });
 
 test('GitHub Pages production deployment publishes the main branch root', () => {
