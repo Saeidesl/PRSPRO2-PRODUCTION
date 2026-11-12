@@ -1512,6 +1512,10 @@
     const container = document.getElementById('attachments-table-container');
     const empty = document.getElementById('attachments-empty');
     if (!container) return;
+    container.querySelectorAll('[data-inline-object-url]').forEach(function (preview) {
+      const objectUrl = preview.dataset.inlineObjectUrl;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    });
     MODULE.ensureProjectWorkspaceStyles();
     MODULE.showLoading(false);
     MODULE.hideError();
