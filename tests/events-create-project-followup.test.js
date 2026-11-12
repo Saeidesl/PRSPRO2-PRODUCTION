@@ -47,8 +47,8 @@ test('created-project highlight respects reduced-motion preferences', () => {
   const reducedMotionBlock = css.slice(reducedMotionIndex, reducedMotionIndex + 500);
   assert.match(reducedMotionBlock, /\.event-queue-project\.is-newly-created/);
   assert.match(reducedMotionBlock, /animation:\s*none/);
-  assert.match(index, /events\.css\?v=20261113-unified-project-cards-1/);
-  assert.match(index, /events\.js\?v=20261113-unified-project-cards-1/);
+  assert.match(index, /events\.css\?v=20261113-unified-project-cards-status-label-2/);
+  assert.match(index, /events\.js\?v=20261113-unified-project-cards-status-label-2/);
 });
 
 test('events flow keeps the existing project and event API paths', () => {
