@@ -761,6 +761,25 @@
       return /^[A-Z0-9_-]+$/.test(text) && /[A-Z]/.test(text);
     },
 
+    invalidateProjectDataCaches: function (projectId) {
+      const cache = window.PMS && window.PMS.Cache;
+      const api = window.PMS && window.PMS.Api;
+      const keys = [
+        CACHE_KEY,
+        CACHE_KEY + '_event_picker',
+        'dashboard_projects_lookup',
+        'dashboard_project_lookups_v2',
+        'dashboard_shared_lookups_v2'
+      ];
+      if (cache && cache.keys && cache.keys.DASHBOARD) keys.push(cache.keys.DASHBOARD);
+      if (projectId !== undefined && projectId !== null && String(projectId) && cache && cache.keys && cache.keys.PROJECT) {
+        keys.push(cache.keys.PROJECT + '_' + String(projectId));
+      }
+      if (api && typeof api.invalidateMany === 'function') api.invalidateMany(keys);
+      else if (cache && typeof cache.remove === 'function') keys.forEach((key) => cache.remove(key));
+      if (window.PMS && window.PMS.Events) window.PMS.Events.projectOptionsToken = '';
+    },
+
     // ========================================================
     // بارگذاری پروژه‌ها
     // ========================================================
@@ -892,6 +911,7 @@
     invalidateProjectCardAttachmentMetadata: function (projectId) {
       const cache = window.PMS && window.PMS.Cache;
       if (cache) {
+        cache.remove(window.PMS.Cache.keys.ATTACHMENTS || 'attachments');
         cache.remove('project_card_images_v1');
         cache.remove('project_card_attachments_v2');
       }
@@ -1532,6 +1552,7 @@
               Status: settings.status
             };
             const response = await window.PMS.Api.put('/projects/' + encodeURIComponent(projectId), payload);
+            this.invalidateProjectDataCaches(projectId);
             if (response && response.success === false) {
               throw new Error(this.getErrorMessage(response) || 'ذخیره تنظیمات ناموفق بود.');
             }
@@ -2327,6 +2348,7 @@
           const projectId = String(modal.dataset.projectId || '');
           if (!projectId) throw new Error('شناسه پروژه برای ویرایش مشخص نیست.');
           const response = await window.PMS.Api.put('/projects/' + encodeURIComponent(projectId), project);
+          this.invalidateProjectDataCaches(projectId);
           if (response && response.success === false) throw new Error(this.getErrorMessage(response) || 'ذخیره تغییرات ناموفق بود.');
           const updated = this.extractCreatedProject(response) || (response && response.data && typeof response.data === 'object' ? response.data : {});
           const existingProject = this.projects.find((item) => String(item.ID || item.Id || item.id) === projectId);
@@ -2374,6 +2396,7 @@
           if (!created || !(created.ID || created.Id || created.id)) {
             throw new Error(this.getErrorMessage(response) || 'پاسخ سرور برای ثبت پروژه معتبر نیست.');
           }
+          this.invalidateProjectDataCaches(created.ID || created.Id || created.id);
           const newId = String(created.ID || created.Id || created.id);
           modal.dataset.referenceCopyProjectId = newId;
           referenceCopyPlan = Array.isArray(created.ReferenceCopyPlan) ? created.ReferenceCopyPlan : [];
