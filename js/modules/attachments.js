@@ -767,6 +767,7 @@
       try {
         const result = await this.fetchAttachmentBlob(attachmentId);
         if (!document.body.contains(modal)) return;
+        content.innerHTML = '';
         if (result.url) {
           const frame = document.createElement('iframe');
           frame.src = result.url;
@@ -776,6 +777,7 @@
           return;
         }
         const blob = result.blob;
+        if (!blob || !blob.size) throw new Error('محتوای فایل خالی است یا از سرور دریافت نشده است.');
         const data = result.data || {};
         const fileName = String(data.FileName || data.fileName || 'file');
         const mime = String(data.MimeType || data.mimeType || blob.type || '').toLowerCase();
@@ -785,9 +787,12 @@
         modal.querySelector('#attachment-preview-title').textContent = fileName;
         if (mime.indexOf('image/') === 0 || ['jpg','jpeg','png','webp','gif'].indexOf(extension) !== -1) {
           const image = document.createElement('img');
-          image.src = url;
           image.alt = fileName;
           image.style.cssText = 'display:block;max-width:100%;max-height:100%;object-fit:contain;margin:auto';
+          image.onerror = function () {
+            content.textContent = 'فایل دریافت شد، اما مرورگر نتوانست تصویر را رمزگشایی کند. لطفاً فایل اصلی را دانلود کنید.';
+          };
+          image.src = url;
           content.appendChild(image);
           image.addEventListener('click', function () {
             image.style.maxHeight = image.style.maxHeight === '100%' ? 'none' : '100%';
@@ -1418,34 +1423,49 @@
       const isImage = mime.indexOf('image/') === 0 || ['jpg','jpeg','png','webp','gif','bmp'].indexOf(extension) !== -1;
       const isPdf = mime === 'application/pdf' || extension === 'pdf';
       target.innerHTML = '';
-      target.dataset.previewState = 'loaded';
       if (result.url) {
         if (isImage) {
           const image = document.createElement('img');
-          image.src = result.url;
           image.alt = fileName;
+          image.onload = function () { target.dataset.previewState = 'loaded'; };
+          image.onerror = function () {
+            target.dataset.previewState = 'error';
+            target.textContent = 'فایل دریافت شد، اما مرورگر نتوانست تصویر را باز کند. از دانلود فایل استفاده کنید.';
+          };
+          image.src = result.url;
           target.appendChild(image);
         } else if (isPdf) {
           const frame = document.createElement('iframe');
           frame.src = result.url;
           frame.title = fileName;
+          frame.addEventListener('load', function () { target.dataset.previewState = 'loaded'; });
           target.appendChild(frame);
         } else {
+          target.dataset.previewState = 'error';
           target.textContent = 'پیش‌نمایش مستقیم این فایل از نشانی امن سرور در دسترس نیست.';
         }
         return;
       }
+      if (!result.blob || !result.blob.size) throw new Error('محتوای فایل خالی است یا از سرور دریافت نشده است.');
       const objectUrl = URL.createObjectURL(result.blob);
       target.dataset.inlineObjectUrl = objectUrl;
       if (isImage) {
         const image = document.createElement('img');
-        image.src = objectUrl;
         image.alt = fileName;
+        image.onload = function () { target.dataset.previewState = 'loaded'; };
+        image.onerror = function () {
+          target.dataset.previewState = 'error';
+          target.textContent = 'محتوای تصویر دریافت شد، اما قابل رمزگشایی نیست. فایل اصلی را دانلود کنید.';
+          URL.revokeObjectURL(objectUrl);
+          delete target.dataset.inlineObjectUrl;
+        };
+        image.src = objectUrl;
         target.appendChild(image);
       } else if (isPdf) {
         const frame = document.createElement('iframe');
         frame.src = objectUrl + '#toolbar=1&navpanes=0';
         frame.title = fileName;
+        frame.addEventListener('load', function () { target.dataset.previewState = 'loaded'; });
         target.appendChild(frame);
       } else if (extension === 'docx' || mime.indexOf('wordprocessingml') !== -1) {
         const mammoth = await MODULE.loadPreviewLibrary('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js', 'mammoth');
