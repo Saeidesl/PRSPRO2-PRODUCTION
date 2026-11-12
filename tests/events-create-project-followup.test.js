@@ -40,9 +40,11 @@ test('created project activates its actual queue and focuses the existing regist
 
 test('created-project highlight respects reduced-motion preferences', () => {
   assert.match(events, /prefers-reduced-motion: reduce/);
-  const reducedMotionBlock = css.match(/@media \(prefers-reduced-motion: reduce\)\s*\{[^}]+\}/);
-  assert.ok(reducedMotionBlock);
-  assert.match(reducedMotionBlock[0], /animation:\s*none/);
+  const reducedMotionIndex = css.lastIndexOf('@media (prefers-reduced-motion: reduce)');
+  assert.ok(reducedMotionIndex >= 0);
+  const reducedMotionBlock = css.slice(reducedMotionIndex, reducedMotionIndex + 500);
+  assert.match(reducedMotionBlock, /\\.event-queue-project\\.is-newly-created/);
+  assert.match(reducedMotionBlock, /animation:\\s*none/);
   assert.match(index, /events\.css\?v=20261112-created-project-focus-1/);
   assert.match(index, /events\.js\?v=20261112-events-create-project-focus-1/);
 });
