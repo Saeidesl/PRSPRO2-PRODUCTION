@@ -1664,13 +1664,19 @@
       if (printButton) {
         printButton.hidden = true;
         printButton.textContent = 'چاپ همه قالب‌ها / ذخیره PDF';
-        printButton.addEventListener('click', () => this.printOutput());
+        if (printButton.dataset.ptOutputPrintBound !== '1') {
+          printButton.dataset.ptOutputPrintBound = '1';
+          printButton.addEventListener('click', () => this.printOutput());
+        }
       }
       if (backButton) {
         backButton.hidden = false;
-        backButton.addEventListener('click', () => {
-          if (PMS.Router && typeof PMS.Router.go === 'function') PMS.Router.go('events');
-        });
+        if (backButton.dataset.ptOutputBackBound !== '1') {
+          backButton.dataset.ptOutputBackBound = '1';
+          backButton.addEventListener('click', () => {
+            if (PMS.Router && typeof PMS.Router.go === 'function') PMS.Router.go('events');
+          });
+        }
       }
       this.setStatus('pt-output-status', 'در حال دریافت پروژه و قالب‌های فعال…');
       try {
