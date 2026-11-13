@@ -202,6 +202,7 @@ test('project output exposes inline editable controls only for approved business
  assert.match(module,/data-pt-row-index/);
  assert.match(module,/ProjectCode','Title','Description','Quantity/);
  assert.match(module,/OccurredAt','Description/);
+ assert.match(module,/if \(this\.projectOutputEdit && this\.projectOutputEdit\.editor\)/);
  assert.match(css,/pt-output-inline-editor/);
  assert.match(css,/pt-output-editable-value/);
 });
