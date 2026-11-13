@@ -130,6 +130,21 @@ test('print designer image layout ids remain stable by attachment and preserve l
 });
 
 
+test('project-specific output route renders every active template through the existing resolver and renderer',()=>{
+ const module=read('js/modules/print-designer.js');
+ const events=read('js/modules/events.js');
+ const page=read('pages/print-output.html');
+ assert.match(events,/event-queue-view-button[\\s\\S]*?data-project-id=/);
+ assert.match(module,/initProjectOutput: async function \\(projectId\\)/);
+ assert.match(module,/PMS\.Api\.get\\('\/print-templates'\\)/);
+ assert.match(module,/PMS\.Api\.post\\('\/print-templates\/' \+ encodeURIComponent\\(template\.ID\\) \+ '\/resolve'\\)/);
+ assert.match(module,/renderOutputDocument\\(template, resolvedProject, data, \\{ preservePdfObjectUrls: true \\}\\)/);
+ assert.match(module,/for \\(let index = 0; index < templates\.length; index\+\+\\)/);
+ assert.match(page,/pt-output-project-heading/);
+ assert.match(page,/pt-output-back/);
+ assert.match(page,/pt-output-print/);
+});
+
 test('template library and document data output are separate routes and modes',()=>{
  const layout=read('js/components/layout.js');
  const router=read('js/core/router.js');
@@ -144,6 +159,7 @@ test('template library and document data output are separate routes and modes',(
  assert.match(output,/pt-output-template/);
  assert.match(output,/pt-output-project/);
  assert.match(module,/resolveOutput: async function/);
+ assert.match(module,/if \(!\(options && options\.preservePdfObjectUrls\)\) this\.clearOutputPdfObjectUrls\(\)/);
  assert.ok(module.includes("'/print-templates/' + encodeURIComponent(templateId) + '/resolve'"));
 });
 
