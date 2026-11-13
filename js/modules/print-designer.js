@@ -2244,6 +2244,7 @@
     printOutput: async function () {
       if (this.projectOutputEdit && this.projectOutputEdit.editor) {
         this.finishProjectOutputEdit(this.projectOutputEdit.editor, true);
+        return;
       }
       if (this.outputPdfBlobUrl) {
         const opened = window.open(this.outputPdfBlobUrl, '_blank');
