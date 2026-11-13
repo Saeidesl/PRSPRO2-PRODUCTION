@@ -338,6 +338,16 @@
           return;
         }
 
+        const queueViewAction = target.closest('.event-queue-view-button');
+        if (queueViewAction) {
+          event.preventDefault();
+          const projectId = String(queueViewAction.dataset.projectId || '').trim();
+          if (projectId && PMS.Router && typeof PMS.Router.go === 'function') {
+            PMS.Router.go('print-output/' + encodeURIComponent(projectId));
+          }
+          return;
+        }
+
         const queueAction = target.closest('.event-queue-register-button');
         if (queueAction) {
           event.preventDefault();
@@ -1182,7 +1192,7 @@
           : (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">＋</span><span>ثبت رویداد</span></button>' : '');
         const historyAction = Events.canViewEventHistory
           ? '<button type="button" class="btn btn-secondary event-queue-history-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">◷</span><span>رویدادهای ثبت‌شده</span></button>' : '';
-        const viewAction = '<button type="button" class="btn btn-secondary event-queue-view-button" disabled title="اتصال این قابلیت در تسک بعدی انجام می‌شود"><span aria-hidden="true">◉</span><span>مشاهده</span></button>';
+        const viewAction = '<button type="button" class="btn btn-secondary event-queue-view-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">◉</span><span>مشاهده</span></button>';
         const actions = [primaryAction, historyAction, viewAction].filter(Boolean).join('');
         return '<article class="event-queue-project event-project-card-unified queue-' + queueKey + '" data-queue="' + queueKey + '" data-event-project-card="' + Events.escape(id) + '">' +
           '<div class="event-queue-project-main"><div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
