@@ -1571,17 +1571,19 @@
         this.projectOutputEdit = null;
         return;
       }
-      const record = this.projectOutputEdit && this.projectOutputEdit.editor === editor
-        ? this.projectOutputEdit.record : null;
+      const active = this.projectOutputEdit && this.projectOutputEdit.editor === editor
+        ? this.projectOutputEdit : null;
+      const record = active && active.record;
       const input = editor.querySelector('.pt-output-inline-input');
       const bindingId = String(editor.dataset.ptBindingId || '');
       const isTableCell = editor.dataset.ptIsTableCell === '1';
       const value = input ? input.value : '';
       if (apply && record && bindingId) {
+        const next = JSON.parse(JSON.stringify(record.data[bindingId] === undefined ? null : record.data[bindingId]));
         if (isTableCell) {
           const rowIndex = Number(editor.dataset.ptRowIndex);
           const columnIndex = Number(editor.dataset.ptColumnIndex);
-          const row = Array.isArray(record.data[bindingId]) ? record.data[bindingId][rowIndex] : null;
+          const row = Array.isArray(next) ? next[rowIndex] : null;
           if (Array.isArray(row)) row[columnIndex] = value;
           else if (row && typeof row === 'object') {
             const key = editor.dataset.ptColumnKey || Object.keys(row)[columnIndex];
@@ -1589,9 +1591,16 @@
           }
         } else {
           const prior = record.data[bindingId];
-          record.data[bindingId] = typeof prior === 'number' && value.trim() !== '' && Number.isFinite(Number(value))
-            ? Number(value) : value;
+          const binding = (record.template.Definition && record.template.Definition.bindings || []).find(item => String(item.id) === bindingId);
+          const isNumber = typeof prior === 'number' || (binding && binding.sourceType === 'PROJECT_FIELD' && binding.field === 'Quantity');
+          if (isNumber && value.trim() !== '' && Number.isFinite(Number(value))) {
+            this.persistProjectOutputEdit(record, bindingId, Number(value), editor);
+          } else {
+            this.persistProjectOutputEdit(record, bindingId, value, editor);
+          }
         }
+        if (isTableCell) this.persistProjectOutputEdit(record, bindingId, next, editor);
+        return;
       }
       const replacement = document.createElement('span');
       replacement.className = editor.dataset.ptValueClass || 'pt-output-editable-value';
@@ -1602,11 +1611,32 @@
         replacement.dataset.ptColumnIndex = editor.dataset.ptColumnIndex;
         if (editor.dataset.ptColumnKey) replacement.dataset.ptColumnKey = editor.dataset.ptColumnKey;
       }
-      replacement.textContent = apply ? value : String(editor.dataset.ptOriginalValue || '');
+      replacement.textContent = String(editor.dataset.ptOriginalValue || '');
       editor.replaceWith(replacement);
       this.projectOutputEdit = null;
-      if (apply) {
-        this.setStatus('pt-output-status', 'تغییر در پیش‌نمایش اعمال شد. برای ثبت دائمی در اطلاعات اصلی، اتصال ذخیره‌سازی سرور در تسک بعدی انجام می‌شود.');
+    },
+    persistProjectOutputEdit: async function (record, bindingId, value, editor) {
+      const source = record && record.sources && record.sources[bindingId];
+      if (!source) {
+        this.setStatus('pt-output-status', 'شناسه منبع این مقدار دریافت نشده است. قالب را دوباره بارگذاری کنید.', true);
+        return;
+      }
+      const controls = Array.from(editor.querySelectorAll('input,textarea,button'));
+      controls.forEach(control => { control.disabled = true; });
+      this.setStatus('pt-output-status', 'در حال ذخیره تغییر در اطلاعات اصلی سیستم…');
+      try {
+        await PMS.Api.put('/print-templates/' + encodeURIComponent(record.template.ID) + '/project-data', {
+          ProjectID: this.projectOutputId,
+          BindingID: bindingId,
+          Value: value,
+          ExpectedSource: source
+        });
+        const projectId = this.projectOutputId;
+        await this.initProjectOutput(projectId);
+        this.setStatus('pt-output-status', 'تغییر با موفقیت در منبع اصلی ذخیره شد و قالب با آخرین اطلاعات سرور به‌روزرسانی شد.');
+      } catch (error) {
+        controls.forEach(control => { control.disabled = false; });
+        this.setStatus('pt-output-status', error.message || 'ذخیره تغییر ناموفق بود؛ اطلاعات اصلی تغییر نکرده است.', true);
       }
     },
     initProjectOutput: async function (projectId) {
@@ -1678,7 +1708,7 @@
             const resolvedProject = resolved.project || project;
             const data = resolved.data || {};
             if (!template.Definition) throw new Error('ساختار ذخیره‌شده قالب در دسترس نیست.');
-            this.projectOutputRecords[String(template.ID)] = { template: template, project: resolvedProject, data: data, section: section };
+            this.projectOutputRecords[String(template.ID)] = { template: template, project: resolvedProject, data: data, sources: resolved.sources || {}, section: section };
             const documentHtml = await this.renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true });
             if (renderedCount > 0) section.classList.add('starts-new-page');
             section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
@@ -1698,7 +1728,7 @@
         if (printButton) printButton.hidden = renderedCount === 0;
         this.setStatus('pt-output-status', renderedCount + ' قالب از ' + templates.length + ' قالب فعال برای این پروژه آماده شد.' +
           (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : '') +
-          ' مقادیر خط‌چین‌دار قابل ویرایش در پیش‌نمایش هستند؛ ذخیره در اطلاعات اصلی در مرحله بعد متصل می‌شود.');
+          ' مقادیر خط‌چین‌دار قابل ویرایش هستند و پس از ذخیره، اطلاعات اصلی سیستم به‌روزرسانی می‌شود.');
         if (previewCard) previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
         this.setStatus('pt-output-status', error.message || 'دریافت پروژه یا قالب‌ها ناموفق بود.', true);
