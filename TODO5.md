@@ -49,6 +49,7 @@
   - ایجاد PR و ادغام فقط پس از بررسی CI و اجازه Product Owner.
   - انتشار Frontend از workflow رسمی؛ ارائه سناریوهای تست زنده و توقف تا تأیید کاربر.
 
-- [ ] Task 4 — نمایش سه وضعیت مستقل در کارت‌ها (IN PROGRESS)
-  - Backend قرارداد `GET /projects?view=event-picker` را با `OverallStatusName` و `CurrentStepName` غنی می‌کند؛ Frontend سه برچسب مستقل را نمایش می‌دهد.
+- [x] Task 4 — نمایش سه وضعیت مستقل در کارت‌ها
+  - Backend قرارداد `GET /projects?view=event-picker` را با `OverallStatusName` و `CurrentStepName` غنی کرد؛ Frontend سه برچسب مستقل را نمایش می‌دهد.
   - وضعیت اجرا همچنان از رویدادهای مرتبط محاسبه می‌شود؛ رنگ نوار کناری و عملکرد دکمه‌ها/فیلترها حفظ می‌شود.
+  - *Log:* Backend: `ProjectService.js` با lookup گروهی و tenant-scoped نام وضعیت کلی و نام مرحله را به خروجی پروژه افزود؛ `CurrentStepStatus` حفظ شد و Schema/DB تغییر نکرد. Frontend: `js/modules/events.js` سه برچسب «وضعیت اجرا»، «وضعیت کلی پروژه» و «وضعیت پروژه در مرحله» را مستقل رندر می‌کند؛ `css/events.css` چینش واکنش‌گرا را پیاده‌سازی کرد و `index.html` cache-busting را به‌روزرسانی کرد. تست‌های `tests/event-project-picker-projection.test.js` و `tests/event-queue-project-cards.test.js` و CIهای Backend/Frontend/cross-repository موفق شدند. Backend PR #78 با merge commit `9f88ea63e50b03929ffbf8ab4e821bf3c7999a50` و Frontend PR #125 با merge commit `c3c31d87b6a9d270804925dec52f7e8c4c7827c5` در main ادغام شدند. Frontend Pages workflow `43402202354` و Backend deployment workflow `43402963994` موفق بودند؛ Backend Web App نسخه 26 منتشر شد. Product Owner تست زنده را در 2026-11-13 موفق اعلام کرد.
