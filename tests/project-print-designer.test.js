@@ -214,6 +214,9 @@ test('project template inline edits persist to the authoritative source and refr
   assert.match(module, /PMS\.Api\.put\('\/print-templates\/'/);
   assert.match(module, /ExpectedSource: source/);
   assert.match(module, /await this\.initProjectOutput\(projectId\)/);
+  assert.match(module, /return failedCount === 0/);
+  assert.match(module, /refreshed !== true/);
+  assert.match(module, /printButton\.hidden = true/);
   assert.match(module, /ذخیره تغییر ناموفق بود/);
   assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
   assert.match(index, /print-designer\.js\?v=20261113-inline-source-save-1/);
