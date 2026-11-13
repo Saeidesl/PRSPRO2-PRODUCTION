@@ -206,3 +206,15 @@ test('project output exposes inline editable controls only for approved business
  assert.match(css,/pt-output-inline-editor/);
  assert.match(css,/pt-output-editable-value/);
 });
+
+test('project template inline edits persist to the authoritative source and refresh before print', () => {
+  const module = read('js/modules/print-designer.js');
+  const index = read('index.html');
+  assert.match(module, /sources: resolved\.sources \|\| \{\}/);
+  assert.match(module, /PMS\.Api\.put\('\/print-templates\/'/);
+  assert.match(module, /ExpectedSource: source/);
+  assert.match(module, /await this\.initProjectOutput\(projectId\)/);
+  assert.match(module, /ذخیره تغییر ناموفق بود/);
+  assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
+  assert.match(index, /print-designer\.js\?v=20261113-inline-source-save-1/);
+});
