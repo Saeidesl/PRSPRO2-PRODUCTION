@@ -1471,6 +1471,7 @@
       this.projectOutputId = String(projectId || '').trim();
       this.clearOutputPdfObjectUrls();
       this.clearGeneratedOutputPdf();
+      this.loadOutputMargins();
       const controls = document.getElementById('pt-output-controls');
       const margins = document.getElementById('pt-output-margin-settings');
       const dataCard = document.getElementById('pt-output-data-card');
@@ -2043,7 +2044,7 @@
         else this.setStatus('pt-output-status', 'PDF اصلی در نمایشگر مرورگر باز شد؛ از گزینه چاپ یا ذخیره همان نمایشگر استفاده کن.');
         return;
       }
-      this.saveOutputMargins();
+      if (!this.projectOutputMode) this.saveOutputMargins();
       let printStyle = document.getElementById('pt-output-page-rule');
       if (!printStyle) {
         printStyle = document.createElement('style');
