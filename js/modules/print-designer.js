@@ -1155,6 +1155,14 @@
       }
     },
     initOutput: async function () {
+      this.projectOutputMode = false;
+      this.projectOutputId = '';
+      const routeParts = String(window.location.hash || '').replace(/^#/, '').split('/');
+      const projectId = routeParts[0] === 'print-output' ? decodeURIComponent(routeParts[1] || '') : '';
+      if (projectId) {
+        await this.initProjectOutput(projectId);
+        return;
+      }
       const button = document.getElementById('pt-output-resolve');
       const printButton = document.getElementById('pt-output-print');
       const downloadButton = document.getElementById('pt-output-download');
@@ -1458,6 +1466,98 @@
       } finally {
         this.livePreviewBusy = false;
         if (this.livePreviewPending && this.livePreviewTimer === null) this.scheduleLivePreview(150);
+      }
+    },
+    initProjectOutput: async function (projectId) {
+      this.projectOutputMode = true;
+      this.projectOutputId = String(projectId || '').trim();
+      this.clearOutputPdfObjectUrls();
+      this.clearGeneratedOutputPdf();
+      this.loadOutputMargins();
+      const controls = document.getElementById('pt-output-controls');
+      const margins = document.getElementById('pt-output-margin-settings');
+      const dataCard = document.getElementById('pt-output-data-card');
+      const heading = document.getElementById('pt-output-project-heading');
+      const previewCard = document.getElementById('pt-output-preview-card');
+      const preview = document.getElementById('pt-output-preview');
+      const printButton = document.getElementById('pt-output-print');
+      const backButton = document.getElementById('pt-output-back');
+      if (controls) controls.hidden = true;
+      if (margins) margins.hidden = true;
+      if (dataCard) dataCard.hidden = true;
+      if (heading) heading.hidden = false;
+      if (previewCard) previewCard.hidden = true;
+      if (preview) preview.replaceChildren();
+      if (printButton) {
+        printButton.hidden = true;
+        printButton.textContent = 'چاپ همه قالب‌ها / ذخیره PDF';
+        printButton.addEventListener('click', () => this.printOutput());
+      }
+      if (backButton) {
+        backButton.hidden = false;
+        backButton.addEventListener('click', () => {
+          if (PMS.Router && typeof PMS.Router.go === 'function') PMS.Router.go('events');
+        });
+      }
+      this.setStatus('pt-output-status', 'در حال دریافت پروژه و قالب‌های فعال…');
+      try {
+        const results = await Promise.all([
+          PMS.Api.get('/print-templates'),
+          PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))
+        ]);
+        const templates = this.list(results[0]).filter(item =>
+          item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'
+        );
+        const projectResult = this.extract(results[1]) || {};
+        const project = projectResult.project || projectResult.Project || projectResult.item || projectResult;
+        const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
+        const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
+        if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName;
+        if (!templates.length) {
+          if (previewCard) previewCard.hidden = false;
+          if (preview) preview.innerHTML = '<div class="pt-empty-state">برای این مجموعه هنوز قالب فعالی در قالب‌ساز ثبت نشده است.</div>';
+          this.setStatus('pt-output-status', 'قالب فعالی برای نمایش وجود ندارد.');
+          return;
+        }
+        let renderedCount = 0;
+        let failedCount = 0;
+        for (let index = 0; index < templates.length; index++) {
+          const template = templates[index];
+          const section = document.createElement('section');
+          section.className = 'pt-project-template-output';
+          section.dataset.templateId = String(template.ID);
+          try {
+            this.setStatus('pt-output-status', 'در حال آماده‌سازی قالب ' + (index + 1) + ' از ' + templates.length + ': ' + (template.Name || template.Code || '') + '…');
+            const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(template.ID) + '/resolve', {
+              ProjectID: this.projectOutputId
+            });
+            const resolved = this.extract(response) || {};
+            const resolvedProject = resolved.project || project;
+            const data = resolved.data || {};
+            if (!template.Definition) throw new Error('ساختار ذخیره‌شده قالب در دسترس نیست.');
+            const documentHtml = await this.renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true });
+            if (renderedCount > 0) section.classList.add('starts-new-page');
+            section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
+              '</strong><span>' + this.esc(template.Code || '') + '</span></header><div class="pt-project-template-pages">' + documentHtml + '</div>';
+            renderedCount++;
+          } catch (templateError) {
+            failedCount++;
+            section.classList.add('has-error');
+            section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
+              '</strong><span>' + this.esc(template.Code || '') + '</span></header><div class="pt-empty-state is-error">آماده‌سازی این قالب ناموفق بود: ' +
+              this.esc(templateError.message || 'خطای نامشخص') + '</div>';
+          }
+          if (preview) preview.appendChild(section);
+        }
+        if (previewCard) previewCard.hidden = false;
+        if (printButton) printButton.hidden = renderedCount === 0;
+        this.setStatus('pt-output-status', renderedCount + ' قالب از ' + templates.length + ' قالب فعال برای این پروژه آماده شد.' +
+          (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : ''));
+        if (previewCard) previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (error) {
+        this.setStatus('pt-output-status', error.message || 'دریافت پروژه یا قالب‌ها ناموفق بود.', true);
+        if (previewCard) previewCard.hidden = false;
+        if (preview) preview.innerHTML = '<div class="pt-empty-state is-error">بارگذاری قالب‌های پروژه ناموفق بود. صفحه را دوباره باز کن.</div>';
       }
     },
     loadOutputOptions: async function () {
@@ -1804,7 +1904,7 @@
       link.click();
       link.remove();
     },
-    loadOutputPdfPages: async function (templateId, definition) {
+    loadOutputPdfPages: async function (templateId, definition, options) {
       const metadata=definition&&definition.pdf;
       if(!metadata||!Array.isArray(metadata.pages)||!metadata.pages.length)return null;
       if(!window.pdfjsLib||typeof window.pdfjsLib.getDocument!=='function')throw new Error('موتور نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن و دوباره تلاش کن.');
@@ -1844,19 +1944,19 @@
         }
         return rendered;
       } catch(error) {
-        this.clearOutputPdfObjectUrls();
+        if (!(options && options.preservePdfObjectUrls)) this.clearOutputPdfObjectUrls();
         throw error;
       } finally {
         if(typeof pdf.destroy==='function')await pdf.destroy();
       }
     },
     renderOutputDocument: async function (template, project, data, options) {
-      this.clearOutputPdfObjectUrls();
+      if (!(options && options.preservePdfObjectUrls)) this.clearOutputPdfObjectUrls();
       const definition = template && template.Definition ? template.Definition : {};
       const overlayOnly = !!(options && options.overlayOnly);
       await this.loadTemplateImages(template, definition);
       const pdfPages = !overlayOnly && template && template.Pdf && template.Pdf.HasFile
-        ? await this.loadOutputPdfPages(template.ID, definition) : null;
+        ? await this.loadOutputPdfPages(template.ID, definition, options) : null;
       const page = definition.page || {};
       const sizes = {A4:[210,297],A5:[148,210],LETTER:[216,279]};
       const base = sizes[String(page.size || 'A4').toUpperCase()] || sizes.A4;
@@ -1948,7 +2048,7 @@
         else this.setStatus('pt-output-status', 'PDF اصلی در نمایشگر مرورگر باز شد؛ از گزینه چاپ یا ذخیره همان نمایشگر استفاده کن.');
         return;
       }
-      this.saveOutputMargins();
+      if (!this.projectOutputMode) this.saveOutputMargins();
       let printStyle = document.getElementById('pt-output-page-rule');
       if (!printStyle) {
         printStyle = document.createElement('style');

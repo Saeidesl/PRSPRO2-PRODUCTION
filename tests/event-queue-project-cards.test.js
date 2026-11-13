@@ -55,15 +55,17 @@ test('unified project cards keep profile images and latest event details', () =>
   assert.match(source, /event-queue-all/);
 });
 
-test('project card gives visual priority to project code and adds the non-functional view button', () => {
+test('project card view action opens the project-specific template output route', () => {
   const source = read('js/modules/events.js');
   assert.match(source, /event-queue-project-code-label/);
   assert.match(source, /event-queue-project-code/);
   assert.match(source, /event-queue-project-title/);
-  assert.match(source, /event-queue-view-button" disabled/);
+  assert.match(source, /event-queue-view-button" data-project-id=/);
+  assert.match(source, /target\.closest\('\.event-queue-view-button'\)/);
+  assert.match(source, /PMS\.Router\.go\('print-output\/' \+ encodeURIComponent\(projectId\)\)/);
   assert.match(source, /رویدادهای ثبت‌شده/);
   assert.match(source, /ثبت رویداد/);
-  assert.doesNotMatch(source, /target\.closest\('\.event-queue-view-button'\)/);
+  assert.doesNotMatch(source, /اتصال این قابلیت در تسک بعدی انجام می‌شود/);
 });
 
 test('three independent project statuses are displayed without changing the narrow status edge', () => {

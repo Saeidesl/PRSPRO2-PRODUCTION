@@ -60,7 +60,7 @@ test('print designer module parses and is loaded exactly once',()=>{
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
- assert.match(index,/20261110-event-picker-visible-groups-1/);
+ assert.match(index,/20261113-project-template-output-2/);
 });
 
 
@@ -189,7 +189,7 @@ test('print output hides image helper copy and uses exact page size without forc
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
  assert.ok(index.includes('css/print-template-library.css?v=20261111-workspace-panels-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261110-event-picker-visible-groups-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261113-project-template-output-2'));
 });
 
 
@@ -218,7 +218,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('event-picker-visible-groups-1'));
+ assert.ok(index.includes('project-template-output-2'));
 });
 
 
@@ -240,7 +240,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('event-picker-visible-groups-1'));
+ assert.ok(index.includes('project-template-output-2'));
 });
 
 
@@ -253,7 +253,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('event-picker-visible-groups-1'));
+ assert.ok(index.includes('project-template-output-2'));
 });
 
 
@@ -375,7 +375,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261110-event-picker-visible-groups-1'));
+ assert.ok(index.includes('20261113-project-template-output-2'));
 });
 
 
