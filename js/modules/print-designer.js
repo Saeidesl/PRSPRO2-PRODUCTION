@@ -2165,7 +2165,7 @@
               : [row]);
             return '<tr>'+columns.map((_,i)=>{
               const key = !Array.isArray(row) && row && typeof row === 'object'
-                ? String((item.columnKeys || columns)[i] || Object.keys(row)[i] || '') : '';
+                ? String((item.columnKeys && item.columnKeys[i]) || Object.keys(row)[i] || '') : '';
               const cellValue = this.esc(this.formatOutputValue(cells[i]));
               const editable = tableEditable
                 ? '<span class="pt-output-editable-value" data-pt-output-editable="true" data-pt-binding-id="' + this.esc(item.bindingId) +
