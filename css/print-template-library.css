@@ -158,8 +158,9 @@
   body.pt-printing #pt-output-preview-card>.card-body{display:block!important;margin:0!important;padding:0!important}
   body.pt-printing #pt-output-preview-card>.card-body>.pt-section-title{display:none!important}
   body.pt-printing .pt-output-preview-toolbar{display:none!important}
-  body.pt-printing .pt-project-template-output{border:0!important;border-radius:0!important;margin:0!important;padding:0!important;background:#fff!important;break-before:page!important;page-break-before:always!important}
-  body.pt-printing .pt-project-template-output:first-child{break-before:auto!important;page-break-before:auto!important}
+  body.pt-printing .pt-project-template-output{border:0!important;border-radius:0!important;margin:0!important;padding:0!important;background:#fff!important}
+  body.pt-printing .pt-project-template-output.starts-new-page{break-before:page!important;page-break-before:always!important}
+  body.pt-printing .pt-project-template-output.has-error{display:none!important}
   body.pt-printing .pt-project-template-heading{display:none!important}
   body.pt-printing .pt-project-template-pages{display:block!important}
   body.pt-printing #pt-output-preview-card{position:absolute!important;top:0!important;left:0!important;right:auto!important;inset:auto!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important}
