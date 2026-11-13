@@ -1632,8 +1632,14 @@
           ExpectedSource: source
         });
         const projectId = this.projectOutputId;
-        await this.initProjectOutput(projectId);
-        this.setStatus('pt-output-status', 'تغییر با موفقیت در منبع اصلی ذخیره شد و قالب با آخرین اطلاعات سرور به‌روزرسانی شد.');
+        const refreshed = await this.initProjectOutput(projectId);
+        if (refreshed !== true) {
+          const printButton = document.getElementById('pt-output-print');
+          if (printButton) printButton.hidden = true;
+          this.setStatus('pt-output-status', 'تغییر در منبع اصلی ذخیره شد؛ اما دریافت دوباره همه قالب‌ها از سرور کامل نشد. برای جلوگیری از چاپ اطلاعات قدیمی، چاپ تا بارگذاری موفق دوباره غیرفعال است.', true);
+          return;
+        }
+        this.setStatus('pt-output-status', 'تغییر با موفقیت در منبع اصلی ذخیره شد و همه قالب‌ها با آخرین اطلاعات سرور به‌روزرسانی شدند.');
       } catch (error) {
         controls.forEach(control => { control.disabled = false; });
         this.setStatus('pt-output-status', error.message || 'ذخیره تغییر ناموفق بود؛ اطلاعات اصلی تغییر نکرده است.', true);
@@ -1736,10 +1742,12 @@
           (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : '') +
           ' مقادیر خط‌چین‌دار قابل ویرایش هستند و پس از ذخیره، اطلاعات اصلی سیستم به‌روزرسانی می‌شود.');
         if (previewCard) previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return failedCount === 0;
       } catch (error) {
         this.setStatus('pt-output-status', error.message || 'دریافت پروژه یا قالب‌ها ناموفق بود.', true);
         if (previewCard) previewCard.hidden = false;
         if (preview) preview.innerHTML = '<div class="pt-empty-state is-error">بارگذاری قالب‌های پروژه ناموفق بود. صفحه را دوباره باز کن.</div>';
+        return false;
       }
     },
     loadOutputOptions: async function () {
