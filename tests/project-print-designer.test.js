@@ -134,15 +134,15 @@ test('project-specific output route renders every active template through the ex
  const module=read('js/modules/print-designer.js');
  const events=read('js/modules/events.js');
  const page=read('pages/print-output.html');
- assert.match(events,/event-queue-view-button[\\s\\S]*?data-project-id=/);
- assert.match(module,/initProjectOutput: async function \\(projectId\\)/);
- assert.match(module,/PMS\.Api\.get\\('\/print-templates'\\)/);
- assert.match(module,/PMS\.Api\.post\\('\/print-templates\/' \+ encodeURIComponent\\(template\.ID\\) \+ '\/resolve'\\)/);
- assert.match(module,/renderOutputDocument\\(template, resolvedProject, data, \\{ preservePdfObjectUrls: true \\}\\)/);
- assert.match(module,/for \\(let index = 0; index < templates\.length; index\+\+\\)/);
- assert.match(page,/pt-output-project-heading/);
- assert.match(page,/pt-output-back/);
- assert.match(page,/pt-output-print/);
+ assert.ok(events.includes('event-queue-view-button" data-project-id='));
+ assert.ok(module.includes('initProjectOutput: async function (projectId)'));
+ assert.ok(module.includes("PMS.Api.get('/print-templates')"));
+ assert.ok(module.includes("PMS.Api.post('/print-templates/' + encodeURIComponent(template.ID) + '/resolve'"));
+ assert.ok(module.includes('renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true })'));
+ assert.ok(module.includes('for (let index = 0; index < templates.length; index++)'));
+ assert.ok(page.includes('pt-output-project-heading'));
+ assert.ok(page.includes('pt-output-back'));
+ assert.ok(page.includes('pt-output-print'));
 });
 
 test('template library and document data output are separate routes and modes',()=>{
@@ -159,6 +159,7 @@ test('template library and document data output are separate routes and modes',(
  assert.match(output,/pt-output-template/);
  assert.match(output,/pt-output-project/);
  assert.match(module,/resolveOutput: async function/);
+ assert.ok(module.includes('if (!this.projectOutputMode) this.saveOutputMargins()'));
  assert.match(module,/if \(!\(options && options\.preservePdfObjectUrls\)\) this\.clearOutputPdfObjectUrls\(\)/);
  assert.ok(module.includes("'/print-templates/' + encodeURIComponent(templateId) + '/resolve'"));
 });
