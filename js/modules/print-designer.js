@@ -2206,6 +2206,9 @@
       return pages.join('');
     },
     printOutput: async function () {
+      if (this.projectOutputEdit && this.projectOutputEdit.editor) {
+        this.finishProjectOutputEdit(this.projectOutputEdit.editor, true);
+      }
       if (this.outputPdfBlobUrl) {
         const opened = window.open(this.outputPdfBlobUrl, '_blank');
         if (!opened) this.setStatus('pt-output-status', 'مرورگر پنجره PDF را مسدود کرد؛ از دکمه «دانلود PDF نهایی» استفاده کن.');
