@@ -2159,3 +2159,11 @@
 .events-page .event-project-card-unified .event-queue-view-button{opacity:.82;cursor:default}
 .events-page .event-project-card-unified.is-newly-created{outline:2px solid var(--color-primary);outline-offset:2px}
 @media (max-width:640px){.events-page .event-queue-list-unified{grid-template-columns:minmax(0,1fr);padding:8px 0}.events-page .event-project-card-unified{padding:9px;gap:8px}.events-page .event-project-card-unified .event-queue-project-main{min-height:142px}.events-page .event-project-card-unified .event-queue-project-media,.events-page .event-project-card-unified .event-queue-project-media img,.events-page .event-project-card-unified .event-queue-project-image-placeholder{min-height:142px}.events-page .event-project-card-unified .event-queue-project-copy{padding:8px 9px}.events-page .event-project-card-unified .event-queue-project-actions{gap:5px}.events-page .event-project-card-unified .event-queue-project-actions .btn{min-height:42px;padding:5px 3px;font-size:10px}}
+
+
+/* Independent execution, overall-project and workflow-stage statuses */
+.events-page .event-queue-project-statuses { display:flex; flex-wrap:wrap; align-items:flex-start; gap:6px; margin-top:9px; min-width:0; }
+.events-page .event-queue-project-statuses .event-queue-project-status-badge { display:inline-flex; flex-direction:column; align-items:flex-start; gap:2px; max-width:100%; min-width:0; padding:5px 9px; border:1px solid var(--color-border); border-radius:9px; background:var(--color-surface-alt); color:var(--color-text); font-size:.76rem; font-weight:700; line-height:1.5; overflow-wrap:anywhere; }
+.events-page .event-queue-project-statuses .event-queue-project-status-badge small { color:var(--color-text-muted); font-size:.65rem; font-weight:600; }
+.events-page .event-queue-project-statuses .status-overall { border-color:color-mix(in srgb,var(--color-primary) 30%,var(--color-border)); }
+.events-page .event-queue-project-statuses .status-step { border-color:color-mix(in srgb,var(--color-info, var(--color-primary)) 30%,var(--color-border)); }
