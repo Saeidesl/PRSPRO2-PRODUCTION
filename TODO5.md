@@ -6,8 +6,8 @@
 
 ### مخازن و شاخه‌ها
 - Backend: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`، شاخه `feat/template-inline-data-edit-20261113`؛ مبنا: `main` در commit `a313b06aa96ed3bebc844a219df30d0df75a0213`.
-- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `feat/template-inline-data-edit-20261113`؛ مبنا: `main` در commit `9595b3e060ab7b544830045e1db08170db3cdbd6`.
-- هر دو مخزن مجوز push دارند؛ هیچ تغییر مستقیمی روی `main` انجام نمی‌شود.
+- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `main`؛ تغییر Task 2 از PR #129 با merge commit `19ec7226960a643d7242f3f5836bc8876e1fcde3` ادغام شد.
+- مخزن Development خارج از محدوده است؛ ادغام فقط پس از موفقیت CI و مجوز صریح انجام شده است.
 
 ### معماری کشف‌شده
 - Frontend صفحه رویدادها: `pages/events.html`؛ کارت‌ها و رفتارها در `js/modules/events.js` و استایل در `css/events.css`.
@@ -58,6 +58,7 @@
 ## تسک‌های فاز جاری
 - [x] **Task 1 — Discovery & Planning:** بررسی شاخه‌ها و commitهای عملیاتی، TODO5/ARCHITECTURE، مسیر خروجی قالب، bindingها، resolver، APIهای نوشتن اطلاعات پروژه/فرم و محدودیت فعلی اصلاح رویداد انجام شد.
   - *Log:* Frontend: PrintDesigner.initProjectOutput(), renderOutputDocument(), pages/print-output.html و js/core/api.js بررسی شد. Backend: Router.js، PrintTemplateService._resolveProjectData()، ProjectInformationService.save()، FormService.updateEventFormResponse()، EventService، EventRepository.update() و FormRepository.updateResponse() بررسی شدند. مشخص شد API فعلی فرم به AmendmentEventID وابسته است و EventService متد عمومی update ندارد. شاخه‌های ویژگی مستقل از main ایجاد شدند؛ هیچ کد یا داده عملیاتی تغییر نکرد.
-- [ ] **Task 2 — Inline Editing UX (IN PROGRESS):** طراحی و پیاده‌سازی ویرایش درجا برای عناصر متصل به bindingهای قابل ویرایش؛ نمایش حالت ویرایش/ذخیره/خطا، لغو و بازخوانی داده ذخیره‌شده؛ حفظ ابعاد، موقعیت، PDF background و چاپ.
-- [ ] **Task 3 — Safe Source Persistence:** پیاده‌سازی ذخیره امن اطلاعات پروژه، اطلاعات مرکزی، پاسخ فرم و فیلدهای قابل ویرایش همان رویداد قبلی با حفظ مجوز، اعتبارسنجی، tenant isolation، optimistic concurrency و Audit/History؛ بدون ایجاد رویداد جدید یا اجرای مجدد Workflow.
+- [x] **Task 2 — Inline Editing UX:** ویرایش درجا برای bindingهای مجاز و سلول‌های جدول در خروجی قالب پروژه پیاده‌سازی، CI و بررسی عملکرد مرورگر با موفقیت گذرانده، در Frontend main ادغام و توسط Product Owner تست و تأیید شد.
+  - *Log:* در `js/modules/print-designer.js`، stateهای `projectOutputRecords` و `projectOutputEdit`، allow-list تابع `isProjectOutputBindingEditable()`، event delegation در `bindProjectOutputSection()` و توابع `beginProjectOutputEdit()` و `finishProjectOutputEdit()` اضافه شدند. مقدارهای `PROJECT_FIELD` (ProjectCode, Title, Description, Quantity)، داده‌های scalar/table از `PROJECT_INFORMATION` و `EVENT_FORM_FIELD` و فیلدهای `OccurredAt` و `Description` از `EVENT_FIELD` در حالت `LATEST` به‌صورت درجا قابل ویرایش شدند؛ فیلدهای سیستمی و تصویرها read-only ماندند. `css/print-template-library.css` برای کنترل‌های ویرایش، حالت موبایل و چاپ توسعه یافت؛ cache-bust در `index.html` به‌روز شد؛ تست‌های `tests/project-print-designer.test.js` و `tests/print-template-library.test.js` اصلاح/تکمیل شدند. PR #129 با CI شامل Frontend checks، Print designer regression، PMS frontend agent suite، PMS cross-repository QA و PMS comprehensive UI performance audit همگی موفق شد؛ در 2026-11-13 با Squash merge commit `19ec7226960a643d7242f3f5836bc8876e1fcde3` به `main` ادغام شد. Product Owner تست ویرایش را موفق اعلام کرد. این تسک فقط UX و تغییر محلی پیش‌نمایش را تحویل می‌دهد؛ ذخیره منبع اصلی هنوز در Task 3 است و deployment مستقل در این Log تأیید نشده است.
+- [ ] **Task 3 — Safe Source Persistence (IN PROGRESS):** پیاده‌سازی ذخیره امن اطلاعات پروژه، اطلاعات مرکزی، پاسخ فرم و فیلدهای قابل ویرایش همان رویداد قبلی با حفظ مجوز، اعتبارسنجی، tenant isolation، optimistic concurrency و Audit/History؛ بدون ایجاد رویداد جدید یا اجرای مجدد Workflow.
 - [ ] **Task 4 — Integration & Regression:** تست قرارداد API، binding-to-source mapping، داده‌های چندردیفی، دسترسی کاربران، همگام‌سازی resolver پس از ذخیره، چاپ/PDF، موبایل/دسکتاپ و عدم رگرسیون جریان رویداد اصلاحی فعلی.
