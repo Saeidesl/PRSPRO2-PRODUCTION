@@ -1155,6 +1155,8 @@
       }
     },
     initOutput: async function () {
+      this.projectOutputMode = false;
+      this.projectOutputId = '';
       const routeParts = String(window.location.hash || '').replace(/^#/, '').split('/');
       const projectId = routeParts[0] === 'print-output' ? decodeURIComponent(routeParts[1] || '') : '';
       if (projectId) {
@@ -1900,7 +1902,7 @@
       link.click();
       link.remove();
     },
-    loadOutputPdfPages: async function (templateId, definition) {
+    loadOutputPdfPages: async function (templateId, definition, options) {
       const metadata=definition&&definition.pdf;
       if(!metadata||!Array.isArray(metadata.pages)||!metadata.pages.length)return null;
       if(!window.pdfjsLib||typeof window.pdfjsLib.getDocument!=='function')throw new Error('موتور نمایش PDF بارگذاری نشده است؛ صفحه را تازه‌سازی کن و دوباره تلاش کن.');
@@ -1940,7 +1942,7 @@
         }
         return rendered;
       } catch(error) {
-        this.clearOutputPdfObjectUrls();
+        if (!(options && options.preservePdfObjectUrls)) this.clearOutputPdfObjectUrls();
         throw error;
       } finally {
         if(typeof pdf.destroy==='function')await pdf.destroy();
@@ -1952,7 +1954,7 @@
       const overlayOnly = !!(options && options.overlayOnly);
       await this.loadTemplateImages(template, definition);
       const pdfPages = !overlayOnly && template && template.Pdf && template.Pdf.HasFile
-        ? await this.loadOutputPdfPages(template.ID, definition) : null;
+        ? await this.loadOutputPdfPages(template.ID, definition, options) : null;
       const page = definition.page || {};
       const sizes = {A4:[210,297],A5:[148,210],LETTER:[216,279]};
       const base = sizes[String(page.size || 'A4').toUpperCase()] || sizes.A4;
