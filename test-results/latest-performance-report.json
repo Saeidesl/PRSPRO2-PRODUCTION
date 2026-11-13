@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "suite": "PMS Comprehensive UI and Performance Audit",
   "scope": "all",
-  "generatedAt": "2026-11-13T16:35:48.810Z",
+  "generatedAt": "2026-11-13T17:41:19.154Z",
   "baseURL": "http://127.0.0.1:4173/PRSPRO2/",
   "mode": "authenticated-read-only",
   "safety": {
@@ -17,20 +17,20 @@
     "permissionDeniedRoutes": 0,
     "failedRoutes": 0,
     "mobileRoutesWithHorizontalOverflow": 0,
-    "visibleFormsInventoried": 12,
-    "dynamicFormsInventoried": 11,
+    "visibleFormsInventoried": 13,
+    "dynamicFormsInventoried": 12,
     "formOpenersChecked": 13,
-    "visibleButtonsInventoried": 172,
+    "visibleButtonsInventoried": 180,
     "visibleInputsAndControlsInventoried": 47,
-    "networkRequestsMeasured": 314,
-    "procurementApiRequestsMeasured": 6,
+    "networkRequestsMeasured": 333,
+    "procurementApiRequestsMeasured": 7,
     "procurementApiFailedRequests": 0,
     "procurementDiagnosticEndpointsMeasured": 5,
     "failedNetworkRequests": 0,
     "consoleErrors": 0,
     "pageErrors": 0,
     "safeButtonChecks": 12,
-    "failedSafeButtonChecks": 2,
+    "failedSafeButtonChecks": 1,
     "formSubmissionsExecuted": 0
   },
   "routes": [
@@ -162,8 +162,8 @@
       ],
       "visibleControlCount": 2,
       "visibleTextLength": 238,
-      "routeReadyMs": 4984,
-      "navigationMs": 7647,
+      "routeReadyMs": 3471,
+      "navigationMs": 6132,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -288,8 +288,8 @@
       ],
       "visibleControlCount": 2,
       "visibleTextLength": 168,
-      "routeReadyMs": 4433,
-      "navigationMs": 7092,
+      "routeReadyMs": 2916,
+      "navigationMs": 5574,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -491,8 +491,8 @@
       ],
       "visibleControlCount": 0,
       "visibleTextLength": 62,
-      "routeReadyMs": 3425,
-      "navigationMs": 6084,
+      "routeReadyMs": 3438,
+      "navigationMs": 6096,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -783,8 +783,8 @@
       ],
       "visibleControlCount": 7,
       "visibleTextLength": 500,
-      "routeReadyMs": 4436,
-      "navigationMs": 7100,
+      "routeReadyMs": 4923,
+      "navigationMs": 7585,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -917,8 +917,8 @@
       ],
       "visibleControlCount": 6,
       "visibleTextLength": 400,
-      "routeReadyMs": 3928,
-      "navigationMs": 6586,
+      "routeReadyMs": 4929,
+      "navigationMs": 7587,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -1075,8 +1075,8 @@
       ],
       "visibleControlCount": 2,
       "visibleTextLength": 438,
-      "routeReadyMs": 3928,
-      "navigationMs": 6586,
+      "routeReadyMs": 2964,
+      "navigationMs": 5623,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -1177,8 +1177,8 @@
         {
           "id": "events-filter-toggle",
           "label": "☷\nفیلترهای بیشتر\n⌄",
-          "clickCompleted": false,
-          "error": "locator.click: Timeout 8000ms exceeded.\nCall log:\n  - waiting for locator('#page-content').locator('[id=\"events-filter-toggle\"]').first()\n    - locator resolved to <button type=\"button\" aria-expanded=\"false\" id=\"events-filter-toggle\" aria-controls=\"events-filter-content\" class=\"btn btn-secondary events-filter-toggle\">…</button>\n  - attempting click action\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n    - done scrolling\n    - <td>دسترسی 1298 / روتر 745 / Sheets: findById:456ms×1…</td> from <section aria-label=\"تشخیص سرعت PMS\" id=\"pms-performance-diagnostics\">…</section> subtree intercepts pointer events\n  - retrying click action\n    - waiting for element to be visible, enabled and stable\n    - element is visible, enabled and stable\n    - scrolling into view if needed\n    - done scrolling\n    - <section aria-label=\"تشخیص سرعت PMS\" id=\"pms-performance-diagnostics\">…</section> intercepts pointe"
+          "clickCompleted": true,
+          "visibleContentChanged": true
         }
       ]
     },
@@ -1286,8 +1286,8 @@
       ],
       "visibleControlCount": 2,
       "visibleTextLength": 225,
-      "routeReadyMs": 3939,
-      "navigationMs": 6597,
+      "routeReadyMs": 3425,
+      "navigationMs": 6081,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -1359,6 +1359,70 @@
           "index": 0,
           "id": "project-status-create",
           "label": "+ وضعیت جدید",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 4,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 5,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 6,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 7,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 8,
+          "id": "",
+          "label": "dynamic-button",
           "type": "button",
           "disabled": false,
           "inForm": false
@@ -1448,9 +1512,9 @@
         }
       ],
       "visibleControlCount": 1,
-      "visibleTextLength": 109,
-      "routeReadyMs": 3946,
-      "navigationMs": 6604,
+      "visibleTextLength": 270,
+      "routeReadyMs": 4424,
+      "navigationMs": 7081,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -1458,7 +1522,7 @@
         "bodyWidth": 390,
         "horizontalOverflow": false,
         "visibleForms": 0,
-        "visibleButtons": 1,
+        "visibleButtons": 9,
         "visibleControls": 1
       },
       "dynamicFormInventory": [
@@ -2276,8 +2340,8 @@
       ],
       "visibleControlCount": 1,
       "visibleTextLength": 500,
-      "routeReadyMs": 3914,
-      "navigationMs": 6581,
+      "routeReadyMs": 3933,
+      "navigationMs": 6599,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -2403,8 +2467,8 @@
       ],
       "visibleControlCount": 1,
       "visibleTextLength": 183,
-      "routeReadyMs": 3917,
-      "navigationMs": 6575,
+      "routeReadyMs": 4411,
+      "navigationMs": 7069,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -2686,8 +2750,8 @@
       ],
       "visibleControlCount": 0,
       "visibleTextLength": 500,
-      "routeReadyMs": 4914,
-      "navigationMs": 30313,
+      "routeReadyMs": 4911,
+      "navigationMs": 31045,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -2719,7 +2783,7 @@
                   "id": "",
                   "name": "ProjectID",
                   "type": "select-one",
-                  "label": "کد پروژه *\nانتخاب پروژه\n1 — شومیز چهارخونه",
+                  "label": "کد پروژه *\nانتخاب پروژه\n1 — شومیز چهارخونه\n2 — تست 2",
                   "required": true,
                   "disabled": false
                 },
@@ -2732,7 +2796,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-h00fjzj-jalali",
+                  "id": "pms-date-g4tdtd2-jalali",
                   "name": "",
                   "type": "text",
                   "label": "تاریخ سفارش (اختیاری)\n▦",
@@ -2740,7 +2804,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-h00fjzj",
+                  "id": "pms-date-g4tdtd2",
                   "name": "OrderDate",
                   "type": "hidden",
                   "label": "۱۴۰۵/۰۷/۲۷",
@@ -2748,7 +2812,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-o0a74gz-jalali",
+                  "id": "pms-date-7acc1co-jalali",
                   "name": "",
                   "type": "text",
                   "label": "تاریخ تحویل مورد انتظار\n▦",
@@ -2756,7 +2820,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-o0a74gz",
+                  "id": "pms-date-7acc1co",
                   "name": "ExpectedDeliveryDate",
                   "type": "hidden",
                   "label": "۱۴۰۵/۰۷/۲۷",
@@ -2856,7 +2920,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-s9lm56m-jalali",
+                  "id": "pms-date-yyisyv0-jalali",
                   "name": "",
                   "type": "text",
                   "label": "تاریخ سفارش (اختیاری)\n▦",
@@ -2864,7 +2928,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-s9lm56m",
+                  "id": "pms-date-yyisyv0",
                   "name": "OrderDate",
                   "type": "hidden",
                   "label": "۱۴۰۵/۰۷/۲۷",
@@ -2872,7 +2936,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-jhiutnz-jalali",
+                  "id": "pms-date-twks6ml-jalali",
                   "name": "",
                   "type": "text",
                   "label": "تاریخ تحویل مورد انتظار\n▦",
@@ -2880,7 +2944,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-jhiutnz",
+                  "id": "pms-date-twks6ml",
                   "name": "ExpectedDeliveryDate",
                   "type": "hidden",
                   "label": "۱۴۰۵/۰۷/۲۷",
@@ -2975,12 +3039,12 @@
                   "id": "",
                   "name": "ProjectID",
                   "type": "select-one",
-                  "label": "پروژه / نوع سفارش *\nانتخاب پروژه یا سفارش عمومی\nسفارش عمومی\n1 — شومیز چهارخونه",
+                  "label": "پروژه / نوع سفارش *\nانتخاب پروژه یا سفارش عمومی\nسفارش عمومی\n1 — شومیز چهارخونه\n2 — تست 2",
                   "required": true,
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-lsog0xc-jalali",
+                  "id": "pms-date-234neoq-jalali",
                   "name": "",
                   "type": "text",
                   "label": "تاریخ دریافت\n▦",
@@ -2988,7 +3052,7 @@
                   "disabled": false
                 },
                 {
-                  "id": "pms-date-lsog0xc",
+                  "id": "pms-date-234neoq",
                   "name": "ReceivedAt",
                   "type": "hidden",
                   "label": "۱۴۰۵/۰۷/۲۷",
@@ -3121,8 +3185,8 @@
       ],
       "visibleControlCount": 1,
       "visibleTextLength": 135,
-      "routeReadyMs": 6455,
-      "navigationMs": 9111,
+      "routeReadyMs": 3414,
+      "navigationMs": 6071,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -3348,8 +3412,8 @@
       ],
       "visibleControlCount": 12,
       "visibleTextLength": 222,
-      "routeReadyMs": 6448,
-      "navigationMs": 9109,
+      "routeReadyMs": 2924,
+      "navigationMs": 5588,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -3474,8 +3538,8 @@
       ],
       "visibleControlCount": 1,
       "visibleTextLength": 95,
-      "routeReadyMs": 5414,
-      "navigationMs": 8073,
+      "routeReadyMs": 4413,
+      "navigationMs": 7070,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -3489,11 +3553,143 @@
       "dynamicFormInventory": [
         {
           "openerId": "user-create-button",
-          "opened": false,
+          "opened": true,
           "baselineFormCount": 0,
           "baselineVisibleControls": 1,
-          "visibleControls": 1,
-          "forms": []
+          "visibleControls": 15,
+          "forms": [
+            {
+              "index": 0,
+              "id": "user-create-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 15,
+              "requiredCount": 3,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "user-create-name",
+                  "name": "Name",
+                  "type": "text",
+                  "label": "نام و نام خانوادگی *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "user-create-username",
+                  "name": "Username",
+                  "type": "text",
+                  "label": "نام کاربری *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "user-create-password",
+                  "name": "Password",
+                  "type": "password",
+                  "label": "رمز عبور *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "user-create-department",
+                  "name": "DepartmentID",
+                  "type": "select-one",
+                  "label": "واحد سازمانی",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "user-create-status",
+                  "name": "Status",
+                  "type": "select-one",
+                  "label": "وضعیت",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "مدیر سیستم (SYS_ADMIN)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "طراح (1)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "الگو ساز (2)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "برشکار (3)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "مدیر انبار ملزومات (4)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "نمونه دوز فرایند (5)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "سرپرست دوخت (6)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "سرپرست بسته بندی (7)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "مدیر انبار محصولات (8)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "user-role",
+                  "type": "checkbox",
+                  "label": "نمونه دوز (9)",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -3657,8 +3853,8 @@
       ],
       "visibleControlCount": 1,
       "visibleTextLength": 419,
-      "routeReadyMs": 4944,
-      "navigationMs": 7602,
+      "routeReadyMs": 3431,
+      "navigationMs": 6090,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -3980,8 +4176,8 @@
       ],
       "visibleControlCount": 1,
       "visibleTextLength": 500,
-      "routeReadyMs": 4446,
-      "navigationMs": 7105,
+      "routeReadyMs": 4910,
+      "navigationMs": 7568,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -4133,9 +4329,9 @@
         }
       ],
       "visibleControlCount": 1,
-      "visibleTextLength": 81,
-      "routeReadyMs": 3415,
-      "navigationMs": 6074,
+      "visibleTextLength": 500,
+      "routeReadyMs": 3941,
+      "navigationMs": 6596,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -4252,8 +4448,8 @@
       ],
       "visibleControlCount": 1,
       "visibleTextLength": 132,
-      "routeReadyMs": 3919,
-      "navigationMs": 6576,
+      "routeReadyMs": 3925,
+      "navigationMs": 6582,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -4378,8 +4574,8 @@
       ],
       "visibleControlCount": 3,
       "visibleTextLength": 484,
-      "routeReadyMs": 3912,
-      "navigationMs": 6570,
+      "routeReadyMs": 3422,
+      "navigationMs": 6080,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -4512,8 +4708,8 @@
       ],
       "visibleControlCount": 2,
       "visibleTextLength": 500,
-      "routeReadyMs": 4433,
-      "navigationMs": 7090,
+      "routeReadyMs": 3917,
+      "navigationMs": 6575,
       "status": "loaded",
       "mobileLayout": {
         "viewportWidth": 390,
@@ -4540,67 +4736,43 @@
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
       "method": "GET",
       "status": 200,
-      "durationMs": 108
+      "durationMs": 178
     },
     {
       "path": "/PRSPRO2/pages/login.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 12
+      "durationMs": 10
     },
     {
       "path": "/api/auth/login",
       "method": "POST",
       "status": 302,
-      "durationMs": 2934
+      "durationMs": 4662
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 99
+      "durationMs": 238
     },
     {
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3221
+      "durationMs": 3270
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 95
+      "durationMs": 115
     },
     {
       "path": "/PRSPRO2/pages/dashboard.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 20
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4522
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 97
-    },
-    {
-      "path": "/PRSPRO2/pages/dashboard.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 39
+      "durationMs": 19
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -4612,25 +4784,19 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 4065
+      "durationMs": 2930
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 85
+      "durationMs": 122
     },
     {
       "path": "/PRSPRO2/pages/dashboard.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/projects.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
+      "durationMs": 16
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -4642,391 +4808,25 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3868
+      "durationMs": 2623
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 91
+      "durationMs": 106
     },
     {
-      "path": "/PRSPRO2/pages/projects.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3151
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 77
-    },
-    {
-      "path": "/PRSPRO2/pages/projects.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/project-detail.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 5
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3989
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 76
-    },
-    {
-      "path": "/PRSPRO2/pages/project-detail.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 8
-    },
-    {
-      "path": "/PRSPRO2/pages/print-designer.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 2
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3343
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 141
-    },
-    {
-      "path": "/PRSPRO2/pages/print-designer.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/PRSPRO2/pages/print-output.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 4
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 1
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3579
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 91
-    },
-    {
-      "path": "/PRSPRO2/pages/print-output.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/events.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 11
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 5409
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 100
-    },
-    {
-      "path": "/PRSPRO2/pages/events.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 8
-    },
-    {
-      "path": "/api/projects",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3741
-    },
-    {
-      "path": "/api/event-types",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3770
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 88
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 93
-    },
-    {
-      "path": "/api/events",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 5301
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 101
-    },
-    {
-      "path": "/api/project-card-images",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 5594
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 91
-    },
-    {
-      "path": "/api/projects/:id/information",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 5570
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 94
-    },
-    {
-      "path": "/api/projects/:id/workflow-progress",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 6257
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 80
-    },
-    {
-      "path": "/api/event-types/:id/forms",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3180
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 76
-    },
-    {
-      "path": "/api/event-types",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 9653
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 88
-    },
-    {
-      "path": "/api/events/:id/forms",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4443
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 77
-    },
-    {
-      "path": "/api/event-types/:id/forms",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4675
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 95
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3418
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 93
-    },
-    {
-      "path": "/PRSPRO2/pages/events.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/workflows.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4992
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 85
-    },
-    {
-      "path": "/PRSPRO2/pages/workflows.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3351
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 175
-    },
-    {
-      "path": "/PRSPRO2/pages/workflows.html",
+      "path": "/PRSPRO2/pages/dashboard.html",
       "method": "GET",
       "status": 200,
       "durationMs": 9
     },
     {
-      "path": "/PRSPRO2/pages/project-statuses.html",
+      "path": "/PRSPRO2/pages/projects.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 2
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3368
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 84
-    },
-    {
-      "path": "/PRSPRO2/pages/project-statuses.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
+      "durationMs": 9
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -5038,187 +4838,7 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3489
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 87
-    },
-    {
-      "path": "/PRSPRO2/pages/project-statuses.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/event-types.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2922
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 96
-    },
-    {
-      "path": "/PRSPRO2/pages/event-types.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 8
-    },
-    {
-      "path": "/api/event-types",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3724
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 80
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 1
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3260
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 95
-    },
-    {
-      "path": "/PRSPRO2/pages/event-types.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/PRSPRO2/pages/information-types.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 21
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4067
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 74
-    },
-    {
-      "path": "/PRSPRO2/pages/information-types.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4192
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 160
-    },
-    {
-      "path": "/PRSPRO2/pages/information-types.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/api/information-types",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3670
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 93
-    },
-    {
-      "path": "/api/procurement/workspace",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4627
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 82
-    },
-    {
-      "path": "/api/projects",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 5607
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 83
-    },
-    {
-      "path": "/api/procurement/workspace",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4295
+      "durationMs": 2782
     },
     {
       "path": "/macros/echo",
@@ -5227,217 +4847,7 @@
       "durationMs": 113
     },
     {
-      "path": "/api/procurement/dashboard",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4343
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 92
-    },
-    {
-      "path": "/api/procurement/needs",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3975
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 110
-    },
-    {
-      "path": "/api/procurement/orders",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2853
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 83
-    },
-    {
-      "path": "/api/procurement/reports",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4949
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 88
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3651
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 138
-    },
-    {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3310
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 84
-    },
-    {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4433
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 80
-    },
-    {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 5810
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 85
-    },
-    {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/attachments.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3888
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 97
-    },
-    {
-      "path": "/PRSPRO2/pages/attachments.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/api/attachments",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2929
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 87
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 6160
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 88
-    },
-    {
-      "path": "/PRSPRO2/pages/attachments.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/reports.html",
+      "path": "/PRSPRO2/pages/projects.html",
       "method": "GET",
       "status": 200,
       "durationMs": 8
@@ -5446,208 +4856,118 @@
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
       "method": "GET",
       "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4869
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 77
-    },
-    {
-      "path": "/PRSPRO2/pages/reports.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/users.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 9
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 2
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3589
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 74
-    },
-    {
-      "path": "/PRSPRO2/pages/users.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/api/users",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2946
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 82
-    },
-    {
-      "path": "/api/departments",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3120
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 82
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 1
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4565
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 93
-    },
-    {
-      "path": "/PRSPRO2/pages/users.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 9
-    },
-    {
-      "path": "/PRSPRO2/pages/departments.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 4
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
       "durationMs": 0
     },
     {
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3714
+      "durationMs": 3228
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 148
+      "durationMs": 100
     },
     {
-      "path": "/PRSPRO2/pages/departments.html",
+      "path": "/PRSPRO2/pages/projects.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 11
+      "durationMs": 8
     },
     {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4041
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 94
-    },
-    {
-      "path": "/PRSPRO2/pages/departments.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/roles.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/api/roles",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2282
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 118
-    },
-    {
-      "path": "/api/departments",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2543
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 90
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "path": "/PRSPRO2/pages/project-detail.html",
       "method": "GET",
       "status": 200,
       "durationMs": 3
     },
     {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3637
+      "durationMs": 4491
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 147
+      "durationMs": 131
     },
     {
-      "path": "/PRSPRO2/pages/roles.html",
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/print-designer.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4449
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 108
+    },
+    {
+      "path": "/PRSPRO2/pages/print-designer.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 18
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2681
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 109
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
       "method": "GET",
       "status": 200,
       "durationMs": 9
@@ -5656,109 +4976,13 @@
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
       "method": "GET",
       "status": 200,
-      "durationMs": 1
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2954
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 137
-    },
-    {
-      "path": "/PRSPRO2/pages/roles.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 13
-    },
-    {
-      "path": "/PRSPRO2/pages/permissions.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
       "durationMs": 0
     },
     {
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3391
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 91
-    },
-    {
-      "path": "/PRSPRO2/pages/permissions.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 8
-    },
-    {
-      "path": "/PRSPRO2/pages/audit.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 4
-    },
-    {
-      "path": "/api/audit",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2925
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 2
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3635
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 90
-    },
-    {
-      "path": "/PRSPRO2/pages/audit.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/settings.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 2
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4034
+      "durationMs": 2762
     },
     {
       "path": "/macros/echo",
@@ -5767,22 +4991,154 @@
       "durationMs": 119
     },
     {
-      "path": "/PRSPRO2/pages/settings.html",
+      "path": "/PRSPRO2/pages/events.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 6
+      "durationMs": 7
     },
     {
-      "path": "/PRSPRO2/pages/admin.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 14
-    },
-    {
-      "path": "/api/admin/sessions",
+      "path": "/api/event-types",
       "method": "GET",
       "status": 302,
-      "durationMs": 2790
+      "durationMs": 2986
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 107
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3171
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/api/events",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3399
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "path": "/api/project-card-images",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3521
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 112
+    },
+    {
+      "path": "/api/projects/:id/information",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4135
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "path": "/api/projects/:id/workflow-progress",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 6121
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 164
+    },
+    {
+      "path": "/api/attachments/:id/download",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3753
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "path": "/api/event-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 9884
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 106
+    },
+    {
+      "path": "/api/attachments/:id/download",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 7572
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 301
+    },
+    {
+      "path": "/api/events/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 6858
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 113
+    },
+    {
+      "path": "/api/event-types/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 5260
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "path": "/api/event-types/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2662
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 250
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -5794,43 +5150,91 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3659
+      "durationMs": 2983
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 151
+      "durationMs": 141
     },
     {
-      "path": "/PRSPRO2/pages/admin.html",
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/workflows.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3441
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "path": "/PRSPRO2/pages/workflows.html",
       "method": "GET",
       "status": 200,
       "durationMs": 10
     },
     {
-      "path": "/PRSPRO2/pages/dashboard.html",
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
       "method": "GET",
       "status": 200,
-      "durationMs": 1
+      "durationMs": 0
     },
     {
-      "path": "/PRSPRO2/pages/dashboard.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 17
-    },
-    {
-      "path": "/api/project-dashboard/lookups",
+      "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3819
+      "durationMs": 3872
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 89
+      "durationMs": 239
+    },
+    {
+      "path": "/PRSPRO2/pages/workflows.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/api/project-statuses",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2510
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 295
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -5842,37 +5246,55 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 4480
+      "durationMs": 3156
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 90
+      "durationMs": 156
     },
     {
-      "path": "/PRSPRO2/pages/dashboard.html",
+      "path": "/PRSPRO2/pages/project-statuses.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 11
+      "durationMs": 8
     },
     {
-      "path": "/PRSPRO2/pages/projects.html",
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
       "method": "GET",
       "status": 200,
-      "durationMs": 4
+      "durationMs": 0
     },
     {
-      "path": "/PRSPRO2/pages/projects.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 11
-    },
-    {
-      "path": "/api/project-dashboard/lookups",
+      "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 4546
+      "durationMs": 3130
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 209
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/event-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/api/event-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2414
     },
     {
       "path": "/macros/echo",
@@ -5890,31 +5312,31 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 4178
+      "durationMs": 3722
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 87
+      "durationMs": 101
     },
     {
-      "path": "/PRSPRO2/pages/projects.html",
+      "path": "/PRSPRO2/pages/event-types.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 7
+      "durationMs": 13
     },
     {
-      "path": "/PRSPRO2/pages/project-detail.html",
+      "path": "/api/event-types",
       "method": "GET",
-      "status": 200,
-      "durationMs": 3
+      "status": 302,
+      "durationMs": 4387
     },
     {
-      "path": "/PRSPRO2/pages/project-detail.html",
+      "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 3
+      "durationMs": 114
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -5926,73 +5348,211 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 2772
+      "durationMs": 3995
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 89
+      "durationMs": 115
     },
     {
-      "path": "/PRSPRO2/pages/project-detail.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 9
-    },
-    {
-      "path": "/PRSPRO2/pages/print-designer.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 4
-    },
-    {
-      "path": "/PRSPRO2/pages/print-designer.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 26
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 2028
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 85
-    },
-    {
-      "path": "/PRSPRO2/pages/print-designer.html",
+      "path": "/PRSPRO2/pages/event-types.html",
       "method": "GET",
       "status": 200,
       "durationMs": 6
     },
     {
-      "path": "/PRSPRO2/pages/print-output.html",
+      "path": "/PRSPRO2/pages/information-types.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 5
+      "durationMs": 15
     },
     {
-      "path": "/PRSPRO2/pages/print-output.html",
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
       "method": "GET",
       "status": 200,
       "durationMs": 0
     },
     {
-      "path": "/api/print-templates",
+      "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 2708
+      "durationMs": 3764
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 270
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4371
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 116
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 11
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/api/procurement/workspace",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4106
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4110
+    },
+    {
+      "path": "/api/information-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4159
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 101
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 217
+    },
+    {
+      "path": "/api/procurement/workspace",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3558
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 192
+    },
+    {
+      "path": "/api/procurement/dashboard",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3566
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 207
+    },
+    {
+      "path": "/api/procurement/needs",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4395
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "path": "/api/procurement/orders",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 5092
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "path": "/api/procurement/reports",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4708
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4023
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3244
     },
     {
       "path": "/macros/echo",
@@ -6001,16 +5561,148 @@
       "durationMs": 112
     },
     {
-      "path": "/api/print-templates/sources",
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 13
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 4692
+      "durationMs": 3115
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 84
+      "durationMs": 122
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2807
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 109
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/attachments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3981
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/PRSPRO2/pages/attachments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2382
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "path": "/PRSPRO2/pages/attachments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4119
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/users.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -6022,46 +5714,64 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 2714
+      "durationMs": 4404
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 96
+      "durationMs": 129
     },
     {
-      "path": "/PRSPRO2/pages/print-output.html",
+      "path": "/PRSPRO2/pages/users.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 8
+      "durationMs": 6
     },
     {
-      "path": "/PRSPRO2/pages/events.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 7
-    },
-    {
-      "path": "/PRSPRO2/pages/events.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 12
-    },
-    {
-      "path": "/api/event-types",
+      "path": "/api/departments",
       "method": "GET",
       "status": 302,
-      "durationMs": 2899
+      "durationMs": 4354
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 93
+      "durationMs": 100
     },
     {
-      "path": "/api/events",
+      "path": "/api/users",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4488
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 198
+    },
+    {
+      "path": "/api/roles",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2173
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 111
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
       "durationMs": 3003
@@ -6070,49 +5780,409 @@
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 95
+      "durationMs": 113
     },
     {
-      "path": "/api/print-templates",
+      "path": "/PRSPRO2/pages/users.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/departments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 11
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 3657
+      "durationMs": 4211
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 80
+      "durationMs": 101
+    },
+    {
+      "path": "/PRSPRO2/pages/departments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/api/departments",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2661
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4238
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "path": "/PRSPRO2/pages/departments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/roles.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/api/departments",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2433
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 162
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 5868
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 108
+    },
+    {
+      "path": "/PRSPRO2/pages/roles.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/api/roles",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2538
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3311
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 149
+    },
+    {
+      "path": "/PRSPRO2/pages/roles.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/permissions.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/api/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2835
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3459
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 105
+    },
+    {
+      "path": "/PRSPRO2/pages/permissions.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 14
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3201
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 105
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/PRSPRO2/pages/settings.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3272
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/PRSPRO2/pages/settings.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/admin.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 13
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3195
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 147
+    },
+    {
+      "path": "/PRSPRO2/pages/admin.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/api/admin/sessions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4365
+    },
+    {
+      "path": "/api/project-dashboard/lookups",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3877
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 159
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 187
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2903
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 209
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 13
+    },
+    {
+      "path": "/api/project-dashboard/lookups",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3962
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 97
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2149
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 105
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
     },
     {
       "path": "/api/projects",
       "method": "GET",
       "status": 302,
-      "durationMs": 4649
-    },
-    {
-      "path": "/api/projects",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4129
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 94
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 81
-    },
-    {
-      "path": "/api/attachments/:id/download",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 5812
+      "durationMs": 3575
     },
     {
       "path": "/macros/echo",
@@ -6130,103 +6200,43 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 4166
+      "durationMs": 3861
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 77
+      "durationMs": 175
     },
     {
-      "path": "/PRSPRO2/pages/events.html",
+      "path": "/PRSPRO2/pages/project-detail.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 10
+      "durationMs": 7
     },
     {
-      "path": "/PRSPRO2/pages/project-statuses.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/PRSPRO2/pages/project-statuses.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/project-statuses",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3611
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 78
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3317
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 139
-    },
-    {
-      "path": "/PRSPRO2/pages/project-statuses.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 10
-    },
-    {
-      "path": "/PRSPRO2/pages/information-types.html",
+      "path": "/PRSPRO2/pages/print-designer.html",
       "method": "GET",
       "status": 200,
       "durationMs": 4
     },
     {
-      "path": "/PRSPRO2/pages/information-types.html",
+      "path": "/PRSPRO2/pages/print-designer.html",
       "method": "GET",
       "status": 200,
       "durationMs": 0
     },
     {
-      "path": "/api/project-statuses",
+      "path": "/api/print-templates",
       "method": "GET",
       "status": 302,
-      "durationMs": 3527
+      "durationMs": 3981
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 80
-    },
-    {
-      "path": "/api/information-types",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3410
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 92
+      "durationMs": 125
     },
     {
       "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -6238,157 +6248,445 @@
       "path": "/api/auth/me/permissions",
       "method": "GET",
       "status": 302,
-      "durationMs": 4574
+      "durationMs": 3607
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 83
+      "durationMs": 141
     },
     {
-      "path": "/PRSPRO2/pages/information-types.html",
+      "path": "/PRSPRO2/pages/print-designer.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 10
+      "durationMs": 7
     },
     {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 4
-    },
-    {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 13
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 1
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3323
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 134
-    },
-    {
-      "path": "/PRSPRO2/pages/procurement.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 6
-    },
-    {
-      "path": "/PRSPRO2/pages/reports.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 4
-    },
-    {
-      "path": "/PRSPRO2/pages/reports.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 22
-    },
-    {
-      "path": "/api/reports/projects",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 4121
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 85
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/auth/me/permissions",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3846
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 74
-    },
-    {
-      "path": "/PRSPRO2/pages/reports.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 8
-    },
-    {
-      "path": "/PRSPRO2/pages/audit.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 2
-    },
-    {
-      "path": "/PRSPRO2/pages/audit.html",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 0
-    },
-    {
-      "path": "/api/reports/projects",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3777
-    },
-    {
-      "path": "/api/audit",
-      "method": "GET",
-      "status": 302,
-      "durationMs": 3498
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 77
-    },
-    {
-      "path": "/macros/echo",
-      "method": "GET",
-      "status": 200,
-      "durationMs": 136
-    },
-    {
-      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "path": "/PRSPRO2/pages/print-output.html",
       "method": "GET",
       "status": 200,
       "durationMs": 3
     },
     {
-      "path": "/api/auth/me/permissions",
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 15
+    },
+    {
+      "path": "/api/print-templates",
       "method": "GET",
       "status": 302,
-      "durationMs": 3641
+      "durationMs": 3205
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 82
+      "durationMs": 115
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2311
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 12
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3082
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3729
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 106
+    },
+    {
+      "path": "/api/print-templates",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4081
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 101
+    },
+    {
+      "path": "/api/event-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 5113
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 153
+    },
+    {
+      "path": "/api/events",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 5891
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 201
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2739
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 206
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/api/project-statuses",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3897
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 144
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3673
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 179
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/api/project-statuses",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2983
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 106
+    },
+    {
+      "path": "/api/information-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4022
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 160
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3513
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 10
+    },
+    {
+      "path": "/api/information-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3772
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 114
+    },
+    {
+      "path": "/api/procurement/workspace",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3771
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 112
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3959
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 14
+    },
+    {
+      "path": "/api/reports/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2761
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 116
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3930
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 103
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2612
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 230
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/api/reports/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3024
+    },
+    {
+      "path": "/api/audit",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2690
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 196
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 171
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3709
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 185
     },
     {
       "path": "/PRSPRO2/pages/audit.html",
@@ -6406,19 +6704,31 @@
       "path": "/PRSPRO2/pages/admin.html",
       "method": "GET",
       "status": 200,
-      "durationMs": 10
+      "durationMs": 16
     },
     {
       "path": "/api/audit",
       "method": "GET",
       "status": 302,
-      "durationMs": 3599
+      "durationMs": 4513
     },
     {
       "path": "/macros/echo",
       "method": "GET",
       "status": 200,
-      "durationMs": 87
+      "durationMs": 117
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4451
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 102
     }
   ],
   "consoleErrors": [],
@@ -6428,24 +6738,24 @@
   ],
   "overallStatus": "needs-attention",
   "login": {
-    "loginFormReadyMs": 249,
-    "loginAttemptMs": 6434,
+    "loginFormReadyMs": 334,
+    "loginAttemptMs": 8365,
     "authenticated": true,
     "errorMessage": ""
   },
   "eventFormDiagnostics": {
-    "modalReadyMs": 2859,
-    "projectWorkflowReadyMs": 6339,
-    "formDefinitionsReadyMs": 9610,
-    "warmFormDefinitionsRequestMs": 4771,
+    "modalReadyMs": 857,
+    "projectWorkflowReadyMs": 6289,
+    "formDefinitionsReadyMs": 11675,
+    "warmFormDefinitionsRequestMs": 2914,
     "warmFormDefinitionsTimedOut": false,
-    "projectOptions": 1,
+    "projectOptions": 2,
     "eligibleEventTypes": 13,
     "configuredFormControls": 7,
     "diagnosticEndpoints": []
   },
   "procurementDiagnostics": {
-    "measuredAt": "2026-11-13T16:38:37.832Z",
+    "measuredAt": "2026-11-13T17:44:02.014Z",
     "headers": [
       "مسیر",
       "زمان مرورگر",
@@ -6455,84 +6765,84 @@
     "endpoints": [
       {
         "endpoint": "/procurement/reports",
-        "browserMs": "5037 ms",
-        "backendMs": "3952 ms",
-        "details": "دسترسی 1670 / روتر 2282 / Sheets: getAll:1045ms×1, getHeaders:890ms×1, findById:572ms×1"
+        "browserMs": "4835 ms",
+        "backendMs": "3116 ms",
+        "details": "دسترسی 1266 / روتر 1850 / Sheets: getAll:444ms×1, findById:437ms×1, getAll:382ms×1"
       },
       {
         "endpoint": "/procurement/orders",
-        "browserMs": "2936 ms",
-        "backendMs": "1988 ms",
-        "details": "دسترسی 1506 / روتر 481 / Sheets: getAll:642ms×1, getHeaders:543ms×1, findById:405ms×1"
+        "browserMs": "5232 ms",
+        "backendMs": "1893 ms",
+        "details": "دسترسی 1241 / روتر 651 / Sheets: findById:440ms×1, findById:267ms×1, getAll:246ms×1"
       },
       {
         "endpoint": "/procurement/needs",
-        "browserMs": "4086 ms",
-        "backendMs": "2806 ms",
-        "details": "دسترسی 1886 / روتر 919 / Sheets: findById:723ms×1, getHeaders:566ms×1, findById:503ms×1"
+        "browserMs": "4536 ms",
+        "backendMs": "3214 ms",
+        "details": "دسترسی 1471 / روتر 1743 / Sheets: getAll:946ms×1, findById:665ms×1, getAll:483ms×1"
       },
       {
         "endpoint": "/procurement/dashboard",
-        "browserMs": "4435 ms",
-        "backendMs": "3136 ms",
-        "details": "دسترسی 1755 / روتر 1380 / Sheets: getAll:916ms×1, getAll:642ms×1, getHeaders:515ms×1"
+        "browserMs": "3773 ms",
+        "backendMs": "1733 ms",
+        "details": "دسترسی 1217 / روتر 515 / Sheets: findById:391ms×1, findById:375ms×1, getAll:220ms×1"
       },
       {
         "endpoint": "/procurement/workspace",
-        "browserMs": "4409 ms",
-        "backendMs": "2996 ms",
-        "details": "دسترسی 2287 / روتر 709 / Sheets: findById:800ms×1, getAll:737ms×1, getHeaders:429ms×1"
+        "browserMs": "3752 ms",
+        "backendMs": "2027 ms",
+        "details": "دسترسی 1438 / روتر 589 / Sheets: findById:631ms×1, getSheet:402ms×2, getSpreadsheet:399ms×1"
       }
     ]
   },
   "procurementPerformance": {
-    "measuredRequests": 6,
+    "measuredRequests": 7,
     "failedRequests": 0,
     "endpoints": [
       {
         "endpoint": "GET /api/procurement/workspace",
-        "requests": 2,
+        "requests": 3,
         "failedRequests": 0,
-        "averageMs": 4461,
-        "medianMs": 4295,
-        "p95Ms": 4627,
-        "maxMs": 4627
+        "averageMs": 3812,
+        "medianMs": 3771,
+        "p95Ms": 4106,
+        "maxMs": 4106
       },
       {
         "endpoint": "GET /api/procurement/dashboard",
         "requests": 1,
         "failedRequests": 0,
-        "averageMs": 4343,
-        "medianMs": 4343,
-        "p95Ms": 4343,
-        "maxMs": 4343
+        "averageMs": 3566,
+        "medianMs": 3566,
+        "p95Ms": 3566,
+        "maxMs": 3566
       },
       {
         "endpoint": "GET /api/procurement/needs",
         "requests": 1,
         "failedRequests": 0,
-        "averageMs": 3975,
-        "medianMs": 3975,
-        "p95Ms": 3975,
-        "maxMs": 3975
+        "averageMs": 4395,
+        "medianMs": 4395,
+        "p95Ms": 4395,
+        "maxMs": 4395
       },
       {
         "endpoint": "GET /api/procurement/orders",
         "requests": 1,
         "failedRequests": 0,
-        "averageMs": 2853,
-        "medianMs": 2853,
-        "p95Ms": 2853,
-        "maxMs": 2853
+        "averageMs": 5092,
+        "medianMs": 5092,
+        "p95Ms": 5092,
+        "maxMs": 5092
       },
       {
         "endpoint": "GET /api/procurement/reports",
         "requests": 1,
         "failedRequests": 0,
-        "averageMs": 4949,
-        "medianMs": 4949,
-        "p95Ms": 4949,
-        "maxMs": 4949
+        "averageMs": 4708,
+        "medianMs": 4708,
+        "p95Ms": 4708,
+        "maxMs": 4708
       }
     ],
     "note": "Browser and admin-only backend repository timings are captured in procurementDiagnostics."
