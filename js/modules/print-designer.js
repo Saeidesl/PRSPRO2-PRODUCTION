@@ -1479,6 +1479,7 @@
         return ['ProjectCode','Title','Description','Quantity'].includes(String(binding.field || ''));
       }
       if (sourceType === 'PROJECT_INFORMATION') {
+        if (elementType === 'table') return Array.isArray(raw);
         return raw === null || raw === undefined || ['string','number','boolean'].includes(typeof raw);
       }
       if (sourceType === 'EVENT_FORM_FIELD') {
@@ -1508,6 +1509,13 @@
         this.beginProjectOutputEdit(value, record);
       });
       section.addEventListener('keydown', event => {
+        const editable = event.target.closest('[data-pt-output-editable="true"]');
+        if (editable && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          const record = this.projectOutputRecords[String(templateId)];
+          if (record && !this.projectOutputEdit) this.beginProjectOutputEdit(editable, record);
+          return;
+        }
         const editor = event.target.closest('.pt-output-inline-editor');
         if (!editor) return;
         if (event.key === 'Escape') {
@@ -1523,9 +1531,7 @@
       const bindingId = String(valueNode.dataset.ptBindingId || '');
       const raw = record.data[bindingId];
       const isTableCell = valueNode.dataset.ptRowIndex !== undefined;
-      const currentValue = isTableCell
-        ? String(valueNode.textContent || '')
-        : (raw === null || raw === undefined ? '' : String(raw));
+      const currentValue = String(valueNode.textContent || '');
       const editor = document.createElement('span');
       editor.className = 'pt-output-inline-editor';
       editor.dataset.ptBindingId = bindingId;
@@ -1649,7 +1655,7 @@
         const project = projectResult.project || projectResult.Project || projectResult.item || projectResult;
         const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
         const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
-        if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName;
+        if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName + ' | برای ویرایش روی مقادیر خط‌چین‌دار کلیک کن';
         if (!templates.length) {
           if (previewCard) previewCard.hidden = false;
           if (preview) preview.innerHTML = '<div class="pt-empty-state">برای این مجموعه هنوز قالب فعالی در قالب‌ساز ثبت نشده است.</div>';
@@ -1691,7 +1697,8 @@
         if (previewCard) previewCard.hidden = false;
         if (printButton) printButton.hidden = renderedCount === 0;
         this.setStatus('pt-output-status', renderedCount + ' قالب از ' + templates.length + ' قالب فعال برای این پروژه آماده شد.' +
-          (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : ''));
+          (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : '') +
+          ' مقادیر خط‌چین‌دار قابل ویرایش در پیش‌نمایش هستند؛ ذخیره در اطلاعات اصلی در مرحله بعد متصل می‌شود.');
         if (previewCard) previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
         this.setStatus('pt-output-status', error.message || 'دریافت پروژه یا قالب‌ها ناموفق بود.', true);
