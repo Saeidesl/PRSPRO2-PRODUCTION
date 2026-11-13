@@ -1536,11 +1536,13 @@
             const data = resolved.data || {};
             if (!template.Definition) throw new Error('ساختار ذخیره‌شده قالب در دسترس نیست.');
             const documentHtml = await this.renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true });
+            if (renderedCount > 0) section.classList.add('starts-new-page');
             section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
               '</strong><span>' + this.esc(template.Code || '') + '</span></header><div class="pt-project-template-pages">' + documentHtml + '</div>';
             renderedCount++;
           } catch (templateError) {
             failedCount++;
+            section.classList.add('has-error');
             section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
               '</strong><span>' + this.esc(template.Code || '') + '</span></header><div class="pt-empty-state is-error">آماده‌سازی این قالب ناموفق بود: ' +
               this.esc(templateError.message || 'خطای نامشخص') + '</div>';
