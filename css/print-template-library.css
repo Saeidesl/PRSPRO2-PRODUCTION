@@ -743,3 +743,15 @@
   .pt-data-group{flex-basis:82vw;width:82vw;max-width:82vw;max-height:48vh}
   .pt-data-items{max-height:36vh}
 }
+
+/* Inline editing on project-specific template output */
+.pt-output-editable-value{display:inline-block;min-width:1.2em;max-width:100%;border-bottom:1px dashed #64748b;cursor:text;border-radius:2px;outline-offset:2px}
+.pt-output-editable-value:hover,.pt-output-editable-value:focus-visible{background:rgba(59,130,246,.09);outline:1px solid rgba(59,130,246,.45)}
+.pt-output-inline-editor{display:inline-flex;flex-direction:column;gap:5px;min-width:90px;max-width:100%;vertical-align:middle;position:relative;z-index:5;background:#fff;padding:4px;border:1px solid #3b82f6;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.14);color:#111827;white-space:normal}
+.pt-output-inline-input{box-sizing:border-box;width:100%;min-width:90px;max-width:220px;min-height:30px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;color:#111827;font:inherit;font-size:10pt}
+.pt-output-inline-input:focus{outline:2px solid rgba(59,130,246,.25);border-color:#2563eb}
+.pt-output-inline-actions{display:flex;gap:5px;justify-content:flex-end;white-space:nowrap}
+.pt-output-inline-actions .btn{min-height:27px;padding:3px 8px;font-size:11px}
+.pt-output-table td .pt-output-editable-value{display:block;min-width:35px}
+@media(max-width:600px){.pt-output-inline-editor{min-width:110px}.pt-output-inline-input{max-width:min(220px,65vw)}}
+@media print{.pt-output-editable-value{border:0!important;background:transparent!important}.pt-output-inline-editor{display:none!important}}

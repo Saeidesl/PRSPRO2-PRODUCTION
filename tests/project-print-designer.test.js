@@ -190,3 +190,19 @@ test('print designer keeps A4 print dimensions and read-only output styles',()=>
  assert.match(css,/\.ppd-standalone \.ppd-paper\{width:210mm!important/);
  assert.match(css,/\.ppd-output-mode \.ppd-properties\{display:none!important/);
 });
+
+test('project output exposes inline editable controls only for approved business data bindings',()=>{
+ const module=read('js/modules/print-designer.js');
+ const css=read('css/print-template-library.css');
+ assert.match(module,/isProjectOutputBindingEditable: function/);
+ assert.match(module,/bindProjectOutputSection: function/);
+ assert.match(module,/beginProjectOutputEdit: function/);
+ assert.match(module,/finishProjectOutputEdit: function/);
+ assert.match(module,/data-pt-output-editable="true"/);
+ assert.match(module,/data-pt-row-index/);
+ assert.match(module,/ProjectCode','Title','Description','Quantity/);
+ assert.match(module,/OccurredAt','Description/);
+ assert.match(module,/if \(this\.projectOutputEdit && this\.projectOutputEdit\.editor\)/);
+ assert.match(css,/pt-output-inline-editor/);
+ assert.match(css,/pt-output-editable-value/);
+});

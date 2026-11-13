@@ -30,6 +30,8 @@
     pendingImageFiles: Object.create(null),
     outputPdfBlobUrl: '',
     outputPdfFileName: 'PMS-document.pdf',
+    projectOutputRecords: Object.create(null),
+    projectOutputEdit: null,
     outputMarginStorageKey: 'PMS_PRINT_OUTPUT_MARGINS_V1',
     pdfDocument: null,
     pdfFile: null,
@@ -1468,9 +1470,150 @@
         if (this.livePreviewPending && this.livePreviewTimer === null) this.scheduleLivePreview(150);
       }
     },
+    isProjectOutputBindingEditable: function (binding, raw, elementType) {
+      if (!binding || this.findImageAttachment(raw)) return false;
+      const sourceType = String(binding.sourceType || '').toUpperCase();
+      const selection = String(binding.selection || 'LATEST').toUpperCase();
+      if (selection !== 'LATEST') return false;
+      if (sourceType === 'PROJECT_FIELD') {
+        return ['ProjectCode','Title','Description','Quantity'].includes(String(binding.field || ''));
+      }
+      if (sourceType === 'PROJECT_INFORMATION') {
+        if (elementType === 'table') return Array.isArray(raw);
+        return raw === null || raw === undefined || ['string','number','boolean'].includes(typeof raw);
+      }
+      if (sourceType === 'EVENT_FORM_FIELD') {
+        if (elementType === 'table') return Array.isArray(raw);
+        return raw === null || raw === undefined || ['string','number','boolean'].includes(typeof raw);
+      }
+      if (sourceType === 'EVENT_FIELD') {
+        return ['OccurredAt','Description'].includes(String(binding.field || '')) &&
+          (raw === null || raw === undefined || ['string','number','boolean'].includes(typeof raw));
+      }
+      return false;
+    },
+    bindProjectOutputSection: function (section, templateId) {
+      if (!section || section.dataset.ptOutputEditBound === '1') return;
+      section.dataset.ptOutputEditBound = '1';
+      section.addEventListener('click', event => {
+        const action = event.target.closest('[data-pt-edit-action]');
+        if (action) {
+          const editor = action.closest('.pt-output-inline-editor');
+          if (editor) this.finishProjectOutputEdit(editor, action.dataset.ptEditAction === 'apply');
+          return;
+        }
+        const value = event.target.closest('[data-pt-output-editable="true"]');
+        if (!value || !section.contains(value)) return;
+        const record = this.projectOutputRecords[String(templateId)];
+        if (!record || this.projectOutputEdit) return;
+        this.beginProjectOutputEdit(value, record);
+      });
+      section.addEventListener('keydown', event => {
+        const editable = event.target.closest('[data-pt-output-editable="true"]');
+        if (editable && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          const record = this.projectOutputRecords[String(templateId)];
+          if (record && !this.projectOutputEdit) this.beginProjectOutputEdit(editable, record);
+          return;
+        }
+        const editor = event.target.closest('.pt-output-inline-editor');
+        if (!editor) return;
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          this.finishProjectOutputEdit(editor, false);
+        } else if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+          event.preventDefault();
+          this.finishProjectOutputEdit(editor, true);
+        }
+      });
+    },
+    beginProjectOutputEdit: function (valueNode, record) {
+      const bindingId = String(valueNode.dataset.ptBindingId || '');
+      const raw = record.data[bindingId];
+      const isTableCell = valueNode.dataset.ptRowIndex !== undefined;
+      const currentValue = String(valueNode.textContent || '');
+      const editor = document.createElement('span');
+      editor.className = 'pt-output-inline-editor';
+      editor.dataset.ptBindingId = bindingId;
+      editor.dataset.ptRowIndex = isTableCell ? valueNode.dataset.ptRowIndex : '';
+      editor.dataset.ptColumnIndex = isTableCell ? valueNode.dataset.ptColumnIndex : '';
+      editor.dataset.ptColumnKey = isTableCell ? (valueNode.dataset.ptColumnKey || '') : '';
+      editor.dataset.ptIsTableCell = isTableCell ? '1' : '0';
+      editor.dataset.ptValueClass = valueNode.className || 'pt-output-editable-value';
+      editor.dataset.ptOriginalValue = currentValue;
+      const multiline = !isTableCell && (currentValue.length > 90 || currentValue.includes('\n'));
+      const input = document.createElement(multiline ? 'textarea' : 'input');
+      if (!multiline) input.type = typeof raw === 'number' && !isTableCell ? 'number' : 'text';
+      input.className = 'pt-output-inline-input';
+      input.value = currentValue;
+      input.setAttribute('aria-label', 'ویرایش مقدار');
+      const actions = document.createElement('span');
+      actions.className = 'pt-output-inline-actions';
+      const apply = document.createElement('button');
+      apply.type = 'button';
+      apply.className = 'btn btn-primary btn-sm';
+      apply.dataset.ptEditAction = 'apply';
+      apply.textContent = 'اعمال';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn btn-secondary btn-sm';
+      cancel.dataset.ptEditAction = 'cancel';
+      cancel.textContent = 'لغو';
+      actions.append(apply, cancel);
+      editor.append(input, actions);
+      valueNode.replaceWith(editor);
+      this.projectOutputEdit = { editor: editor, record: record };
+      input.focus();
+      if (typeof input.select === 'function') input.select();
+    },
+    finishProjectOutputEdit: function (editor, apply) {
+      if (!editor || !editor.parentNode) {
+        this.projectOutputEdit = null;
+        return;
+      }
+      const record = this.projectOutputEdit && this.projectOutputEdit.editor === editor
+        ? this.projectOutputEdit.record : null;
+      const input = editor.querySelector('.pt-output-inline-input');
+      const bindingId = String(editor.dataset.ptBindingId || '');
+      const isTableCell = editor.dataset.ptIsTableCell === '1';
+      const value = input ? input.value : '';
+      if (apply && record && bindingId) {
+        if (isTableCell) {
+          const rowIndex = Number(editor.dataset.ptRowIndex);
+          const columnIndex = Number(editor.dataset.ptColumnIndex);
+          const row = Array.isArray(record.data[bindingId]) ? record.data[bindingId][rowIndex] : null;
+          if (Array.isArray(row)) row[columnIndex] = value;
+          else if (row && typeof row === 'object') {
+            const key = editor.dataset.ptColumnKey || Object.keys(row)[columnIndex];
+            if (key) row[key] = value;
+          }
+        } else {
+          const prior = record.data[bindingId];
+          record.data[bindingId] = typeof prior === 'number' && value.trim() !== '' && Number.isFinite(Number(value))
+            ? Number(value) : value;
+        }
+      }
+      const replacement = document.createElement('span');
+      replacement.className = editor.dataset.ptValueClass || 'pt-output-editable-value';
+      replacement.dataset.ptOutputEditable = 'true';
+      replacement.dataset.ptBindingId = bindingId;
+      if (isTableCell) {
+        replacement.dataset.ptRowIndex = editor.dataset.ptRowIndex;
+        replacement.dataset.ptColumnIndex = editor.dataset.ptColumnIndex;
+        if (editor.dataset.ptColumnKey) replacement.dataset.ptColumnKey = editor.dataset.ptColumnKey;
+      }
+      replacement.textContent = apply ? value : String(editor.dataset.ptOriginalValue || '');
+      editor.replaceWith(replacement);
+      this.projectOutputEdit = null;
+      if (apply) {
+        this.setStatus('pt-output-status', 'تغییر در پیش‌نمایش اعمال شد. برای ثبت دائمی در اطلاعات اصلی، اتصال ذخیره‌سازی سرور در تسک بعدی انجام می‌شود.');
+      }
+    },
     initProjectOutput: async function (projectId) {
       this.projectOutputMode = true;
       this.projectOutputId = String(projectId || '').trim();
+      this.projectOutputRecords = Object.create(null);
+      this.projectOutputEdit = null;
       this.clearOutputPdfObjectUrls();
       this.clearGeneratedOutputPdf();
       this.loadOutputMargins();
@@ -1512,7 +1655,7 @@
         const project = projectResult.project || projectResult.Project || projectResult.item || projectResult;
         const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
         const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
-        if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName;
+        if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName + ' | برای ویرایش روی مقادیر خط‌چین‌دار کلیک کن';
         if (!templates.length) {
           if (previewCard) previewCard.hidden = false;
           if (preview) preview.innerHTML = '<div class="pt-empty-state">برای این مجموعه هنوز قالب فعالی در قالب‌ساز ثبت نشده است.</div>';
@@ -1535,11 +1678,13 @@
             const resolvedProject = resolved.project || project;
             const data = resolved.data || {};
             if (!template.Definition) throw new Error('ساختار ذخیره‌شده قالب در دسترس نیست.');
+            this.projectOutputRecords[String(template.ID)] = { template: template, project: resolvedProject, data: data, section: section };
             const documentHtml = await this.renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true });
             if (renderedCount > 0) section.classList.add('starts-new-page');
             section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
               '</strong><span>' + this.esc(template.Code || '') + '</span></header><div class="pt-project-template-pages">' + documentHtml + '</div>';
             renderedCount++;
+            this.bindProjectOutputSection(section, template.ID);
           } catch (templateError) {
             failedCount++;
             section.classList.add('has-error');
@@ -1552,7 +1697,8 @@
         if (previewCard) previewCard.hidden = false;
         if (printButton) printButton.hidden = renderedCount === 0;
         this.setStatus('pt-output-status', renderedCount + ' قالب از ' + templates.length + ' قالب فعال برای این پروژه آماده شد.' +
-          (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : ''));
+          (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : '') +
+          ' مقادیر خط‌چین‌دار قابل ویرایش در پیش‌نمایش هستند؛ ذخیره در اطلاعات اصلی در مرحله بعد متصل می‌شود.');
         if (previewCard) previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
         this.setStatus('pt-output-status', error.message || 'دریافت پروژه یا قالب‌ها ناموفق بود.', true);
@@ -1975,9 +2121,14 @@
         const imageAttachment = this.findImageAttachment(raw);
         const isImage = item.type === 'image' || !!imageAttachment;
         const value = binding ? this.formatOutputValue(raw) : (item.text || '');
-        const fieldContent = item.type === 'field' && item.showLabel && item.label
-          ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> <span>' + this.esc(value) + '</span>'
+        const canEditValue = !overlayOnly && this.projectOutputMode &&
+          this.isProjectOutputBindingEditable(binding, raw, item.type);
+        const editableValue = canEditValue
+          ? '<span class="pt-output-editable-value" data-pt-output-editable="true" data-pt-binding-id="' + this.esc(item.bindingId) + '" tabindex="0" role="button" title="برای ویرایش کلیک کن">' + this.esc(value) + '</span>'
           : this.esc(value);
+        const fieldContent = item.type === 'field' && item.showLabel && item.label
+          ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> ' + editableValue
+          : editableValue;
         const style = 'left:'+Number(item.x||0)+'mm;top:'+Number(item.y||0)+'mm;width:'+Number(item.width||30)+'mm;min-height:'+Number(item.height||15)+'mm;font-size:'+Number(item.fontSize||12)+'pt;text-align:'+this.esc(item.align||'right')+';color:'+this.esc(item.color||'#1f2937')+';background:'+this.esc(item.background||'transparent')+';';
         if (isImage) {
           let image = '';
@@ -2006,11 +2157,24 @@
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
           const columns = item.columns || [];
-          const tableRows = rows.map(row => {
+          const tableEditable = !overlayOnly && this.projectOutputMode &&
+            this.isProjectOutputBindingEditable(binding, raw, item.type);
+          const tableRows = rows.map((row, rowIndex) => {
             const cells = Array.isArray(row) ? row : (row && typeof row === 'object'
               ? (item.columnKeys || columns).map((key,i) => row[key] !== undefined ? row[key] : Object.values(row)[i])
               : [row]);
-            return '<tr>'+columns.map((_,i)=>'<td>'+this.esc(this.formatOutputValue(cells[i]))+'</td>').join('')+'</tr>';
+            return '<tr>'+columns.map((_,i)=>{
+              const key = !Array.isArray(row) && row && typeof row === 'object'
+                ? String((item.columnKeys && item.columnKeys[i]) || Object.keys(row)[i] || '') : '';
+              const cellValue = this.esc(this.formatOutputValue(cells[i]));
+              const editable = tableEditable
+                ? '<span class="pt-output-editable-value" data-pt-output-editable="true" data-pt-binding-id="' + this.esc(item.bindingId) +
+                  '" data-pt-row-index="' + rowIndex + '" data-pt-column-index="' + i + '"' +
+                  (key ? ' data-pt-column-key="' + this.esc(key) + '"' : '') +
+                  ' tabindex="0" role="button" title="برای ویرایش کلیک کن">' + cellValue + '</span>'
+                : cellValue;
+              return '<td>'+editable+'</td>';
+            }).join('')+'</tr>';
           }).join('');
           return '<div class="pt-output-element pt-output-table" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
         }
@@ -2042,6 +2206,9 @@
       return pages.join('');
     },
     printOutput: async function () {
+      if (this.projectOutputEdit && this.projectOutputEdit.editor) {
+        this.finishProjectOutputEdit(this.projectOutputEdit.editor, true);
+      }
       if (this.outputPdfBlobUrl) {
         const opened = window.open(this.outputPdfBlobUrl, '_blank');
         if (!opened) this.setStatus('pt-output-status', 'مرورگر پنجره PDF را مسدود کرد؛ از دکمه «دانلود PDF نهایی» استفاده کن.');
