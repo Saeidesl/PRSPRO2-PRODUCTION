@@ -2461,7 +2461,7 @@
           const tableEditable = !overlayOnly && this.projectOutputMode &&
             this.isProjectOutputBindingEditable(binding, raw, item.type, source);
           const manageRows = tableEditable && isMultiple && columnsMeta.length > 0;
-          const tableRows = rows.map((row, rowIndex) => {
+          const tableRows = (await Promise.all(rows.map(async (row, rowIndex) => {
             const rowObject = row && typeof row === 'object' && !Array.isArray(row) ? row : null;
             const cells = Array.isArray(row) ? row : (rowObject
               ? columns.map((_,i) => {
@@ -2469,7 +2469,7 @@
                 const key = String((item.columnKeys && item.columnKeys[i]) || meta.Code || Object.keys(rowObject)[i] || '');
                 return rowObject[key] !== undefined ? rowObject[key] : Object.values(rowObject)[i];
               }) : [row]);
-            const cellsHtml = columns.map((_,i)=>{
+            const cellsHtml = (await Promise.all(columns.map(async (_,i)=>{
               const meta = columnsMeta[i] || {};
               const key = String((item.columnKeys && item.columnKeys[i]) || meta.Code || (rowObject ? Object.keys(rowObject)[i] : ''));
               const cellRaw = rowObject && key ? rowObject[key] : cells[i];
@@ -2493,12 +2493,12 @@
                   '" tabindex="0" role="button" title="برای ویرایش کلیک کن">' + cellContent + '</span>'
                 : cellContent;
               return '<td>'+editable+'</td>';
-            }).join('');
+            }))).join('');
             const remove = manageRows
               ? '<td class="pt-output-row-action-cell"><button type="button" class="btn btn-sm btn-quiet" data-pt-table-action="remove-row" data-pt-binding-id="' + this.esc(item.bindingId) + '" data-pt-row-index="' + rowIndex + '">حذف</button></td>'
               : '';
             return '<tr>'+cellsHtml+remove+'</tr>';
-          }).join('');
+          }))).join('');
           const actionHeader = manageRows ? '<th class="pt-output-row-action-cell">عملیات</th>' : '';
           const addButton = manageRows
             ? '<div class="pt-output-table-actions"><button type="button" class="btn btn-sm btn-primary" data-pt-table-action="add-row" data-pt-binding-id="' + this.esc(item.bindingId) + '">+ افزودن ردیف</button></div>'
