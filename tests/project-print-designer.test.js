@@ -197,7 +197,7 @@ test('project output exposes inline editable controls only for approved business
  assert.match(module,/isProjectOutputBindingEditable: function/);
  assert.match(module,/bindProjectOutputSection: function/);
  assert.match(module,/beginProjectOutputEdit: function/);
- assert.match(module,/finishProjectOutputEdit: function/);
+ assert.match(module,/finishProjectOutputEdit: async function/);
  assert.match(module,/data-pt-output-editable="true"/);
  assert.match(module,/data-pt-row-index/);
  assert.match(module,/ProjectCode','Title','Description','Quantity/);
