@@ -758,6 +758,9 @@
 
 
 /* Project-output inline file and repeatable-table controls */
+.pt-output-table{overflow:auto;max-width:100%}
+.pt-output-image-frame{position:relative}
+.pt-output-image-frame .pt-output-file-edit{position:absolute;right:2px;bottom:2px;z-index:2;margin:0;background:var(--surface,#fff)}
 .pt-output-file-frame{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap;min-width:0}
 .pt-output-file-name{overflow-wrap:anywhere;color:var(--text,var(--color-text))}
 .pt-output-file-edit{flex:none;white-space:nowrap}
@@ -773,4 +776,5 @@
 .pt-output-inline-editor input[type=file]{max-width:220px}
 @media print{
   .pt-output-file-edit,.pt-output-table-actions,.pt-output-row-action-cell,.pt-output-row-editor-actions{display:none!important}
+  .pt-output-table{overflow:visible!important}
 }
