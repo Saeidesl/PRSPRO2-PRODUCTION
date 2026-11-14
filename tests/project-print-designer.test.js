@@ -219,7 +219,7 @@ test('project template inline edits persist to the authoritative source and refr
   assert.match(module, /printButton\.hidden = true/);
   assert.match(module, /ذخیره تغییر ناموفق بود/);
   assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
-  assert.match(index, /print-designer\.js\?v=20261113-inline-source-save-1/);
+  assert.match(index, /print-designer\.js\?v=20261114-inline-file-table-edit-1/);
 });
 
 
