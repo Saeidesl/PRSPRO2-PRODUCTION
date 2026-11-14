@@ -1692,7 +1692,7 @@
         this.projectOutputEdit = null;
         return;
       }
-      const next = JSON.parse(JSON.stringify(record.data[bindingId] === undefined ? null : record.data[bindingId]));
+      let next = JSON.parse(JSON.stringify(record.data[bindingId] === undefined ? null : record.data[bindingId]));
       let value = input.value;
       try {
         if (dataType === 'image' || dataType === 'file') {
@@ -1710,8 +1710,8 @@
           const key = editor.dataset.ptColumnKey || Object.keys(row)[columnIndex];
           if (!key) throw new Error('شناسه ستون جدول پیدا نشد.');
           row[key] = value;
-        } else if (dataType === 'image' && input.multiple && Array.isArray(next)) {
-          value = next.concat(value);
+        } else if (dataType === 'image' && input.multiple) {
+          next = (Array.isArray(next) ? next : []).concat(Array.isArray(value) ? value : [value]);
         }
         await this.persistProjectOutputEdit(record, bindingId, isTableCell || (dataType === 'image' && input.multiple) ? next : value, editor);
       } catch (error) {
@@ -2407,7 +2407,7 @@
           ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> ' + editableValue
           : editableValue;
         const style = 'left:'+Number(item.x||0)+'mm;top:'+Number(item.y||0)+'mm;width:'+Number(item.width||30)+'mm;min-height:'+Number(item.height||15)+'mm;font-size:'+Number(item.fontSize||12)+'pt;text-align:'+this.esc(item.align||'right')+';color:'+this.esc(item.color||'#1f2937')+';background:'+this.esc(item.background||'transparent')+';';
-        if (isFile && !isImage) {
+        if (isFile) {
           const label = attachments.map(file => file.fileName || 'فایل پیوست').join('، ') || 'فایلی انتخاب نشده است';
           return '<div class="pt-output-element pt-output-file-frame" style="'+style+'"><span class="pt-output-file-name">'+this.esc(label)+'</span>'+fileEditButton+'</div>';
         }
