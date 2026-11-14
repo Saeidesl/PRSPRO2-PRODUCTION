@@ -1643,10 +1643,11 @@
         input.accept = dataType === 'image'
           ? 'image/jpeg,image/png,image/webp,image/gif'
           : '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx';
-        input.multiple = dataType === 'image' && (isTableCell || String(source.cardinality || '').toUpperCase() === 'MULTIPLE');
-        const existing = isTableCell
-          ? this.getOutputAttachments((Array.isArray(raw) ? raw[Number(editor.dataset.ptRowIndex)] : {})[columnKey])
-          : this.getOutputAttachments(raw);
+        input.multiple = dataType === 'image';
+        const existingValue = isTableCell
+          ? (function(row, index, key) { return Array.isArray(row) ? row[index] : (row && typeof row === 'object' ? row[key] : null); })(Array.isArray(raw) ? raw[Number(editor.dataset.ptRowIndex)] : null, Number(editor.dataset.ptColumnIndex), columnKey)
+          : raw;
+        const existing = this.getOutputAttachments(existingValue);
         if (existing.length) {
           const current = document.createElement('small');
           current.className = 'pt-output-current-file';
@@ -1704,12 +1705,16 @@
         if (dataType === 'image' || dataType === 'file') {
           const files = Array.from(input.files || []);
           if (!files.length) throw new Error('برای ثبت تغییر، فایل یا تصویر جدید انتخاب کنید.');
-          if (dataType === 'image' && input.multiple && isTableCell && files.length > 20) {
-            throw new Error('حداکثر ۲۰ تصویر برای هر سلول مجاز است.');
+          if (dataType === 'image' && input.multiple && isTableCell) {
+            const row = Array.isArray(next) ? next[Number(editor.dataset.ptRowIndex)] : null;
+            const key = editor.dataset.ptColumnKey || '';
+            const current = row && typeof row === 'object' ? (Array.isArray(row) ? row[Number(editor.dataset.ptColumnIndex)] : row[key]) : null;
+            const count = Array.isArray(current) ? current.length : (current ? 1 : 0);
+            if (count + files.length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر سلول مجاز است.');
           }
-          if (dataType === 'image' && input.multiple && !isTableCell &&
-              (Array.isArray(next) ? next.length : 0) + files.length > 20) {
-            throw new Error('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.');
+          if (dataType === 'image' && input.multiple && !isTableCell) {
+            const count = Array.isArray(next) ? next.length : (next ? 1 : 0);
+            if (count + files.length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.');
           }
           const uploaded = [];
           for (const file of files) uploaded.push(await this.uploadProjectOutputAttachment(file, dataType));
@@ -1730,11 +1735,13 @@
           const key = editor.dataset.ptColumnKey || Object.keys(row)[columnIndex];
           if (!key) throw new Error('شناسه ستون جدول پیدا نشد.');
           if (dataType === 'image' && input.multiple) {
-            row[key] = (Array.isArray(row[key]) ? row[key] : []).concat(Array.isArray(value) ? value : [value]);
+            const currentImages = Array.isArray(row[key]) ? row[key] : (row[key] ? [row[key]] : []);
+            row[key] = currentImages.concat(Array.isArray(value) ? value : [value]);
             if (row[key].length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر سلول مجاز است.');
           } else row[key] = value;
         } else if (dataType === 'image' && input.multiple) {
-          next = (Array.isArray(next) ? next : []).concat(Array.isArray(value) ? value : [value]);
+          const currentImages = Array.isArray(next) ? next : (next ? [next] : []);
+          next = currentImages.concat(Array.isArray(value) ? value : [value]);
         }
         await this.persistProjectOutputEdit(record, bindingId, isTableCell || (dataType === 'image' && input.multiple) ? next : value, editor);
       } catch (error) {
