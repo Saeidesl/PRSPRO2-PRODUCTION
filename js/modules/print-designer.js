@@ -1561,6 +1561,7 @@
               saveButton.type = 'button';
               saveButton.className = 'btn btn-primary btn-sm';
               saveButton.dataset.ptOutputAction = 'save-row';
+              saveButton.dataset.ptDraftRowAction = '1';
               saveButton.dataset.ptBindingId = bindingId;
               saveButton.dataset.ptRowIndex = String(rowIndex);
               saveButton.textContent = 'ذخیره ردیف';
@@ -1569,6 +1570,7 @@
               cancelButton.type = 'button';
               cancelButton.className = 'btn btn-secondary btn-sm';
               cancelButton.dataset.ptOutputAction = 'remove-row';
+              cancelButton.dataset.ptDraftRowAction = '1';
               cancelButton.dataset.ptBindingId = bindingId;
               cancelButton.dataset.ptRowIndex = String(rowIndex);
               cancelButton.textContent = 'لغو ردیف';
@@ -1597,7 +1599,7 @@
               if (draftTr) draftTr.remove();
               const actions = rowNode && rowNode.querySelector('.pt-output-table-actions');
               if (actions) {
-                actions.querySelectorAll('[data-pt-output-action="save-row"],[data-pt-output-action="remove-row"]').forEach(button => button.remove());
+                actions.querySelectorAll('[data-pt-draft-row-action="1"]').forEach(button => button.remove());
                 actions.querySelectorAll('[data-pt-output-action="add-row"],[data-pt-output-action="remove-row"]').forEach(button => { button.disabled = false; });
               }
               this.setStatus('ردیف موقت لغو شد.');
