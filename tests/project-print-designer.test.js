@@ -234,6 +234,8 @@ test('project output keeps a new table row editable as a draft until explicit sa
   const module = read('js/modules/print-designer.js');
   assert.match(module, /data-pt-output-action="add-row"/);
   assert.match(module, /data-pt-output-action="save-row"/);
+  assert.match(module, /data-pt-draft-row-action/);
+  assert.match(module, /\[data-pt-draft-row-action="1"\]/);
   assert.match(module, /data-pt-output-action="remove-row"/);
   assert.match(module, /projectOutputDraftRows/);
   assert.match(module, /ردیف جدید اضافه شد/);
