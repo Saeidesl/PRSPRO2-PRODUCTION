@@ -1496,6 +1496,7 @@
       return found;
     },
     uploadProjectOutputAttachment: async function (file, dataType) {
+      if (!this.canUploadProjectOutputAttachments()) throw new Error('مجوز بارگذاری پیوست را ندارید.');
       if (!file) throw new Error('فایلی برای بارگذاری انتخاب نشده است.');
       const maxBytes = 10 * 1024 * 1024;
       const extension = String(file.name || '').split('.').pop().toLowerCase();
@@ -1710,8 +1711,15 @@
         if (isTableCell) {
           const rowIndex = Number(editor.dataset.ptRowIndex);
           const columnIndex = Number(editor.dataset.ptColumnIndex);
-          const row = Array.isArray(next) ? next[rowIndex] : null;
-          if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error('ساختار ردیف جدول معتبر نیست؛ قالب را تازه‌سازی کنید.');
+          let row = Array.isArray(next) ? next[rowIndex] : null;
+          if (Array.isArray(row)) {
+            const source = this.getProjectOutputSource(record, bindingId) || {};
+            const normalized = Object.create(null);
+            (source.columns || []).forEach((column, index) => { normalized[String(column.Code || '')] = row[index] === undefined ? '' : row[index]; });
+            next[rowIndex] = normalized;
+            row = normalized;
+          }
+          if (!row || typeof row !== 'object') throw new Error('ساختار ردیف جدول معتبر نیست؛ قالب را تازه‌سازی کنید.');
           const key = editor.dataset.ptColumnKey || Object.keys(row)[columnIndex];
           if (!key) throw new Error('شناسه ستون جدول پیدا نشد.');
           row[key] = value;
@@ -1732,6 +1740,7 @@
         input.type = 'file';
         input.accept = type === 'image' ? 'image/jpeg,image/png,image/webp,image/gif' : '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx';
         input.multiple = type === 'image';
+        input.disabled = !this.canUploadProjectOutputAttachments();
       } else if (type === 'boolean') {
         input = document.createElement('input'); input.type = 'checkbox';
       } else if (type === 'select') {
@@ -2476,7 +2485,9 @@
                 }));
                 cellContent = previews.join('');
               }
-              const editable = tableEditable
+              const columnType = String(meta.DataType || 'text').toLowerCase();
+              const canEditCell = tableEditable && (!['image','file'].includes(columnType) || this.canUploadProjectOutputAttachments());
+              const editable = canEditCell
                 ? '<span class="pt-output-editable-value" data-pt-output-editable="true" data-pt-binding-id="' + this.esc(item.bindingId) +
                   '" data-pt-row-index="' + rowIndex + '" data-pt-column-index="' + i + '" data-pt-column-key="' + this.esc(key) +
                   '" tabindex="0" role="button" title="برای ویرایش کلیک کن">' + cellContent + '</span>'
