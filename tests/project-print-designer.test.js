@@ -242,6 +242,7 @@ test('project output allows multiple draft table rows and saves them together in
   assert.match(module, /for \(const rowIndex of pendingRows\)/);
   assert.match(module, /saveProjectOutputBinding\(record, bindingId, next/);
   assert.match(module, /updatedPending = pendingRows\.filter/);
+  assert.match(module, /draftNode\.querySelectorAll\('\[data-pt-row-index\]'\)/);
   assert.match(module, /next\.push\(/);
   assert.match(module, /next\.splice\(/);
 });
