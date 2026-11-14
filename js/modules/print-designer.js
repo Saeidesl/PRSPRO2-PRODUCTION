@@ -1473,6 +1473,11 @@
     getProjectOutputSource: function (record, bindingId) {
       return record && record.sources ? (record.sources[String(bindingId)] || null) : null;
     },
+    canUploadProjectOutputAttachments: function () {
+      const router = window.PMS && window.PMS.Router;
+      return !!(router && ((typeof router.isAdmin === 'function' && router.isAdmin()) ||
+        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_UPLOAD') !== -1)));
+    },
     getOutputAttachments: function (value) {
       const found = [];
       const visit = item => {
@@ -2397,7 +2402,7 @@
         const value = binding ? (attachments.length ? attachments.map(file => file.fileName || 'فایل پیوست').join('، ') : this.formatOutputValue(raw)) : (item.text || '');
         const canEditValue = !overlayOnly && this.projectOutputMode &&
           this.isProjectOutputBindingEditable(binding, raw, item.type, source);
-        const fileEditButton = canEditValue && (isImage || isFile)
+        const fileEditButton = canEditValue && this.canUploadProjectOutputAttachments() && (isImage || isFile)
           ? '<button type="button" class="btn btn-sm pt-output-file-edit" data-pt-output-file-edit="true" data-pt-binding-id="' + this.esc(item.bindingId) + '">' +
             (attachments.length ? 'تغییر فایل' : 'بارگذاری فایل') + '</button>' : '';
         const editableValue = canEditValue && !isImage && !isFile
