@@ -1473,6 +1473,17 @@
     getProjectOutputSource: function (record, bindingId) {
       return record && record.sources ? (record.sources[String(bindingId)] || null) : null;
     },
+    normalizeProjectOutputRows: function (rows, source) {
+      const columns = Array.isArray(source && source.columns) ? source.columns : [];
+      return (Array.isArray(rows) ? rows : []).map(row => {
+        if (row && typeof row === 'object' && !Array.isArray(row)) return JSON.parse(JSON.stringify(row));
+        const normalized = Object.create(null);
+        columns.forEach((column, index) => {
+          normalized[String(column.Code || '')] = Array.isArray(row) ? (row[index] === undefined ? '' : row[index]) : (index === 0 ? row : '');
+        });
+        return normalized;
+      });
+    },
     canUploadProjectOutputAttachments: function () {
       const router = window.PMS && window.PMS.Router;
       return !!(router && ((typeof router.isAdmin === 'function' && router.isAdmin()) ||
@@ -1573,7 +1584,8 @@
           else if (action === 'remove-row') {
             const bindingId = String(tableAction.dataset.ptBindingId || '');
             const rowIndex = Number(tableAction.dataset.ptRowIndex);
-            const next = Array.isArray(record.data[bindingId]) ? JSON.parse(JSON.stringify(record.data[bindingId])) : [];
+            const source = this.getProjectOutputSource(record, bindingId);
+            const next = this.normalizeProjectOutputRows(record.data[bindingId], source);
             if (!Number.isInteger(rowIndex) || rowIndex < 0 || rowIndex >= next.length) return;
             next.splice(rowIndex, 1);
             this.persistProjectOutputEdit(record, bindingId, next, tableAction);
@@ -1700,6 +1712,7 @@
         return;
       }
       let next = JSON.parse(JSON.stringify(record.data[bindingId] === undefined ? null : record.data[bindingId]));
+      if (isTableCell) next = this.normalizeProjectOutputRows(next, this.getProjectOutputSource(record, bindingId));
       let value = input.value;
       try {
         if (dataType === 'image' || dataType === 'file') {
@@ -1865,7 +1878,7 @@
           this.setStatus('pt-output-status', 'برای ذخیره ردیف، حداقل یک مقدار وارد کنید.', true);
           return;
         }
-        const next = Array.isArray(record.data[bindingId]) ? JSON.parse(JSON.stringify(record.data[bindingId])) : [];
+        const next = this.normalizeProjectOutputRows(record.data[bindingId], source);
         next.push(nextRow);
         await this.persistProjectOutputEdit(record, bindingId, next, row);
       } catch (error) {
