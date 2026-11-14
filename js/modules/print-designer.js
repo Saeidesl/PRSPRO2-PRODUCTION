@@ -1493,7 +1493,7 @@
     bindProjectOutputSection: function (section, templateId) {
       if (!section || section.dataset.ptOutputEditBound === '1') return;
       section.dataset.ptOutputEditBound = '1';
-      section.addEventListener('click', event => {
+      section.addEventListener('click', async event => {
         const fileLink = event.target.closest('[data-pt-file-download]');
         if (fileLink && section.contains(fileLink)) {
           event.preventDefault();
