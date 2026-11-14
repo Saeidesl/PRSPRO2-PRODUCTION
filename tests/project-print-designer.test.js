@@ -230,18 +230,18 @@ test('project output supports uploading file/image bindings through project atta
   assert.match(module, /data-pt-file-input/);
   assert.match(module, /dataType === 'image'/);
 });
-test('project output keeps a new table row editable as a draft until explicit save, then persists the full table', () => {
+test('project output allows multiple draft table rows and saves them together in one request', () => {
   const module = read('js/modules/print-designer.js');
+  const addBlock = module.slice(module.indexOf("if (actionName === 'add-row')"), module.indexOf("} else if (actionName === 'remove-row')"));
   assert.match(module, /data-pt-output-action="add-row"/);
-  assert.match(module, /saveButton\.dataset\.ptOutputAction = 'save-row'/);
-  assert.match(module, /data-pt-draft-row-action/);
-  assert.match(module, /\[data-pt-draft-row-action="1"\]/);
-  assert.match(module, /data-pt-output-action="remove-row"/);
-  assert.match(module, /projectOutputDraftRows/);
-  assert.match(module, /ردیف جدید اضافه شد/);
-  assert.match(module, /ابتدا حداقل یک خانه از ردیف را تکمیل کن/);
-  assert.match(module, /record\.data\[bindingId\] = next/);
+  assert.match(addBlock, /draftRows\[bindingId\] = pendingRows\.concat\(rowIndex\)/);
+  assert.match(addBlock, /data-pt-output-action = 'save-rows'/);
+  assert.match(addBlock, /ذخیره همه ردیف‌ها/);
+  assert.match(addBlock, /لغو ردیف/);
+  assert.doesNotMatch(addBlock, /if \(pendingRows\.length\)/);
+  assert.match(module, /for \(const rowIndex of pendingRows\)/);
   assert.match(module, /saveProjectOutputBinding\(record, bindingId, next/);
+  assert.match(module, /updatedPending = pendingRows\.filter/);
   assert.match(module, /next\.push\(/);
   assert.match(module, /next\.splice\(/);
 });
