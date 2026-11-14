@@ -1778,8 +1778,8 @@
         const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'انتخاب کنید'; input.appendChild(placeholder);
         (Array.isArray(column.Options) ? column.Options : []).forEach(option => {
           const item = document.createElement('option');
-          item.value = String(option && typeof option === 'object' ? (option.value !== undefined ? option.value : option.label) : option);
-          item.textContent = String(option && typeof option === 'object' ? (option.label || option.value) : option);
+          item.value = String(option && typeof option === 'object' ? (option.value !== undefined ? option.value : (option.Value !== undefined ? option.Value : (option.label || option.Label))) : option);
+          item.textContent = String(option && typeof option === 'object' ? (option.label || option.Label || option.value || option.Value) : option);
           input.appendChild(item);
         });
       } else {
