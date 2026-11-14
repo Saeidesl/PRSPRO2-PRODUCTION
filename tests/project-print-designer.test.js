@@ -221,3 +221,20 @@ test('project template inline edits persist to the authoritative source and refr
   assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
   assert.match(index, /print-designer\.js\?v=20261113-inline-source-save-1/);
 });
+
+test('project output supports uploading file/image bindings through project attachment API', () => {
+  const module = read('js/modules/print-designer.js');
+  assert.match(module, /uploadProjectOutputFile/);
+  assert.match(module, /\/projects\/.*\/attachments/);
+  assert.match(module, /AttachmentType: 'INFORMATION'/);
+  assert.match(module, /data-pt-file-input/);
+  assert.match(module, /dataType === 'image'/);
+});
+test('project output supports adding and removing multi-row table records and persists the complete value', () => {
+  const module = read('js/modules/print-designer.js');
+  assert.match(module, /data-pt-output-action="add-row"/);
+  assert.match(module, /data-pt-output-action="remove-row"/);
+  assert.match(module, /saveProjectOutputBinding/);
+  assert.match(module, /next\.push\(/);
+  assert.match(module, /next\.splice\(/);
+});
