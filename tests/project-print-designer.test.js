@@ -238,3 +238,10 @@ test('project output supports adding and removing multi-row table records and pe
   assert.match(module, /next\.push\(/);
   assert.match(module, /next\.splice\(/);
 });
+
+test('project output file references can be downloaded through the authorized attachment endpoint', () => {
+  const module = read('js/modules/print-designer.js');
+  assert.match(module, /downloadProjectOutputAttachment/);
+  assert.match(module, /\/attachments\/.*\/download/);
+  assert.match(module, /data-pt-file-download/);
+});
