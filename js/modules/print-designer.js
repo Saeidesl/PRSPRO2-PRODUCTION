@@ -1470,20 +1470,18 @@
         if (this.livePreviewPending && this.livePreviewTimer === null) this.scheduleLivePreview(150);
       }
     },
-    isProjectOutputBindingEditable: function (binding, raw, elementType) {
-      if (!binding || this.findImageAttachment(raw)) return false;
+    isProjectOutputBindingEditable: function (binding, raw, elementType, source) {
+      if (!binding) return false;
       const sourceType = String(binding.sourceType || '').toUpperCase();
       const selection = String(binding.selection || 'LATEST').toUpperCase();
       if (selection !== 'LATEST') return false;
+      const dataType = String(source && source.dataType || '').toLowerCase();
+      if (['image','file'].includes(dataType)) return ['PROJECT_INFORMATION','EVENT_FORM_FIELD'].includes(sourceType);
       if (sourceType === 'PROJECT_FIELD') {
         return ['ProjectCode','Title','Description','Quantity'].includes(String(binding.field || ''));
       }
-      if (sourceType === 'PROJECT_INFORMATION') {
-        if (elementType === 'table') return Array.isArray(raw);
-        return raw === null || raw === undefined || ['string','number','boolean'].includes(typeof raw);
-      }
-      if (sourceType === 'EVENT_FORM_FIELD') {
-        if (elementType === 'table') return Array.isArray(raw);
+      if (sourceType === 'PROJECT_INFORMATION' || sourceType === 'EVENT_FORM_FIELD') {
+        if (elementType === 'table') return Array.isArray(raw) || raw === null || raw === undefined;
         return raw === null || raw === undefined || ['string','number','boolean'].includes(typeof raw);
       }
       if (sourceType === 'EVENT_FIELD') {
@@ -1496,6 +1494,37 @@
       if (!section || section.dataset.ptOutputEditBound === '1') return;
       section.dataset.ptOutputEditBound = '1';
       section.addEventListener('click', event => {
+        const fileLink = event.target.closest('[data-pt-file-download]');
+        if (fileLink && section.contains(fileLink)) {
+          event.preventDefault();
+          this.downloadProjectOutputAttachment(fileLink.dataset.ptFileDownload);
+          return;
+        }
+        const outputAction = event.target.closest('[data-pt-output-action]');
+        if (outputAction && section.contains(outputAction)) {
+          const record = this.projectOutputRecords[String(templateId)];
+          const bindingId = String(outputAction.dataset.ptBindingId || '');
+          if (!record || !bindingId) return;
+          const current = record.data[bindingId];
+          const next = Array.isArray(current) ? JSON.parse(JSON.stringify(current)) : [];
+          if (outputAction.dataset.ptOutputAction === 'add-row') {
+            const rowNode = outputAction.closest('.pt-output-table');
+            const configuredKeys = String(rowNode && rowNode.dataset.ptColumnKeys || '').split('|').filter(Boolean);
+            const firstObjectRow = next.find(row => row && typeof row === 'object' && !Array.isArray(row));
+            const keys = configuredKeys.length ? configuredKeys : (firstObjectRow ? Object.keys(firstObjectRow) : []);
+            next.push(keys.length ? Object.fromEntries(keys.map(key => [key, ''])) : (rowNode ? Array.from({length:Number(rowNode.dataset.ptColumnCount||0)},()=> '') : []));
+            this.saveProjectOutputBinding(record, bindingId, next, outputAction.closest('.pt-output-element'));
+          } else if (outputAction.dataset.ptOutputAction === 'remove-row') {
+            const rowIndex = Number(outputAction.dataset.ptRowIndex);
+            if (Number.isInteger(rowIndex) && rowIndex >= 0 && rowIndex < next.length) {
+              next.splice(rowIndex, 1);
+              this.saveProjectOutputBinding(record, bindingId, next, outputAction.closest('.pt-output-element'));
+            }
+          } else if (outputAction.dataset.ptOutputAction === 'remove-file') {
+            this.saveProjectOutputBinding(record, bindingId, null, outputAction.closest('.pt-output-element'));
+          }
+          return;
+        }
         const action = event.target.closest('[data-pt-edit-action]');
         if (action) {
           const editor = action.closest('.pt-output-inline-editor');
@@ -1507,6 +1536,15 @@
         const record = this.projectOutputRecords[String(templateId)];
         if (!record || this.projectOutputEdit) return;
         this.beginProjectOutputEdit(value, record);
+      });
+      section.addEventListener('change', event => {
+        const input = event.target.closest('[data-pt-file-input]');
+        if (!input || !section.contains(input) || !input.files || !input.files[0]) return;
+        const record = this.projectOutputRecords[String(templateId)];
+        const bindingId = String(input.dataset.ptBindingId || '');
+        const file = input.files[0];
+        input.value = '';
+        if (record && bindingId) this.uploadProjectOutputFile(record, bindingId, file, input.closest('.pt-output-element'));
       });
       section.addEventListener('keydown', event => {
         const editable = event.target.closest('[data-pt-output-editable="true"]');
@@ -1614,6 +1652,85 @@
       replacement.textContent = String(editor.dataset.ptOriginalValue || '');
       editor.replaceWith(replacement);
       this.projectOutputEdit = null;
+    },
+    downloadProjectOutputAttachment: async function (attachmentId) {
+      try {
+        const response = await PMS.Api.get('/attachments/' + encodeURIComponent(attachmentId) + '/download', { trackSync: false });
+        const file = this.extract(response) || {};
+        const base64 = String(file.Base64 || file.base64 || '').replace(/^data:[^,]*;base64,/i, '').replace(/\s/g, '');
+        if (!base64) throw new Error('محتوای فایل پیوست دریافت نشد.');
+        const binary = window.atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+        const mime = String(file.MimeType || file.mimeType || 'application/octet-stream');
+        const blobUrl = window.URL.createObjectURL(new Blob([bytes], { type: mime }));
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = String(file.FileName || file.fileName || 'attachment');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+      } catch (error) {
+        this.setStatus('pt-output-status', error.message || 'دریافت فایل ناموفق بود.', true);
+      }
+    },
+    saveProjectOutputBinding: async function (record, bindingId, value, root) {
+      const source = record && record.sources && record.sources[bindingId];
+      if (!source) throw new Error('شناسه منبع این مقدار دریافت نشده است؛ قالب را تازه‌سازی کنید.');
+      if (root) root.classList.add('pt-output-saving');
+      this.setStatus('pt-output-status', 'در حال ذخیره تغییر در اطلاعات اصلی سیستم…');
+      try {
+        await PMS.Api.put('/print-templates/' + encodeURIComponent(record.template.ID) + '/project-data', {
+          ProjectID: this.projectOutputId, BindingID: bindingId, Value: value, ExpectedSource: source
+        });
+        const refreshed = await this.initProjectOutput(this.projectOutputId);
+        if (refreshed !== true) throw new Error('ذخیره انجام شد اما تازه‌سازی خروجی کامل نشد؛ پیش از چاپ صفحه را دوباره بارگذاری کنید.');
+        this.setStatus('pt-output-status', 'تغییر با موفقیت در اطلاعات اصلی ذخیره شد.');
+      } catch (error) {
+        if (root) root.classList.remove('pt-output-saving');
+        this.setStatus('pt-output-status', error.message || 'ذخیره تغییر ناموفق بود.', true);
+        return false;
+      }
+    },
+    uploadProjectOutputFile: async function (record, bindingId, file, root) {
+      const source = record && record.sources && record.sources[bindingId];
+      if (!source || !['image','file'].includes(String(source.dataType || '').toLowerCase())) {
+        this.setStatus('pt-output-status', 'این اتصال برای بارگذاری فایل یا تصویر مجاز نیست.', true);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        this.setStatus('pt-output-status', 'حداکثر حجم فایل ۱۰ مگابایت است.', true);
+        return;
+      }
+      const mime = String(file.type || '').toLowerCase();
+      if (source.dataType === 'image' && mime.indexOf('image/') !== 0) {
+        this.setStatus('pt-output-status', 'برای این فیلد فقط فایل تصویری مجاز است.', true);
+        return;
+      }
+      try {
+        if (root) root.classList.add('pt-output-saving');
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(new Error('خواندن فایل انتخاب‌شده ناموفق بود.'));
+          reader.readAsDataURL(file);
+        });
+        const response = await PMS.Api.post('/projects/' + encodeURIComponent(this.projectOutputId) + '/attachments', {
+          FileName: file.name, MimeType: mime, Base64: dataUrl, AttachmentType: 'INFORMATION'
+        });
+        const uploaded = this.extract(response) || {};
+        const attachment = uploaded.attachment || uploaded.Attachment || uploaded;
+        if (!attachment.ID) throw new Error('سرور شناسه پیوست بارگذاری‌شده را برنگرداند.');
+        const reference = {
+          AttachmentID: String(attachment.ID), FileName: String(attachment.FileName || file.name),
+          MimeType: String(attachment.MimeType || mime), FileSize: Number(attachment.FileSize || file.size)
+        };
+        await this.saveProjectOutputBinding(record, bindingId, reference, root);
+      } catch (error) {
+        if (root) root.classList.remove('pt-output-saving');
+        this.setStatus('pt-output-status', error.message || 'بارگذاری یا ذخیره فایل ناموفق بود.', true);
+      }
     },
     persistProjectOutputEdit: async function (record, bindingId, value, editor) {
       const source = record && record.sources && record.sources[bindingId];
@@ -2162,11 +2279,19 @@
       const renderElement = async item => {
         const binding = bindings[item.bindingId];
         const raw = binding ? data[item.bindingId] : null;
+        const outputRecord = this.projectOutputRecords[String(template.ID)];
+        const outputSource = outputRecord && outputRecord.sources ? outputRecord.sources[String(item.bindingId || '')] : null;
         const imageAttachment = this.findImageAttachment(raw);
-        const isImage = item.type === 'image' || !!imageAttachment;
+        const fileAttachment = raw && typeof raw === 'object' && !Array.isArray(raw) && (raw.AttachmentID || raw.attachmentId)
+          ? { id: String(raw.AttachmentID || raw.attachmentId), name: String(raw.FileName || raw.fileName || 'فایل پیوست'), mime: String(raw.MimeType || raw.mimeType || '') } : null;
+        const dataType = String(outputSource && outputSource.dataType || '').toLowerCase();
+        const isImage = item.type === 'image' || dataType === 'image' || !!imageAttachment;
         const value = binding ? this.formatOutputValue(raw) : (item.text || '');
         const canEditValue = !overlayOnly && this.projectOutputMode &&
-          this.isProjectOutputBindingEditable(binding, raw, item.type);
+          this.isProjectOutputBindingEditable(binding, raw, item.type, outputSource);
+        const uploadControl = canEditValue && ['image','file'].includes(dataType)
+          ? '<span class="pt-output-file-controls"><label class="btn btn-secondary btn-sm">انتخاب ' + (dataType === 'image' ? 'تصویر' : 'فایل') + '<input type="file" data-pt-file-input="true" data-pt-binding-id="' + this.esc(item.bindingId) + '" accept="' + (dataType === 'image' ? 'image/*' : '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx') + '" hidden></label>' +
+            (fileAttachment ? '<button type="button" class="btn btn-secondary btn-sm" data-pt-output-action="remove-file" data-pt-binding-id="' + this.esc(item.bindingId) + '">حذف فایل</button>' : '') + '</span>' : '';
         const editableValue = canEditValue
           ? '<span class="pt-output-editable-value" data-pt-output-editable="true" data-pt-binding-id="' + this.esc(item.bindingId) + '" tabindex="0" role="button" title="برای ویرایش کلیک کن">' + this.esc(value) + '</span>'
           : this.esc(value);
@@ -2196,13 +2321,25 @@
           const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
           const imageLabel = item.type === 'field' && item.showLabel && item.label
             ? '<div class="pt-output-field-label">' + this.esc(item.label) + ':</div>' : '';
-          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+imageLabel+image+'</div>';
+          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+imageLabel+image+uploadControl+'</div>';
+        }
+        if (!isImage && dataType === 'file') {
+          const link = fileAttachment ? '<a class="pt-output-file-link" href="#" data-pt-file-download="' + this.esc(fileAttachment.id) + '">' + this.esc(fileAttachment.name) + '</a>' : '<span class="pt-output-file-empty">فایلی ثبت نشده است</span>';
+          const fileLabel = item.type === 'field' && item.showLabel && item.label
+            ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> ' : '';
+          return '<div class="pt-output-element pt-output-field" dir="auto" style="' + style + '">' + fileLabel + link + uploadControl + '</div>';
         }
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
           const columns = item.columns || [];
           const tableEditable = !overlayOnly && this.projectOutputMode &&
-            this.isProjectOutputBindingEditable(binding, raw, item.type);
+            this.isProjectOutputBindingEditable(binding, raw, item.type, outputSource);
+          const columnKeys = item.columnKeys || [];
+          const rowActions = tableEditable ? rows.map((_, rowIndex) =>
+            '<button type="button" class="btn btn-secondary btn-sm" data-pt-output-action="remove-row" data-pt-binding-id="' + this.esc(item.bindingId) + '" data-pt-row-index="' + rowIndex + '">حذف ردیف</button>'
+          ).join('') : '';
+          const tableControls = tableEditable
+            ? '<div class="pt-output-table-actions">' + rowActions + '<button type="button" class="btn btn-primary btn-sm" data-pt-output-action="add-row" data-pt-binding-id="' + this.esc(item.bindingId) + '">+ افزودن ردیف</button></div>' : '';
           const tableRows = rows.map((row, rowIndex) => {
             const cells = Array.isArray(row) ? row : (row && typeof row === 'object'
               ? (item.columnKeys || columns).map((key,i) => row[key] !== undefined ? row[key] : Object.values(row)[i])
@@ -2220,7 +2357,7 @@
               return '<td>'+editable+'</td>';
             }).join('')+'</tr>';
           }).join('');
-          return '<div class="pt-output-element pt-output-table" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+          return '<div class="pt-output-element pt-output-table" data-pt-column-count="' + columns.length + '" data-pt-column-keys="' + this.esc(columnKeys.join('|')) + '" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table>'+tableControls+'</div>';
         }
         if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
         if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';

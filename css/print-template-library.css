@@ -755,3 +755,12 @@
 .pt-output-table td .pt-output-editable-value{display:block;min-width:35px}
 @media(max-width:600px){.pt-output-inline-editor{min-width:110px}.pt-output-inline-input{max-width:min(220px,65vw)}}
 @media print{.pt-output-editable-value{border:0!important;background:transparent!important}.pt-output-inline-editor{display:none!important}}
+
+/* Project output: direct attachment and multi-row editing controls */
+.pt-output-file-controls,.pt-output-table-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.pt-output-file-link{display:inline-block;max-width:100%;overflow-wrap:anywhere;text-decoration:underline}
+.pt-output-file-empty{opacity:.7;font-size:.9em}
+.pt-output-saving{opacity:.65;pointer-events:none}
+.pt-output-table-actions button{white-space:nowrap}
+.pt-output-file-controls input[type=file]{display:none}
+@media print{.pt-output-file-controls,.pt-output-table-actions{display:none!important}}
