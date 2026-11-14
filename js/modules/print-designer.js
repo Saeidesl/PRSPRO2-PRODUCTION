@@ -1509,7 +1509,9 @@
           const next = Array.isArray(current) ? JSON.parse(JSON.stringify(current)) : [];
           if (outputAction.dataset.ptOutputAction === 'add-row') {
             const rowNode = outputAction.closest('.pt-output-table');
-            const keys = String(rowNode && rowNode.dataset.ptColumnKeys || '').split('|').filter(Boolean);
+            const configuredKeys = String(rowNode && rowNode.dataset.ptColumnKeys || '').split('|').filter(Boolean);
+            const firstObjectRow = next.find(row => row && typeof row === 'object' && !Array.isArray(row));
+            const keys = configuredKeys.length ? configuredKeys : (firstObjectRow ? Object.keys(firstObjectRow) : []);
             next.push(keys.length ? Object.fromEntries(keys.map(key => [key, ''])) : (rowNode ? Array.from({length:Number(rowNode.dataset.ptColumnCount||0)},()=> '') : []));
             this.saveProjectOutputBinding(record, bindingId, next, outputAction.closest('.pt-output-element'));
           } else if (outputAction.dataset.ptOutputAction === 'remove-row') {
@@ -1688,7 +1690,7 @@
       } catch (error) {
         if (root) root.classList.remove('pt-output-saving');
         this.setStatus('pt-output-status', error.message || 'ذخیره تغییر ناموفق بود.', true);
-        throw error;
+        return false;
       }
     },
     uploadProjectOutputFile: async function (record, bindingId, file, root) {
