@@ -2367,6 +2367,8 @@
       if (!(options && options.preservePdfObjectUrls)) this.clearOutputPdfObjectUrls();
       const definition = template && template.Definition ? template.Definition : {};
       const overlayOnly = !!(options && options.overlayOnly);
+      const outputRecord = this.projectOutputRecords && this.projectOutputRecords[String(template && template.ID)];
+      const outputSources = (options && options.sources) || (outputRecord && outputRecord.sources) || {};
       await this.loadTemplateImages(template, definition);
       const pdfPages = !overlayOnly && template && template.Pdf && template.Pdf.HasFile
         ? await this.loadOutputPdfPages(template.ID, definition, options) : null;
@@ -2385,65 +2387,107 @@
       const renderElement = async item => {
         const binding = bindings[item.bindingId];
         const raw = binding ? data[item.bindingId] : null;
-        const imageAttachment = this.findImageAttachment(raw);
-        const isImage = item.type === 'image' || !!imageAttachment;
-        const value = binding ? this.formatOutputValue(raw) : (item.text || '');
+        const source = binding ? outputSources[String(item.bindingId)] : null;
+        const attachments = this.getOutputAttachments(raw);
+        const imageAttachments = attachments.filter(attachment => attachment.mime.indexOf('image/') === 0);
+        const imageAttachment = imageAttachments[0] || this.findImageAttachment(raw);
+        const dataType = String(source && source.dataType || '').toLowerCase();
+        const isImage = item.type === 'image' || dataType === 'image' || !!imageAttachment;
+        const isFile = dataType === 'file';
+        const value = binding ? (attachments.length ? attachments.map(file => file.fileName || 'فایل پیوست').join('، ') : this.formatOutputValue(raw)) : (item.text || '');
         const canEditValue = !overlayOnly && this.projectOutputMode &&
-          this.isProjectOutputBindingEditable(binding, raw, item.type);
-        const editableValue = canEditValue
+          this.isProjectOutputBindingEditable(binding, raw, item.type, source);
+        const fileEditButton = canEditValue && (isImage || isFile)
+          ? '<button type="button" class="btn btn-sm pt-output-file-edit" data-pt-output-file-edit="true" data-pt-binding-id="' + this.esc(item.bindingId) + '">' +
+            (attachments.length ? 'تغییر فایل' : 'بارگذاری فایل') + '</button>' : '';
+        const editableValue = canEditValue && !isImage && !isFile
           ? '<span class="pt-output-editable-value" data-pt-output-editable="true" data-pt-binding-id="' + this.esc(item.bindingId) + '" tabindex="0" role="button" title="برای ویرایش کلیک کن">' + this.esc(value) + '</span>'
           : this.esc(value);
         const fieldContent = item.type === 'field' && item.showLabel && item.label
           ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> ' + editableValue
           : editableValue;
         const style = 'left:'+Number(item.x||0)+'mm;top:'+Number(item.y||0)+'mm;width:'+Number(item.width||30)+'mm;min-height:'+Number(item.height||15)+'mm;font-size:'+Number(item.fontSize||12)+'pt;text-align:'+this.esc(item.align||'right')+';color:'+this.esc(item.color||'#1f2937')+';background:'+this.esc(item.background||'transparent')+';';
+        if (isFile && !isImage) {
+          const label = attachments.map(file => file.fileName || 'فایل پیوست').join('، ') || 'فایلی انتخاب نشده است';
+          return '<div class="pt-output-element pt-output-file-frame" style="'+style+'"><span class="pt-output-file-name">'+this.esc(label)+'</span>'+fileEditButton+'</div>';
+        }
         if (isImage) {
           let image = '';
-          if (imageAttachment) {
-            try {
-              const src = await this.loadOutputImage(raw);
-              image = '<img class="pt-output-image-content" src="' + src + '" alt="' + this.esc(imageAttachment.id) + '">';
-            } catch (error) {
-              if (overlayOnly) throw error;
-              image = '<div class="pt-output-image pt-output-image-error">بارگذاری تصویر ناموفق بود</div>';
-            }
+          if (imageAttachments.length) {
+            const renderedImages = await Promise.all(imageAttachments.map(async attachment => {
+              try {
+                const src = await this.loadOutputImage({AttachmentID:attachment.id,MimeType:attachment.mime});
+                return '<img class="pt-output-image-content" src="' + src + '" alt="' + this.esc(attachment.fileName || attachment.id) + '">';
+              } catch (error) {
+                if (overlayOnly) throw error;
+                return '<div class="pt-output-image pt-output-image-error">بارگذاری تصویر ناموفق بود</div>';
+              }
+            }));
+            image = renderedImages.join('');
           } else if (item.type === 'image' && this.imageSources[item.assetId || item.id]) {
             image = '<img class="pt-output-image-content" src="' + this.esc(this.imageSources[item.assetId || item.id]) + '" alt="' + this.esc(item.fileName || 'تصویر قالب') + '">';
-          } else if (item.type === 'image') {
+          } else if (item.type === 'image' && !dataType) {
             if (overlayOnly) throw new Error('تصویر ثابت قالب بارگذاری نشده است: ' + (item.fileName || item.assetId || 'تصویر'));
             image = '<div class="pt-output-image pt-output-image-error">تصویر قالب در دسترس نیست</div>';
           } else {
             image = '<div class="pt-output-image pt-output-image-empty" aria-hidden="true"></div>';
           }
-          const directTemplateImage = item.type === 'image' && !!(item.assetId || this.pendingImageFiles[item.id]) && !imageAttachment;
+          const directTemplateImage = item.type === 'image' && !!(item.assetId || this.pendingImageFiles[item.id]) && !imageAttachments.length;
           const imageStyle = style + 'height:' + Number(item.height || 15) + 'mm;';
           const imageLabel = item.type === 'field' && item.showLabel && item.label
             ? '<div class="pt-output-field-label">' + this.esc(item.label) + ':</div>' : '';
-          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+imageLabel+image+'</div>';
+          return '<div class="pt-output-element pt-output-image-frame"'+(directTemplateImage ? ' data-pt-template-image="true" data-pt-element-id="'+this.esc(item.id)+'"' : '')+' style="'+imageStyle+'">'+imageLabel+image+fileEditButton+'</div>';
         }
         if (item.type === 'table') {
-          const rows = Array.isArray(raw) ? raw : (item.rows || []);
-          const columns = item.columns || [];
+          const columnsMeta = Array.isArray(source && source.columns) ? source.columns : [];
+          const columns = Array.isArray(item.columns) && item.columns.length
+            ? item.columns : columnsMeta.map(column => column.Name || column.Code);
+          const isMultiple = String(source && source.cardinality || '').toUpperCase() === 'MULTIPLE';
+          const rows = Array.isArray(raw) ? raw : (isMultiple ? [] : (item.rows || []));
           const tableEditable = !overlayOnly && this.projectOutputMode &&
-            this.isProjectOutputBindingEditable(binding, raw, item.type);
+            this.isProjectOutputBindingEditable(binding, raw, item.type, source);
+          const manageRows = tableEditable && isMultiple && columnsMeta.length > 0;
           const tableRows = rows.map((row, rowIndex) => {
-            const cells = Array.isArray(row) ? row : (row && typeof row === 'object'
-              ? (item.columnKeys || columns).map((key,i) => row[key] !== undefined ? row[key] : Object.values(row)[i])
-              : [row]);
-            return '<tr>'+columns.map((_,i)=>{
-              const key = !Array.isArray(row) && row && typeof row === 'object'
-                ? String((item.columnKeys && item.columnKeys[i]) || Object.keys(row)[i] || '') : '';
-              const cellValue = this.esc(this.formatOutputValue(cells[i]));
+            const rowObject = row && typeof row === 'object' && !Array.isArray(row) ? row : null;
+            const cells = Array.isArray(row) ? row : (rowObject
+              ? columns.map((_,i) => {
+                const meta = columnsMeta[i] || {};
+                const key = String((item.columnKeys && item.columnKeys[i]) || meta.Code || Object.keys(rowObject)[i] || '');
+                return rowObject[key] !== undefined ? rowObject[key] : Object.values(rowObject)[i];
+              }) : [row]);
+            const cellsHtml = columns.map((_,i)=>{
+              const meta = columnsMeta[i] || {};
+              const key = String((item.columnKeys && item.columnKeys[i]) || meta.Code || (rowObject ? Object.keys(rowObject)[i] : ''));
+              const cellRaw = rowObject && key ? rowObject[key] : cells[i];
+              const cellAttachments = this.getOutputAttachments(cellRaw);
+              const cellImages = cellAttachments.filter(file => file.mime.indexOf('image/') === 0);
+              let cellContent = cellAttachments.length
+                ? this.esc(cellAttachments.map(file => file.fileName || 'فایل پیوست').join('، '))
+                : this.esc(this.formatOutputValue(cellRaw));
+              if (cellImages.length) {
+                const previews = await Promise.all(cellImages.map(async file => {
+                  try { return '<img class="pt-output-table-image" src="' + await this.loadOutputImage({AttachmentID:file.id,MimeType:file.mime}) + '" alt="' + this.esc(file.fileName || '') + '">'; }
+                  catch (error) { return '<span class="pt-output-image-error">تصویر در دسترس نیست</span>'; }
+                }));
+                cellContent = previews.join('');
+              }
               const editable = tableEditable
                 ? '<span class="pt-output-editable-value" data-pt-output-editable="true" data-pt-binding-id="' + this.esc(item.bindingId) +
-                  '" data-pt-row-index="' + rowIndex + '" data-pt-column-index="' + i + '"' +
-                  (key ? ' data-pt-column-key="' + this.esc(key) + '"' : '') +
-                  ' tabindex="0" role="button" title="برای ویرایش کلیک کن">' + cellValue + '</span>'
-                : cellValue;
+                  '" data-pt-row-index="' + rowIndex + '" data-pt-column-index="' + i + '" data-pt-column-key="' + this.esc(key) +
+                  '" tabindex="0" role="button" title="برای ویرایش کلیک کن">' + cellContent + '</span>'
+                : cellContent;
               return '<td>'+editable+'</td>';
-            }).join('')+'</tr>';
+            }).join('');
+            const remove = manageRows
+              ? '<td class="pt-output-row-action-cell"><button type="button" class="btn btn-sm btn-quiet" data-pt-table-action="remove-row" data-pt-binding-id="' + this.esc(item.bindingId) + '" data-pt-row-index="' + rowIndex + '">حذف</button></td>'
+              : '';
+            return '<tr>'+cellsHtml+remove+'</tr>';
           }).join('');
-          return '<div class="pt-output-element pt-output-table" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+          const actionHeader = manageRows ? '<th class="pt-output-row-action-cell">عملیات</th>' : '';
+          const addButton = manageRows
+            ? '<div class="pt-output-table-actions"><button type="button" class="btn btn-sm btn-primary" data-pt-table-action="add-row" data-pt-binding-id="' + this.esc(item.bindingId) + '">+ افزودن ردیف</button></div>'
+            : '';
+          return '<div class="pt-output-element pt-output-table" data-pt-output-table-container="true" style="'+style+'"><strong>'+this.esc(item.text||'')+'</strong><table><thead><tr>'+columns.map(col=>'<th>'+this.esc(col)+'</th>').join('')+actionHeader+'</tr></thead><tbody>'+tableRows+'</tbody></table>'+addButton+'</div>';
         }
         if (item.type === 'line' || item.type === 'divider') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
         if (item.type === 'rectangle' || item.type === 'ellipse') return '<div class="pt-output-element pt-output-shape pt-output-'+item.type+'" style="'+style+'" aria-hidden="true"></div>';
