@@ -1704,6 +1704,13 @@
         if (dataType === 'image' || dataType === 'file') {
           const files = Array.from(input.files || []);
           if (!files.length) throw new Error('برای ثبت تغییر، فایل یا تصویر جدید انتخاب کنید.');
+          if (dataType === 'image' && input.multiple && isTableCell && files.length > 20) {
+            throw new Error('حداکثر ۲۰ تصویر برای هر سلول مجاز است.');
+          }
+          if (dataType === 'image' && input.multiple && !isTableCell &&
+              (Array.isArray(next) ? next.length : 0) + files.length > 20) {
+            throw new Error('حداکثر ۲۰ تصویر برای هر فیلد مجاز است.');
+          }
           const uploaded = [];
           for (const file of files) uploaded.push(await this.uploadProjectOutputAttachment(file, dataType));
           value = dataType === 'image' && input.multiple ? uploaded : uploaded[0];
@@ -1722,7 +1729,10 @@
           if (!row || typeof row !== 'object') throw new Error('ساختار ردیف جدول معتبر نیست؛ قالب را تازه‌سازی کنید.');
           const key = editor.dataset.ptColumnKey || Object.keys(row)[columnIndex];
           if (!key) throw new Error('شناسه ستون جدول پیدا نشد.');
-          row[key] = value;
+          if (dataType === 'image' && input.multiple) {
+            row[key] = (Array.isArray(row[key]) ? row[key] : []).concat(Array.isArray(value) ? value : [value]);
+            if (row[key].length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر سلول مجاز است.');
+          } else row[key] = value;
         } else if (dataType === 'image' && input.multiple) {
           next = (Array.isArray(next) ? next : []).concat(Array.isArray(value) ? value : [value]);
         }
@@ -1812,11 +1822,23 @@
       const nextRow = Object.create(null);
       try {
         const controls = Array.from(row.querySelectorAll('[data-pt-column-code]'));
+        const missing = controls.find(input => {
+          if (input.dataset.ptColumnRequired !== 'true') return false;
+          if (input.type === 'file') return !(input.files && input.files.length);
+          if (input.type === 'checkbox') return false;
+          return input.value === '' || input.value === null || input.value === undefined;
+        });
+        if (missing) {
+          this.setStatus('pt-output-status', 'تکمیل ستون «' + (missing.getAttribute('aria-label') || missing.dataset.ptColumnCode) + '» الزامی است.', true);
+          missing.focus();
+          return;
+        }
         for (const input of controls) {
           const type = String(input.dataset.ptColumnType || 'text').toLowerCase();
           let value = '';
           if (type === 'image' || type === 'file') {
             const files = Array.from(input.files || []);
+            if (type === 'image' && files.length > 20) throw new Error('حداکثر ۲۰ تصویر برای هر سلول مجاز است.');
             if (files.length) {
               const uploaded = [];
               for (const file of files) uploaded.push(await this.uploadProjectOutputAttachment(file, type));
@@ -1826,12 +1848,6 @@
           else {
             value = input.value;
             if (type === 'number' && String(value).trim() !== '') value = Number(value);
-          }
-          if (input.dataset.ptColumnRequired === 'true' &&
-              (value === '' || value === null || value === undefined || (Array.isArray(value) && !value.length))) {
-            this.setStatus('pt-output-status', 'تکمیل ستون «' + (input.getAttribute('aria-label') || input.dataset.ptColumnCode) + '» الزامی است.', true);
-            input.focus();
-            return;
           }
           nextRow[input.dataset.ptColumnCode] = value;
         }
