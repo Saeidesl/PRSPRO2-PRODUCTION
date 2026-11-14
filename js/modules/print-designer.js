@@ -1494,6 +1494,12 @@
       if (!section || section.dataset.ptOutputEditBound === '1') return;
       section.dataset.ptOutputEditBound = '1';
       section.addEventListener('click', event => {
+        const fileLink = event.target.closest('[data-pt-file-download]');
+        if (fileLink && section.contains(fileLink)) {
+          event.preventDefault();
+          this.downloadProjectOutputAttachment(fileLink.dataset.ptFileDownload);
+          return;
+        }
         const outputAction = event.target.closest('[data-pt-output-action]');
         if (outputAction && section.contains(outputAction)) {
           const record = this.projectOutputRecords[String(templateId)];
@@ -1644,6 +1650,28 @@
       replacement.textContent = String(editor.dataset.ptOriginalValue || '');
       editor.replaceWith(replacement);
       this.projectOutputEdit = null;
+    },
+    downloadProjectOutputAttachment: async function (attachmentId) {
+      try {
+        const response = await PMS.Api.get('/attachments/' + encodeURIComponent(attachmentId) + '/download', { trackSync: false });
+        const file = this.extract(response) || {};
+        const base64 = String(file.Base64 || file.base64 || '').replace(/^data:[^,]*;base64,/i, '').replace(/\s/g, '');
+        if (!base64) throw new Error('محتوای فایل پیوست دریافت نشد.');
+        const binary = window.atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+        const mime = String(file.MimeType || file.mimeType || 'application/octet-stream');
+        const blobUrl = window.URL.createObjectURL(new Blob([bytes], { type: mime }));
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = String(file.FileName || file.fileName || 'attachment');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+      } catch (error) {
+        this.setStatus('pt-output-status', error.message || 'دریافت فایل ناموفق بود.', true);
+      }
     },
     saveProjectOutputBinding: async function (record, bindingId, value, root) {
       const source = record && record.sources && record.sources[bindingId];
@@ -2295,7 +2323,9 @@
         }
         if (!isImage && dataType === 'file') {
           const link = fileAttachment ? '<a class="pt-output-file-link" href="#" data-pt-file-download="' + this.esc(fileAttachment.id) + '">' + this.esc(fileAttachment.name) + '</a>' : '<span class="pt-output-file-empty">فایلی ثبت نشده است</span>';
-          return '<div class="pt-output-element pt-output-field" dir="auto" style="' + style + '">' + fieldContent.replace(this.esc(value), link) + uploadControl + '</div>';
+          const fileLabel = item.type === 'field' && item.showLabel && item.label
+            ? '<span class="pt-output-field-label">' + this.esc(item.label) + ':</span> ' : '';
+          return '<div class="pt-output-element pt-output-field" dir="auto" style="' + style + '">' + fileLabel + link + uploadControl + '</div>';
         }
         if (item.type === 'table') {
           const rows = Array.isArray(raw) ? raw : (item.rows || []);
