@@ -1552,14 +1552,298 @@
       }
       return false;
     },
-    bindProjectOutputSection: function (section, templateId) {    persistProjectOutputEdit: async function (record, bindingId, value, editor) {
+    bindProjectOutputSection: function (section, templateId) {
+      if (!section || section.dataset.ptOutputEditBound === '1') return;
+      section.dataset.ptOutputEditBound = '1';
+      section.addEventListener('click', event => {
+        const tableAction = event.target.closest('[data-pt-table-action]');
+        if (tableAction && section.contains(tableAction)) {
+          const record = this.projectOutputRecords[String(templateId)];
+          if (!record) return;
+          const action = tableAction.dataset.ptTableAction;
+          if (action === 'add-row') this.beginProjectOutputRowAdd(tableAction, record);
+          else if (action === 'save-row') this.finishProjectOutputRowAdd(tableAction, record);
+          else if (action === 'cancel-row') this.cancelProjectOutputRowAdd(tableAction);
+          else if (action === 'remove-row') {
+            const bindingId = String(tableAction.dataset.ptBindingId || '');
+            const rowIndex = Number(tableAction.dataset.ptRowIndex);
+            const next = Array.isArray(record.data[bindingId]) ? JSON.parse(JSON.stringify(record.data[bindingId])) : [];
+            if (!Number.isInteger(rowIndex) || rowIndex < 0 || rowIndex >= next.length) return;
+            next.splice(rowIndex, 1);
+            this.persistProjectOutputEdit(record, bindingId, next, tableAction);
+          }
+          return;
+        }
+        const fileAction = event.target.closest('[data-pt-output-file-edit]');
+        if (fileAction && section.contains(fileAction)) {
+          const record = this.projectOutputRecords[String(templateId)];
+          if (record && !this.projectOutputEdit) this.beginProjectOutputEdit(fileAction, record);
+          return;
+        }
+        const action = event.target.closest('[data-pt-edit-action]');
+        if (action) {
+          const editor = action.closest('.pt-output-inline-editor');
+          if (editor) this.finishProjectOutputEdit(editor, action.dataset.ptEditAction === 'apply');
+          return;
+        }
+        const value = event.target.closest('[data-pt-output-editable="true"]');
+        if (!value || !section.contains(value)) return;
+        const record = this.projectOutputRecords[String(templateId)];
+        if (!record || this.projectOutputEdit) return;
+        this.beginProjectOutputEdit(value, record);
+      });
+      section.addEventListener('keydown', event => {
+        const editable = event.target.closest('[data-pt-output-editable="true"]');
+        if (editable && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          const record = this.projectOutputRecords[String(templateId)];
+          if (record && !this.projectOutputEdit) this.beginProjectOutputEdit(editable, record);
+          return;
+        }
+        const editor = event.target.closest('.pt-output-inline-editor');
+        if (!editor) return;
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          this.finishProjectOutputEdit(editor, false);
+        } else if (event.key === 'Enter' && event.target.tagName !== 'TEXTAREA' && event.target.type !== 'file') {
+          event.preventDefault();
+          this.finishProjectOutputEdit(editor, true);
+        }
+      });
+    },
+    beginProjectOutputEdit: function (valueNode, record) {
+      const bindingId = String(valueNode.dataset.ptBindingId || '');
+      const source = this.getProjectOutputSource(record, bindingId) || {};
+      const raw = record.data[bindingId];
+      const isTableCell = valueNode.dataset.ptRowIndex !== undefined;
+      const columnKey = isTableCell ? String(valueNode.dataset.ptColumnKey || '') : '';
+      const columnMeta = isTableCell ? (source.columns || []).find(column => String(column.Code) === columnKey) : null;
+      const dataType = String((columnMeta && columnMeta.DataType) || source.dataType || 'text').toLowerCase();
+      const editor = document.createElement('span');
+      editor.className = 'pt-output-inline-editor';
+      editor.dataset.ptBindingId = bindingId;
+      editor.dataset.ptRowIndex = isTableCell ? valueNode.dataset.ptRowIndex : '';
+      editor.dataset.ptColumnIndex = isTableCell ? valueNode.dataset.ptColumnIndex : '';
+      editor.dataset.ptColumnKey = columnKey;
+      editor.dataset.ptIsTableCell = isTableCell ? '1' : '0';
+      editor.dataset.ptDataType = dataType;
+      editor.dataset.ptValueClass = valueNode.className || 'pt-output-editable-value';
+      editor.dataset.ptOriginalValue = valueNode.textContent || '';
+      const isFile = dataType === 'image' || dataType === 'file';
+      let input;
+      if (isFile) {
+        input = document.createElement('input');
+        input.type = 'file';
+        input.accept = dataType === 'image'
+          ? 'image/jpeg,image/png,image/webp,image/gif'
+          : '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx';
+        input.multiple = dataType === 'image' && (isTableCell || String(source.cardinality || '').toUpperCase() === 'MULTIPLE');
+        const existing = isTableCell
+          ? this.getOutputAttachments((Array.isArray(raw) ? raw[Number(editor.dataset.ptRowIndex)] : {})[columnKey])
+          : this.getOutputAttachments(raw);
+        if (existing.length) {
+          const current = document.createElement('small');
+          current.className = 'pt-output-current-file';
+          current.textContent = existing.map(item => item.fileName || 'فایل پیوست').join('، ');
+          editor.appendChild(current);
+        }
+      } else {
+        const multiline = !isTableCell && String(valueNode.textContent || '').length > 90;
+        input = document.createElement(multiline ? 'textarea' : 'input');
+        if (!multiline) input.type = dataType === 'number' ? 'number' : 'text';
+        input.value = valueNode.textContent || '';
+      }
+      input.className = 'pt-output-inline-input';
+      input.setAttribute('aria-label', 'ویرایش مقدار');
+      const actions = document.createElement('span');
+      actions.className = 'pt-output-inline-actions';
+      const apply = document.createElement('button');
+      apply.type = 'button'; apply.className = 'btn btn-primary btn-sm';
+      apply.dataset.ptEditAction = 'apply'; apply.textContent = isFile ? 'بارگذاری و ذخیره' : 'اعمال';
+      const cancel = document.createElement('button');
+      cancel.type = 'button'; cancel.className = 'btn btn-secondary btn-sm';
+      cancel.dataset.ptEditAction = 'cancel'; cancel.textContent = 'لغو';
+      actions.append(apply, cancel);
+      editor.append(input, actions);
+      valueNode.replaceWith(editor);
+      this.projectOutputEdit = { editor: editor, record: record };
+      input.focus();
+    },
+    finishProjectOutputEdit: async function (editor, apply) {
+      if (!editor || !editor.parentNode) { this.projectOutputEdit = null; return; }
+      const active = this.projectOutputEdit && this.projectOutputEdit.editor === editor ? this.projectOutputEdit : null;
+      const record = active && active.record;
+      const input = editor.querySelector('.pt-output-inline-input');
+      const bindingId = String(editor.dataset.ptBindingId || '');
+      const isTableCell = editor.dataset.ptIsTableCell === '1';
+      const dataType = String(editor.dataset.ptDataType || 'text').toLowerCase();
+      if (!apply || !record || !bindingId || !input) {
+        const replacement = document.createElement('span');
+        replacement.className = editor.dataset.ptValueClass || 'pt-output-editable-value';
+        replacement.dataset.ptOutputEditable = 'true';
+        replacement.dataset.ptBindingId = bindingId;
+        if (isTableCell) {
+          replacement.dataset.ptRowIndex = editor.dataset.ptRowIndex;
+          replacement.dataset.ptColumnIndex = editor.dataset.ptColumnIndex;
+          if (editor.dataset.ptColumnKey) replacement.dataset.ptColumnKey = editor.dataset.ptColumnKey;
+        }
+        replacement.textContent = String(editor.dataset.ptOriginalValue || '');
+        editor.replaceWith(replacement);
+        this.projectOutputEdit = null;
+        return;
+      }
+      const next = JSON.parse(JSON.stringify(record.data[bindingId] === undefined ? null : record.data[bindingId]));
+      let value = input.value;
+      try {
+        if (dataType === 'image' || dataType === 'file') {
+          const files = Array.from(input.files || []);
+          if (!files.length) throw new Error('برای ثبت تغییر، فایل یا تصویر جدید انتخاب کنید.');
+          const uploaded = [];
+          for (const file of files) uploaded.push(await this.uploadProjectOutputAttachment(file, dataType));
+          value = dataType === 'image' && input.multiple ? uploaded : uploaded[0];
+        }
+        if (isTableCell) {
+          const rowIndex = Number(editor.dataset.ptRowIndex);
+          const columnIndex = Number(editor.dataset.ptColumnIndex);
+          const row = Array.isArray(next) ? next[rowIndex] : null;
+          if (!row || typeof row !== 'object' || Array.isArray(row)) throw new Error('ساختار ردیف جدول معتبر نیست؛ قالب را تازه‌سازی کنید.');
+          const key = editor.dataset.ptColumnKey || Object.keys(row)[columnIndex];
+          if (!key) throw new Error('شناسه ستون جدول پیدا نشد.');
+          row[key] = value;
+        } else if (dataType === 'image' && input.multiple && Array.isArray(next)) {
+          value = next.concat(value);
+        }
+        await this.persistProjectOutputEdit(record, bindingId, isTableCell || (dataType === 'image' && input.multiple) ? next : value, editor);
+      } catch (error) {
+        this.setStatus('pt-output-status', error.message || 'ویرایش مقدار ناموفق بود.', true);
+        Array.from(editor.querySelectorAll('input,textarea,button')).forEach(control => { control.disabled = false; });
+      }
+    },
+    createProjectOutputColumnInput: function (column) {
+      const type = String(column.DataType || 'text').toLowerCase();
+      let input;
+      if (type === 'image' || type === 'file') {
+        input = document.createElement('input');
+        input.type = 'file';
+        input.accept = type === 'image' ? 'image/jpeg,image/png,image/webp,image/gif' : '.jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.xls,.xlsx';
+        input.multiple = type === 'image';
+      } else if (type === 'boolean') {
+        input = document.createElement('input'); input.type = 'checkbox';
+      } else if (type === 'select') {
+        input = document.createElement('select');
+        const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'انتخاب کنید'; input.appendChild(placeholder);
+        (Array.isArray(column.Options) ? column.Options : []).forEach(option => {
+          const item = document.createElement('option');
+          item.value = String(option && typeof option === 'object' ? (option.value !== undefined ? option.value : option.label) : option);
+          item.textContent = String(option && typeof option === 'object' ? (option.label || option.value) : option);
+          input.appendChild(item);
+        });
+      } else {
+        input = document.createElement('input');
+        input.type = type === 'number' ? 'number' : (type === 'date' ? 'date' : (type === 'datetime' ? 'datetime-local' : 'text'));
+      }
+      input.className = 'pt-output-row-input';
+      input.dataset.ptColumnCode = String(column.Code || '');
+      input.dataset.ptColumnType = type;
+      input.dataset.ptColumnRequired = column.IsRequired ? 'true' : 'false';
+      input.setAttribute('aria-label', column.Name || column.Code || 'مقدار');
+      if (column.IsRequired) input.required = true;
+      return input;
+    },
+    beginProjectOutputRowAdd: function (button, record) {
+      const bindingId = String(button.dataset.ptBindingId || '');
+      const source = this.getProjectOutputSource(record, bindingId);
+      if (!source || String(source.cardinality || '').toUpperCase() !== 'MULTIPLE' || !Array.isArray(source.columns) || !source.columns.length) {
+        this.setStatus('pt-output-status', 'ساختار ستون‌های جدول برای افزودن ردیف دریافت نشده است؛ قالب را تازه‌سازی کنید.', true);
+        return;
+      }
+      const container = button.closest('[data-pt-output-table-container]');
+      const tbody = container && container.querySelector('tbody');
+      if (!tbody || tbody.querySelector('[data-pt-new-row="true"]')) return;
+      const row = document.createElement('tr');
+      row.dataset.ptNewRow = 'true';
+      source.columns.forEach(column => {
+        const cell = document.createElement('td');
+        cell.appendChild(this.createProjectOutputColumnInput(column));
+        row.appendChild(cell);
+      });
+      const actions = document.createElement('td');
+      actions.className = 'pt-output-row-editor-actions';
+      const save = document.createElement('button');
+      save.type = 'button'; save.className = 'btn btn-primary btn-sm';
+      save.dataset.ptTableAction = 'save-row'; save.dataset.ptBindingId = bindingId; save.textContent = 'ذخیره ردیف';
+      const cancel = document.createElement('button');
+      cancel.type = 'button'; cancel.className = 'btn btn-secondary btn-sm';
+      cancel.dataset.ptTableAction = 'cancel-row'; cancel.textContent = 'لغو';
+      actions.append(save, cancel);
+      row.appendChild(actions);
+      tbody.appendChild(row);
+      button.disabled = true;
+      const first = row.querySelector('input,select,textarea');
+      if (first) first.focus();
+    },
+    cancelProjectOutputRowAdd: function (button) {
+      const row = button.closest('[data-pt-new-row="true"]');
+      if (!row) return;
+      const container = row.closest('[data-pt-output-table-container]');
+      row.remove();
+      const add = container && container.querySelector('[data-pt-table-action="add-row"]');
+      if (add) add.disabled = false;
+    },
+    finishProjectOutputRowAdd: async function (button, record) {
+      const row = button.closest('[data-pt-new-row="true"]');
+      const bindingId = String(button.dataset.ptBindingId || '');
+      const source = this.getProjectOutputSource(record, bindingId);
+      if (!row || !source) return;
+      const nextRow = Object.create(null);
+      try {
+        const controls = Array.from(row.querySelectorAll('[data-pt-column-code]'));
+        for (const input of controls) {
+          const type = String(input.dataset.ptColumnType || 'text').toLowerCase();
+          let value = '';
+          if (type === 'image' || type === 'file') {
+            const files = Array.from(input.files || []);
+            if (files.length) {
+              const uploaded = [];
+              for (const file of files) uploaded.push(await this.uploadProjectOutputAttachment(file, type));
+              value = type === 'image' ? uploaded : uploaded[0];
+            }
+          } else if (type === 'boolean') value = !!input.checked;
+          else {
+            value = input.value;
+            if (type === 'number' && String(value).trim() !== '') value = Number(value);
+          }
+          if (input.dataset.ptColumnRequired === 'true' &&
+              (value === '' || value === null || value === undefined || (Array.isArray(value) && !value.length))) {
+            this.setStatus('pt-output-status', 'تکمیل ستون «' + (input.getAttribute('aria-label') || input.dataset.ptColumnCode) + '» الزامی است.', true);
+            input.focus();
+            return;
+          }
+          nextRow[input.dataset.ptColumnCode] = value;
+        }
+        if (!Object.keys(nextRow).some(key => {
+          const value = nextRow[key];
+          return value !== '' && value !== null && value !== undefined && (!Array.isArray(value) || value.length > 0);
+        })) {
+          this.setStatus('pt-output-status', 'برای ذخیره ردیف، حداقل یک مقدار وارد کنید.', true);
+          return;
+        }
+        const next = Array.isArray(record.data[bindingId]) ? JSON.parse(JSON.stringify(record.data[bindingId])) : [];
+        next.push(nextRow);
+        await this.persistProjectOutputEdit(record, bindingId, next, row);
+      } catch (error) {
+        this.setStatus('pt-output-status', error.message || 'افزودن ردیف ناموفق بود.', true);
+        Array.from(row.querySelectorAll('input,select,textarea,button')).forEach(control => { control.disabled = false; });
+      }
+    },
+    persistProjectOutputEdit: async function (record, bindingId, value, editor) {
       const source = record && record.sources && record.sources[bindingId];
       if (!source) {
         this.setStatus('pt-output-status', 'شناسه منبع این مقدار دریافت نشده است. قالب را دوباره بارگذاری کنید.', true);
-        return;
+        return false;
       }
-      const controls = Array.from(editor.querySelectorAll('input,textarea,button'));
-      controls.forEach(control => { control.disabled = true; });
+      const controls = [editor].concat(Array.from(editor && editor.querySelectorAll ? editor.querySelectorAll('input,textarea,button') : []));
+      controls.filter(Boolean).forEach(control => { control.disabled = true; });
       this.setStatus('pt-output-status', 'در حال ذخیره تغییر در اطلاعات اصلی سیستم…');
       try {
         await PMS.Api.put('/print-templates/' + encodeURIComponent(record.template.ID) + '/project-data', {
@@ -1574,12 +1858,14 @@
           const printButton = document.getElementById('pt-output-print');
           if (printButton) printButton.hidden = true;
           this.setStatus('pt-output-status', 'تغییر در منبع اصلی ذخیره شد؛ اما دریافت دوباره همه قالب‌ها از سرور کامل نشد. برای جلوگیری از چاپ اطلاعات قدیمی، چاپ تا بارگذاری موفق دوباره غیرفعال است.', true);
-          return;
+          return false;
         }
         this.setStatus('pt-output-status', 'تغییر با موفقیت در منبع اصلی ذخیره شد و همه قالب‌ها با آخرین اطلاعات سرور به‌روزرسانی شدند.');
+        return true;
       } catch (error) {
-        controls.forEach(control => { control.disabled = false; });
+        controls.filter(Boolean).forEach(control => { control.disabled = false; });
         this.setStatus('pt-output-status', error.message || 'ذخیره تغییر ناموفق بود؛ اطلاعات اصلی تغییر نکرده است.', true);
+        return false;
       }
     },
     initProjectOutput: async function (projectId) {
