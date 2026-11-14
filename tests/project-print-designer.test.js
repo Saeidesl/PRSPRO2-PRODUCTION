@@ -233,7 +233,7 @@ test('project output supports uploading file/image bindings through project atta
 test('project output keeps a new table row editable as a draft until explicit save, then persists the full table', () => {
   const module = read('js/modules/print-designer.js');
   assert.match(module, /data-pt-output-action="add-row"/);
-  assert.match(module, /data-pt-output-action="save-row"/);
+  assert.match(module, /saveButton\.dataset\.ptOutputAction = 'save-row'/);
   assert.match(module, /data-pt-draft-row-action/);
   assert.match(module, /\[data-pt-draft-row-action="1"\]/);
   assert.match(module, /data-pt-output-action="remove-row"/);
