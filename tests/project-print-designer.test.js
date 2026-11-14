@@ -235,6 +235,7 @@ test('project output supports safe file/image uploads and repeatable table rows 
   assert.match(module,/data-pt-table-action="remove-row"/);
   assert.match(module,/beginProjectOutputRowAdd: function/);
   assert.match(module,/finishProjectOutputRowAdd: async function/);
+  assert.match(module,/normalizeProjectOutputRows: function/);
   assert.match(module,/source\.cardinality/);
   assert.match(module,/source\.columns/);
   assert.match(css,/pt-output-table-actions/);
