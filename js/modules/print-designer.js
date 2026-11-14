@@ -1514,8 +1514,10 @@
 
           if (actionName === 'add-row') {
             if (!rowNode) return;
-            if (pendingRows.length) {
-              this.setStatus('pt-output-status', 'ابتدا ردیف موقت فعلی را ذخیره یا لغو کن.', true);
+            const tbody = rowNode.querySelector('tbody');
+            const headers = Array.from(rowNode.querySelectorAll('thead th'));
+            if (!tbody || !headers.length) {
+              this.setStatus('pt-output-status', 'ساختار ستون‌های جدول برای افزودن ردیف کامل نیست.', true);
               return;
             }
             const configuredKeys = String(rowNode.dataset.ptColumnKeys || '').split('|').filter(Boolean);
@@ -1526,16 +1528,8 @@
             next.push(draftRow);
             const rowIndex = next.length - 1;
             record.data[bindingId] = next;
-            draftRows[bindingId] = [rowIndex];
+            draftRows[bindingId] = pendingRows.concat(rowIndex);
 
-            const tbody = rowNode.querySelector('tbody');
-            const headers = Array.from(rowNode.querySelectorAll('thead th'));
-            if (!tbody || !headers.length) {
-              this.setStatus('pt-output-status', 'ساختار ستون‌های جدول برای افزودن ردیف کامل نیست.', true);
-              draftRows[bindingId] = [];
-              record.data[bindingId] = Array.isArray(current) ? current : [];
-              return;
-            }
             const tr = document.createElement('tr');
             tr.dataset.ptDraftRowIndex = String(rowIndex);
             headers.forEach((header, columnIndex) => {
@@ -1557,15 +1551,17 @@
 
             const actions = rowNode.querySelector('.pt-output-table-actions');
             if (actions) {
-              const saveButton = document.createElement('button');
-              saveButton.type = 'button';
-              saveButton.className = 'btn btn-primary btn-sm';
-              saveButton.dataset.ptOutputAction = 'save-row';
-              saveButton.dataset.ptDraftRowAction = '1';
-              saveButton.dataset.ptBindingId = bindingId;
-              saveButton.dataset.ptRowIndex = String(rowIndex);
-              saveButton.textContent = 'ذخیره ردیف';
-              actions.appendChild(saveButton);
+              let saveButton = actions.querySelector('[data-pt-output-action="save-rows"]');
+              if (!saveButton) {
+                saveButton = document.createElement('button');
+                saveButton.type = 'button';
+                saveButton.className = 'btn btn-primary btn-sm';
+                saveButton.dataset.ptOutputAction = 'save-rows';
+                saveButton.dataset.ptDraftRowAction = '1';
+                saveButton.dataset.ptBindingId = bindingId;
+                saveButton.textContent = 'ذخیره همه ردیف‌ها';
+                actions.appendChild(saveButton);
+              }
               const cancelButton = document.createElement('button');
               cancelButton.type = 'button';
               cancelButton.className = 'btn btn-secondary btn-sm';
@@ -1573,36 +1569,61 @@
               cancelButton.dataset.ptDraftRowAction = '1';
               cancelButton.dataset.ptBindingId = bindingId;
               cancelButton.dataset.ptRowIndex = String(rowIndex);
-              cancelButton.textContent = 'لغو ردیف';
+              cancelButton.textContent = 'لغو ردیف ' + (pendingRows.length + 1);
               actions.appendChild(cancelButton);
-              actions.querySelectorAll('[data-pt-output-action="add-row"],[data-pt-output-action="remove-row"]').forEach(button => {
-                if (button !== cancelButton) button.disabled = true;
-              });
+              actions.querySelectorAll('[data-pt-output-action="remove-row"]:not([data-pt-draft-row-action="1"])').forEach(button => { button.disabled = true; });
             }
-            this.setStatus('pt-output-status', 'ردیف جدید اضافه شد. خانه‌ها را تکمیل کن و «ذخیره ردیف» را بزن.');
-          } else if (actionName === 'save-row') {
-            const rowIndex = Number(outputAction.dataset.ptRowIndex);
-            const row = next[rowIndex];
-            const values = Array.isArray(row) ? row : (row && typeof row === 'object' ? Object.values(row) : []);
-            if (!values.some(value => value !== null && value !== undefined && String(value).trim() !== '')) {
-              this.setStatus('pt-output-status', 'ابتدا حداقل یک خانه از ردیف را تکمیل کن.', true);
-              return;
+            this.setStatus('pt-output-status', 'ردیف جدید اضافه شد. می‌توانی ردیف‌های بیشتری اضافه کنی و در پایان همه را یک‌جا ذخیره کنی.');
+          } else if (actionName === 'save-rows') {
+            if (!pendingRows.length) return;
+            for (const rowIndex of pendingRows) {
+              const row = next[rowIndex];
+              const values = Array.isArray(row) ? row : (row && typeof row === 'object' ? Object.values(row) : []);
+              if (!values.some(value => value !== null && value !== undefined && String(value).trim() !== '')) {
+                this.setStatus('pt-output-status', 'ابتدا حداقل یک خانه از ردیف ' + (pendingRows.indexOf(rowIndex) + 1) + ' را تکمیل کن.', true);
+                return;
+              }
             }
-            await this.saveProjectOutputBinding(record, bindingId, next, outputAction.closest('.pt-output-element'));
+            outputAction.disabled = true;
+            const saved = await this.saveProjectOutputBinding(record, bindingId, next, outputAction.closest('.pt-output-element'));
+            if (saved === false) outputAction.disabled = false;
           } else if (actionName === 'remove-row') {
             const rowIndex = Number(outputAction.dataset.ptRowIndex);
             if (pendingRows.includes(rowIndex)) {
               next.splice(rowIndex, 1);
+              const updatedPending = pendingRows.filter(index => index !== rowIndex).map(index => index > rowIndex ? index - 1 : index);
+              if (updatedPending.length) draftRows[bindingId] = updatedPending;
+              else delete draftRows[bindingId];
               record.data[bindingId] = next;
-              delete draftRows[bindingId];
               const draftTr = rowNode && rowNode.querySelector('tr[data-pt-draft-row-index="' + rowIndex + '"]');
               if (draftTr) draftTr.remove();
+              const tableBody = rowNode && rowNode.querySelector('tbody');
+              if (tableBody) {
+                updatedPending.forEach(index => {
+                  const draftNode = tableBody.querySelector('tr[data-pt-draft-row-index="' + (index >= rowIndex ? index + 1 : index) + '"]');
+                  if (!draftNode) return;
+                  draftNode.dataset.ptDraftRowIndex = String(index);
+                  draftNode.querySelectorAll('[data-pt-row-index]').forEach(cell => { cell.dataset.ptRowIndex = String(index); });
+                });
+              }
               const actions = rowNode && rowNode.querySelector('.pt-output-table-actions');
               if (actions) {
-                actions.querySelectorAll('[data-pt-draft-row-action="1"]').forEach(button => button.remove());
-                actions.querySelectorAll('[data-pt-output-action="add-row"],[data-pt-output-action="remove-row"]').forEach(button => { button.disabled = false; });
+                const cancelButtons = Array.from(actions.querySelectorAll('[data-pt-draft-row-action="1"][data-pt-output-action="remove-row"]'));
+                cancelButtons.forEach(button => {
+                  const index = Number(button.dataset.ptRowIndex);
+                  if (index === rowIndex) button.remove();
+                  else if (index > rowIndex) {
+                    button.dataset.ptRowIndex = String(index - 1);
+                    button.textContent = 'لغو ردیف ' + (updatedPending.indexOf(index - 1) + 1);
+                  }
+                });
+                if (!updatedPending.length) {
+                  const saveButton = actions.querySelector('[data-pt-output-action="save-rows"]');
+                  if (saveButton) saveButton.remove();
+                  actions.querySelectorAll('[data-pt-output-action="remove-row"]:not([data-pt-draft-row-action="1"])').forEach(button => { button.disabled = false; });
+                }
               }
-              this.setStatus('ردیف موقت لغو شد.');
+              this.setStatus('pt-output-status', updatedPending.length ? 'ردیف موقت لغو شد؛ ردیف‌های دیگر همچنان آماده ویرایش هستند.' : 'همه ردیف‌های موقت لغو شدند.');
               return;
             }
             if (Number.isInteger(rowIndex) && rowIndex >= 0 && rowIndex < next.length) {

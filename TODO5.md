@@ -1,254 +1,59 @@
-'use strict';
-const assert=require('node:assert/strict');
-const fs=require('node:fs');
-const path=require('node:path');
-const test=require('node:test');
-const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+## 🎯 Current Objective
 
-test('standalone print template library route uses its independent module',()=>{
-  const page=read('pages/print-designer.html');
-  const module=read('js/modules/print-designer.js');
-  const router=read('js/core/router.js');
-  assert.match(page,/pt-template-form/);
-  assert.match(page,/pt-data-picker-content/);
-  assert.ok(page.includes('id="pt-open-data-picker"'));
-  assert.match(module,/initLibrary: async function/);
-  assert.match(module,/PMS\.Api\.post\('\/print-templates'/);
-  assert.match(router,/'print-design': 'PrintDesigner'/);
-});
+پیاده‌سازی امکان ویرایش مستقیم داده‌های متصل به قالب پروژه با ذخیره در منبع اصلی؛ ویرایش فیلدهای رویداد و پاسخ فرم باید همان رکورد قبلی را اصلاح کند و رویداد جدید ایجاد نکند.
 
-test('print designer supports adding project data, custom text, rules and reusable form snapshots',()=>{
-  const module=read('js/modules/project-detail.js');
-  assert.match(module,/data-ppd-add="project"/);
-  assert.match(module,/data-ppd-add="project-fields"/);
-  assert.match(module,/data-ppd-add="text"/);
-  assert.match(module,/data-ppd-add="line"/);
-  assert.match(module,/data-ppd-form/);
-  assert.match(module,/Definition|definition/);
-  assert.match(module,/renderPrintDesignerElement: function/);
-});
+## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 
-test('print designer supports visual ordering, element styling, saved templates and A4 printing',()=>{
-  const module=read('js/modules/project-detail.js');
-  const css=read('css/project-print-designer.css');
-  assert.match(module,/draggable="true"/);
-  assert.match(module,/data-ppd-move="up"/);
-  assert.match(module,/data-ppd-move="down"/);
-  assert.match(module,/data-ppd-style="border"/);
-  assert.match(module,/data-ppd-style="background"/);
-  assert.match(module,/savePrintDesignerTemplate: function/);
-  assert.match(module,/loadPrintDesignerTemplate: function/);
-  assert.match(module,/window\.print\(\)/);
-  assert.match(css,/@page\{size:A4 portrait/);
-  assert.match(css,/@media print/);
-  assert.match(css,/@media\(max-width:680px\)/);
-});
+### مخازن و شاخه‌ها
+- Backend: Saeidesl/PRSPRO2BACKEND-PRODUCTION، شاخه feat/template-inline-data-edit-20261113، مبنا: main در commit a313b06aa96ed3bebc844a219df30d0df75a0213.
+- Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه عملیاتی `main` در commit مبنای این اصلاح `3c4b6cd672596077aeb48a455c21a6dcfa2af518`؛ شاخه جاری اصلاح چندردیفی `fix/template-output-multiple-draft-rows-20261114` بر همین مبنا ساخته شد. اصلاح تک‌ردیفی قبلی PR #134 با commit `f0be230ed3db512cd747f3c908d3d038bc6705d7` در main ادغام و در GitHub Pages منتشر شد.
+- مخازن Development خارج از محدوده‌اند؛ تغییرات Backend همچنان فقط روی شاخه feature انجام می‌شوند.
 
-test('print designer assets are cache-busted and loaded by the application',()=>{
-  const index=read('index.html');
-  assert.match(index,/print-template-library\.css\?v=/);
-  assert.match(index,/project-detail\.js\?v=20261112-project-detail-attachment-cache-1/);
-});
+### معماری و داده‌های موجود
+- Google Apps Script V8 و Google Sheets؛ Router مرجع کنترل مجوز و tenant است.
+- Router.js: مسیر resolve قالب POST /print-templates/:id/resolve؛ ویرایش پروژه PUT /projects/:id؛ ذخیره اطلاعات مرکزی POST /projects/:projectId/information/:typeId؛ ویرایش پاسخ فرم PUT /events/:eventId/forms/:formId.
+- PrintTemplateService._resolveProjectData(): منابع PROJECT_FIELD, PROJECT_INFORMATION, EVENT_FORM_FIELD و EVENT_FIELD را از مخازن اصلی resolve می‌کند.
+- ProjectInformationService.save(): مقدار جاری را در 30_ProjectInformation و سابقه را در 31_ProjectInformationHistory ثبت می‌کند.
+- FormRepository.findResponse() و updateResponse(): پاسخ فرم همان رویداد را در 35_EventFormData پیدا و به‌روزرسانی می‌کنند.
+- EventRepository.update(): امکان به‌روزرسانی ردیف موجود 13_Events را دارد؛ اما EventService متد عمومی update ندارد.
+- FormService.updateEventFormResponse() فعلی برای اصلاح پاسخ فرم به AmendmentEventID و رویداد اصلاحی جداگانه نیاز دارد؛ این جریان باید برای قابلیت جدید بدون ایجاد رویداد، به‌صورت سازگار و کنترل‌شده توسعه یابد.
+- AuditService.log() و تاریخچه اطلاعات پروژه ابزارهای موجود برای ثبت سابقه‌اند؛ نباید رویداد عملیاتی جدید برای ممیزی ساخته شود.
+- Frontend مسیر خروجی در pages/print-output.html و js/modules/print-designer.js قرار دارد؛ PrintDesigner.initProjectOutput() قالب‌های فعال را resolve می‌کند و renderOutputDocument() عناصر و bindingها را رندر می‌کند.
 
+### قواعد حفاظتی
+- binding و شناسه واقعی منبع داده مرجع ویرایش است، نه متن HTML یا مقدار نمایشی.
+- فقط فیلدهای business-editable با allow-list و مجوز متناظر قابل تغییر باشند؛ شناسه‌ها، سازنده، نوع رویداد، وضعیت محاسبه‌شده و فیلدهای سیستمی read-only بمانند مگر مجوز/قاعده فعلی صریحاً اجازه دهد.
+- tenant isolation، project access، permission، اعتبارسنجی نوع اطلاعات و فرم، concurrency و Audit/History حفظ شوند.
+- ذخیره فرم/رویداد نباید EventService.create()، integration تأمین یا حرکت Workflow را دوباره اجرا کند.
+- چاپ/PDF پس از تأیید ذخیره باید با داده resolve‌شده تازه تولید شود؛ شکست ذخیره، داده را موفق/ثبت‌شده نشان ندهد.
+- هیچ Sheet، ستون، migration یا endpoint موازی بدون اثبات نیاز و بررسی سازگاری ایجاد نشود.
 
-test('form image attachments are loaded as inline images for project forms and print designer',()=>{
- const module=read('js/modules/project-detail.js');
- assert.match(module,/prepareProjectFormImages: async function/);
- assert.ok(module.includes(`data:' + data.MimeType + ';base64,'`));
- assert.match(module,/project-form-inline-image/);
- assert.match(module,/renderPrintDesignerValue\(row && row\[String\(column\.Code \|\| column\.code\)\], column\.DataType \|\| column\.dataType\)/);
-});
+## 🧩 تکمیل دامنه ویرایش در خروجی قالب
 
-test('print designer renders image attachments as inline images on the A4 canvas',()=>{
- const module=read('js/modules/project-detail.js');
- const css=read('css/project-print-designer.css');
- assert.match(module,/renderPrintDesignerValue: function/);
- assert.match(module,/data-ppd-image/);
- assert.match(module,/loadPrintDesignerImages: async function/);
- assert.ok(module.includes("'/attachments/' + encodeURIComponent(id) + '/download'"));
- assert.match(module,/ppd-inline-image/);
- assert.match(css,/ppd-inline-image/);
-});
+- رفتار ویرایش متنی و ذخیره در منبع اصلی در نسخه عملیاتی تست شد و موفق بود.
+- دو کمبود تأییدشده برای ادامه: (۱) ویرایش فیلدهای `image` و `file` با بارگذاری پیوست و ثبت reference امن در منبع اصلی؛ (۲) مدیریت کامل ردیف‌های داده چندردیفی شامل افزودن، حذف و ویرایش ردیف‌ها.
+- مسیر موجود پیوست باید استفاده شود: `POST /projects/:projectId/attachments`، `GET /projects/:projectId/attachments`، `GET /attachments/:attachmentId/download` و `DELETE /attachments/:attachmentId`؛ metadata در `15_Attachments` و فایل باینری در Google Drive. برای اطلاعات مرکزی، reference پیوست با `AttachmentType=INFORMATION` و اعتبارسنجی tenant/project/MIME الزامی است.
+- برای جدول‌ها، ساختار `ValueJSON` در `30_ProjectInformation` و پاسخ `ResponseJSON` در `35_EventFormData` حفظ می‌شود؛ افزودن/حذف ردیف باید در همان binding و با حفظ ترتیب ستون‌ها، validation، required fields و revision انجام شود. هیچ Sheet یا API موازی ایجاد نشود مگر ضرورت اثبات شود.
+
+## 📋 Macro-Task Queue & Implementation Log
+
+- [x] **Task 1 — Discovery & Planning:** بررسی Router، سرویس‌ها، مخازن، bindingهای قالب، APIهای موجود و مسیرهای ثبت/اصلاح رویداد انجام شد.
+  - *Log:* Router.js, PrintTemplateService.js, ProjectInformationService.js, FormService.js, EventService.js, EventRepository.js, FormRepository.js و tests/print-templates.test.js بررسی شدند. ProjectInformationService.save() تاریخچه پروژه را حفظ می‌کند؛ FormRepository.updateResponse() امکان اصلاح همان پاسخ را دارد؛ اما FormService.updateEventFormResponse() فعلی به رویداد اصلاحی مجزا وابسته است و برای تصمیم جدید کافی نیست. EventRepository.update() موجود است ولی متد عمومی امن در EventService وجود ندارد. هیچ کد عملیاتی تغییر نکرد.
+- [x] **Task 2 — Inline Editing UX:** رابط ویرایش درجا در Frontend عملیاتی پیاده‌سازی، CI و بررسی عملکرد مرورگر با موفقیت گذرانده، ادغام و توسط Product Owner تست شد.
+  - *Log:* تغییرات UX فقط در مخزن Frontend انجام شد: `js/modules/print-designer.js` (allow-list ویرایش، مدیریت ویرایش inline، ویرایش سلول جدول و حفظ مقدار هنگام چاپ)، `css/print-template-library.css` (ظاهر کنترل‌ها، موبایل و چاپ)، `index.html` (cache-bust) و تست‌های `tests/project-print-designer.test.js` و `tests/print-template-library.test.js`. PR #129 با همه بررسی‌های CI از جمله comprehensive UI performance audit موفق، با merge commit `19ec7226960a643d7242f3f5836bc8876e1fcde3` در Frontend main ادغام شد و Product Owner موفقیت تست ویرایش را اعلام کرد. در Backend هیچ فایل اجرایی، API، Sheet یا داده عملیاتی تغییر نکرد؛ ذخیره منبع اصلی موضوع Task 3 است.
+- [x] **Task 3 — Source Update Services:** ذخیره امن ویرایش‌های پروژه، اطلاعات مرکزی، پاسخ فرم و فیلدهای رویداد در همان رکورد، بدون ساخت رویداد جدید.
+  - *Progress Log:* پیاده‌سازی اولیه روی شاخه feature انجام شد: Router.js مسیر PUT /print-templates/:id/project-data را به PrintTemplateService.updateProjectBinding() متصل می‌کند؛ PrintTemplateService._resolveProjectData() اکنون metadata منبع و tokenهای concurrency را همراه resolve برمی‌گرداند و resolve() نیز آن‌ها را به Frontend می‌دهد. ProjectService.updateFromTemplate() چهار فیلد مجاز پروژه را با tenant/project access، قفل، کنترل نسخه، یکتایی کد و Audit ذخیره می‌کند. ProjectInformationService.save() از ExpectedRevision پشتیبانی می‌کند و saveWithLock() بررسی revision و نوشتن اطلاعات مرکزی را در قفل مشترک Script اجرا می‌کند؛ Router مسیر POST موجود و PrintTemplateService از همین wrapper استفاده می‌کنند و مسیر تاریخچه 30_ProjectInformation/31_ProjectInformationHistory حفظ شده است. FormService.updateEventFormFieldFromTemplate() پاسخ همان رکورد 35_EventFormData را از طریق FormRepository.updateResponse(existing.ID, ...) تغییر می‌دهد، اعتبارسنجی فرم را اجرا و اطلاعات مرکزی مرتبط را همگام می‌کند؛ هیچ AmendmentEventID یا رویداد جدیدی ساخته نمی‌شود. EventService.updateFieldFromTemplate() فقط OccurredAt و Description را روی همان ردیف 13_Events تغییر می‌دهد، محدودیت واحد ثبت‌کننده و ترتیب رویدادها را رعایت می‌کند و workflow را دوباره اجرا نمی‌کند. تست‌های tests/print-templates.test.js گسترش یافتند. PR #80 در 2026-11-13 با merge commit `3106574d8476c92be1244b0b8360841d44cb5a17` در `main` ادغام شد؛ Product Owner ذخیره ویرایش متنی را تست کرد و دو کمبود فایل/تصویر و مدیریت ردیف‌های جدول را برای Task 4 اعلام کرد. آخرین CI Backend روی commit 81a644d695e2f184dcf92f19be6f7ebc48166122 موفق: 219/219 تست، Backend source checks و Procurement performance diagnostics؛ دو agent بررسی نیز موفق.
+- [ ] **Task 4 — File/Image Upload & Multi-row Editing (IN PROGRESS):** تکمیل ویرایش فایل/تصویر و عملیات افزودن/حذف ردیف جدول در همان خروجی قالب، همراه با ذخیره امن در منبع اصلی و حفظ سازگاری. آزمون امنیت، داده چندردیفی، تاریخچه، سازگاری API، چاپ/PDF و جریان‌های موجود.
+
+## وضعیت پیاده‌سازی
+- Taskهای 1 تا 3 تکمیل شده‌اند. Task 3 در هر دو مخزن ادغام شده و Product Owner ذخیره ویرایش متنی را در نسخه عملیاتی موفق تست کرده است. Task 4 روی شاخه‌های مستقل عملیاتی در حال توسعه است؛ هنوز ادغام یا انتشار نشده است.
+  - *Progress Log:* در `PrintTemplateService._resolveProjectData()`، metadata نوع داده `dataType` به source tokenهای `PROJECT_INFORMATION` و `EVENT_FORM_FIELD` اضافه شد تا Frontend نوع واقعی فیلد را بدون حدس تشخیص دهد. در Frontend، `js/modules/print-designer.js` از API موجود `POST /projects/:projectId/attachments` با `AttachmentType=INFORMATION` برای آپلود استفاده می‌کند؛ reference امن پیوست را با API موجود `PUT /print-templates/:id/project-data` در منبع اصلی ذخیره می‌کند؛ دریافت فایل از `GET /attachments/:attachmentId/download` انجام می‌شود. جدول‌ها کنترل افزودن/حذف ردیف دارند و کل آرایه پس از تغییر از همان API ذخیره می‌شود. `css/print-template-library.css` کنترل‌ها و حذف آن‌ها از چاپ را پوشش می‌دهد؛ `index.html` cache key را به `20261114-inline-file-table-edit-1` تغییر داد. تست‌های ایستا برای upload/download و افزودن/حذف ردیف اضافه شدند. تغییرات هنوز در حال بررسی CI هستند؛ هیچ داده عملیاتی تغییر نکرده است.
 
 
-test('print designer exposes independently selectable and adjustable form images',()=>{
- const module=read('js/modules/project-detail.js');
- const css=read('css/project-print-designer.css');
- assert.match(module,/data-ppd-inner-image/);
- assert.match(module,/draggable="false"/);
- assert.match(module,/image\.draggable = false/);
- assert.match(module,/innerImage = event\.target\.closest\('\[data-ppd-inner-image\]'\)/);
- assert.match(module,/printDesignerSelectedInner/);
- assert.match(css,/is-inner-selected/);
- assert.match(module,/data-ppd-inner-style="width"/);
- assert.match(module,/data-ppd-inner-style="x"/);
- assert.match(module,/data-ppd-inner-style="y"/);
- assert.match(module,/pointerdown/);
- assert.match(module,/parentForControls/);
- assert.match(module,/this\.printDesignerSelectedInner = \{ elementId: innerDrag\.elementId, imageId: innerDrag\.imageId \}/);
- assert.match(module,/pointermove/);
- assert.match(module,/innerLayout\[selection\.imageId\]/);
- assert.match(module,/image\.dataset\.ppdInnerImage/);
- assert.match(css,/ppd-inline-image\[data-ppd-inner-image\]/);
-});
+## 2026-11-14 — توسعه افزودن و ذخیره همزمان چند ردیف در خروجی قالب پروژه
 
-
-test('print designer supports selecting form tables and adjusting overall and individual column widths',()=>{
- const module=read('js/modules/project-detail.js');
- const css=read('css/project-print-designer.css');
- assert.match(module,/renderPrintDesignerTable: function/);
- assert.match(module,/data-ppd-inner-table/);
- assert.match(module,/data-ppd-inner-column/);
- assert.match(module,/printDesignerSelectedTable/);
- assert.match(module,/data-ppd-table-style="width"/);
- assert.match(module,/data-ppd-column-width/);
- assert.match(module,/tableLayout/);
- assert.match(module,/layout\.columns\[col\.dataset\.ppdColCode\]/);
- assert.match(module,/field-' \+ String\(item\.fieldKey\)/);
- assert.match(css,/\.ppd-inner-table/);
- assert.match(css,/@media print/);
-});
-
-test('print designer uses its selectable image renderer for full forms and individual fields',()=>{
- const module=read('js/modules/project-detail.js');
- const start=module.indexOf('renderPrintDesignerElement: function (item) {');
- const end=module.indexOf('renderProjectForms: function ()',start);
- const renderer=module.slice(start,end);
- assert.match(renderer,/renderPrintDesignerTable\('field-'/);
- assert.match(renderer,/renderPrintDesignerValue\(value, info\.DataType\)/);
- assert.doesNotMatch(renderer,/renderProjectFormValue\(/);
- const tableRenderer=module.slice(module.indexOf('renderPrintDesignerTable: function'),module.indexOf('renderPrintDesignerElement: function'));
- assert.match(tableRenderer,/renderPrintDesignerValue\(row && row\[String\(column\.Code \|\| column\.code\)\], column\.DataType \|\| column\.dataType\)/);
-});
-
-test('print designer image layout ids remain stable by attachment and preserve legacy positional layouts',()=>{
- const module=read('js/modules/project-detail.js');
- assert.match(module,/const attachmentKey = String\(id\)\.replace\(\/\[\^a-zA-Z0-9_-\]\/g, '_'\)/);
- assert.match(module,/const innerId = 'img-' \+ attachmentKey \+ '-' \+ occurrence/);
- assert.match(module,/layouts\[innerId\] \|\| layouts\[legacyInnerId\]/);
- assert.match(module,/printDesignerImageOccurrences = Object\.create\(null\)/);
-});
-
-
-test('project-specific output route renders every active template through the existing resolver and renderer',()=>{
- const module=read('js/modules/print-designer.js');
- const events=read('js/modules/events.js');
- const page=read('pages/print-output.html');
- assert.ok(events.includes('event-queue-view-button" data-project-id='));
- assert.ok(module.includes('initProjectOutput: async function (projectId)'));
- assert.ok(module.includes("PMS.Api.get('/print-templates')"));
- assert.ok(module.includes("PMS.Api.post('/print-templates/' + encodeURIComponent(template.ID) + '/resolve'"));
- assert.ok(module.includes('renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true })'));
- assert.ok(module.includes('for (let index = 0; index < templates.length; index++)'));
- assert.ok(page.includes('pt-output-project-heading'));
- assert.ok(page.includes('pt-output-back'));
- assert.ok(page.includes('pt-output-print'));
-});
-
-test('template library and document data output are separate routes and modes',()=>{
- const layout=read('js/components/layout.js');
- const router=read('js/core/router.js');
- const design=read('pages/print-designer.html');
- const output=read('pages/print-output.html');
- const module=read('js/modules/print-designer.js');
- assert.match(layout,/label: 'طراحی قالب'/);
- assert.match(layout,/label: 'چاپ اسناد'/);
- assert.ok(router.includes("'print-design': 'pages/print-designer.html'"));
- assert.ok(router.includes("'print-output': 'pages/print-output.html'"));
- assert.match(design,/ذخیره قالب/);
- assert.match(output,/pt-output-template/);
- assert.match(output,/pt-output-project/);
- assert.match(module,/resolveOutput: async function/);
- assert.ok(module.includes('if (!this.projectOutputMode) this.saveOutputMargins()'));
- assert.match(module,/if \(!\(options && options\.preservePdfObjectUrls\)\) this\.clearOutputPdfObjectUrls\(\)/);
- assert.ok(module.includes("'/print-templates/' + encodeURIComponent(templateId) + '/resolve'"));
-});
-
-test('standalone print designer remains a full-screen layer above the application sidebar',()=>{
- const css=read('css/project-print-designer.css');
- assert.match(css,/\.ppd-standalone\{position:fixed;inset:0;z-index:12000/);
- assert.doesNotMatch(css,/\.ppd-standalone\{position:relative/);
- assert.match(css,/body\.ppd-printing\{overflow:hidden/);
-});
-
-test('print designer form library has distinct sections, clear empty state and responsive panel layout',()=>{
- const module=read('js/modules/project-detail.js');
- const css=read('css/project-print-designer.css');
- assert.match(module,/ppd-library-section ppd-library-forms/);
- assert.match(module,/ppd-library-empty/);
- assert.match(module,/data-ppd-form/);
- assert.match(module,/data-ppd-field/);
- assert.match(css,/\.ppd-library-actions\{display:grid/);
- assert.match(css,/\.ppd-form-library\{display:flex/);
- assert.match(css,/@media\(max-width:760px\)/);
- assert.match(css,/\.ppd-standalone \.ppd-paper\{width:min\(210mm,calc\(100vw - 48px\)\)/);
-});
-
-test('print designer keeps A4 print dimensions and read-only output styles',()=>{
- const css=read('css/project-print-designer.css');
- assert.match(css,/@page\{size:A4 portrait/);
- assert.match(css,/\.ppd-standalone \.ppd-paper\{width:210mm!important/);
- assert.match(css,/\.ppd-output-mode \.ppd-properties\{display:none!important/);
-});
-
-test('project output exposes inline editable controls only for approved business data bindings',()=>{
- const module=read('js/modules/print-designer.js');
- const css=read('css/print-template-library.css');
- assert.match(module,/isProjectOutputBindingEditable: function/);
- assert.match(module,/bindProjectOutputSection: function/);
- assert.match(module,/beginProjectOutputEdit: function/);
- assert.match(module,/finishProjectOutputEdit: function/);
- assert.match(module,/data-pt-output-editable="true"/);
- assert.match(module,/data-pt-row-index/);
- assert.match(module,/ProjectCode','Title','Description','Quantity/);
- assert.match(module,/OccurredAt','Description/);
- assert.match(module,/if \(this\.projectOutputEdit && this\.projectOutputEdit\.editor\)/);
- assert.match(css,/pt-output-inline-editor/);
- assert.match(css,/pt-output-editable-value/);
-});
-
-test('project template inline edits persist to the authoritative source and refresh before print', () => {
-  const module = read('js/modules/print-designer.js');
-  const index = read('index.html');
-  assert.match(module, /sources: resolved\.sources \|\| \{\}/);
-  assert.match(module, /PMS\.Api\.put\('\/print-templates\/'/);
-  assert.match(module, /ExpectedSource: source/);
-  assert.match(module, /await this\.initProjectOutput\(projectId\)/);
-  assert.match(module, /return failedCount === 0/);
-  assert.match(module, /refreshed !== true/);
-  assert.match(module, /printButton\.hidden = true/);
-  assert.match(module, /ذخیره تغییر ناموفق بود/);
-  assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
-  assert.match(index, /print-designer\.js\?v=20261114-inline-file-table-edit-1/);
-});
-
-test('project output supports uploading file/image bindings through project attachment API', () => {
-  const module = read('js/modules/print-designer.js');
-  assert.match(module, /uploadProjectOutputFile/);
-  assert.match(module, /\/projects\/.*\/attachments/);
-  assert.match(module, /AttachmentType: 'INFORMATION'/);
-  assert.match(module, /data-pt-file-input/);
-  assert.match(module, /dataType === 'image'/);
-});
-test('project output supports adding and removing multi-row table records and persists the complete value', () => {
-  const module = read('js/modules/print-designer.js');
-  assert.match(module, /data-pt-output-action="add-row"/);
-  assert.match(module, /data-pt-output-action="remove-row"/);
-  assert.match(module, /saveProjectOutputBinding/);
-  assert.match(module, /next\.push\(/);
-  assert.match(module, /next\.splice\(/);
-});
-
-test('project output file references can be downloaded through the authorized attachment endpoint', () => {
-  const module = read('js/modules/print-designer.js');
-  assert.match(module, /downloadProjectOutputAttachment/);
-  assert.match(module, /\/attachments\/.*\/download/);
-  assert.match(module, /data-pt-file-download/);
-});
-
-
-## 2026-11-14 — اصلاح چرخه افزودن ردیف جدول در خروجی قالب
-
-- *Discovery:* علت عدم نمایش ردیف جدید این بود که افزودن ردیف خالی بلافاصله به Backend ارسال می‌شد؛ اعتبارسنجی موجود در `ProjectInformationService._validate()` ردیف‌های کاملاً خالی را فیلتر می‌کند و در نتیجه resolver پس از ذخیره، همان جدول قبلی را برمی‌گرداند. این رفتار برای ثبت فرم‌های عادی حفظ می‌شود.
-- *Implementation:* افزودن ردیف در Frontend اکنون ابتدا یک ردیف موقت قابل ویرایش در همان جدول ایجاد می‌کند؛ تغییر سلول‌های ردیف موقت فقط در حافظه همان خروجی نگه داشته می‌شود. دکمه «ذخیره ردیف» پس از تکمیل حداقل یک خانه، کل جدول را از API موجود ذخیره می‌کند و اعتبارسنجی الزامی ستون‌ها همچنان در Backend اجرا می‌شود. «لغو ردیف» فقط ردیف موقت و کنترل‌های وابسته به همان ردیف را حذف می‌کند؛ دکمه‌های حذف ردیف‌های ذخیره‌شده باقی می‌مانند. هنگام وجود ردیف موقت، عملیات متداخل جدول غیرفعال است تا index و داده‌ها جابه‌جا نشوند.
-- *Scope:* فقط Frontend تغییر می‌کند؛ هیچ API، Sheet، ستون یا منطق ثبت فرم در Backend تغییر نمی‌کند. این تغییر پس از CI و تست عملیاتی کاربر نهایی می‌شود.
+- *Discovery:* Product Owner تست کرد که افزودن و ذخیره یک ردیف در PR #134 موفق است؛ محدودیت باقی‌مانده این بود که پس از ایجاد یک ردیف موقت، امکان افزودن ردیف موقت بعدی وجود نداشت. علت در `PrintDesigner.bindProjectOutputSection()` و شرط جلوگیری از افزودن هنگام وجود `pendingRows` بود.
+- *Implementation:* در `js/modules/print-designer.js` افزودن چند ردیف موقت برای یک binding فعال شد؛ شاخص تمام ردیف‌های موقت در `projectOutputDraftRows[bindingId]` نگهداری می‌شود. دکمه واحد «ذخیره همه ردیف‌ها» پس از اعتبارسنجی خالی نبودن هر ردیف، کل آرایه را با یک فراخوانی `saveProjectOutputBinding()` به API موجود `PUT /print-templates/:id/project-data` می‌فرستد. لغو هر ردیف موقت به‌صورت مستقل انجام و index ردیف‌های بعدی در DOM و state اصلاح می‌شود. حذف ردیف‌های ذخیره‌شده تا زمان وجود draft غیرفعال می‌شود تا indexها جابه‌جا نشوند؛ دکمه افزودن فعال می‌ماند.
+- *Frontend files:* `js/modules/print-designer.js`، `index.html` (cache key: `20261114-inline-file-table-edit-3`)، `tests/project-print-designer.test.js` و `tests/print-template-library.test.js`.
+- *Backend/API/Database:* هیچ تغییر runtime در Backend، هیچ API یا payload جدید، هیچ Sheet/column/schema و هیچ داده عملیاتی تغییر نکرد. همان API و همان منبع داده چندردیفی استفاده می‌شود.
+- *CI:* روی commit `f26d015e366404841c50f76bd63e7327c5a10e0b`، Frontend checks، Print designer regression، PMS frontend agent suite و PMS cross-repository QA موفق شدند؛ ممیزی جامع UI/performance هنوز در حال اجراست. ادغام PR #135 و پذیرش عملیاتی هنوز انجام نشده‌اند.
