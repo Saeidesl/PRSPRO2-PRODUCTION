@@ -219,7 +219,7 @@ test('project template inline edits persist to the authoritative source and refr
   assert.match(module, /printButton\.hidden = true/);
   assert.match(module, /ذخیره تغییر ناموفق بود/);
   assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
-  assert.match(index, /print-designer\.js\?v=20261114-inline-file-table-edit-2/);
+  assert.match(index, /print-designer\.js\?v=20261114-inline-file-table-edit-3/);
 });
 
 test('project output supports uploading file/image bindings through project attachment API', () => {
@@ -235,7 +235,7 @@ test('project output allows multiple draft table rows and saves them together in
   const addBlock = module.slice(module.indexOf("if (actionName === 'add-row')"), module.indexOf("} else if (actionName === 'remove-row')"));
   assert.match(module, /data-pt-output-action="add-row"/);
   assert.match(addBlock, /draftRows\[bindingId\] = pendingRows\.concat\(rowIndex\)/);
-  assert.match(addBlock, /data-pt-output-action = 'save-rows'/);
+  assert.match(addBlock, /saveButton\.dataset\.ptOutputAction = 'save-rows'/);
   assert.match(addBlock, /ذخیره همه ردیف‌ها/);
   assert.match(addBlock, /لغو ردیف/);
   assert.doesNotMatch(addBlock, /if \(pendingRows\.length\)/);
