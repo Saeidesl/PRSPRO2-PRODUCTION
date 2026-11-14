@@ -197,7 +197,7 @@ test('project output exposes inline editable controls only for approved business
  assert.match(module,/isProjectOutputBindingEditable: function/);
  assert.match(module,/bindProjectOutputSection: function/);
  assert.match(module,/beginProjectOutputEdit: function/);
- assert.match(module,/finishProjectOutputEdit: function/);
+ assert.match(module,/finishProjectOutputEdit: async function/);
  assert.match(module,/data-pt-output-editable="true"/);
  assert.match(module,/data-pt-row-index/);
  assert.match(module,/ProjectCode','Title','Description','Quantity/);
@@ -219,5 +219,26 @@ test('project template inline edits persist to the authoritative source and refr
   assert.match(module, /printButton\.hidden = true/);
   assert.match(module, /ذخیره تغییر ناموفق بود/);
   assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
-  assert.match(index, /print-designer\.js\?v=20261113-inline-source-save-1/);
+  assert.match(index, /print-designer\.js\?v=20261114-inline-file-table-edit-1/);
+});
+
+
+test('project output supports safe file/image uploads and repeatable table rows using source metadata',()=>{
+  const module=read('js/modules/print-designer.js');
+  const css=read('css/print-template-library.css');
+  assert.match(module,/getProjectOutputSource: function/);
+  assert.match(module,/uploadProjectOutputAttachment: async function/);
+  assert.match(module,/AttachmentType: 'INFORMATION'/);
+  assert.match(module,/ATTACHMENT_UPLOAD/);
+  assert.match(module,/data-pt-output-file-edit/);
+  assert.match(module,/data-pt-table-action="add-row"/);
+  assert.match(module,/data-pt-table-action="remove-row"/);
+  assert.match(module,/beginProjectOutputRowAdd: function/);
+  assert.match(module,/finishProjectOutputRowAdd: async function/);
+  assert.match(module,/normalizeProjectOutputRows: function/);
+  assert.match(module,/source\.cardinality/);
+  assert.match(module,/source\.columns/);
+  assert.match(css,/pt-output-table-actions/);
+  assert.match(css,/pt-output-row-input/);
+  assert.match(css,/@media print/);
 });
