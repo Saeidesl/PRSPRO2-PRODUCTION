@@ -230,11 +230,16 @@ test('project output supports uploading file/image bindings through project atta
   assert.match(module, /data-pt-file-input/);
   assert.match(module, /dataType === 'image'/);
 });
-test('project output supports adding and removing multi-row table records and persists the complete value', () => {
+test('project output keeps a new table row editable as a draft until explicit save, then persists the full table', () => {
   const module = read('js/modules/print-designer.js');
   assert.match(module, /data-pt-output-action="add-row"/);
+  assert.match(module, /data-pt-output-action="save-row"/);
   assert.match(module, /data-pt-output-action="remove-row"/);
-  assert.match(module, /saveProjectOutputBinding/);
+  assert.match(module, /projectOutputDraftRows/);
+  assert.match(module, /ردیف جدید اضافه شد/);
+  assert.match(module, /ابتدا حداقل یک خانه از ردیف را تکمیل کن/);
+  assert.match(module, /record\.data\[bindingId\] = next/);
+  assert.match(module, /saveProjectOutputBinding\(record, bindingId, next/);
   assert.match(module, /next\.push\(/);
   assert.match(module, /next\.splice\(/);
 });
