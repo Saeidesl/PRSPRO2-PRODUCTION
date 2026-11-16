@@ -427,6 +427,7 @@
         const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/images', {
           fileName:file.name,mimeType:file.type,base64:await this.fileToBase64(file)
         });
+        this.invalidateTemplateCache();
         const uploaded = this.extract(response) || {};
         const assetId = uploaded.ID || uploaded.id || uploaded.AssetID || uploaded.assetId;
         if (!assetId) throw new Error('تصویر بارگذاری شد اما شناسه آن دریافت نشد.');
@@ -1157,6 +1158,7 @@
           initialDefinition.elements = (initialDefinition.elements || []).filter(element => element.type !== 'image' || element.assetId);
           const createBody = Object.assign({}, body, {Definition:this.pdfFile ? this.blankDefinition() : initialDefinition});
           const created = await PMS.Api.post('/print-templates', createBody);
+          this.invalidateTemplateCache();
           const createdData = this.extract(created) || {};
           templateId = createdData.ID;
           if (!templateId) throw new Error('قالب ایجاد شد اما شناسه آن دریافت نشد.');
@@ -1170,8 +1172,10 @@
             pageCount: Number(this.definition.pdf && this.definition.pdf.pages ? this.definition.pdf.pages.length : 0),
             Definition: this.definition
           });
+          this.invalidateTemplateCache();
         } else if (!wasNew || pendingIds.length) {
           await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), Object.assign({},body,{Definition:this.definition}));
+          this.invalidateTemplateCache();
         }
         saveCommitted = true;
         this.invalidateTemplateCache();
