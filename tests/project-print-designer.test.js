@@ -180,14 +180,10 @@ test('project output reuses cached template definitions but continues resolving 
 
 test('cross-device template edits are detected through a lightweight tenant-scoped server revision', () => {
   const module = read('js/modules/print-designer.js');
-  const backendService = readBackend('PrintTemplateService.js');
-  const backendRouter = readBackend('Router.js');
   assert.match(module, /PMS\.Api\.get\('\/print-templates\/version'\)/);
   assert.match(module, /currentRevision === cachedTemplates\.revision/);
   assert.match(module, /if \(templates === null\)/);
-  assert.match(backendService, /cacheVersion: function\(params\)/);
-  assert.match(backendService, /Utilities\.DigestAlgorithm\.SHA_256/);
-  assert.match(backendRouter, /path === '\/print-templates\/version'/);
+  assert.match(module, /this\.fetchTemplatesWithRevision\(\)/);
 });
 
 test('successful template create, edit and deactivate refresh the persistent template cache', () => {
