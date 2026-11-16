@@ -33,6 +33,8 @@
     projectOutputRecords: Object.create(null),
     projectOutputEdit: null,
     outputMarginStorageKey: 'PMS_PRINT_OUTPUT_MARGINS_V1',
+    templateCacheStorageKey: 'PMS_PRINT_TEMPLATES_CACHE_V1',
+    templateCacheSchemaVersion: 1,
     pdfDocument: null,
     pdfFile: null,
     pdfRenderVersion: 0,
@@ -53,6 +55,48 @@
       if (Array.isArray(data)) return data;
       for (const key of (keys || ['items','Items'])) if (data && Array.isArray(data[key])) return data[key];
       return [];
+    },
+    getTemplateCacheKey: function () {
+      const user = PMS.Session && typeof PMS.Session.getUser === 'function' ? PMS.Session.getUser() : null;
+      const tenantId = user && (user.TenantID || user.TenantId || user.tenantId);
+      const userId = user && (user.ID || user.UserID || user.id || user.Username || user.username);
+      if (!tenantId || !userId) return '';
+      return this.templateCacheStorageKey + ':' + encodeURIComponent(String(tenantId)) + ':' + encodeURIComponent(String(userId));
+    },
+    readTemplateCache: function () {
+      const key = this.getTemplateCacheKey();
+      if (!key) return null;
+      try {
+        const cached = JSON.parse(window.localStorage.getItem(key) || 'null');
+        if (!cached || cached.schemaVersion !== this.templateCacheSchemaVersion || !Array.isArray(cached.templates)) return null;
+        return cached.templates.filter(item => item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE');
+      } catch (error) {
+        return null;
+      }
+    },
+    writeTemplateCache: function (templates) {
+      const key = this.getTemplateCacheKey();
+      if (!key || !Array.isArray(templates)) return false;
+      try {
+        window.localStorage.setItem(key, JSON.stringify({
+          schemaVersion: this.templateCacheSchemaVersion,
+          templates: templates.filter(item => item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE')
+        }));
+        return true;
+      } catch (error) {
+        // Persistent storage is an optimization; server loading remains available.
+        return false;
+      }
+    },
+    invalidateTemplateCache: function () {
+      const key = this.getTemplateCacheKey();
+      if (!key) return false;
+      try {
+        window.localStorage.removeItem(key);
+        return true;
+      } catch (error) {
+        return false;
+      }
     },
     esc: function (value) {
       return String(value === undefined || value === null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -747,6 +791,7 @@
       ]);
       if (results[0].status === 'fulfilled') {
         this.templates = this.list(results[0].value);
+        this.writeTemplateCache(this.templates);
         this.renderLibrary();
         this.setStatus('pt-library-status', this.templates.length ? this.templates.length + ' قالب در کتابخانه وجود دارد.' : 'هنوز قالبی ساخته نشده است.');
       } else {
@@ -1129,6 +1174,7 @@
           await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), Object.assign({},body,{Definition:this.definition}));
         }
         saveCommitted = true;
+        this.invalidateTemplateCache();
         this.resetForm();
         await this.loadLibrary();
         this.setStatus('pt-library-status', 'قالب با موفقیت ذخیره شد.');
@@ -1150,6 +1196,7 @@
       if (!item || !window.confirm('قالب «' + item.Name + '» غیرفعال شود؟')) return;
       try {
         await PMS.Api.delete('/print-templates/' + encodeURIComponent(id));
+        this.invalidateTemplateCache();
         await this.loadLibrary();
         this.setStatus('pt-library-status', 'قالب غیرفعال شد.');
       } catch (error) {
@@ -1935,14 +1982,23 @@
       }
       this.setStatus('pt-output-status', 'در حال دریافت پروژه و قالب‌های فعال…');
       try {
-        const results = await Promise.all([
-          PMS.Api.get('/print-templates'),
-          PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))
-        ]);
-        const templates = this.list(results[0]).filter(item =>
-          item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'
-        );
-        const projectResult = this.extract(results[1]) || {};
+        const cachedTemplates = this.readTemplateCache();
+        let templates;
+        let projectResult;
+        if (cachedTemplates !== null) {
+          templates = cachedTemplates;
+          projectResult = this.extract(await PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))) || {};
+        } else {
+          const results = await Promise.all([
+            PMS.Api.get('/print-templates'),
+            PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))
+          ]);
+          templates = this.list(results[0]).filter(item =>
+            item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'
+          );
+          this.writeTemplateCache(templates);
+          projectResult = this.extract(results[1]) || {};
+        }
         const project = projectResult.project || projectResult.Project || projectResult.item || projectResult;
         const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
         const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
@@ -2002,9 +2058,19 @@
     loadOutputOptions: async function () {
       this.setStatus('pt-output-status', 'در حال دریافت قالب‌ها و پروژه‌ها…');
       try {
-        const results = await Promise.all([PMS.Api.get('/print-templates'), PMS.Api.get('/projects')]);
-        const templates = this.list(results[0]);
-        const projects = this.list(results[1], ['items','Items','projects','Projects']);
+        const cachedTemplates = this.readTemplateCache();
+        let templates;
+        let projectResponse;
+        if (cachedTemplates !== null) {
+          templates = cachedTemplates;
+          projectResponse = await PMS.Api.get('/projects');
+        } else {
+          const results = await Promise.all([PMS.Api.get('/print-templates'), PMS.Api.get('/projects')]);
+          templates = this.list(results[0]);
+          this.writeTemplateCache(templates);
+          projectResponse = results[1];
+        }
+        const projects = this.list(projectResponse, ['items','Items','projects','Projects']);
         this.outputTemplates = templates;
         const templateSelect = document.getElementById('pt-output-template');
         const projectSelect = document.getElementById('pt-output-project');
