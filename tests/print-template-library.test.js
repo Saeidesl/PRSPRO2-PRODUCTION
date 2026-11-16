@@ -60,7 +60,7 @@ test('print designer module parses and is loaded exactly once',()=>{
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
- assert.match(index,/20261116-persistent-template-cache-1/);
+ assert.match(index,/20261116-cross-device-template-revision-1/);
 });
 
 
@@ -189,7 +189,7 @@ test('print output hides image helper copy and uses exact page size without forc
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
  assert.ok(index.includes('css/print-template-library.css?v=20261113-inline-edit-ux-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261116-persistent-template-cache-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261116-cross-device-template-revision-1'));
 });
 
 
@@ -375,7 +375,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261116-persistent-template-cache-1'));
+ assert.ok(index.includes('20261116-cross-device-template-revision-1'));
 });
 
 
@@ -702,4 +702,15 @@ test('template cache invalidates only after successful create, update or deactiv
  assert.match(module,/await PMS\.Api\.delete\('\/print-templates\/' \+ encodeURIComponent\(id\)\);\s*this\.invalidateTemplateCache\(id\)/);
  assert.match(module,/this\.getTemplateListCached\(\)/);
  assert.match(module,/PMS\.Api\.post\('\/print-templates\/' \+ encodeURIComponent\(template\.ID\) \+ '\/resolve'/);
+});
+
+
+test('template cache checks a tenant-scoped server revision and refreshes only changed templates',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/getTemplateRevisionCacheKey/);
+ assert.match(module,/PMS\.Api\.get\('\/print-templates\/revision'/);
+ assert.match(module,/Number\(existing\.Version \|\| 1\) !== Number\(meta\.Version \|\| 1\)/);
+ assert.match(module,/PMS\.Api\.get\('\/print-templates\/' \+ encodeURIComponent\(meta\.ID\)/);
+ assert.match(module,/activeIds\.has\(String\(item\.ID\)\)/);
+ assert.match(module,/PMS\.Cache\.set\(revisionKey, latest\)/);
 });
