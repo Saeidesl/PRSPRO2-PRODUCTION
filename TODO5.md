@@ -52,3 +52,10 @@
 - [ ] **Task 2 — Persistent Template Cache (IN PROGRESS):** اتصال فهرست و تعریف قالب‌ها به cache دائمی موجود، با scope امن tenant/user و حذف درخواست شبکه در cache hit.
 - [ ] **Task 3 — Targeted Cache Invalidation:** همگام‌سازی کش پس از ایجاد، ویرایش، تغییر PDF/تصاویر و غیرفعال‌سازی قالب؛ حفظ cache در صورت شکست عملیات.
 - [ ] **Task 4 — Regression & Operational Acceptance:** آزمون cache hit/miss، حساب‌های متفاوت، تغییرات قالب، resolve تازه پروژه، چاپ/PDF و پذیرش عملیاتی Product Owner.
+
+
+### رفع اشکال پس از انتشار — پاسخ کش فهرست قالب‌ها
+- گزارش عملیاتی: صفحه خروجی پروژه با وجود وجود قالب فعال، پیام خالی بودن کتابخانه را نمایش داد.
+- علت در Frontend `js/modules/print-designer.js`: در cache hit، تابع `getTemplateListCached()` پاسخ `{data: cachedList, ...}` را بدون `success: true` برمی‌گرداند؛ `PMS.Api.extractData()` این envelope را باز نمی‌کند و `PrintDesigner.list()` به‌جای آرایه، شیء envelope را دریافت کرده و `[]` می‌سازد.
+- اصلاح در حال انجام: حفظ قرارداد استاندارد پاسخ API با `success: true` برای هر سه مسیر cache hit / revision unchanged / fallback cache؛ افزودن تست runtime برای اطمینان از قابل مشاهده بودن قالب کش‌شده و تغییر cache-bust token جهت دریافت فایل اصلاح‌شده در مرورگر.
+- Backend و API revision تغییر نمی‌کنند؛ این اختلال در سازگاری envelope سمت Frontend است.
