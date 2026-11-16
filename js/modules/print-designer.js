@@ -34,7 +34,7 @@
     projectOutputEdit: null,
     outputMarginStorageKey: 'PMS_PRINT_OUTPUT_MARGINS_V1',
     templateCacheStorageKey: 'PMS_PRINT_TEMPLATES_CACHE_V1',
-    templateCacheSchemaVersion: 1,
+    templateCacheSchemaVersion: 2,
     pdfDocument: null,
     pdfFile: null,
     pdfRenderVersion: 0,
@@ -68,18 +68,23 @@
       if (!key) return null;
       try {
         const cached = JSON.parse(window.localStorage.getItem(key) || 'null');
-        if (!cached || cached.schemaVersion !== this.templateCacheSchemaVersion || !Array.isArray(cached.templates)) return null;
-        return cached.templates.filter(item => item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE');
+        if (!cached || cached.schemaVersion !== this.templateCacheSchemaVersion ||
+            !Array.isArray(cached.templates) || !cached.revision) return null;
+        return {
+          templates: cached.templates.filter(item => item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'),
+          revision: String(cached.revision)
+        };
       } catch (error) {
         return null;
       }
     },
-    writeTemplateCache: function (templates) {
+    writeTemplateCache: function (templates, revision) {
       const key = this.getTemplateCacheKey();
-      if (!key || !Array.isArray(templates)) return false;
+      if (!key || !Array.isArray(templates) || !revision) return false;
       try {
         window.localStorage.setItem(key, JSON.stringify({
           schemaVersion: this.templateCacheSchemaVersion,
+          revision: String(revision),
           templates: templates.filter(item => item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE')
         }));
         return true;
@@ -87,6 +92,34 @@
         // Persistent storage is an optimization; server loading remains available.
         return false;
       }
+    },
+    getTemplateCacheRevision: async function () {
+      const response = await PMS.Api.get('/print-templates/version');
+      const data = this.extract(response) || {};
+      const revision = String(data.revision || '');
+      if (!revision) throw new Error('نسخه قالب‌ها از سرور دریافت نشد.');
+      return revision;
+    },
+    fetchTemplatesWithRevision: async function () {
+      let templates = [];
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const before = await this.getTemplateCacheRevision();
+          const response = await PMS.Api.get('/print-templates');
+          templates = this.list(response).filter(item =>
+            item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'
+          );
+          const after = await this.getTemplateCacheRevision();
+          if (before === after) return { templates: templates, revision: after };
+        } catch (error) {
+          const response = await PMS.Api.get('/print-templates');
+          templates = this.list(response).filter(item =>
+            item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'
+          );
+          return { templates: templates, revision: '' };
+        }
+      }
+      return { templates: templates, revision: '' };
     },
     invalidateTemplateCache: function () {
       const key = this.getTemplateCacheKey();
@@ -787,12 +820,12 @@
     loadLibrary: async function () {
       this.setStatus('pt-library-status', 'در حال دریافت کتابخانه قالب‌ها و منابع داده…');
       const results = await Promise.allSettled([
-        PMS.Api.get('/print-templates'),
+        this.fetchTemplatesWithRevision(),
         PMS.Api.get('/print-templates/sources')
       ]);
       if (results[0].status === 'fulfilled') {
-        this.templates = this.list(results[0].value);
-        this.writeTemplateCache(this.templates);
+        this.templates = results[0].value.templates;
+        this.writeTemplateCache(this.templates, results[0].value.revision);
         this.renderLibrary();
         this.setStatus('pt-library-status', this.templates.length ? this.templates.length + ' قالب در کتابخانه وجود دارد.' : 'هنوز قالبی ساخته نشده است.');
       } else {
@@ -1987,22 +2020,22 @@
       this.setStatus('pt-output-status', 'در حال دریافت پروژه و قالب‌های فعال…');
       try {
         const cachedTemplates = this.readTemplateCache();
-        let templates;
-        let projectResult;
+        const projectPromise = PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId));
+        let templates = null;
         if (cachedTemplates !== null) {
-          templates = cachedTemplates;
-          projectResult = this.extract(await PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))) || {};
-        } else {
-          const results = await Promise.all([
-            PMS.Api.get('/print-templates'),
-            PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))
-          ]);
-          templates = this.list(results[0]).filter(item =>
-            item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'
-          );
-          this.writeTemplateCache(templates);
-          projectResult = this.extract(results[1]) || {};
+          try {
+            const currentRevision = await this.getTemplateCacheRevision();
+            if (currentRevision === cachedTemplates.revision) templates = cachedTemplates.templates;
+          } catch (versionError) {
+            // If the lightweight version check is unavailable, fetch authoritative definitions below.
+          }
         }
+        if (templates === null) {
+          const refreshed = await this.fetchTemplatesWithRevision();
+          templates = refreshed.templates;
+          this.writeTemplateCache(templates, refreshed.revision);
+        }
+        const projectResult = this.extract(await projectPromise) || {};
         const project = projectResult.project || projectResult.Project || projectResult.item || projectResult;
         const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
         const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
@@ -2063,17 +2096,22 @@
       this.setStatus('pt-output-status', 'در حال دریافت قالب‌ها و پروژه‌ها…');
       try {
         const cachedTemplates = this.readTemplateCache();
-        let templates;
-        let projectResponse;
+        const projectPromise = PMS.Api.get('/projects');
+        let templates = null;
         if (cachedTemplates !== null) {
-          templates = cachedTemplates;
-          projectResponse = await PMS.Api.get('/projects');
-        } else {
-          const results = await Promise.all([PMS.Api.get('/print-templates'), PMS.Api.get('/projects')]);
-          templates = this.list(results[0]);
-          this.writeTemplateCache(templates);
-          projectResponse = results[1];
+          try {
+            const currentRevision = await this.getTemplateCacheRevision();
+            if (currentRevision === cachedTemplates.revision) templates = cachedTemplates.templates;
+          } catch (versionError) {
+            // Fall back to authoritative template loading when version checks are unavailable.
+          }
         }
+        if (templates === null) {
+          const refreshed = await this.fetchTemplatesWithRevision();
+          templates = refreshed.templates;
+          this.writeTemplateCache(templates, refreshed.revision);
+        }
+        const projectResponse = await projectPromise;
         const projects = this.list(projectResponse, ['items','Items','projects','Projects']);
         this.outputTemplates = templates;
         const templateSelect = document.getElementById('pt-output-template');
