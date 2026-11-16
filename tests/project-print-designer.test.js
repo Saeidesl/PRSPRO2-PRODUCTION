@@ -156,6 +156,9 @@ test('project template definitions are cached indefinitely per authenticated ten
   assert.match(module, /writeTemplateCache: function/);
   assert.match(module, /invalidateTemplateCache: function/);
   assert.match(module, /schemaVersion: this\.templateCacheSchemaVersion/);
+  assert.match(module, /revision: String\(cached\.revision\)/);
+  assert.match(module, /getTemplateCacheRevision: async function/);
+  assert.match(module, /fetchTemplatesWithRevision: async function/);
   assert.doesNotMatch(module.slice(module.indexOf('readTemplateCache: function'), module.indexOf('writeTemplateCache: function')), /expires|ttl|Date\.now/);
 });
 
@@ -166,11 +169,25 @@ test('project output reuses cached template definitions but continues resolving 
   const output = module.slice(start, end);
   assert.match(output, /const cachedTemplates = this\.readTemplateCache\(\)/);
   assert.match(output, /if \(cachedTemplates !== null\)/);
+  assert.match(output, /this\.getTemplateCacheRevision\(\)/);
+  assert.match(output, /currentRevision === cachedTemplates\.revision/);
   assert.match(output, /PMS\.Api\.get\('\/projects\/' \+ encodeURIComponent\(this\.projectOutputId\)\)/);
-  assert.match(output, /PMS\.Api\.get\('\/print-templates'\)/);
-  assert.match(output, /this\.writeTemplateCache\(templates\)/);
+  assert.match(output, /this\.fetchTemplatesWithRevision\(\)/);
+  assert.match(output, /this\.writeTemplateCache\(templates, refreshed\.revision\)/);
   assert.match(output, /PMS\.Api\.post\('\/print-templates\/' \+ encodeURIComponent\(template\.ID\) \+ '\/resolve'/);
   assert.match(output, /renderOutputDocument\(template, resolvedProject, data/);
+});
+
+test('cross-device template edits are detected through a lightweight tenant-scoped server revision', () => {
+  const module = read('js/modules/print-designer.js');
+  const backendService = readBackend('PrintTemplateService.js');
+  const backendRouter = readBackend('Router.js');
+  assert.match(module, /PMS\.Api\.get\('\/print-templates\/version'\)/);
+  assert.match(module, /currentRevision === cachedTemplates\.revision/);
+  assert.match(module, /if \(templates === null\)/);
+  assert.match(backendService, /cacheVersion: function\(params\)/);
+  assert.match(backendService, /Utilities\.DigestAlgorithm\.SHA_256/);
+  assert.match(backendRouter, /path === '\/print-templates\/version'/);
 });
 
 test('successful template create, edit and deactivate refresh the persistent template cache', () => {
