@@ -681,3 +681,25 @@ test('data picker keeps source groups horizontally scrollable and expanded field
  assert.match(styles,/max-height:min\(38vh,330px\)/);
  assert.match(styles,/@media\(max-width:600px\)/);
 });
+
+
+test('print template list and definitions use permanent tenant-scoped cache without background refresh',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/getTemplateCacheKey: function/);
+ assert.match(module,/PMS\.Session\.getUser\(\)/);
+ assert.match(module,/PMS\.Api\.getCached\('\/print-templates', key, \{ refreshCached: false \}\)/);
+ assert.match(module,/PMS\.Api\.getCached\('\/print-templates\/' \+ encodeURIComponent\(id\), key, \{ refreshCached: false \}\)/);
+ assert.match(module,/getTemplateListCached\(\)/);
+ assert.match(module,/getTemplateCached\(id\)/);
+ assert.match(module,/invalidateTemplateCache: function/);
+ assert.match(module,/this\.getTemplateListCached\(\)/);
+ assert.match(module,/this\.getTemplateCached\(id\)/);
+});
+
+test('template cache invalidates only after successful create, update or deactivation',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/saveCommitted = true;\s*this\.invalidateTemplateCache\(templateId\)/);
+ assert.match(module,/await PMS\.Api\.delete\('\/print-templates\/' \+ encodeURIComponent\(id\)\);\s*this\.invalidateTemplateCache\(id\)/);
+ assert.match(module,/this\.getTemplateListCached\(\)/);
+ assert.match(module,/PMS\.Api\.post\('\/print-templates\/' \+ encodeURIComponent\(template\.ID\) \+ '\/resolve'/);
+});
