@@ -145,6 +145,60 @@ test('project-specific output route renders every active template through the ex
  assert.ok(page.includes('pt-output-print'));
 });
 
+test('project template definitions are cached indefinitely per authenticated tenant and user', () => {
+  const module = read('js/modules/print-designer.js');
+  assert.match(module, /templateCacheStorageKey: 'PMS_PRINT_TEMPLATES_CACHE_V1'/);
+  assert.match(module, /getTemplateCacheKey: function/);
+  assert.match(module, /PMS\.Session\.getUser\(\)/);
+  assert.match(module, /tenantId/);
+  assert.match(module, /userId/);
+  assert.match(module, /readTemplateCache: function/);
+  assert.match(module, /writeTemplateCache: function/);
+  assert.match(module, /invalidateTemplateCache: function/);
+  assert.match(module, /schemaVersion: this\.templateCacheSchemaVersion/);
+  assert.match(module, /revision: String\(cached\.revision\)/);
+  assert.match(module, /getTemplateCacheRevision: async function/);
+  assert.match(module, /fetchTemplatesWithRevision: async function/);
+  assert.doesNotMatch(module.slice(module.indexOf('readTemplateCache: function'), module.indexOf('writeTemplateCache: function')), /expires|ttl|Date\.now/);
+});
+
+test('project output reuses cached template definitions but continues resolving live project data', () => {
+  const module = read('js/modules/print-designer.js');
+  const start = module.indexOf('initProjectOutput: async function (projectId)');
+  const end = module.indexOf('loadOutputOptions: async function', start);
+  const output = module.slice(start, end);
+  assert.match(output, /const cachedTemplates = this\.readTemplateCache\(\)/);
+  assert.match(output, /if \(cachedTemplates !== null\)/);
+  assert.match(output, /this\.getTemplateCacheRevision\(\)/);
+  assert.match(output, /currentRevision === cachedTemplates\.revision/);
+  assert.match(output, /PMS\.Api\.get\('\/projects\/' \+ encodeURIComponent\(this\.projectOutputId\)\)/);
+  assert.match(output, /this\.fetchTemplatesWithRevision\(\)/);
+  assert.match(output, /this\.writeTemplateCache\(templates, refreshed\.revision\)/);
+  assert.match(output, /PMS\.Api\.post\('\/print-templates\/' \+ encodeURIComponent\(template\.ID\) \+ '\/resolve'/);
+  assert.match(output, /renderOutputDocument\(template, resolvedProject, data/);
+});
+
+test('cross-device template edits are detected through a lightweight tenant-scoped server revision', () => {
+  const module = read('js/modules/print-designer.js');
+  assert.match(module, /PMS\.Api\.get\('\/print-templates\/version'\)/);
+  assert.match(module, /currentRevision === cachedTemplates\.revision/);
+  assert.match(module, /if \(templates === null\)/);
+  assert.match(module, /this\.fetchTemplatesWithRevision\(\)/);
+});
+
+test('successful template create, edit and deactivate refresh the persistent template cache', () => {
+  const module = read('js/modules/print-designer.js');
+  const saveStart = module.indexOf('saveTemplate: async function ()');
+  const deleteStart = module.indexOf('deleteTemplate: async function (id)', saveStart);
+  const saveBlock = module.slice(saveStart, deleteStart);
+  const deleteEnd = module.indexOf('initOutput: async function ()', deleteStart);
+  const deleteBlock = module.slice(deleteStart, deleteEnd);
+  assert.match(saveBlock, /this\.invalidateTemplateCache\(\)/);
+  assert.match(saveBlock, /await this\.loadLibrary\(\)/);
+  assert.match(deleteBlock, /this\.invalidateTemplateCache\(\)/);
+  assert.match(deleteBlock, /await this\.loadLibrary\(\)/);
+});
+
 test('template library and document data output are separate routes and modes',()=>{
  const layout=read('js/components/layout.js');
  const router=read('js/core/router.js');
