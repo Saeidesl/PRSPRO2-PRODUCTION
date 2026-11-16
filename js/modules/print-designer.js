@@ -54,6 +54,35 @@
       for (const key of (keys || ['items','Items'])) if (data && Array.isArray(data[key])) return data[key];
       return [];
     },
+    getTemplateCacheKey: function (suffix) {
+      const user = PMS.Session && typeof PMS.Session.getUser === 'function'
+        ? PMS.Session.getUser() : null;
+      const tenantId = user && (user.TenantID || user.tenantId);
+      const userId = user && (user.ID || user.Id || user.UserID || user.userId);
+      if (!tenantId || !userId || !PMS.Cache) return '';
+      return 'printTemplates_v1_' + encodeURIComponent(String(tenantId)) + '_' +
+        encodeURIComponent(String(userId)) + (suffix ? '_' + encodeURIComponent(String(suffix)) : '');
+    },
+    getTemplateListCached: async function () {
+      const key = this.getTemplateCacheKey('list');
+      if (!key || !PMS.Api || typeof PMS.Api.getCached !== 'function') {
+        return PMS.Api.get('/print-templates');
+      }
+      return PMS.Api.getCached('/print-templates', key, { refreshCached: false });
+    },
+    getTemplateCached: async function (id) {
+      const key = this.getTemplateCacheKey('detail_' + id);
+      if (!key || !PMS.Api || typeof PMS.Api.getCached !== 'function') {
+        return PMS.Api.get('/print-templates/' + encodeURIComponent(id));
+      }
+      return PMS.Api.getCached('/print-templates/' + encodeURIComponent(id), key, { refreshCached: false });
+    },
+    invalidateTemplateCache: function (id) {
+      const listKey = this.getTemplateCacheKey('list');
+      if (listKey && PMS.Cache) PMS.Cache.remove(listKey);
+      const detailKey = id ? this.getTemplateCacheKey('detail_' + id) : '';
+      if (detailKey && PMS.Cache) PMS.Cache.remove(detailKey);
+    },
     esc: function (value) {
       return String(value === undefined || value === null ? '' : value).replace(/[&<>"']/g, function (ch) {
         return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);
@@ -742,7 +771,7 @@
     loadLibrary: async function () {
       this.setStatus('pt-library-status', 'در حال دریافت کتابخانه قالب‌ها و منابع داده…');
       const results = await Promise.allSettled([
-        PMS.Api.get('/print-templates'),
+        this.getTemplateListCached(),
         PMS.Api.get('/print-templates/sources')
       ]);
       if (results[0].status === 'fulfilled') {
@@ -1065,7 +1094,7 @@
     editTemplate: async function (id) {
       this.clearLivePreview('در حال بارگذاری قالب انتخاب‌شده…');
       try {
-        const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(id));
+        const response = await this.getTemplateCached(id);
         const item = this.extract(response);
         this.editingId = item.ID;
         this.currentTemplateMeta = item;
@@ -1129,6 +1158,7 @@
           await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), Object.assign({},body,{Definition:this.definition}));
         }
         saveCommitted = true;
+        this.invalidateTemplateCache(templateId);
         this.resetForm();
         await this.loadLibrary();
         this.setStatus('pt-library-status', 'قالب با موفقیت ذخیره شد.');
@@ -1150,6 +1180,7 @@
       if (!item || !window.confirm('قالب «' + item.Name + '» غیرفعال شود؟')) return;
       try {
         await PMS.Api.delete('/print-templates/' + encodeURIComponent(id));
+        this.invalidateTemplateCache(id);
         await this.loadLibrary();
         this.setStatus('pt-library-status', 'قالب غیرفعال شد.');
       } catch (error) {
@@ -1936,7 +1967,7 @@
       this.setStatus('pt-output-status', 'در حال دریافت پروژه و قالب‌های فعال…');
       try {
         const results = await Promise.all([
-          PMS.Api.get('/print-templates'),
+          this.getTemplateListCached(),
           PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))
         ]);
         const templates = this.list(results[0]).filter(item =>
@@ -2002,7 +2033,7 @@
     loadOutputOptions: async function () {
       this.setStatus('pt-output-status', 'در حال دریافت قالب‌ها و پروژه‌ها…');
       try {
-        const results = await Promise.all([PMS.Api.get('/print-templates'), PMS.Api.get('/projects')]);
+        const results = await Promise.all([this.getTemplateListCached(), PMS.Api.get('/projects')]);
         const templates = this.list(results[0]);
         const projects = this.list(results[1], ['items','Items','projects','Projects']);
         this.outputTemplates = templates;
