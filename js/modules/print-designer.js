@@ -54,6 +54,127 @@
       for (const key of (keys || ['items','Items'])) if (data && Array.isArray(data[key])) return data[key];
       return [];
     },
+    getTemplateCacheKey: function (suffix) {
+      const user = PMS.Session && typeof PMS.Session.getUser === 'function'
+        ? PMS.Session.getUser() : null;
+      const tenantId = user && (user.TenantID || user.tenantId);
+      const userId = user && (user.ID || user.Id || user.UserID || user.userId);
+      if (!tenantId || !userId || !PMS.Cache) return '';
+      return 'printTemplates_v1_' + encodeURIComponent(String(tenantId)) + '_' +
+        encodeURIComponent(String(userId)) + (suffix ? '_' + encodeURIComponent(String(suffix)) : '');
+    },
+    getTemplateRevisionCacheKey: function () {
+      return this.getTemplateCacheKey('revision');
+    },
+    rememberTemplateDetails: function (templates) {
+      if (!PMS.Cache || !Array.isArray(templates)) return;
+      templates.forEach(item => {
+        if (!item || !item.ID) return;
+        const detailKey = this.getTemplateCacheKey('detail_' + item.ID);
+        if (detailKey) PMS.Cache.set(detailKey, item);
+      });
+    },
+    getTemplateListCached: async function () {
+      const listKey = this.getTemplateCacheKey('list');
+      const revisionKey = this.getTemplateRevisionCacheKey();
+      if (!listKey || !revisionKey || !PMS.Cache || !PMS.Api) {
+        return PMS.Api.get('/print-templates');
+      }
+
+      const cachedList = PMS.Cache.get(listKey);
+      if (cachedList === null) {
+        const results = await Promise.allSettled([
+          PMS.Api.get('/print-templates'),
+          PMS.Api.get('/print-templates/revision', { trackSync: false })
+        ]);
+        if (results[0].status !== 'fulfilled') throw results[0].reason;
+        const templates = this.list(results[0].value);
+        PMS.Cache.set(listKey, templates);
+        this.rememberTemplateDetails(templates);
+        if (results[1].status === 'fulfilled') {
+          const revisionData = this.extract(results[1].value) || {};
+          if (revisionData.revision) PMS.Cache.set(revisionKey, revisionData);
+        }
+        return results[0].value;
+      }
+
+      try {
+        const revisionResponse = await PMS.Api.get('/print-templates/revision', { trackSync: false });
+        const latest = this.extract(revisionResponse) || {};
+        const previous = PMS.Cache.get(revisionKey);
+        if (!latest.revision || !Array.isArray(latest.templates)) {
+          return { data: cachedList, cached: true, refreshing: false };
+        }
+        if (previous && previous.revision === latest.revision) {
+          return { data: cachedList, cached: true, refreshing: false };
+        }
+
+        const cachedById = new Map(cachedList.map(item => [String(item.ID), item]));
+        const activeIds = new Set(latest.templates.map(item => String(item.ID)));
+        const changed = latest.templates.filter(meta => {
+          const existing = cachedById.get(String(meta.ID));
+          return !existing ||
+            Number(existing.Version || 1) !== Number(meta.Version || 1) ||
+            String(existing.UpdatedAt || '') !== String(meta.UpdatedAt || '');
+        });
+
+        const refreshed = await Promise.all(changed.map(async meta => {
+          const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(meta.ID), { trackSync: false });
+          return this.extract(response);
+        }));
+        const refreshedById = new Map(refreshed.filter(Boolean).map(item => [String(item.ID), item]));
+        const nextList = latest.templates.map(meta => {
+          const updated = refreshedById.get(String(meta.ID));
+          const existing = cachedById.get(String(meta.ID));
+          const item = updated || existing;
+          if (!item) throw new Error('نسخه جدید یکی از قالب‌ها دریافت نشد.');
+          return Object.assign({}, item, {
+            Code: meta.Code || item.Code,
+            Name: meta.Name || item.Name,
+            Description: meta.Description === undefined ? item.Description : meta.Description,
+            Version: Number(meta.Version || item.Version || 1),
+            UpdatedAt: meta.UpdatedAt || item.UpdatedAt || ''
+          });
+        }).sort((a, b) => String(a.Name || '').localeCompare(String(b.Name || ''), 'fa'));
+
+        cachedList.forEach(item => {
+          if (!activeIds.has(String(item.ID))) {
+            const detailKey = this.getTemplateCacheKey('detail_' + item.ID);
+            if (detailKey) PMS.Cache.remove(detailKey);
+          }
+        });
+        PMS.Cache.set(listKey, nextList);
+        this.rememberTemplateDetails(nextList);
+        PMS.Cache.set(revisionKey, latest);
+        return { data: nextList, cached: true, refreshing: false };
+      } catch (error) {
+        // Keep the last known good cache if the revision check or a changed
+        // template download fails; retry synchronization on the next visit.
+        return { data: cachedList, cached: true, refreshing: false };
+      }
+    },
+    getTemplateCached: async function (id) {
+      const key = this.getTemplateCacheKey('detail_' + id);
+      if (!key || !PMS.Api || !PMS.Cache) {
+        return PMS.Api.get('/print-templates/' + encodeURIComponent(id));
+      }
+      const cached = PMS.Cache.get(key);
+      if (cached !== null) {
+        return { data: cached, cached: true, refreshing: false };
+      }
+      const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(id));
+      const item = this.extract(response);
+      if (item) PMS.Cache.set(key, item);
+      return response;
+    },
+    invalidateTemplateCache: function (id) {
+      const listKey = this.getTemplateCacheKey('list');
+      const revisionKey = this.getTemplateRevisionCacheKey();
+      if (listKey && PMS.Cache) PMS.Cache.remove(listKey);
+      if (revisionKey && PMS.Cache) PMS.Cache.remove(revisionKey);
+      const detailKey = id ? this.getTemplateCacheKey('detail_' + id) : '';
+      if (detailKey && PMS.Cache) PMS.Cache.remove(detailKey);
+    },
     esc: function (value) {
       return String(value === undefined || value === null ? '' : value).replace(/[&<>"']/g, function (ch) {
         return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]);
@@ -742,7 +863,7 @@
     loadLibrary: async function () {
       this.setStatus('pt-library-status', 'در حال دریافت کتابخانه قالب‌ها و منابع داده…');
       const results = await Promise.allSettled([
-        PMS.Api.get('/print-templates'),
+        this.getTemplateListCached(),
         PMS.Api.get('/print-templates/sources')
       ]);
       if (results[0].status === 'fulfilled') {
@@ -1065,7 +1186,7 @@
     editTemplate: async function (id) {
       this.clearLivePreview('در حال بارگذاری قالب انتخاب‌شده…');
       try {
-        const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(id));
+        const response = await this.getTemplateCached(id);
         const item = this.extract(response);
         this.editingId = item.ID;
         this.currentTemplateMeta = item;
@@ -1129,6 +1250,7 @@
           await PMS.Api.put('/print-templates/' + encodeURIComponent(templateId), Object.assign({},body,{Definition:this.definition}));
         }
         saveCommitted = true;
+        this.invalidateTemplateCache(templateId);
         this.resetForm();
         await this.loadLibrary();
         this.setStatus('pt-library-status', 'قالب با موفقیت ذخیره شد.');
@@ -1150,6 +1272,7 @@
       if (!item || !window.confirm('قالب «' + item.Name + '» غیرفعال شود؟')) return;
       try {
         await PMS.Api.delete('/print-templates/' + encodeURIComponent(id));
+        this.invalidateTemplateCache(id);
         await this.loadLibrary();
         this.setStatus('pt-library-status', 'قالب غیرفعال شد.');
       } catch (error) {
@@ -1936,7 +2059,7 @@
       this.setStatus('pt-output-status', 'در حال دریافت پروژه و قالب‌های فعال…');
       try {
         const results = await Promise.all([
-          PMS.Api.get('/print-templates'),
+          this.getTemplateListCached(),
           PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))
         ]);
         const templates = this.list(results[0]).filter(item =>
@@ -2002,7 +2125,7 @@
     loadOutputOptions: async function () {
       this.setStatus('pt-output-status', 'در حال دریافت قالب‌ها و پروژه‌ها…');
       try {
-        const results = await Promise.all([PMS.Api.get('/print-templates'), PMS.Api.get('/projects')]);
+        const results = await Promise.all([this.getTemplateListCached(), PMS.Api.get('/projects')]);
         const templates = this.list(results[0]);
         const projects = this.list(results[1], ['items','Items','projects','Projects']);
         this.outputTemplates = templates;

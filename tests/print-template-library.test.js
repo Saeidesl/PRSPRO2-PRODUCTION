@@ -60,7 +60,7 @@ test('print designer module parses and is loaded exactly once',()=>{
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
- assert.match(index,/20261114-inline-file-table-edit-3/);
+ assert.match(index,/20261116-cross-device-template-revision-1/);
 });
 
 
@@ -189,7 +189,7 @@ test('print output hides image helper copy and uses exact page size without forc
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
  assert.ok(index.includes('css/print-template-library.css?v=20261113-inline-edit-ux-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261114-inline-file-table-edit-3'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261116-cross-device-template-revision-1'));
 });
 
 
@@ -218,7 +218,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('inline-file-table-edit-3'));
+ assert.ok(index.includes('cross-device-template-revision-1'));
 });
 
 
@@ -240,7 +240,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('inline-file-table-edit-3'));
+ assert.ok(index.includes('cross-device-template-revision-1'));
 });
 
 
@@ -253,7 +253,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('inline-file-table-edit-3'));
+ assert.ok(index.includes('cross-device-template-revision-1'));
 });
 
 
@@ -375,7 +375,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261114-inline-file-table-edit-3'));
+ assert.ok(index.includes('20261116-cross-device-template-revision-1'));
 });
 
 
@@ -680,4 +680,37 @@ test('data picker keeps source groups horizontally scrollable and expanded field
  assert.match(styles,/\.pt-data-items\{[\s\S]*?overflow-y:auto/);
  assert.match(styles,/max-height:min\(38vh,330px\)/);
  assert.match(styles,/@media\(max-width:600px\)/);
+});
+
+
+test('print template list and definitions use permanent tenant-scoped cache without background refresh',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/getTemplateCacheKey: function/);
+ assert.match(module,/PMS\.Session\.getUser\(\)/);
+ assert.match(module,/PMS\.Api\.get\('\/print-templates\/revision'/);
+ assert.match(module,/PMS\.Api\.get\('\/print-templates\/' \+ encodeURIComponent\(meta\.ID\)/);
+ assert.match(module,/getTemplateListCached\(\)/);
+ assert.match(module,/getTemplateCached\(id\)/);
+ assert.match(module,/invalidateTemplateCache: function/);
+ assert.match(module,/this\.getTemplateListCached\(\)/);
+ assert.match(module,/this\.getTemplateCached\(id\)/);
+});
+
+test('template cache invalidates only after successful create, update or deactivation',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/saveCommitted = true;\s*this\.invalidateTemplateCache\(templateId\)/);
+ assert.match(module,/await PMS\.Api\.delete\('\/print-templates\/' \+ encodeURIComponent\(id\)\);\s*this\.invalidateTemplateCache\(id\)/);
+ assert.match(module,/this\.getTemplateListCached\(\)/);
+ assert.match(module,/PMS\.Api\.post\('\/print-templates\/' \+ encodeURIComponent\(template\.ID\) \+ '\/resolve'/);
+});
+
+
+test('template cache checks a tenant-scoped server revision and refreshes only changed templates',()=>{
+ const module=read('js/modules/print-designer.js');
+ assert.match(module,/getTemplateRevisionCacheKey/);
+ assert.match(module,/PMS\.Api\.get\('\/print-templates\/revision'/);
+ assert.match(module,/Number\(existing\.Version \|\| 1\) !== Number\(meta\.Version \|\| 1\)/);
+ assert.match(module,/PMS\.Api\.get\('\/print-templates\/' \+ encodeURIComponent\(meta\.ID\)/);
+ assert.match(module,/activeIds\.has\(String\(item\.ID\)\)/);
+ assert.match(module,/PMS\.Cache\.set\(revisionKey, latest\)/);
 });
