@@ -64,22 +64,34 @@
 
 - [x] **Task 1 — Discovery & Planning:** بررسی کامل صفحه خروجی، چرخه بارگذاری، resolveهای ترتیبی، assetها و تست‌های موجود.
   - *Log:* `pages/print-output.html` و `js/modules/print-designer.js` بررسی شدند. `initProjectOutput()` ابتدا لیست cache‌شده قالب‌ها و پروژه تازه را موازی می‌گیرد، اما سپس resolve و render هر قالب را در حلقه ترتیبی انجام می‌دهد. `renderOutputDocument()` تصاویر و PDF پس‌زمینه را برای هر قالب دریافت می‌کند؛ بارگذاری تصاویر فقط در محدوده همان قالب موازی است. نتیجه این است که تأخیر resolve و render قالب‌ها روی هم جمع می‌شود. گزارش performance موجود زمان route را اندازه‌گیری می‌کند و برای سنجش خروجی واقعی پروژه کافی نیست. هیچ کد اجرایی در Discovery تغییر نکرد.
-- [ ] **Task 2 — Batch Resolve Integration (IN PROGRESS):** اتصال صفحه خروجی به endpoint تجمیعی و تبدیل پاسخ‌ها به render مستقل هر قالب.
-- [ ] **Task 3 — Progressive Rendering & Asset Scheduling:** نمایش تدریجی قالب‌ها، concurrency محدود برای assetها و حفظ کیفیت PDF/تصاویر.
+- [x] **Task 2 — Batch Resolve Integration:** اتصال صفحه خروجی به endpoint تجمیعی و تبدیل پاسخ‌ها به render مستقل هر قالب.
+- [ ] **Task 3 — Progressive Rendering & Asset Scheduling (IN PROGRESS):** نمایش تدریجی قالب‌ها، concurrency محدود برای assetها و حفظ کیفیت PDF/تصاویر.
 - [ ] **Task 4 — Regression, Performance & Operational Acceptance:** تست خروجی پروژه با چند قالب، ویرایش متن/فایل/جدول، چاپ/PDF، موبایل، شمار درخواست‌ها و زمان واقعی؛ پذیرش Product Owner.
 
 ### وضعیت اجرا
-- Task 1 Discovery تکمیل و در همین شاخه ثبت شده است.
-- Task 2 در شاخه کاری پیاده‌سازی شده و PR #140 باز است؛ Frontend checks، Print Designer regression، Frontend agent، asset QA و cross-repository QA برای آخرین commit موفق شده‌اند.
-- ممیزی جامع مرورگر هنوز در حال اجراست و نتیجه آن هنوز ثبت نشده است.
-- Frontend هنوز به main ادغام یا روی GitHub Pages منتشر نشده است؛ این تغییر به انتشار endpoint جدید Backend وابسته است.
-- cache دائمی قالب‌ها و revision sync حفظ شده‌اند؛ داده پروژه و نتیجه resolve در cache دائمی ذخیره نمی‌شوند.
-- Task 2 تا تکمیل ممیزی، ادغام مرحله‌ای و پذیرش عملیاتی هنوز [ ] باقی می‌ماند.
+- Task 1 Discovery & Planning تکمیل شده است.
+- Task 2 اتصال Batch Resolve در Frontend، ادغام، انتشار GitHub Pages و تست عملیاتی Product Owner را با موفقیت پشت سر گذاشته و در این ثبت [x] شده است.
+- Backend dependency با PR #87 در `main` ادغام و از طریق Apps Script workflow run `44134620890` روی commit `d1c34d72cc8ff9b2e736dc7c880c5cca36e480af` منتشر شد.
+- Frontend PR #140 با squash در `main` ادغام شد؛ merge commit: `0a3a67ff657300f0e79ce193c3c461d248e42691`.
+- GitHub Pages workflow رسمی `.github/workflows/deploy-pages-staging.yml` با run `44135173608` روی commit نهایی اجرا شد.
+- Product Owner در 2026-11-17 تست عملیاتی خروجی چندقالبی و رفتارهای مرتبط را تأیید کرد.
+- cache دائمی تعریف قالب‌ها حفظ شد؛ داده پروژه و نتیجه resolve در cache دائمی ذخیره نمی‌شوند.
+- Task 3 اکنون IN PROGRESS است و روی نمایش تدریجی و زمان‌بندی assetها تمرکز دارد.
 
-### Task 2 implementation status (IN PROGRESS)
-- شاخه کاری: `perf/project-print-output-batch-resolve-20261117`.
-- `js/modules/print-designer.js`، تابع `PrintDesigner.initProjectOutput(projectId)`: به‌جای resolve جداگانه هر قالب، یک درخواست `POST /print-templates/resolve` با `ProjectID` و `TemplateIDs` ارسال می‌کند؛ نتایج با TemplateID به قالب مربوط متصل می‌شوند و خطای هر قالب در همان بخش نمایش داده می‌شود.
-- درخواست جداگانه `GET /projects/:id` در حالت وجود قالب حذف شد؛ اطلاعات عنوان پروژه از پاسخ تازه batch استفاده می‌شود. در حالت بدون قالب، GET پروژه برای نمایش عنوان حفظ شده است.
-- مسیرهای ویرایش inline، آپلود فایل، جدول چندردیفی، PDF و renderer موجود حفظ شدند. cache-busting ماژول در `index.html` به `20261117-project-print-batch-resolve-1` تغییر کرد.
-- تست جدید `tests/project-print-output-batch.test.js` و assertionهای `tests/project-print-designer.test.js` به قرارداد batch به‌روزرسانی شدند.
-- Task 3 (نمایش تدریجی و زمان‌بندی assetها) هنوز شروع نشده است؛ تست‌های CI و بازبینی نهایی Task 2 در انتظار هستند.
+### Task 2 implementation log — Batch Resolve Integration (ACCEPTED)
+- `js/modules/print-designer.js`، تابع `PrintDesigner.initProjectOutput(projectId)`: به‌جای resolve ترتیبی برای هر قالب، یک درخواست `POST /print-templates/resolve` با payload `{ ProjectID, TemplateIDs }` ارسال می‌کند؛ پاسخ‌ها با TemplateID به قالب مربوط متصل می‌شوند و خطای هر قالب مستقل نمایش داده می‌شود.
+- درخواست جداگانه `GET /projects/:id` در حالت وجود قالب حذف شد؛ عنوان پروژه از پاسخ تازه batch خوانده می‌شود. حالت بدون قالب همچنان اطلاعات پروژه را جداگانه می‌گیرد.
+- مسیرهای renderer، ویرایش inline، آپلود فایل/تصویر، جدول چندردیفی و چاپ/PDF حفظ شدند.
+- `index.html`: cache-busting ماژول به `20261117-project-print-batch-resolve-1` تغییر کرد.
+- تست جدید `tests/project-print-output-batch.test.js` و تست‌های `tests/project-print-designer.test.js` و `tests/print-template-library.test.js` به‌روزرسانی شدند؛ CIهای Frontend و cross-repository QA موفق شدند.
+- Backend endpoint متناظر در `Router.js` و `PrintTemplateService.resolveMany()` اضافه شد؛ legacy endpoint بدون تغییر باقی ماند.
+- Frontend PR #140 با squash merge commit `0a3a67ff657300f0e79ce193c3c461d248e42691` در `main` ادغام شد؛ GitHub Pages run `44135173608` روی همین SHA اجرا شد.
+- Product Owner تست عملیاتی را در 2026-11-17 تأیید کرد؛ صحت خروجی چندقالبی و حفظ ویرایش متن/فایل، جدول چندردیفی، چاپ/PDF و رفتار موبایل تأیید شد.
+
+### Task 3 — Progressive Rendering & Asset Scheduling (IN PROGRESS)
+- هدف: هر قالب پس از آماده‌شدن خودش در preview ظاهر شود؛ کاربر منتظر resolve و render کندترین قالب نماند.
+- محدوده: `pages/print-output.html`، `js/modules/print-designer.js`، `renderOutputDocument()`، `loadTemplateImages()`، `loadOutputPdfPages()` و تست‌های مرتبط.
+- پیاده‌سازی باید ترتیب اصلی قالب‌ها را حفظ کند، assetها را با concurrency محدود بارگذاری کند و خطای یک قالب را از بقیه جدا نگه دارد.
+- چرخه عمر PDF/object URL و listenerها باید بدون memory leak مدیریت شود؛ کیفیت تصاویر/PDF، ویرایش inline، upload، جدول چندردیفی و چاپ همه قالب‌ها حفظ شود.
+- داده پروژه/رویداد/فرم همیشه تازه بماند و فقط definition/metadata قالب از cache دائمی استفاده کند.
+- معیار پذیرش: نمایش تدریجی قابل مشاهده، ترتیب ثابت، بارگذاری asset کنترل‌شده، عدم توقف کل صفحه با خطای یک قالب، عدم رگرسیون چاپ/PDF و موبایل.
