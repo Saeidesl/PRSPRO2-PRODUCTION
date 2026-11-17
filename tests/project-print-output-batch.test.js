@@ -44,3 +44,28 @@ test('print output keeps template definition cache separate from project resolve
   assert.match(module, /PMS\.Api\.post\('\/print-templates\/resolve'/);
   assert.match(module, /PMS\.Api\.post\('\/print-templates\/' \+ encodeURIComponent\(templateId\) \+ '\/resolve'/);
 });
+
+test('project output prepares ordered placeholders and progressively fills them with bounded concurrency', () => {
+  const module = read('js/modules/print-designer.js');
+  const start = module.indexOf('initProjectOutput: async function (projectId)');
+  const end = module.indexOf('loadOutputOptions: async function ()', start);
+  const output = module.slice(start, end);
+  assert.match(output, /const sections = templates\\.map/);
+  assert.match(output, /preview\\.appendChild\\(section\\)/);
+  assert.match(output, /mapWithConcurrency\\(templates, 2/);
+  assert.match(output, /renderOutputDocument\\(/);
+  assert.match(output, /section\\.classList\\.add\\('has-error'\\)/);
+  assert.match(output, /completedCount\\+\\+/);
+  assert.match(module, /mapWithConcurrency: async function/);
+  assert.match(module, /mapWithConcurrency\\(ids, 3/);
+  assert.match(module, /mapWithConcurrency\\(pageElements, 2/);
+});
+
+test('parallel PDF rendering revokes only object URLs created by a failed template', () => {
+  const module = read('js/modules/print-designer.js');
+  assert.match(module, /const createdObjectUrls=\\[\\]/);
+  assert.match(module, /createdObjectUrls\\.push\\(background\\)/);
+  assert.match(module, /releaseOutputPdfObjectUrls\\(createdObjectUrls\\)/);
+  assert.match(module, /releaseOutputPdfObjectUrls: function/);
+  assert.match(module, /if \\(!this\\.projectOutputMode\\) \\{/);
+});
