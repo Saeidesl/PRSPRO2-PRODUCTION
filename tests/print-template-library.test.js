@@ -33,7 +33,10 @@ test('document output resolves a shared template against the selected project',(
  const page=read('pages/print-output.html');
  assert.match(page,/pt-output-template/);
  assert.match(page,/pt-output-project/);
- assert.ok(module.includes("PMS.Api.post('/print-templates/' + encodeURIComponent(templateId) + '/resolve'"));
+ assert.ok(module.includes("PMS.Api.post('/print-templates/resolve'"));
+ assert.ok(module.includes("'/print-templates/' + encodeURIComponent(template.ID) + '/resolve'"));
+ assert.match(module,/resolveProjectTemplates: async function/);
+ assert.match(module,/const resolvedByTemplate = await this\.resolveProjectTemplates\(this\.projectOutputId, templates\)/);
  assert.match(module,/resolveOutput: async function/);
 });
 
@@ -740,4 +743,15 @@ test('cached print-template lists retain the standard API success envelope and r
  const response=await designer.getTemplateListCached();
  assert.equal(response.success,true);
  assert.deepEqual(Array.from(designer.list(response),item=>item.ID),['PT_1']);
+});
+
+test('project output resolves all active template form data in one batch with legacy fallback',()=>{
+ const module=read('js/modules/print-designer.js');
+ const start=module.indexOf('resolveProjectTemplates: async function');
+ const end=module.indexOf('initProjectOutput: async function',start);
+ const helper=module.slice(start,end);
+ assert.match(helper,/TemplateIDs: ids/);
+ assert.match(helper,/\[404, 405\]/);
+ assert.match(helper,/Math\.min\(2, templates\.length\)/);
+ assert.match(module,/دریافت گروهی اطلاعات/);
 });

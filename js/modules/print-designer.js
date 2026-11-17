@@ -2016,6 +2016,45 @@
         this.setStatus('pt-output-status', error.message || 'ذخیره تغییر ناموفق بود؛ اطلاعات اصلی تغییر نکرده است.', true);
       }
     },
+    resolveProjectTemplates: async function (projectId, templates) {
+      const ids = (templates || []).map(item => String(item && item.ID || '')).filter(Boolean);
+      if (!ids.length) return new Map();
+      try {
+        const response = await PMS.Api.post('/print-templates/resolve', {
+          ProjectID: projectId,
+          TemplateIDs: ids
+        });
+        const payload = this.extract(response) || {};
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        if (!items.length && ids.length) throw new Error('پاسخ دسته‌ای آماده‌سازی قالب‌ها معتبر نیست.');
+        return new Map(items.map(item => [String(item.template && item.template.ID || item.templateId || ''), item]));
+      } catch (error) {
+        // Older deployed Apps Script versions do not expose the batch endpoint.
+        // Keep compatibility while limiting fallback concurrency to two requests.
+        const missingBatchRoute = [404, 405].includes(Number(error && error.status)) ||
+          (String(error && error.code || '').toUpperCase() === 'NOT_FOUND' &&
+            /مسیر مورد نظر پیدا نشد/.test(String(error && error.message || '')));
+        if (!missingBatchRoute) throw error;
+        const resolved = new Array(templates.length);
+        let cursor = 0;
+        const worker = async () => {
+          while (cursor < templates.length) {
+            const index = cursor++;
+            const template = templates[index];
+            try {
+              const legacy = await PMS.Api.post('/print-templates/' + encodeURIComponent(template.ID) + '/resolve', {
+                ProjectID: projectId
+              });
+              resolved[index] = this.extract(legacy) || {};
+            } catch (legacyError) {
+              resolved[index] = { error: { message: legacyError.message || 'دریافت اطلاعات فرم ناموفق بود.' } };
+            }
+          }
+        };
+        await Promise.all(Array.from({length: Math.min(2, templates.length)}, worker));
+        return new Map(templates.map((template, index) => [String(template.ID), resolved[index]]));
+      }
+    },
     initProjectOutput: async function (projectId) {
       this.projectOutputMode = true;
       this.projectOutputId = String(projectId || '').trim();
@@ -2078,6 +2117,9 @@
         }
         let renderedCount = 0;
         let failedCount = 0;
+        const resolveStartedAt = Date.now();
+        const resolvedByTemplate = await this.resolveProjectTemplates(this.projectOutputId, templates);
+        const resolveElapsed = Date.now() - resolveStartedAt;
         for (let index = 0; index < templates.length; index++) {
           const template = templates[index];
           const section = document.createElement('section');
@@ -2085,10 +2127,8 @@
           section.dataset.templateId = String(template.ID);
           try {
             this.setStatus('pt-output-status', 'در حال آماده‌سازی قالب ' + (index + 1) + ' از ' + templates.length + ': ' + (template.Name || template.Code || '') + '…');
-            const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(template.ID) + '/resolve', {
-              ProjectID: this.projectOutputId
-            });
-            const resolved = this.extract(response) || {};
+            const resolved = resolvedByTemplate.get(String(template.ID)) || {};
+            if (resolved.error) throw new Error(resolved.error.message || 'دریافت اطلاعات فرم ناموفق بود.');
             const resolvedProject = resolved.project || project;
             const data = resolved.data || {};
             if (!template.Definition) throw new Error('ساختار ذخیره‌شده قالب در دسترس نیست.');
@@ -2112,7 +2152,7 @@
         if (printButton) printButton.hidden = renderedCount === 0;
         this.setStatus('pt-output-status', renderedCount + ' قالب از ' + templates.length + ' قالب فعال برای این پروژه آماده شد.' +
           (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : '') +
-          ' مقادیر خط‌چین‌دار قابل ویرایش هستند و پس از ذخیره، اطلاعات اصلی سیستم به‌روزرسانی می‌شود.');
+          ' دریافت گروهی اطلاعات: ' + (resolveElapsed / 1000).toFixed(1) + ' ثانیه. مقادیر خط‌چین‌دار قابل ویرایش هستند و پس از ذخیره، اطلاعات اصلی سیستم به‌روزرسانی می‌شود.');
         if (previewCard) previewCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return failedCount === 0;
       } catch (error) {
