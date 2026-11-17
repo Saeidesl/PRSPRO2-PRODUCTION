@@ -32,7 +32,7 @@ test('project output continues using fresh project data and existing renderer/ed
   const module = read('js/modules/print-designer.js');
   const output = module.slice(module.indexOf('initProjectOutput: async function (projectId)'), module.indexOf('loadOutputOptions: async function ()'));
   assert.match(output, /PMS\.Api\.post\('\/print-templates\/resolve'/);
-  assert.match(output, /renderOutputDocument\(template, resolvedProject, data, \{ preservePdfObjectUrls: true \}\)/);
+  assert.match(output, /renderOutputDocument\(\s*template,\s*resolvedProject,\s*data,\s*\{\s*preservePdfObjectUrls:\s*true\s*\}\s*\)/);
   assert.match(module, /bindProjectOutputSection: function/);
   assert.match(module, /uploadProjectOutputFile: async function/);
   assert.match(module, /beginProjectOutputEdit: function/);
