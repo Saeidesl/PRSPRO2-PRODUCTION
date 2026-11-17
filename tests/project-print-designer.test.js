@@ -137,7 +137,8 @@ test('project-specific output route renders every active template through the ex
  assert.ok(events.includes('event-queue-view-button" data-project-id='));
  assert.ok(module.includes('initProjectOutput: async function (projectId)'));
  assert.ok(module.includes("PMS.Api.get('/print-templates')"));
- assert.ok(module.includes("PMS.Api.post('/print-templates/' + encodeURIComponent(template.ID) + '/resolve'"));
+ assert.ok(module.includes("PMS.Api.post('/print-templates/resolve'"));
+ assert.ok(module.includes('TemplateIDs: templates.map(item => String(item.ID))'));
  assert.ok(module.includes('renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true })'));
  assert.ok(module.includes('for (let index = 0; index < templates.length; index++)'));
  assert.ok(page.includes('pt-output-project-heading'));
@@ -219,7 +220,7 @@ test('project template inline edits persist to the authoritative source and refr
   assert.match(module, /printButton\.hidden = true/);
   assert.match(module, /ذخیره تغییر ناموفق بود/);
   assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
-  assert.match(index, /print-designer\.js\?v=20261116-template-cache-envelope-fix-1/);
+  assert.match(index, /print-designer\.js\?v=20261117-project-print-batch-resolve-1/);
 });
 
 test('project output supports uploading file/image bindings through project attachment API', () => {
