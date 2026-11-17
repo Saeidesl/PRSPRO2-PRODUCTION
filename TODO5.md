@@ -72,3 +72,12 @@
 - در این مرحله فقط Discovery و مستندسازی انجام شده است.
 - cache دائمی قالب‌ها و revision sync قبلی حفظ می‌شوند؛ داده پروژه و نتیجه resolve هرگز cache دائمی نمی‌شوند.
 - تغییرات فقط روی شاخه کاری انجام می‌شوند؛ merge به main نیازمند تأیید صریح Product Owner است.
+
+
+### Task 2 implementation status (IN PROGRESS)
+- شاخه کاری: `perf/project-print-output-batch-resolve-20261117`.
+- `js/modules/print-designer.js`، تابع `PrintDesigner.initProjectOutput(projectId)`: به‌جای resolve جداگانه هر قالب، یک درخواست `POST /print-templates/resolve` با `ProjectID` و `TemplateIDs` ارسال می‌کند؛ نتایج با TemplateID به قالب مربوط متصل می‌شوند و خطای هر قالب در همان بخش نمایش داده می‌شود.
+- درخواست جداگانه `GET /projects/:id` در حالت وجود قالب حذف شد؛ اطلاعات عنوان پروژه از پاسخ تازه batch استفاده می‌شود. در حالت بدون قالب، GET پروژه برای نمایش عنوان حفظ شده است.
+- مسیرهای ویرایش inline، آپلود فایل، جدول چندردیفی، PDF و renderer موجود حفظ شدند. cache-busting ماژول در `index.html` به `20261117-project-print-batch-resolve-1` تغییر کرد.
+- تست جدید `tests/project-print-output-batch.test.js` و assertionهای `tests/project-print-designer.test.js` به قرارداد batch به‌روزرسانی شدند.
+- Task 3 (نمایش تدریجی و زمان‌بندی assetها) هنوز شروع نشده است؛ تست‌های CI و بازبینی نهایی Task 2 در انتظار هستند.
