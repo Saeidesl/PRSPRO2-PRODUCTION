@@ -2031,7 +2031,10 @@
       } catch (error) {
         // Older deployed Apps Script versions do not expose the batch endpoint.
         // Keep compatibility while limiting fallback concurrency to two requests.
-        if (![404, 405].includes(Number(error && error.status))) throw error;
+        const missingBatchRoute = [404, 405].includes(Number(error && error.status)) ||
+          (String(error && error.code || '').toUpperCase() === 'NOT_FOUND' &&
+            /مسیر مورد نظر پیدا نشد/.test(String(error && error.message || '')));
+        if (!missingBatchRoute) throw error;
         const resolved = new Array(templates.length);
         let cursor = 0;
         const worker = async () => {
