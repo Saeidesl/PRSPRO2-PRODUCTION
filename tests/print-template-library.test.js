@@ -701,7 +701,7 @@ test('template cache invalidates only after successful create, update or deactiv
  assert.match(module,/saveCommitted = true;\s*this\.invalidateTemplateCache\(templateId\)/);
  assert.match(module,/await PMS\.Api\.delete\('\/print-templates\/' \+ encodeURIComponent\(id\)\);\s*this\.invalidateTemplateCache\(id\)/);
  assert.match(module,/this\.getTemplateListCached\(\)/);
- assert.match(module,/PMS\.Api\.post\('\/print-templates\/' \+ encodeURIComponent\(template\.ID\) \+ '\/resolve'/);
+ assert.match(module,/PMS\.Api\.post\('\/print-templates\/resolve'/);
 });
 
 
