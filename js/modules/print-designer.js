@@ -481,7 +481,7 @@
         if (id) assets[String(id)] = image;
       });
       const ids = Array.from(new Set(elements.filter(item => item.type === 'image' && item.assetId && !this.imageSources[item.assetId]).map(item => String(item.assetId))));
-      await Promise.all(ids.map(async assetId => {
+      await this.mapWithConcurrency(ids, 3, async assetId => {
         if (!assets[assetId]) return;
         try {
           const response = await PMS.Api.get('/print-templates/' + encodeURIComponent(template.ID) + '/images/' + encodeURIComponent(assetId), {trackSync:false});
@@ -493,7 +493,7 @@
         } catch (error) {
           this.setStatus('pt-editor-status','دریافت یکی از تصاویر قالب ناموفق بود: ' + (error.message || ''),true);
         }
-      }));
+      });
     },
     uploadPendingImages: async function (templateId) {
       const pendingIds = Object.keys(this.pendingImageFiles || {});
@@ -2041,6 +2041,7 @@
       if (preview) preview.replaceChildren();
       if (printButton) {
         printButton.hidden = true;
+        printButton.disabled = true;
         printButton.textContent = 'چاپ همه قالب‌ها / ذخیره PDF';
         if (printButton.dataset.ptOutputPrintBound !== '1') {
           printButton.dataset.ptOutputPrintBound = '1';
@@ -2090,39 +2091,66 @@
         const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
         if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName + ' | برای ویرایش روی مقادیر خط‌چین‌دار کلیک کن';
 
-        let renderedCount = 0;
-        let failedCount = 0;
-        for (let index = 0; index < templates.length; index++) {
-          const template = templates[index];
+        const sections = templates.map((template, index) => {
           const section = document.createElement('section');
           section.className = 'pt-project-template-output';
+          if (index > 0) section.classList.add('starts-new-page');
           section.dataset.templateId = String(template.ID);
+          section.innerHTML = '<header class="pt-project-template-heading"><strong>' +
+            this.esc(template.Name || template.Code || 'قالب بدون نام') +
+            '</strong><span>' + this.esc(template.Code || '') +
+            '</span></header><div class="pt-empty-state">در صف آماده‌سازی…</div>';
+          if (preview) preview.appendChild(section);
+          return section;
+        });
+        if (previewCard) previewCard.hidden = false;
+
+        let renderedCount = 0;
+        let failedCount = 0;
+        let completedCount = 0;
+        this.setStatus('pt-output-status', 'قالب‌ها دریافت شدند؛ آماده‌سازی تدریجی ' + templates.length + ' قالب آغاز شد…');
+
+        await this.mapWithConcurrency(templates, 2, async (template, index) => {
+          const section = sections[index];
           try {
-            this.setStatus('pt-output-status', 'در حال آماده‌سازی قالب ' + (index + 1) + ' از ' + templates.length + ': ' + (template.Name || template.Code || '') + '…');
             const resolved = resolvedById[String(template.ID)];
             if (!resolved) throw new Error('پاسخ اطلاعات این قالب از سرور دریافت نشد.');
             if (resolved.error) throw new Error(resolved.error);
             const resolvedProject = resolved.project || project;
             const data = resolved.data || {};
             if (!template.Definition) throw new Error('ساختار ذخیره‌شده قالب در دسترس نیست.');
-            this.projectOutputRecords[String(template.ID)] = { template: template, project: resolvedProject, data: data, sources: resolved.sources || {}, section: section };
-            const documentHtml = await this.renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true });
-            if (renderedCount > 0) section.classList.add('starts-new-page');
-            section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
-              '</strong><span>' + this.esc(template.Code || '') + '</span></header><div class="pt-project-template-pages">' + documentHtml + '</div>';
+            this.projectOutputRecords[String(template.ID)] = {
+              template: template, project: resolvedProject, data: data,
+              sources: resolved.sources || {}, section: section
+            };
+            const documentHtml = await this.renderOutputDocument(
+              template, resolvedProject, data, { preservePdfObjectUrls: true }
+            );
+            section.innerHTML = '<header class="pt-project-template-heading"><strong>' +
+              this.esc(template.Name || template.Code || 'قالب بدون نام') +
+              '</strong><span>' + this.esc(template.Code || '') +
+              '</span></header><div class="pt-project-template-pages">' + documentHtml + '</div>';
             renderedCount++;
             this.bindProjectOutputSection(section, template.ID);
           } catch (templateError) {
             failedCount++;
             section.classList.add('has-error');
-            section.innerHTML = '<header class="pt-project-template-heading"><strong>' + this.esc(template.Name || template.Code || 'قالب بدون نام') +
-              '</strong><span>' + this.esc(template.Code || '') + '</span></header><div class="pt-empty-state is-error">آماده‌سازی این قالب ناموفق بود: ' +
+            section.innerHTML = '<header class="pt-project-template-heading"><strong>' +
+              this.esc(template.Name || template.Code || 'قالب بدون نام') +
+              '</strong><span>' + this.esc(template.Code || '') +
+              '</span></header><div class="pt-empty-state is-error">آماده‌سازی این قالب ناموفق بود: ' +
               this.esc(templateError.message || 'خطای نامشخص') + '</div>';
+          } finally {
+            completedCount++;
+            this.setStatus('pt-output-status', 'آماده‌سازی قالب‌ها: ' + completedCount + ' از ' + templates.length +
+              ' | آماده: ' + renderedCount + ' | ناموفق: ' + failedCount);
           }
-          if (preview) preview.appendChild(section);
+        });
+
+        if (printButton) {
+          printButton.hidden = renderedCount === 0;
+          printButton.disabled = false;
         }
-        if (previewCard) previewCard.hidden = false;
-        if (printButton) printButton.hidden = renderedCount === 0;
         this.setStatus('pt-output-status', renderedCount + ' قالب از ' + templates.length + ' قالب فعال برای این پروژه آماده شد.' +
           (failedCount ? ' آماده‌سازی ' + failedCount + ' قالب ناموفق بود؛ خطای هر قالب در همان بخش مشخص شده است.' : '') +
           ' مقادیر خط‌چین‌دار قابل ویرایش هستند و پس از ذخیره، اطلاعات اصلی سیستم به‌روزرسانی می‌شود.');
@@ -2191,6 +2219,21 @@
       if (mime.indexOf('image/') !== 0) throw new Error('فایل متصل‌شده تصویر معتبر نیست.');
       return 'data:' + mime + ';base64,' + String(base64).replace(/^data:[^,]*;base64,/, '');
     },
+    mapWithConcurrency: async function (items, concurrency, worker) {
+      const list = Array.from(items || []);
+      const results = new Array(list.length);
+      const limit = Math.max(1, Math.min(list.length || 1, Number(concurrency) || 1));
+      let cursor = 0;
+      const runners = Array.from({ length: limit }, async () => {
+        while (true) {
+          const index = cursor++;
+          if (index >= list.length) return;
+          results[index] = await worker(list[index], index);
+        }
+      });
+      await Promise.all(runners);
+      return results;
+    },
     getPdfRenderScale: function (viewport,dpi) {
       const width=Math.max(1,Number(viewport&&viewport.width)||1);
       const height=Math.max(1,Number(viewport&&viewport.height)||1);
@@ -2202,6 +2245,11 @@
     clearOutputPdfObjectUrls: function () {
       (this.outputPdfObjectUrls||[]).forEach(url=>{try{window.URL.revokeObjectURL(url);}catch(_){}});
       this.outputPdfObjectUrls=[];
+    },
+    releaseOutputPdfObjectUrls: function (urls) {
+      const owned = new Set(urls || []);
+      owned.forEach(url=>{try{window.URL.revokeObjectURL(url);}catch(_){}});
+      this.outputPdfObjectUrls = (this.outputPdfObjectUrls || []).filter(url => !owned.has(url));
     },
     clearGeneratedOutputPdf: function () {
       if (this.outputPdfBlobUrl) {
@@ -2492,6 +2540,7 @@
       const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
       if(pdf.numPages!==metadata.pages.length)throw new Error('تعداد صفحات فایل PDF با مشخصات قالب یکسان نیست؛ قالب را دوباره ذخیره کن.');
       const rendered=[];
+      const createdObjectUrls=[];
       try {
         for(let pageNumber=1;pageNumber<=pdf.numPages;pageNumber++){
           const page=await pdf.getPage(pageNumber),baseViewport=page.getViewport({scale:1});
@@ -2508,6 +2557,7 @@
               canvas.toBlob(result=>result?resolve(result):reject(new Error('ساخت تصویر صفحه PDF ناموفق بود.')),'image/png');
             });
             const background=window.URL.createObjectURL(blob);
+            createdObjectUrls.push(background);
             this.outputPdfObjectUrls.push(background);
             const pageMeta=metadata.pages[pageNumber-1]||{};
             rendered.push({width:Number(pageMeta.widthMm)||(baseViewport.width*25.4/72),
@@ -2519,7 +2569,7 @@
         }
         return rendered;
       } catch(error) {
-        if (!(options && options.preservePdfObjectUrls)) this.clearOutputPdfObjectUrls();
+        this.releaseOutputPdfObjectUrls(createdObjectUrls);
         throw error;
       } finally {
         if(typeof pdf.destroy==='function')await pdf.destroy();
@@ -2540,8 +2590,10 @@
       const pageSpecs = overlayOnly && definition.pdf && Array.isArray(definition.pdf.pages)
         ? definition.pdf.pages.map(item => ({width:Number(item.widthMm),height:Number(item.heightMm)}))
         : (pdfPages && pdfPages.length ? pdfPages.map(item => ({width:item.width,height:item.height})) : [defaultSpec]);
-      this.outputPageSpecs = pageSpecs;
-      this.outputPageSpec = pageSpecs[0];
+      if (!this.projectOutputMode) {
+        this.outputPageSpecs = pageSpecs;
+        this.outputPageSpec = pageSpecs[0];
+      }
       const bindings = Object.create(null);
       (definition.bindings || []).forEach(binding => { bindings[binding.id] = binding; });
       const renderElement = async item => {
@@ -2635,7 +2687,7 @@
       for (let pageIndex = 0; pageIndex < pageSpecs.length; pageIndex++) {
         const spec = pageSpecs[pageIndex];
         const pageElements = (definition.elements || []).filter(item => Number(item.pageIndex || 0) === pageIndex);
-        const elements = await Promise.all(pageElements.map(renderElement));
+        const elements = await this.mapWithConcurrency(pageElements, 2, renderElement);
         const background = pdfPages && pdfPages[pageIndex]
           ? '<img class="pt-output-pdf-background" src="'+pdfPages[pageIndex].background+'" alt="" aria-hidden="true">'
           : '';
