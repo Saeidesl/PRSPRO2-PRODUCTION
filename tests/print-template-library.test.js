@@ -60,7 +60,7 @@ test('print designer module parses and is loaded exactly once',()=>{
  assert.doesNotThrow(()=>new vm.Script(module,{filename:'print-designer.js'}));
  const index=read('index.html');
  assert.equal(index.split('js/modules/print-designer.js').length - 1,1);
- assert.match(index,/20261116-cross-device-template-revision-1/);
+ assert.match(index,/20261116-template-cache-envelope-fix-1/);
 });
 
 
@@ -189,7 +189,7 @@ test('print output hides image helper copy and uses exact page size without forc
 test('print output assets use refreshed cache keys for the current print fixes',()=>{
  const index=read('index.html');
  assert.ok(index.includes('css/print-template-library.css?v=20261113-inline-edit-ux-1'));
- assert.ok(index.includes('js/modules/print-designer.js?v=20261116-cross-device-template-revision-1'));
+ assert.ok(index.includes('js/modules/print-designer.js?v=20261116-template-cache-envelope-fix-1'));
 });
 
 
@@ -218,7 +218,7 @@ test('mobile print scales each complete PDF page into a safe Letter/A4 printable
  assert.ok(styles.includes('width:var(--pt-print-width,210mm)!important'));
  assert.ok(styles.includes('height:var(--pt-print-height,297mm)!important'));
  assert.ok(styles.includes('break-inside:avoid!important'));
- assert.ok(index.includes('cross-device-template-revision-1'));
+ assert.ok(index.includes('template-cache-envelope-fix-1'));
 });
 
 
@@ -240,7 +240,7 @@ test('print output exposes persistent user-configurable margins for all template
  assert.match(module,/left:'\+margins\.left\+'mm;top:'\+margins\.top\+'mm/);
  assert.match(styles,/\.pt-print-margin-grid/);
  assert.ok(styles.includes('transform:scale(var(--pt-print-scale,1))'));
- assert.ok(index.includes('cross-device-template-revision-1'));
+ assert.ok(index.includes('template-cache-envelope-fix-1'));
 });
 
 
@@ -253,7 +253,7 @@ test('print margin controls apply immediately to the rendered page and persist m
  assert.match(module,/content\.style\.top = margins\.top \+ 'mm'/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-width', safeWidth \+ 'mm'\)/);
  assert.match(module,/article\.style\.setProperty\('--pt-print-height', safeHeight \+ 'mm'\)/);
- assert.ok(index.includes('cross-device-template-revision-1'));
+ assert.ok(index.includes('template-cache-envelope-fix-1'));
 });
 
 
@@ -375,7 +375,7 @@ test('original PDF output assets use versioned pinned browser libraries and refr
  const module=read('js/modules/print-designer.js');
  assert.match(module,/pdf-lib@1\.17\.1/);
  assert.match(module,/html2canvas\/1\.4\.1/);
- assert.ok(index.includes('20261116-cross-device-template-revision-1'));
+ assert.ok(index.includes('20261116-template-cache-envelope-fix-1'));
 });
 
 
@@ -713,4 +713,31 @@ test('template cache checks a tenant-scoped server revision and refreshes only c
  assert.match(module,/PMS\.Api\.get\('\/print-templates\/' \+ encodeURIComponent\(meta\.ID\)/);
  assert.match(module,/activeIds\.has\(String\(item\.ID\)\)/);
  assert.match(module,/PMS\.Cache\.set\(revisionKey, latest\)/);
+});
+
+
+test('cached print-template lists retain the standard API success envelope and remain visible',async()=>{
+ const cache=new Map();
+ const templates=[{ID:'PT_1',Name:'قالب تست',Status:'ACTIVE',Version:1,UpdatedAt:'2026-11-16T10:00:00Z',Definition:{elements:[],bindings:[]}}];
+ const revision={revision:'1-test',templates:[{ID:'PT_1',Code:'T1',Name:'قالب تست',Description:'',Version:1,UpdatedAt:'2026-11-16T10:00:00Z'}]};
+ const sandbox={
+  window:{PMS:{
+   Session:{getUser:()=>({TenantID:'TENANT_1',ID:'USER_1'})},
+   Cache:{get:key=>cache.has(key)?cache.get(key):null,set:(key,value)=>cache.set(key,value),remove:key=>cache.delete(key)},
+   Api:{
+    get:async path=>path==='/print-templates/revision'?{success:true,data:revision}:{success:true,data:templates},
+    extractData:response=>response&&response.success===true&&Object.prototype.hasOwnProperty.call(response,'data')?response.data:response
+   }
+  }},
+  console
+ };
+ vm.runInNewContext(read('js/modules/print-designer.js'),sandbox);
+ const designer=sandbox.window.PMS.Modules.PrintDesigner;
+ const key=designer.getTemplateCacheKey('list');
+ const revisionKey=designer.getTemplateRevisionCacheKey();
+ cache.set(key,templates);
+ cache.set(revisionKey,revision);
+ const response=await designer.getTemplateListCached();
+ assert.equal(response.success,true);
+ assert.deepEqual(Array.from(designer.list(response),item=>item.ID),['PT_1']);
 });

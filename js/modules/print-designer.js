@@ -103,10 +103,10 @@
         const latest = this.extract(revisionResponse) || {};
         const previous = PMS.Cache.get(revisionKey);
         if (!latest.revision || !Array.isArray(latest.templates)) {
-          return { data: cachedList, cached: true, refreshing: false };
+          return { success: true, data: cachedList, cached: true, refreshing: false };
         }
         if (previous && previous.revision === latest.revision) {
-          return { data: cachedList, cached: true, refreshing: false };
+          return { success: true, data: cachedList, cached: true, refreshing: false };
         }
 
         const cachedById = new Map(cachedList.map(item => [String(item.ID), item]));
@@ -150,7 +150,7 @@
       } catch (error) {
         // Keep the last known good cache if the revision check or a changed
         // template download fails; retry synchronization on the next visit.
-        return { data: cachedList, cached: true, refreshing: false };
+        return { success: true, data: cachedList, cached: true, refreshing: false };
       }
     },
     getTemplateCached: async function (id) {
