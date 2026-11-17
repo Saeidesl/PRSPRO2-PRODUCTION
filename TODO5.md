@@ -64,17 +64,21 @@
 
 - [x] **Task 1 — Discovery & Planning:** بررسی کامل صفحه خروجی، چرخه بارگذاری، resolveهای ترتیبی، assetها و تست‌های موجود.
   - *Log:* `pages/print-output.html` و `js/modules/print-designer.js` بررسی شدند. `initProjectOutput()` ابتدا لیست cache‌شده قالب‌ها و پروژه تازه را موازی می‌گیرد، اما سپس resolve و render هر قالب را در حلقه ترتیبی انجام می‌دهد. `renderOutputDocument()` تصاویر و PDF پس‌زمینه را برای هر قالب دریافت می‌کند؛ بارگذاری تصاویر فقط در محدوده همان قالب موازی است. نتیجه این است که تأخیر resolve و render قالب‌ها روی هم جمع می‌شود. گزارش performance موجود زمان route را اندازه‌گیری می‌کند و برای سنجش خروجی واقعی پروژه کافی نیست. هیچ کد اجرایی در Discovery تغییر نکرد.
-- [ ] **Task 2 — Batch Resolve Integration (IN PROGRESS):** اتصال صفحه خروجی به endpoint تجمیعی و تبدیل پاسخ‌ها به render مستقل هر قالب.
+- [x] **Task 2 — Batch Resolve Integration:** اتصال صفحه خروجی به endpoint تجمیعی و تبدیل پاسخ‌ها به render مستقل هر قالب.
 - [ ] **Task 3 — Progressive Rendering & Asset Scheduling:** نمایش تدریجی قالب‌ها، concurrency محدود برای assetها و حفظ کیفیت PDF/تصاویر.
 - [ ] **Task 4 — Regression, Performance & Operational Acceptance:** تست خروجی پروژه با چند قالب، ویرایش متن/فایل/جدول، چاپ/PDF، موبایل، شمار درخواست‌ها و زمان واقعی؛ پذیرش Product Owner.
 
 ### وضعیت اجرا
-- Task 1 Discovery تکمیل و در همین شاخه ثبت شده است.
-- Task 2 در شاخه کاری پیاده‌سازی شده و PR #140 باز است؛ Frontend checks، Print Designer regression، Frontend agent، asset QA و cross-repository QA برای آخرین commit موفق شده‌اند.
-- ممیزی جامع مرورگر هنوز در حال اجراست و نتیجه آن هنوز ثبت نشده است.
-- Frontend هنوز به main ادغام یا روی GitHub Pages منتشر نشده است؛ این تغییر به انتشار endpoint جدید Backend وابسته است.
-- cache دائمی قالب‌ها و revision sync حفظ شده‌اند؛ داده پروژه و نتیجه resolve در cache دائمی ذخیره نمی‌شوند.
-- Task 2 تا تکمیل ممیزی، ادغام مرحله‌ای و پذیرش عملیاتی هنوز [ ] باقی می‌ماند.
+- Task 1 و Task 2 تکمیل شده‌اند؛ Frontend در main ادغام و GitHub Pages برای commit نهایی منتشر شده است.
+- Frontend main: 0a3a67ff657300f0e79ce193c3c461d248e42691؛ PR #140 ادغام‌شده.
+- GitHub Pages workflow run 44135173608 روی SHA فوق completed/success شد.
+- Backend endpoint وابسته نیز روی Apps Script عملیاتی منتشر شده است؛ جزئیات در TODO5 Backend ثبت شده است.
+- Product Owner تست عملیاتی خروجی پروژه را در 2026-11-17 موفق تأیید کرد.
+- cache دائمی تعریف قالب‌ها حفظ شد؛ داده پروژه و نتیجه resolve در cache دائمی ذخیره نمی‌شوند.
+- Task 3 در این فاز گام بعدی است و هنوز شروع نشده است.
+
+
+
 
 ### Task 2 implementation status (IN PROGRESS)
 - شاخه کاری: `perf/project-print-output-batch-resolve-20261117`.
@@ -83,3 +87,10 @@
 - مسیرهای ویرایش inline، آپلود فایل، جدول چندردیفی، PDF و renderer موجود حفظ شدند. cache-busting ماژول در `index.html` به `20261117-project-print-batch-resolve-1` تغییر کرد.
 - تست جدید `tests/project-print-output-batch.test.js` و assertionهای `tests/project-print-designer.test.js` به قرارداد batch به‌روزرسانی شدند.
 - Task 3 (نمایش تدریجی و زمان‌بندی assetها) هنوز شروع نشده است؛ تست‌های CI و بازبینی نهایی Task 2 در انتظار هستند.
+### Task 2 implementation status (COMPLETED)
+- js/modules/print-designer.js، تابع PrintDesigner.initProjectOutput(projectId): یک درخواست POST /print-templates/resolve با ProjectID و TemplateIDs ارسال می‌کند؛ پاسخ‌ها با TemplateID متصل و خطاها مستقل مدیریت می‌شوند.
+- هنگام وجود قالب، درخواست جداگانه GET /projects/:id حذف شد؛ عنوان پروژه از پاسخ تازه batch دریافت می‌شود. در حالت بدون قالب، GET پروژه حفظ شده است.
+- renderer، ویرایش inline، آپلود فایل/تصویر، جدول چندردیفی، PDF و چاپ حفظ شدند. index.html cache-busting به 20261117-project-print-batch-resolve-1 تغییر کرد.
+- تست‌های tests/project-print-output-batch.test.js، tests/project-print-designer.test.js و tests/print-template-library.test.js؛ CIهای Frontend و cross-repository QA موفق.
+- ادغام PR #140 و انتشار GitHub Pages روی SHA 0a3a67ff657300f0e79ce193c3c461d248e42691 تأیید شد.
+- *Log:* تغییرات Frontend روی main ادغام، GitHub Pages منتشر و تست عملیاتی Product Owner تأیید شد.
