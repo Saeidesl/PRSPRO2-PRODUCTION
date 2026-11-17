@@ -2081,7 +2081,7 @@
           TemplateIDs: templates.map(item => String(item.ID))
         });
         const batch = this.extract(batchResponse) || {};
-        const project = batch.project || {};
+        const project = batch.project || ((batch.results || []).find(item => item && item.project) || {}).project || {};
         const resolvedById = Object.create(null);
         (Array.isArray(batch.results) ? batch.results : []).forEach(item => {
           if (item && item.template && item.template.ID) resolvedById[String(item.template.ID)] = item;
