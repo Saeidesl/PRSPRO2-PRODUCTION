@@ -69,10 +69,12 @@
 - [ ] **Task 4 — Regression, Performance & Operational Acceptance:** تست خروجی پروژه با چند قالب، ویرایش متن/فایل/جدول، چاپ/PDF، موبایل، شمار درخواست‌ها و زمان واقعی؛ پذیرش Product Owner.
 
 ### وضعیت اجرا
-- در این مرحله فقط Discovery و مستندسازی انجام شده است.
-- cache دائمی قالب‌ها و revision sync قبلی حفظ می‌شوند؛ داده پروژه و نتیجه resolve هرگز cache دائمی نمی‌شوند.
-- تغییرات فقط روی شاخه کاری انجام می‌شوند؛ merge به main نیازمند تأیید صریح Product Owner است.
-
+- Task 1 Discovery تکمیل و در همین شاخه ثبت شده است.
+- Task 2 در شاخه کاری پیاده‌سازی شده و PR #140 باز است؛ Frontend checks، Print Designer regression، Frontend agent، asset QA و cross-repository QA برای آخرین commit موفق شده‌اند.
+- ممیزی جامع مرورگر هنوز در حال اجراست و نتیجه آن هنوز ثبت نشده است.
+- Frontend هنوز به main ادغام یا روی GitHub Pages منتشر نشده است؛ این تغییر به انتشار endpoint جدید Backend وابسته است.
+- cache دائمی قالب‌ها و revision sync حفظ شده‌اند؛ داده پروژه و نتیجه resolve در cache دائمی ذخیره نمی‌شوند.
+- Task 2 تا تکمیل ممیزی، ادغام مرحله‌ای و پذیرش عملیاتی هنوز [ ] باقی می‌ماند.
 
 ### Task 2 implementation status (IN PROGRESS)
 - شاخه کاری: `perf/project-print-output-batch-resolve-20261117`.
