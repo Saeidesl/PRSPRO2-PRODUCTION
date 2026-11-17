@@ -91,3 +91,34 @@
 - سقف هم‌زمانی: دو قالب، سه تصویر، دو عنصر صفحه؛ نمایش تدریجی با حفظ ترتیب و خطای مستقل هر قالب.
 - Cache-bust: `index.html` → `print-designer.js?v=20261118-project-print-progressive-1`.
 - PR #145 و merge commit `07baba1fb07bce07f57e697e12f85934190e71d9`; CI/QA موفق و تست عملیاتی توسط Product Owner تأیید شد.
+
+
+### Task 4 — Discovery findings & validation plan (2026-11-17)
+
+#### Repository baseline
+- مخزن عملیاتی Frontend: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه مبنا `main`؛ آخرین commit مشاهده‌شده: `48a6c631a15c5c7f52100176e4053eb58b42ddb5` (به‌روزرسانی گزارش ممیزی عملکرد).
+- مخزن عملیاتی Backend مرتبط: `Saeidesl/PRSPRO2BACKEND-PRODUCTION`، شاخه مبنا `main`؛ آخرین commit مشاهده‌شده: `dcbf9655ee0df80133b1652095dc07a509f2b25d`.
+- هر دو مخزن فعال، غیر archived، دارای default branch برابر `main` و دسترسی مدیریتی مخزن تأیید شدند. فقط مخازن عملیاتی بررسی شدند.
+
+#### Frontend implementation map
+- `pages/print-output.html`: صفحه خروجی پروژه و کنترل‌های انتخاب پروژه/قالب و چاپ.
+- `js/modules/print-designer.js`:
+  - `PrintDesigner.initProjectOutput(projectId)`: دریافت فهرست قالب‌های cache‌شده، ارسال یک درخواست `POST /print-templates/resolve` با `ProjectID` و `TemplateIDs`، نگاشت پاسخ بر اساس TemplateID و ایجاد placeholderهای مرتب.
+  - `mapWithConcurrency(items, concurrency, worker)`: محدودسازی اجرای موازی؛ خروجی پروژه حداکثر دو قالب، تصاویر حداکثر سه asset و عناصر صفحه حداکثر دو مورد هم‌زمان.
+  - `loadTemplateImages()` و `loadOutputPdfPages()`: دریافت assetهای تصویر و PDF هر قالب؛ زمان این درخواست‌ها باید جدا از resolve سنجیده شود.
+  - `renderOutputDocument()`: رندر نهایی با حفظ مسیرهای ویرایش inline، فایل/تصویر و جدول چندردیفی.
+- `index.html`: نسخه asset فعال `print-designer.js?v=20261118-project-print-progressive-1` است.
+- تست‌های مرتبط: `tests/project-print-output-batch.test.js` و `tests/project-print-designer.test.js`. این تست‌ها قراردادها و وجود مسیرهای batch، ترتیب placeholder، concurrency، نگاشت خطای قالب، مسیرهای ویرایش/آپلود/جدول و مدیریت URLهای PDF را عمدتاً به‌صورت static assertion پوشش می‌دهند؛ آزمون مرورگر واقعی چندقالبی و خروجی PDF واقعی از این فایل‌ها به‌تنهایی اثبات نمی‌شود.
+
+#### Performance audit review
+- گزارش `test-results/latest-performance-report.json` با زمان `2026-11-17T18:17:55Z`، ممیزی authenticated read-only روی 20 مسیر را ثبت کرده است: 20 مسیر بارگذاری‌شده، صفر خطای route/network/console/page، صفر سرریز افقی در viewport موبایل 390px و 347 درخواست شبکه در کل ممیزی.
+- مسیر عمومی `print-output` بارگذاری و دکمه عمومی ساخت پیش‌نمایش بررسی شده است؛ اما در trace شبکه هیچ `POST /api/print-templates/resolve`، هیچ resolve تکی، و هیچ دریافت PDF/تصویر قالب ثبت نشده است. بنابراین ممیزی فعلی پروژه مشخص با چند قالب را resolve/render نکرده و زمان واقعی خروجی را اندازه نگرفته است.
+- وضعیت کلی گزارش `needs-attention` است؛ دو safe-button check ناموفق مربوط به فیلتر رویدادها (عنصر تشخیص عملکرد روی آن کلیک را پوشانده) و دکمه ذخیره قالب گزارش‌هاست. این دو مورد در مسیر خروجی پروژه نیستند و باید در گزارش Task 4 به‌عنوان موارد جانبی/مستقل تفکیک شوند، نه به‌عنوان شکست خروجی قالب.
+- ممیزی read-only عمداً submit فرم‌های تغییردهنده داده را اجرا نمی‌کند؛ این محدودیت برای جلوگیری از تغییر ناخواسته داده‌های عملیاتی درست است.
+
+#### Frontend validation work required
+- اجرای سناریوی کنترل‌شده با پروژه دارای چند قالب فعال و داده fixture مشخص؛ ثبت تعداد درخواست‌های resolve و اثبات یک درخواست batch و نبود resolveهای تکی.
+- اندازه‌گیری زمان تا اولین قالب آماده، زمان تا تکمیل همه قالب‌ها، زمان batch resolve و زمان دریافت/رندر تصویر و PDF؛ ثبت تعداد قالب‌ها و assetها در کنار اندازه‌گیری.
+- بررسی ترتیب قالب‌ها، خطای مستقل یک قالب، تازه بودن داده پروژه/رویداد/فرم پس از تغییر منبع، و رفتار چاپ همه صفحات/PDF.
+- اجرای رگرسیون کنترل‌شده برای ویرایش متن، آپلود تصویر/فایل، افزودن/حذف ردیف جدول و جلوگیری از چاپ پیش از تکمیل رندر/ذخیره.
+- بررسی دسکتاپ و موبایل در صفحه خروجی واقعی؛ بدون ثبت/ویرایش/حذف داده عملیاتی در ممیزی خودکار.
