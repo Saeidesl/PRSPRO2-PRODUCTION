@@ -140,7 +140,8 @@ test('project-specific output route renders every active template through the ex
  assert.ok(module.includes("PMS.Api.post('/print-templates/resolve'"));
  assert.ok(module.includes('TemplateIDs: templates.map(item => String(item.ID))'));
  assert.ok(module.includes('renderOutputDocument(template, resolvedProject, data, { preservePdfObjectUrls: true })'));
- assert.match(module,/mapWithConcurrency\\(templates, 2/);\n  assert.match(module,/const sections = templates\\.map/);
+ assert.match(module,/mapWithConcurrency\(templates, 2/);
+ assert.match(module,/const sections = templates\.map/);
  assert.ok(page.includes('pt-output-project-heading'));
  assert.ok(page.includes('pt-output-back'));
  assert.ok(page.includes('pt-output-print'));
