@@ -2056,26 +2056,40 @@
           });
         }
       }
-      this.setStatus('pt-output-status', 'در حال دریافت پروژه و قالب‌های فعال…');
+      this.setStatus('pt-output-status', 'در حال دریافت فهرست قالب‌ها…');
       try {
-        const results = await Promise.all([
-          this.getTemplateListCached(),
-          PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId))
-        ]);
-        const templates = this.list(results[0]).filter(item =>
+        const templateListResponse = await this.getTemplateListCached();
+        const templates = this.list(templateListResponse).filter(item =>
           item && item.ID && String(item.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'
         );
-        const projectResult = this.extract(results[1]) || {};
-        const project = projectResult.project || projectResult.Project || projectResult.item || projectResult;
-        const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
-        const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
-        if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName + ' | برای ویرایش روی مقادیر خط‌چین‌دار کلیک کن';
         if (!templates.length) {
+          const projectResponse = await PMS.Api.get('/projects/' + encodeURIComponent(this.projectOutputId));
+          const projectResult = this.extract(projectResponse) || {};
+          const project = projectResult.project || projectResult.Project || projectResult.item || projectResult;
+          const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
+          const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
+          if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName;
           if (previewCard) previewCard.hidden = false;
           if (preview) preview.innerHTML = '<div class="pt-empty-state">برای این مجموعه هنوز قالب فعالی در قالب‌ساز ثبت نشده است.</div>';
           this.setStatus('pt-output-status', 'قالب فعالی برای نمایش وجود ندارد.');
           return;
         }
+
+        this.setStatus('pt-output-status', 'در حال دریافت یکپارچه اطلاعات پروژه و فرم‌ها برای ' + templates.length + ' قالب…');
+        const batchResponse = await PMS.Api.post('/print-templates/resolve', {
+          ProjectID: this.projectOutputId,
+          TemplateIDs: templates.map(item => String(item.ID))
+        });
+        const batch = this.extract(batchResponse) || {};
+        const project = batch.project || {};
+        const resolvedById = Object.create(null);
+        (Array.isArray(batch.results) ? batch.results : []).forEach(item => {
+          if (item && item.template && item.template.ID) resolvedById[String(item.template.ID)] = item;
+        });
+        const projectName = project.Title || project.Name || project.ProjectName || 'پروژه انتخاب‌شده';
+        const projectCode = project.ProjectCode || project.Code || this.projectOutputId;
+        if (heading) heading.textContent = 'قالب‌های پروژه ' + projectCode + ' — ' + projectName + ' | برای ویرایش روی مقادیر خط‌چین‌دار کلیک کن';
+
         let renderedCount = 0;
         let failedCount = 0;
         for (let index = 0; index < templates.length; index++) {
@@ -2085,10 +2099,9 @@
           section.dataset.templateId = String(template.ID);
           try {
             this.setStatus('pt-output-status', 'در حال آماده‌سازی قالب ' + (index + 1) + ' از ' + templates.length + ': ' + (template.Name || template.Code || '') + '…');
-            const response = await PMS.Api.post('/print-templates/' + encodeURIComponent(template.ID) + '/resolve', {
-              ProjectID: this.projectOutputId
-            });
-            const resolved = this.extract(response) || {};
+            const resolved = resolvedById[String(template.ID)];
+            if (!resolved) throw new Error('پاسخ اطلاعات این قالب از سرور دریافت نشد.');
+            if (resolved.error) throw new Error(resolved.error);
             const resolvedProject = resolved.project || project;
             const data = resolved.data || {};
             if (!template.Definition) throw new Error('ساختار ذخیره‌شده قالب در دسترس نیست.');
