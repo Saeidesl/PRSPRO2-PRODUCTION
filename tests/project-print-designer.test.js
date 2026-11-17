@@ -220,7 +220,7 @@ test('project template inline edits persist to the authoritative source and refr
   assert.match(module, /printButton\.hidden = true/);
   assert.match(module, /ذخیره تغییر ناموفق بود/);
   assert.match(module, /prevent printing before inline source save completes|finishProjectOutputEdit\(this\.projectOutputEdit\.editor, true\)/);
-  assert.match(index, /print-designer\.js\?v=20261116-template-cache-envelope-fix-1/);
+  assert.match(index, /print-designer\.js\?v=20261117-project-print-batch-resolve-1/);
 });
 
 test('project output supports uploading file/image bindings through project attachment API', () => {
