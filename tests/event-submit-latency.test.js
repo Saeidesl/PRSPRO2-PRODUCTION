@@ -39,5 +39,5 @@ test('multiple images upload in bounded batches and preserve selection order', (
 });
 
 test('event submit asset cache-busting version is refreshed', () => {
-  assert.match(index, /js\/modules\/events\.js\?v=20261113-three-project-statuses-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261118-event-image-preview-modal-2/);
 });
