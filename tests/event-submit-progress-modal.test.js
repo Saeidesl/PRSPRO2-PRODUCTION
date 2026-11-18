@@ -67,5 +67,5 @@ test('progress modal keeps keyboard focus contained and allows Escape only after
 
 test('event progress assets use refreshed cache-busting versions', () => {
   assert.match(index, /events\.css\?v=20261118-events-4-column-desktop-1/);
-  assert.match(index, /js\/modules\/events\.js\?v=20261118-event-image-native-dialog-3/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261118-event-amendment-explicit-1/);
 });
