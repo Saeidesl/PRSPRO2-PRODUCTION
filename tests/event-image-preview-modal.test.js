@@ -6,6 +6,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'js/modules/events.js'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 test('event attachment image preview uses fixed full-screen centered overlay', () => {
   assert.match(source, /event-image-preview-modal/);
@@ -19,4 +20,8 @@ test('event image preview scales to viewport and supports close controls and Esc
   assert.match(source, /event-modal-close/);
   assert.match(source, /event\.key === 'Escape'/);
   assert.match(source, /URL\.revokeObjectURL\(url\)/);
+});
+
+test('event image preview fix is cache-busted in the production entry point', () => {
+  assert.match(indexHtml, /js\/modules\/events\.js\?v=20261118-event-image-preview-modal-2/);
 });
