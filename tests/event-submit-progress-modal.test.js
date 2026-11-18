@@ -65,7 +65,17 @@ test('progress modal keeps keyboard focus contained and allows Escape only after
   assert.match(source, /overlay\.getAttribute\('role'\) === 'dialog' \? overlay/);
 });
 
-test('event progress assets use refreshed cache-busting versions', () => {
-  assert.match(index, /events\.css\?v=20261118-events-4-column-desktop-1/);
-  assert.match(index, /js\/modules\/events\.js\?v=20261118-event-image-native-dialog-3/);
+test('result panel and retry code are removed', () => {
+  assert.doesNotMatch(source, /showEventSubmissionResult|event-result-panel|procurement-retry|showProcurementRetryNotice/);
+  assert.doesNotMatch(styles, /event-result-panel/);
+});
+
+test('success modal auto-closes after five seconds', () => {
+  assert.match(source, /setTimeout\(\(\) => \{[\s\S]*?closeSubmitProgressModal\(\)[\s\S]*?\}, 5000\)/);
+  assert.match(source, /completedState\.finished === 'success'/);
+});
+
+test('progress assets use refreshed cache-busting versions', () => {
+  assert.match(index, /events\.css\?v=20261118-event-result-removed-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261118-event-submit-auto-close-5s-1/);
 });
