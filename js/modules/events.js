@@ -2009,7 +2009,7 @@
 
       typeSelect.addEventListener('change', () => {
         const selectedType = this.findById(this.eventTypes, typeSelect.value);
-        this.setAmendmentMode(!!selectedType && (selectedType.IsFormAmendment === true || String(selectedType.IsFormAmendment).toLowerCase() === 'true' || /(EDIT|UPDATE|AMEND|ویرایش|اصلاح)/i.test(String(selectedType.Code || '')+' '+String(selectedType.Name || ''))), projectSelect.value);
+        this.setAmendmentMode(!!selectedType && (selectedType.IsFormAmendment === true || String(selectedType.IsFormAmendment).toLowerCase() === 'true'), projectSelect.value);
         const selectedProject = this.findById(this.projects, projectSelect.value);
         if (selectedProject && String(selectedProject.RecordState || '').toUpperCase() === 'DRAFT' &&
             selectedType && String(selectedType.ConnectionType || 'PROJECT').toUpperCase() !== 'INDEPENDENT' &&
