@@ -26,3 +26,7 @@ Reduce event project card size and show four cards per row on wide desktop, pres
   - *Log:* Verified only `Saeidesl/PRSPRO2-PRODUCTION`, branch `main`, latest baseline `28e734e4bb269395236ee7fcf2397703939271b7`; card grid is `.event-queue-list-unified` in `css/events.css`, current 2-column default and responsive one-column mobile. Card component `.event-project-card-unified` and its image/copy/actions layout identified. Existing test `tests/event-queue-project-cards.test.js` covers queue card behavior; no CSS breakpoint regression assertion yet.
 - [ ] **Task 6 — Compact desktop card layout:** Apply 4 columns at ≥1200px, 3 columns at 900–1199px, preserve existing tablet/mobile behavior; add CSS regression checks and update cache key. Validate CI and open PR for PO acceptance.
   - *Log:* Pending implementation.
+
+
+- [x] **Task 7 — اصلاح تشخیص حالت ویرایش فرم:** بررسی علت و حذف تشخیص بر اساس نام/کد رویداد؛ کنترل حالت فقط با IsFormAmendment صریح.
+  - *Log:* در `js/modules/events.js` تشخیص کلیدواژه‌ای حذف شد و `IsFormAmendment` تنها شرط فعال‌سازی حالت اصلاح است. تست رگرسیون در `tests/event-form-cache-policy.test.js` اضافه شد تا کلمات ویرایش/اصلاح/UPDATE به تنهایی حالت اصلاح را فعال نکنند. Cache-busting `index.html` به `20261118-amendment-explicit-config-1` تغییر کرد. تست CI و ادغام پس از تأیید pipeline ثبت می‌شود.

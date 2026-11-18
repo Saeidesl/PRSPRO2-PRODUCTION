@@ -58,3 +58,11 @@ test('recent project picker preserves existing DOM when rendered content is unch
   assert.match(events, /if \(container\.innerHTML !== emptyMarkup\) container\.innerHTML = emptyMarkup/);
   assert.match(events, /if \(container\.innerHTML !== markup\) container\.innerHTML = markup/);
 });
+
+
+test('amendment mode is controlled only by explicit event-type configuration, not its name or code', () => {
+  const typeChangeHandler = events.slice(events.indexOf("typeSelect.addEventListener('change'"), events.indexOf("const selectedProject = this.findById(this.projects", events.indexOf("typeSelect.addEventListener('change'")));
+  assert.match(typeChangeHandler, /selectedType\.IsFormAmendment === true/);
+  assert.match(typeChangeHandler, /String\(selectedType\.IsFormAmendment\)\.toLowerCase\(\) === 'true'/);
+  assert.doesNotMatch(typeChangeHandler, /EDIT|UPDATE|AMEND|ویرایش|اصلاح/);
+});
