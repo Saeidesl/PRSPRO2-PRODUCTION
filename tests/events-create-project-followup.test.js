@@ -48,7 +48,7 @@ test('created-project highlight respects reduced-motion preferences', () => {
   assert.match(reducedMotionBlock, /\.event-queue-project\.is-newly-created/);
   assert.match(reducedMotionBlock, /animation:\s*none/);
   assert.match(index, /events\.css\?v=20261113-three-project-statuses-1/);
-  assert.match(index, /events\.js\?v=20261113-three-project-statuses-1/);
+  assert.match(index, /events\.js\?v=20261118-event-image-preview-modal-2/);
 });
 
 test('events flow keeps the existing project and event API paths', () => {
