@@ -105,3 +105,11 @@ test('event module asset versions are refreshed for the unified card UI', () => 
   assert.match(html, /css\/events\.css\?v=20261113-three-project-statuses-1/);
   assert.match(html, /js\/modules\/events\.js\?v=20261118-event-image-native-dialog-3/);
 });
+
+
+test('unified event project cards use four columns on wide desktop and responsive fallbacks', () => {
+  const css = read('css/events.css');
+  assert.match(css, /@media \(min-width: 1200px\)[\s\S]*?event-queue-list-unified \{ grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(min-width: 900px\) and \(max-width: 1199px\)[\s\S]*?event-queue-list-unified \{ grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(max-width:640px\)[\s\S]*?event-queue-list-unified\{grid-template-columns:minmax\(0,1fr\)/);
+});
