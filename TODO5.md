@@ -1,5 +1,5 @@
 ## 🎯 Current Objective
-Reduce event project card size and show four cards per row on wide desktop, preserving responsive tablet/mobile layouts.
+Remove event submission result panel and dedicated retry API; auto-close successful progress modal after five seconds.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 - Operational Frontend: `Saeidesl/PRSPRO2-PRODUCTION`, `main`; current base commit `bdce6324ebdaf0d3552704634a743992a154dc57`.
@@ -29,4 +29,8 @@ Reduce event project card size and show four cards per row on wide desktop, pres
 
 
 - [x] **Task 7 — اصلاح تشخیص حالت ویرایش فرم:** بررسی علت و حذف تشخیص بر اساس نام/کد رویداد؛ کنترل حالت فقط با IsFormAmendment صریح.
-  - *Log:* در `js/modules/events.js` تشخیص کلیدواژه‌ای حذف شد و `IsFormAmendment` تنها شرط فعال‌سازی حالت اصلاح است. تست رگرسیون در `tests/event-form-cache-policy.test.js` اضافه شد تا کلمات ویرایش/اصلاح/UPDATE به تنهایی حالت اصلاح را فعال نکنند. Cache-busting `index.html` به `20261118-amendment-explicit-config-1` تغییر کرد. تست CI و ادغام پس از تأیید pipeline ثبت می‌شود.
+  - *Log:* تشخیص کلیدواژه حذف شد؛ تست رگرسیون `tests/event-form-cache-policy.test.js` اضافه و cache-busting به `20261118-amendment-explicit-config-1` تغییر یافت. کاربر تست عملی را موفق اعلام کرد؛ تسک پذیرفته و بسته شد.
+
+
+- [ ] **Task 8 — حذف پنل نتیجه ثبت رویداد و بستن خودکار:** حذف پنل نتیجه، CSS و retry مربوط؛ بستن پنجره پیشرفت پس از ۵ ثانیه موفقیت.
+  - *Log:* پنل `showEventSubmissionResult()` و `event-result-panel` حذف؛ `showProcurementRetryNotice()` حذف؛ route اختصاصی `/events/:id/procurement-retry` و سرویس retry Backend حذف می‌شوند. عملیات اصلی POST /events، ذخیره فرم، اطلاعات مرکزی، workflow و محاسبه ملزومات حفظ می‌شوند.
