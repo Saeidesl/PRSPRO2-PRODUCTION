@@ -1731,9 +1731,20 @@
         const modal = document.createElement('div');
         modal.id = 'event-image-preview-modal';
         modal.className = 'event-modal-overlay';
-        modal.innerHTML = '<div class="event-modal-panel" style="max-width:900px"><div class="event-modal-heading"><h3>' + this.escape(data.FileName || 'پیش‌نمایش تصویر') + '</h3><button type="button" class="event-modal-close" aria-label="بستن">×</button></div><div style="padding:16px;text-align:center"><img alt="' + this.escape(data.FileName || 'تصویر') + '" src="' + url + '" style="max-width:100%;max-height:75vh;object-fit:contain"></div></div>';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'پیش‌نمایش تصویر رویداد');
+        modal.style.cssText = 'position:fixed;inset:0;z-index:300000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;overflow:auto;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)';
+        modal.innerHTML = '<div class="event-modal-panel" style="width:min(900px,100%);max-height:calc(100vh - 32px);overflow:auto;margin:auto"><div class="event-modal-heading"><h3>' + this.escape(data.FileName || 'پیش‌نمایش تصویر') + '</h3><button type="button" class="event-modal-close" aria-label="بستن">×</button></div><div style="padding:12px;text-align:center"><img alt="' + this.escape(data.FileName || 'تصویر') + '" src="' + url + '" style="display:block;margin:auto;max-width:100%;max-height:calc(100vh - 150px);width:auto;height:auto;object-fit:contain"></div></div>';
         document.body.appendChild(modal);
-        const close = () => { modal.remove(); URL.revokeObjectURL(url); };
+        const close = () => {
+          if (!modal.isConnected) return;
+          modal.remove();
+          URL.revokeObjectURL(url);
+          document.removeEventListener('keydown', onKeydown);
+        };
+        const onKeydown = event => { if (event.key === 'Escape') close(); };
+        document.addEventListener('keydown', onKeydown);
         modal.querySelector('.event-modal-close').addEventListener('click', close);
         modal.addEventListener('click', event => { if (event.target === modal) close(); });
       } catch (error) {
