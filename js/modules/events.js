@@ -1597,9 +1597,6 @@
         const content = document.getElementById('event-details-content');
         if (content) {
           content.innerHTML = html;
-          content.querySelectorAll('[data-event-image-attachment]').forEach(button => {
-            button.addEventListener('click', () => this.openEventImageAttachment(button.dataset.eventImageAttachment));
-          });
         }
       } catch (error) {
         const content = document.getElementById('event-details-content');
@@ -1727,26 +1724,26 @@
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         const url = URL.createObjectURL(new Blob([bytes], {type:data.MimeType}));
         const old = document.getElementById('event-image-preview-modal');
-        if (old) old.remove();
-        const modal = document.createElement('div');
+        if (old) {
+          if (typeof old.close === 'function' && old.open) old.close();
+          old.remove();
+        }
+        // Native modal dialog uses the browser top layer and cannot be trapped
+        // inside page layout/transform stacking contexts.
+        const modal = document.createElement('dialog');
         modal.id = 'event-image-preview-modal';
-        modal.className = 'event-modal-overlay';
-        modal.setAttribute('role', 'dialog');
-        modal.setAttribute('aria-modal', 'true');
         modal.setAttribute('aria-label', 'پیش‌نمایش تصویر رویداد');
-        modal.style.cssText = 'position:fixed;inset:0;z-index:300000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;overflow:auto;background:rgba(0,0,0,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)';
-        modal.innerHTML = '<div class="event-modal-panel" style="width:min(900px,100%);max-height:calc(100vh - 32px);overflow:auto;margin:auto"><div class="event-modal-heading"><h3>' + this.escape(data.FileName || 'پیش‌نمایش تصویر') + '</h3><button type="button" class="event-modal-close" aria-label="بستن">×</button></div><div style="padding:12px;text-align:center"><img alt="' + this.escape(data.FileName || 'تصویر') + '" src="' + url + '" style="display:block;margin:auto;max-width:100%;max-height:calc(100vh - 150px);width:auto;height:auto;object-fit:contain"></div></div>';
-        document.body.appendChild(modal);
-        const close = () => {
-          if (!modal.isConnected) return;
-          modal.remove();
+        modal.style.cssText = 'position:fixed;margin:auto;padding:0;border:0;border-radius:12px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);width:min(900px,calc(100vw - 24px));overflow:auto;background:#202833;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)';
+        modal.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.18)"><strong style="min-width:0;overflow-wrap:anywhere">' + this.escape(data.FileName || 'پیش‌نمایش تصویر') + '</strong><button type="button" class="event-modal-close" aria-label="بستن" style="flex:0 0 40px;width:40px;height:40px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:transparent;color:#fff;font-size:26px;cursor:pointer">×</button></div><div style="display:flex;align-items:center;justify-content:center;padding:12px;min-height:0"><img alt="' + this.escape(data.FileName || 'تصویر') + '" src="' + url + '" style="display:block;max-width:100%;max-height:calc(100dvh - 110px);width:auto;height:auto;object-fit:contain"></div>';
+        modal.addEventListener('click', event => { if (event.target === modal) modal.close(); });
+        const cleanup = () => {
           URL.revokeObjectURL(url);
-          document.removeEventListener('keydown', onKeydown);
+          modal.remove();
         };
-        const onKeydown = event => { if (event.key === 'Escape') close(); };
-        document.addEventListener('keydown', onKeydown);
-        modal.querySelector('.event-modal-close').addEventListener('click', close);
-        modal.addEventListener('click', event => { if (event.target === modal) close(); });
+        modal.addEventListener('close', cleanup, {once:true});
+        modal.querySelector('.event-modal-close').addEventListener('click', () => modal.close());
+        document.body.appendChild(modal);
+        modal.showModal();
       } catch (error) {
         this.showNotice('پیش‌نمایش تصویر ناموفق بود: ' + this.errorMessage(error), 'warning');
       }
