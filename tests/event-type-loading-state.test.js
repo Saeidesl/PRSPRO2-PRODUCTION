@@ -40,5 +40,5 @@ test('event type loading state is responsive, theme-aware, and uses the refreshe
   assert.match(styles, /var\(--color-surface-alt\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
   assert.match(index, /events\.css\?v=20261113-three-project-statuses-1/);
-  assert.match(index, /events\.js\?v=20261118-event-image-preview-modal-2/);
+  assert.match(index, /events\.js\?v=20261118-event-image-native-dialog-3/);
 });
