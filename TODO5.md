@@ -15,6 +15,6 @@ Fix event attachment image previews: clicking an image in event details must ope
 - [x] **Task 1 — Discovery & Planning:** Inspect preview trigger, modal implementation, operational branch and delivery/cache mechanism.
   - *Log:* Confirmed preview flow in `js/modules/events.js`; PR #150 implemented inline fixed overlay but `index.html` still referenced `events.js?v=20261113-three-project-statuses-1`. This cache key mismatch was the likely reason the deployed browser did not load the new code. No backend change required.
 - [ ] **Task 2 — Corrective Delivery & Cache Busting (IN PROGRESS):** Update production script cache version and add regression coverage so the preview fix is actually loaded by browsers.
-  - *Log:* Pending changes, CI and deployment verification.
+  - *Log:* Cache-busting نسخه events.js در entry point اصلاح شد؛ تست‌ها نیز به نسخه JS جدید و CSS نسخه قبلی هماهنگ شدند. CI برای تأیید مجدد در حال اجراست.
 - [ ] **Task 3 — Regression & Operational Acceptance:** Verify the image opens centered in the live app, closes by button/backdrop/Escape, responsive sizing and event detail regressions; then provide user test instructions and pause for acceptance.
   - *Log:* Pending.
