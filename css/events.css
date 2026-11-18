@@ -2167,3 +2167,12 @@
 .events-page .event-queue-project-statuses .event-queue-project-status-badge small { color:var(--color-text-muted); font-size:.65rem; font-weight:600; }
 .events-page .event-queue-project-statuses .status-overall { border-color:color-mix(in srgb,var(--color-primary) 30%,var(--color-border)); }
 .events-page .event-queue-project-statuses .status-step { border-color:color-mix(in srgb,var(--color-info, var(--color-primary)) 30%,var(--color-border)); }
+
+
+/* Desktop density: four project cards per row on wide screens. */
+@media (min-width: 1200px) {
+  .events-page .event-queue-list-unified { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+}
+@media (min-width: 900px) and (max-width: 1199px) {
+  .events-page .event-queue-list-unified { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+}
