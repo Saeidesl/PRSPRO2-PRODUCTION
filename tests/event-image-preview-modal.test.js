@@ -9,20 +9,20 @@ const projectsSource = fs.readFileSync(path.join(__dirname, '..', 'js/modules/pr
 const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 test('project and event images use the shared native dialog top layer', () => {
-  assert.match(projectsSource, /document\\.createElement\\('dialog'\\)/);
-  assert.match(projectsSource, /dialog\\.showModal\\(\\)/);
+  assert.match(projectsSource, /document\.createElement\('dialog'\)/);
+  assert.match(projectsSource, /dialog\.showModal\(\)/);
   assert.match(projectsSource, /pms-image-preview-dialog/);
-  assert.match(projectsSource, /openProjectImage: function \\(src, alt\\) \\{\\s*return this\\.openImagePreview/);
-  assert.match(source, /projectModule\\.openImagePreview\\(url, data\\.FileName \\|\\| 'پیش‌نمایش تصویر', \\{revokeObjectUrl:true\\}\\)/);
+  assert.match(projectsSource, /openProjectImage: function \(src, alt\) \{\s*return this\.openImagePreview/);
+  assert.match(source, /projectModule\.openImagePreview\(url, data\.FileName \|\| 'پیش‌نمایش تصویر', \{revokeObjectUrl:true\}\)/);
   assert.doesNotMatch(projectsSource, /project-image-lightbox/);
 });
 
 test('shared image preview closes safely and releases only owned object URLs', () => {
-  assert.match(projectsSource, /dialog\\.close\\(\\)/);
-  assert.match(projectsSource, /URL\\.revokeObjectURL\\(src\\)/);
-  assert.match(projectsSource, /event\\.target === dialog/);
+  assert.match(projectsSource, /dialog\.close\(\)/);
+  assert.match(projectsSource, /URL\.revokeObjectURL\(src\)/);
+  assert.match(projectsSource, /event\.target === dialog/);
   assert.match(projectsSource, /pms-image-preview-close/);
-  assert.match(source, /URL\\.revokeObjectURL\\(url\\)/);
+  assert.match(source, /URL\.revokeObjectURL\(url\)/);
 });
 
 test('event preview click is delegated once to avoid duplicate fetch/modal races', () => {
