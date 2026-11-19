@@ -39,6 +39,6 @@ test('project picker supports filtering, empty state, accessibility, and respons
   assert.match(source, /aria-expanded/);
   assert.match(styles, /\.event-project-picker-panel/);
   assert.match(styles, /@media \(max-width: 640px\)/);
-  assert.match(index, /events\.css\?v=20261118-events-4-column-desktop-1/);
-  assert.match(index, /events\.js\?v=20261118-event-image-native-dialog-3/);
+  assert.match(index, /events\.css\?v=20261119-event-picker-loading-ux-2/);
+  assert.match(index, /events\.js\?v=20261119-event-submit-auto-close-5s-3/);
 });
