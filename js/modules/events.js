@@ -4087,9 +4087,6 @@
         formModal.removeAttribute('aria-hidden');
         const submit = document.getElementById('event-form-submit');
         if (submit && !submit.disabled) submit.focus();
-      } else {
-        const resultClose = document.querySelector('.event-result-close');
-        if (resultClose) resultClose.focus();
       }
     },
 
