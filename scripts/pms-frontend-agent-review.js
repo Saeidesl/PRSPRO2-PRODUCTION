@@ -24,15 +24,16 @@ const materialPlanning = read('js/modules/material-planning.js');
 const appHtml = read('index.html');
 
 check('EVENT-INTEGRATION-FAILURE-SURFACING',
-  'The event form surfaces a failed procurement integration rather than implying that all work completed.',
+  'A failed procurement integration is surfaced in the existing event progress modal without a separate result panel.',
   hasAll(events, [
-    /procurementIntegration\.status[\s\S]{0,100}FAILED/,
-    /showProcurementRetryNotice/,
-    /محاسبه نیاز ملزومات کامل نشد/
-  ]));
-check('EVENT-INTEGRATION-RETRY',
-  'The frontend has a recovery path for retrying a failed event-to-procurement integration.',
-  /showProcurementRetryNotice/.test(events) && /PROCUREMENT_INTEGRATION_RETRY|retryProcurementIntegration|procurement-retry/i.test(events));
+    /eventResult\.procurementIntegration/,
+    /procurementIntegration\.status[\s\S]{0,120}FAILED/,
+    /محاسبه ملزومات ناموفق بود/,
+    /showNotice\([\s\S]{0,180}warning/
+  ]) && !/showEventSubmissionResult|event-result-panel/.test(events));
+check('EVENT-INTEGRATION-RETRY-REMOVED',
+  'The dedicated procurement retry UI and API call are removed.',
+  !/showProcurementRetryNotice|PROCUREMENT_INTEGRATION_RETRY|retryProcurementIntegration|procurement-retry/i.test(events));
 check('MATERIAL-PLANNING-UI',
   'The material-planning screen exposes specification and calculation history information.',
   hasAll(materialPlanning, [
