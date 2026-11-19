@@ -77,7 +77,7 @@ test('success modal auto-closes after five seconds', () => {
 
 test('progress assets use refreshed cache-busting versions', () => {
   assert.match(index, /events\.css\?v=20261119-event-picker-loading-ux-1/);
-  assert.match(index, /js\/modules\/events\.js\?v=20261118-event-submit-auto-close-5s-1/);
+  assert.match(index, /js\/modules\/events\.js\?v=20261119-event-submit-auto-close-5s-3/);
 });
 
 
