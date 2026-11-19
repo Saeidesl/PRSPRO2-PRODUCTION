@@ -1401,6 +1401,12 @@
       return this.projectImageGalleryCountPromise;
     },
 
+    invalidateProjectImageGalleryCounts: function () {
+      this.projectImageGalleryCounts = Object.create(null);
+      this.projectImageGalleryCountsLoadedAt = 0;
+      this.applyProjectImageGalleryCounts();
+    },
+
     applyProjectImageGalleryCounts: function () {
       const container = document.getElementById('event-queue-all');
       if (!container) return;
@@ -3798,6 +3804,7 @@
       const result = PMS.Api.extractData ? PMS.Api.extractData(response) : (response && response.data) || response;
       const attachment = result && (result.attachment || result.Attachment);
       if (!attachment || !(attachment.ID || attachment.Id)) throw new Error('اطلاعات فایل بارگذاری‌شده دریافت نشد.');
+      this.invalidateProjectImageGalleryCounts();
       const value = {AttachmentID:attachment.ID || attachment.Id,FileName:attachment.FileName || file.name,MimeType:attachment.MimeType || mime,FileSize:Number(attachment.FileSize || file.size),AttachmentType:attachmentType};
       this.recordSubmitProgressUpload(file);
       if (input) {
