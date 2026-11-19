@@ -1,5 +1,5 @@
 ## 🎯 Current Objective
-Remove event submission result panel and dedicated retry API; auto-close successful progress modal after five seconds.
+یکپارچه‌سازی پیش‌نمایش تصاویر کارت پروژه و پیوست رویدادها با یک پنجره Native Dialog مشترک؛ حذف مسیر قدیمی نمایش تصویر و جلوگیری از بازگشت مشکل نمایش تصویر در پایین صفحه.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 - Operational Frontend: `Saeidesl/PRSPRO2-PRODUCTION`, `main`; current base commit `bdce6324ebdaf0d3552704634a743992a154dc57`.
@@ -7,7 +7,12 @@ Remove event submission result panel and dedicated retry API; auto-close success
 - Frontend entry point: `index.html` loads `js/modules/events.js`; query-string version is used for cache busting.
 - Frontend page: `pages/events.html`; event detail modal content is populated by `js/modules/events.js`.
 - Image preview trigger: `[data-event-image-attachment]`; gallery renderer creates image attachment buttons.
-- Preview method: `Events.openEventImageAttachment(attachmentId)`; existing `GET /attachments/:attachmentId/download` via `PMS.Api.get`, MIME validation and Blob/object URL.
+- Event attachment preview: `Events.openEventImageAttachment(attachmentId)`; existing `GET /attachments/:attachmentId/download` via `PMS.Api.get`, permission/MIME validation and Blob/object URL.
+- Shared preview UI: `PMS.Modules.Projects.openImagePreview(src, alt, options)` in `js/modules/projects.js`; native `<dialog>.showModal()` is used for both project-card profile images and event attachments.
+- Project-card entry: `Projects.openProjectImage(src, alt)` delegates to the shared preview helper; legacy `.project-image-lightbox` div overlay is removed.
+- Event attachment entry: `Events.openEventImageAttachment(attachmentId)` fetches and validates the image, creates a Blob URL, then delegates to the shared helper; the helper revokes only URLs explicitly marked as owned.
+- Cache-busting: `index.html` versions both `js/modules/projects.js` and `js/modules/events.js` with `20261119-shared-image-preview-1`.
+- Regression coverage: `tests/event-image-preview-modal.test.js` asserts shared dialog usage, no legacy project overlay, correct object URL cleanup and asset cache versions.
 - PR #150/#151 changed inline fixed overlay positioning and cache-busting, but the user still reports the preview at page bottom. Discovery shows the modal is appended to `document.body` as a normal `div`; replace this positioning strategy with native `<dialog>.showModal()` (browser top layer), and remove duplicate click listeners that can launch overlapping fetch/modal requests.
 - Preserve current API, attachment permissions, MIME validation, object URL flow, event detail modal and image data behavior.
 
@@ -22,10 +27,10 @@ Remove event submission result panel and dedicated retry API; auto-close success
   - *Log:* PR #152 merged to `main` after all four CI checks passed. Product Owner confirmed manual preview behavior successful; task accepted.
 
 
-- [ ] **Task 5 — Discovery & Planning (IN PROGRESS):** Confirm operational frontend baseline, card selector, existing responsive breakpoints, and test coverage; define desktop 4-column layout with tablet/mobile fallbacks.
-  - *Log:* Verified only `Saeidesl/PRSPRO2-PRODUCTION`, branch `main`, latest baseline `28e734e4bb269395236ee7fcf2397703939271b7`; card grid is `.event-queue-list-unified` in `css/events.css`, current 2-column default and responsive one-column mobile. Card component `.event-project-card-unified` and its image/copy/actions layout identified. Existing test `tests/event-queue-project-cards.test.js` covers queue card behavior; no CSS breakpoint regression assertion yet.
-- [ ] **Task 6 — Compact desktop card layout:** Apply 4 columns at ≥1200px, 3 columns at 900–1199px, preserve existing tablet/mobile behavior; add CSS regression checks and update cache key. Validate CI and open PR for PO acceptance.
-  - *Log:* Pending implementation.
+- [x] **Task 5 — Discovery & Planning:** Confirm operational frontend baseline, card selector, existing responsive breakpoints, and test coverage; define desktop 4-column layout with tablet/mobile fallbacks.
+  - *Log:* Verified only `Saeidesl/PRSPRO2-PRODUCTION`, branch `main`; card grid is `.event-queue-list-unified` in `css/events.css`, component `.event-project-card-unified`, and test `tests/event-queue-project-cards.test.js`.
+- [x] **Task 6 — Compact desktop card layout:** Apply 4 columns at ≥1200px, 3 columns at 900–1199px, preserve narrower responsive layouts and add regression checks.
+  - *Log:* Updated `css/events.css` breakpoints and `index.html` stylesheet cache key to `20261118-events-4-column-desktop-1`; added assertions in `tests/event-queue-project-cards.test.js` and aligned stale cache-key assertions in six related test files. Frontend PR #153 passed all four CI checks and was squash-merged to `main` (merge commit `69326229bd18d989c4a4407eeb82c63b314bd04c`). Product Owner confirmed four desktop cards per row and responsive behavior. This closes the stale Task 5/6 entries without removing their history.
 
 
 - [x] **Task 7 — اصلاح تشخیص حالت ویرایش فرم:** بررسی علت و حذف تشخیص بر اساس نام/کد رویداد؛ کنترل حالت فقط با IsFormAmendment صریح.
@@ -39,3 +44,11 @@ Remove event submission result panel and dedicated retry API; auto-close success
   - *Log تکمیلی:* علت ۱۱ شکست Frontend مشخص شد: assertionهای cache-busting به نسخه‌های قدیمی `index.html` اشاره می‌کردند و دو گروه assertion استایل Project Picker و loading به selectorهایی ارجاع می‌دادند که stylesheet عملیاتی فاقد آن‌ها بود. نسخه‌های تست با assetهای واقعی هماهنگ شدند؛ استایل responsive/theme-aware برای `event-project-picker` و loading state به `css/events.css` اضافه شد؛ cache-busting جدید در `index.html` اعمال شد. پس از این اصلاحات، workflow فرانت‌اند دوباره باید روی آخرین commit کامل اجرا شود؛ تا آن زمان نتیجه نهایی CI قطعی نیست.
 
   - *Log نهایی پس از پذیرش کاربر:* PR فرانت‌اند #157 با روش squash در `main` ادغام شد؛ merge commit برابر `55ae0b9ff2d317a0e151a622714a8be92140d807` است. PR بک‌اند #96 نیز با روش squash در `main` ادغام شد؛ merge commit برابر `223e409b2aac23c7dfb58c8d70fd5c956e120da6` است. Browser Audit نهایی run `44564569175` موفق شد؛ تست‌های واقعی مرورگر، UI inventory و performance audit موفق بودند. کاربر نسخه عملیاتی را آزمایش و موفقیت تمام رفتارهای درخواستی را تأیید کرد: حذف پنل نتیجه جداگانه، بسته‌شدن پنجره موفقیت پس از ۵ ثانیه، باقی‌ماندن خطاها و نمایش هشدار شکست یکپارچگی Procurement. شاخه `main` هر دو مخزن با merge commitهای فوق تطبیق داده شد. تسک پذیرفته و بسته شد. انتشار/استقرار در این log ادعا نمی‌شود؛ تأیید کاربر مربوط به تست نسخه عملیاتی است.
+
+
+- [x] **Task 9 — Discovery & Planning: بررسی علت بازگشت مشکل پیش‌نمایش تصاویر**
+  - *Log:* آخرین نسخه عملیاتی روی `main` و commit `6f6e55288836bbcb0212630fa25f66885762a2aa` بررسی شد. مشخص شد thumbnail کارت پروژه در `js/modules/events.js` به `PMS.Modules.Projects.openProjectImage()` می‌رسد؛ این تابع در `js/modules/projects.js` یک `div` عادی با کلاس `.project-image-lightbox` به `document.body` اضافه می‌کرد، در حالی که CSS متناظر وجود نداشت. پیش‌نمایش پیوست رویداد مسیر مجزای Native Dialog داشت. علت بازگشت، باقی‌ماندن دو پیاده‌سازی متفاوت برای دو نوع تصویر بود، نه صرفاً cache مرورگر. هیچ تغییر Backend یا داده عملیاتی لازم نیست.
+- [ ] **Task 10 — IN PROGRESS: یکپارچه‌سازی نمایش تصویر**
+  - *Log:* در شاخه کاری `fix/event-project-image-preview-dialog-20261119`، تابع مشترک `Projects.openImagePreview(src, alt, options)` با Native `<dialog>.showModal()` اضافه شد؛ `openProjectImage()` اکنون wrapper همین تابع است. `Events.openEventImageAttachment()` پس از حفظ کنترل مجوز، MIME و API فعلی، URL تصویر را به همان helper می‌سپارد. آزادسازی Object URL فقط برای URLهای ساخته‌شده در مسیر پیوست فعال می‌شود. تست‌های رگرسیون و cache-busting نیز به‌روزرسانی شده‌اند؛ اجرای CI و بازبینی نهایی هنوز باقی است.
+- [ ] **Task 11 — Regression, CI & Operational Acceptance:** اجرای تست‌های فرانت‌اند، بررسی رفتار بستن با دکمه/Backdrop/Escape، حفظ مجوزها و نمایش صحیح هر دو نوع تصویر؛ سپس ادغام و تأیید دستی Product Owner.
+  - *Log:* پس از تکمیل Task 10 اجرا می‌شود؛ هیچ ادغام یا انتشار عملیاتی تا سبز شدن CI و پذیرش کاربر ادعا نخواهد شد.

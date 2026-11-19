@@ -1723,27 +1723,12 @@
         const binary = atob(data.Base64), bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         const url = URL.createObjectURL(new Blob([bytes], {type:data.MimeType}));
-        const old = document.getElementById('event-image-preview-modal');
-        if (old) {
-          if (typeof old.close === 'function' && old.open) old.close();
-          old.remove();
-        }
-        // Native modal dialog uses the browser top layer and cannot be trapped
-        // inside page layout/transform stacking contexts.
-        const modal = document.createElement('dialog');
-        modal.id = 'event-image-preview-modal';
-        modal.setAttribute('aria-label', 'پیش‌نمایش تصویر رویداد');
-        modal.style.cssText = 'position:fixed;margin:auto;padding:0;border:0;border-radius:12px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);width:min(900px,calc(100vw - 24px));overflow:auto;background:#202833;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)';
-        modal.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.18)"><strong style="min-width:0;overflow-wrap:anywhere">' + this.escape(data.FileName || 'پیش‌نمایش تصویر') + '</strong><button type="button" class="event-modal-close" aria-label="بستن" style="flex:0 0 40px;width:40px;height:40px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:transparent;color:#fff;font-size:26px;cursor:pointer">×</button></div><div style="display:flex;align-items:center;justify-content:center;padding:12px;min-height:0"><img alt="' + this.escape(data.FileName || 'تصویر') + '" src="' + url + '" style="display:block;max-width:100%;max-height:calc(100dvh - 110px);width:auto;height:auto;object-fit:contain"></div>';
-        modal.addEventListener('click', event => { if (event.target === modal) modal.close(); });
-        const cleanup = () => {
+        const projectModule = PMS.Modules && PMS.Modules.Projects;
+        if (!projectModule || typeof projectModule.openImagePreview !== 'function') {
           URL.revokeObjectURL(url);
-          modal.remove();
-        };
-        modal.addEventListener('close', cleanup, {once:true});
-        modal.querySelector('.event-modal-close').addEventListener('click', () => modal.close());
-        document.body.appendChild(modal);
-        modal.showModal();
+          throw new Error('سرویس پیش‌نمایش تصویر در دسترس نیست.');
+        }
+        projectModule.openImagePreview(url, data.FileName || 'پیش‌نمایش تصویر', {revokeObjectUrl:true});
       } catch (error) {
         this.showNotice('پیش‌نمایش تصویر ناموفق بود: ' + this.errorMessage(error), 'warning');
       }
