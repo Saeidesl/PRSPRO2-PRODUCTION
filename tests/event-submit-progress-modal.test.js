@@ -79,3 +79,11 @@ test('progress assets use refreshed cache-busting versions', () => {
   assert.match(index, /events\.css\?v=20261118-event-result-removed-1/);
   assert.match(index, /js\/modules\/events\.js\?v=20261118-event-submit-auto-close-5s-1/);
 });
+
+
+test('failed procurement integration is shown in the existing progress modal without a result panel', () => {
+  assert.match(source, /procurementIntegration\.status[\s\S]{0,120}FAILED/);
+  assert.match(source, /محاسبه ملزومات ناموفق بود/);
+  assert.match(source, /showNotice\([\s\S]{0,180}warning/);
+  assert.doesNotMatch(source, /showProcurementRetryNotice|procurement-retry/);
+});
