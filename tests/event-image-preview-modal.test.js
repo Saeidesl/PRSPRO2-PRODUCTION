@@ -27,5 +27,5 @@ test('event preview click is delegated once to avoid duplicate fetch/modal races
 });
 
 test('native dialog fix is cache-busted in production entry point', () => {
-  assert.match(indexHtml, /js\/modules\/events\.js\?v=20261118-event-image-native-dialog-3/);
+  assert.match(indexHtml, /js\/modules\/events\.js\?v=20261119-event-submit-auto-close-5s-2/);
 });
