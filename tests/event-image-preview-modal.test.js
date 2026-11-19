@@ -5,20 +5,24 @@ const path = require('node:path');
 const test = require('node:test');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'js/modules/events.js'), 'utf8');
+const projectsSource = fs.readFileSync(path.join(__dirname, '..', 'js/modules/projects.js'), 'utf8');
 const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-test('event image preview uses native dialog top-layer centering', () => {
-  assert.match(source, /document\.createElement\('dialog'\)/);
-  assert.match(source, /modal\.showModal\(\)/);
-  assert.match(source, /position:fixed;margin:auto/);
-  assert.match(source, /event-image-preview-modal/);
+test('project and event images use the shared native dialog top layer', () => {
+  assert.match(projectsSource, /document\.createElement\('dialog'\)/);
+  assert.match(projectsSource, /dialog\.showModal\(\)/);
+  assert.match(projectsSource, /pms-image-preview-dialog/);
+  assert.match(projectsSource, /openProjectImage: function \(src, alt\) \{\s*return this\.openImagePreview/);
+  assert.match(source, /projectModule\.openImagePreview\(url, data\.FileName \|\| 'پیش‌نمایش تصویر', \{revokeObjectUrl:true\}\)/);
+  assert.doesNotMatch(projectsSource, /project-image-lightbox/);
 });
 
-test('event preview closes safely and releases image URL', () => {
-  assert.match(source, /modal\.close\(\)/);
+test('shared image preview closes safely and releases only owned object URLs', () => {
+  assert.match(projectsSource, /dialog\.close\(\)/);
+  assert.match(projectsSource, /URL\.revokeObjectURL\(src\)/);
+  assert.match(projectsSource, /event\.target === dialog/);
+  assert.match(projectsSource, /pms-image-preview-close/);
   assert.match(source, /URL\.revokeObjectURL\(url\)/);
-  assert.match(source, /event\.target === modal/);
-  assert.match(source, /event-modal-close/);
 });
 
 test('event preview click is delegated once to avoid duplicate fetch/modal races', () => {
@@ -27,5 +31,5 @@ test('event preview click is delegated once to avoid duplicate fetch/modal races
 });
 
 test('native dialog fix is cache-busted in production entry point', () => {
-  assert.match(indexHtml, /js\/modules\/events\.js\?v=20261119-event-submit-auto-close-5s-3/);
+  assert.match(indexHtml, /js\/modules\/events\.js\?v=20261119-shared-image-preview-1/);
 });
