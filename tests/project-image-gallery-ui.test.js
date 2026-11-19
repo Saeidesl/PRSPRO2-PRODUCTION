@@ -43,6 +43,13 @@ test('full-size attachment download is deferred to image selection and uses shar
   assert.match(events, /projectModule\.openImagePreview\(url/);
 });
 
+test('gallery counts are invalidated after event-form and project attachment changes', () => {
+  assert.match(events, /invalidateProjectImageGalleryCounts: function/);
+  assert.match(events, /this\.invalidateProjectImageGalleryCounts\(\);/);
+  const projects = fs.readFileSync(path.join(__dirname, '..', 'js/modules/projects.js'), 'utf8');
+  assert.match(projects, /eventsModule\.invalidateProjectImageGalleryCounts\(\)/);
+});
+
 test('gallery releases thumbnail object URLs when the modal closes and uses responsive styling', () => {
   assert.match(events, /state\.urls\.forEach\(\(url\) => URL\.revokeObjectURL\(url\)\)/);
   assert.match(styles, /\.event-project-image-gallery-dialog/);
