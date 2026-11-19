@@ -1551,7 +1551,7 @@
               state.observer.unobserve(entry.target);
               enqueue(entry.target);
             });
-          }, { root: dialog, rootMargin: '100px 0px', threshold: 0.01 });
+          }, { root: content, rootMargin: '100px 0px', threshold: 0.01 });
           content.querySelectorAll('[data-gallery-image-id]').forEach((button) => state.observer.observe(button));
         } else {
           content.querySelectorAll('[data-gallery-image-id]').forEach(enqueue);
