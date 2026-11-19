@@ -49,7 +49,7 @@ test('event registration displays current workflow step requirements', () => {
 
 test('event module cache version is refreshed for workflow progress', () => {
   const html = read('index.html');
-  assert.match(html, /js\/modules\/events\.js\?v=20261119-event-submit-auto-close-5s-2/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261119-event-submit-auto-close-5s-3/);
 });
 
 
