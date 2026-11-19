@@ -3836,7 +3836,11 @@
           this.amendmentMode ? 'اطلاعات رویداد با موفقیت به‌روزرسانی شد.' : 'رویداد با موفقیت در سیستم ثبت شد.'
         );
         const procurementIntegration = eventResult.procurementIntegration || {};
-        // procurementIntegration.status can be FAILED; the result panel below exposes recovery.
+        const procurementFailed = String(procurementIntegration.status || '').toUpperCase() === 'FAILED';
+        if (procurementFailed) {
+          this.setSubmitProgressStep('event', 'warning', 'رویداد ثبت شد، اما محاسبه ملزومات ناموفق بود؛ پیگیری لازم است.');
+          this.showNotice('رویداد ذخیره شد، اما اتصال محاسبه ملزومات ناموفق بود. لطفاً بخش ملزومات را بررسی کنید.', 'warning');
+        }
 
         this.projectOptionsToken = '';
         PMS.Api.invalidateMany([
@@ -3869,11 +3873,15 @@
         try {
           await this.reloadEvents();
           this.setSubmitProgressStep('refresh', 'success', 'فهرست رویدادها با موفقیت به‌روز شد.');
-          this.completeSubmitProgress('رویداد ثبت شد و فهرست نیز به‌روز شد.');
+          this.completeSubmitProgress(procurementFailed
+            ? 'رویداد ثبت شد؛ اما محاسبه ملزومات نیازمند بررسی است.'
+            : 'رویداد ثبت شد و فهرست نیز به‌روز شد.');
         } catch (refreshError) {
           // رویداد ثبت شده است؛ فقط تازه‌سازی فهرست ناموفق بوده.
           this.setSubmitProgressStep('refresh', 'warning', 'ثبت رویداد موفق بود؛ تازه‌سازی فهرست انجام نشد.');
-          this.completeSubmitProgress('رویداد ثبت شد؛ اما به‌روزرسانی فهرست با مشکل مواجه شد.');
+          this.completeSubmitProgress(procurementFailed
+            ? 'رویداد ثبت شد؛ محاسبه ملزومات و به‌روزرسانی فهرست نیازمند بررسی است.'
+            : 'رویداد ثبت شد؛ اما به‌روزرسانی فهرست با مشکل مواجه شد.');
           this.showRefreshNotice();
         }
 
