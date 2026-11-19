@@ -25,5 +25,5 @@ test('project progress animation styles remain idempotent and support reduced mo
 });
 
 test('project module cache key is refreshed for the shared progress-style fix', () => {
-  assert.match(index, /js\/modules\/projects\.js\?v=20261112-project-create-progress-1/);
+  assert.match(index, /js\/modules\/projects\.js\?v=20261119-shared-image-preview-1/);
 });
