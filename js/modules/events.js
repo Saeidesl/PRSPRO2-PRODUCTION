@@ -1402,9 +1402,9 @@
     },
 
     invalidateProjectImageGalleryCounts: function () {
-      this.projectImageGalleryCounts = Object.create(null);
+      // Keep the last visible count while marking it stale; the next queue
+      // render refreshes it without briefly replacing valid numbers with dashes.
       this.projectImageGalleryCountsLoadedAt = 0;
-      this.applyProjectImageGalleryCounts();
     },
 
     applyProjectImageGalleryCounts: function () {
