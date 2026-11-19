@@ -102,8 +102,8 @@ test('newly created project highlighting works without switching a removed queue
 
 test('event module asset versions are refreshed for the unified card UI', () => {
   const html = read('index.html');
-  assert.match(html, /css\/events\.css\?v=20261119-event-picker-loading-ux-1/);
-  assert.match(html, /js\/modules\/events\.js\?v=20261119-event-submit-auto-close-5s-2/);
+  assert.match(html, /css\/events\.css\?v=20261119-event-picker-loading-ux-2/);
+  assert.match(html, /js\/modules\/events\.js\?v=20261119-event-submit-auto-close-5s-3/);
 });
 
 
