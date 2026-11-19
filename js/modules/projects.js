@@ -909,6 +909,10 @@
         cache.remove('project_card_attachments_v2');
       }
       this.projectCardAttachmentsPromise = null;
+      const eventsModule = window.PMS && (window.PMS.Events || (window.PMS.Modules && window.PMS.Modules.Events));
+      if (eventsModule && typeof eventsModule.invalidateProjectImageGalleryCounts === 'function') {
+        eventsModule.invalidateProjectImageGalleryCounts();
+      }
       if (projectId !== undefined && projectId !== null && String(projectId)) {
         const id = String(projectId);
         cache && cache.remove('project_attachments_' + id);
