@@ -1,1 +1,6548 @@
-{"overallStatus":"runner-error","note":"Audit runner did not produce a report."}
+{
+  "schemaVersion": 1,
+  "suite": "PMS Comprehensive UI and Performance Audit",
+  "scope": "all",
+  "generatedAt": "2026-11-19T18:01:40.204Z",
+  "baseURL": "http://127.0.0.1:4173/PRSPRO2/",
+  "mode": "authenticated-read-only",
+  "safety": {
+    "formSubmission": "disabled",
+    "destructiveActions": "never-clicked",
+    "sensitiveValuesRecorded": false,
+    "note": "This suite inventories every reachable form/control and measures navigation/network timing. Data-changing workflows require explicit staging scenarios and are not submitted by this audit."
+  },
+  "summary": {
+    "requestedRoutes": 20,
+    "loadedRoutes": 20,
+    "permissionDeniedRoutes": 0,
+    "failedRoutes": 0,
+    "mobileRoutesWithHorizontalOverflow": 0,
+    "visibleFormsInventoried": 12,
+    "dynamicFormsInventoried": 11,
+    "formOpenersChecked": 13,
+    "visibleButtonsInventoried": 152,
+    "visibleInputsAndControlsInventoried": 47,
+    "networkRequestsMeasured": 342,
+    "procurementApiRequestsMeasured": 7,
+    "procurementApiFailedRequests": 0,
+    "procurementDiagnosticEndpointsMeasured": 5,
+    "failedNetworkRequests": 0,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "safeButtonChecks": 12,
+    "failedSafeButtonChecks": 1,
+    "formSubmissionsExecuted": 0
+  },
+  "routes": [
+    {
+      "requestedRoute": "dashboard",
+      "currentHash": "dashboard",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "dashboard-refresh-button",
+          "label": "بروزرسانی",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "dash-clear-search",
+          "label": "×",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "dash-filter-toggle",
+          "label": "فیلترهای پیشرفته\n⌄",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "dash-event-order",
+          "label": "رویدادها: جدید به قدیم",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 2,
+      "visibleTextLength": 238,
+      "routeReadyMs": 3981,
+      "navigationMs": 6641,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 4,
+        "visibleControls": 2
+      },
+      "dynamicFormInventory": [],
+      "safeButtonChecks": [
+        {
+          "id": "dashboard-refresh-button",
+          "label": "بروزرسانی",
+          "clickCompleted": true,
+          "visibleContentChanged": true
+        }
+      ]
+    },
+    {
+      "requestedRoute": "projects",
+      "currentHash": "projects",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "project-create-button",
+          "label": "+\nپروژه جدید",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 2,
+      "visibleTextLength": 168,
+      "routeReadyMs": 3922,
+      "navigationMs": 6580,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 2
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "project-create-button",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 2,
+          "visibleControls": 4,
+          "forms": [
+            {
+              "index": 0,
+              "id": "project-create-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 6,
+              "requiredCount": 4,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "new-project-code",
+                  "name": "ProjectCode",
+                  "type": "text",
+                  "label": "کد موقت پروژه *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "new-project-title",
+                  "name": "Title",
+                  "type": "text",
+                  "label": "نام پروژه *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "new-project-workflow",
+                  "name": "WorkflowID",
+                  "type": "select-one",
+                  "label": "گردش کار پروژه *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "new-project-created-at-jalali",
+                  "name": "",
+                  "type": "text",
+                  "label": "تاریخ و ساعت ایجاد پروژه *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "new-project-created-at",
+                  "name": "CreatedAt",
+                  "type": "hidden",
+                  "label": "CreatedAt",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "new-project-reference",
+                  "name": "SourceProjectID",
+                  "type": "select-one",
+                  "label": "پروژه اصلی / مرجع *",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "safeButtonChecks": [
+        {
+          "id": "project-create-button",
+          "label": "+\nپروژه جدید",
+          "clickCompleted": true,
+          "visibleContentChanged": false
+        }
+      ]
+    },
+    {
+      "requestedRoute": "project-detail",
+      "currentHash": "project-detail",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "project-back-button",
+          "label": "← بازگشت به پروژه‌ها",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "project-add-event-button",
+          "label": "+ ثبت رویداد",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 0,
+      "visibleTextLength": 62,
+      "routeReadyMs": 3423,
+      "navigationMs": 6080,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 2,
+        "visibleControls": 0
+      },
+      "dynamicFormInventory": [],
+      "safeButtonChecks": [
+        {
+          "id": "project-back-button",
+          "label": "← بازگشت به پروژه‌ها",
+          "clickCompleted": true,
+          "visibleContentChanged": false
+        }
+      ]
+    },
+    {
+      "requestedRoute": "print-design",
+      "currentHash": "print-design",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [
+        {
+          "index": 0,
+          "id": "pt-template-form",
+          "name": "",
+          "action": "",
+          "method": "GET",
+          "fieldCount": 3,
+          "requiredCount": 2,
+          "submitCount": 1,
+          "nativeValidity": false,
+          "fields": [
+            {
+              "id": "pt-template-code",
+              "name": "Code",
+              "type": "text",
+              "label": "کد قالب",
+              "required": true,
+              "disabled": false
+            },
+            {
+              "id": "pt-template-name",
+              "name": "Name",
+              "type": "text",
+              "label": "نام قالب",
+              "required": true,
+              "disabled": false
+            },
+            {
+              "id": "pt-template-description",
+              "name": "Description",
+              "type": "textarea",
+              "label": "توضیحات",
+              "required": false,
+              "disabled": false
+            }
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "pt-template-reset",
+          "label": "قالب جدید",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 4,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 5,
+          "id": "pt-open-data-picker",
+          "label": "＋ افزودن اطلاعات",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 6,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 7,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 8,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 9,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 10,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 11,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 12,
+          "id": "pt-live-preview-refresh",
+          "label": "به‌روزرسانی",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 13,
+          "id": "pt-live-preview-print",
+          "label": "چاپ",
+          "type": "button",
+          "disabled": true,
+          "inForm": false
+        },
+        {
+          "index": 14,
+          "id": "pt-live-preview-expand",
+          "label": "نمایش بزرگ",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 15,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "submit",
+          "disabled": false,
+          "inForm": true
+        },
+        {
+          "index": 16,
+          "id": "pt-template-reset-secondary",
+          "label": "انصراف از ویرایش",
+          "type": "button",
+          "disabled": false,
+          "inForm": true
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 7,
+      "visibleTextLength": 500,
+      "routeReadyMs": 4427,
+      "navigationMs": 7087,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 1,
+        "visibleButtons": 17,
+        "visibleControls": 7
+      },
+      "dynamicFormInventory": [],
+      "safeButtonChecks": [
+        {
+          "id": "pt-template-reset",
+          "label": "قالب جدید",
+          "clickCompleted": true,
+          "visibleContentChanged": true
+        }
+      ]
+    },
+    {
+      "requestedRoute": "print-output",
+      "currentHash": "print-output",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "pt-output-resolve",
+          "label": "ساخت پیش‌نمایش سند",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "pt-margin-reset",
+          "label": "بازنشانی فاصله‌ها",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 6,
+      "visibleTextLength": 400,
+      "routeReadyMs": 2932,
+      "navigationMs": 5591,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 2,
+        "visibleControls": 6
+      },
+      "dynamicFormInventory": [],
+      "safeButtonChecks": [
+        {
+          "id": "pt-output-resolve",
+          "label": "ساخت پیش‌نمایش سند",
+          "clickCompleted": true,
+          "visibleContentChanged": true
+        }
+      ]
+    },
+    {
+      "requestedRoute": "events",
+      "currentHash": "events",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "events-create-project-button",
+          "label": "＋\nایجاد پروژه جدید",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 4,
+          "id": "events-filter-toggle",
+          "label": "☷\nفیلترهای بیشتر\n⌄",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 2,
+      "visibleTextLength": 438,
+      "routeReadyMs": 3416,
+      "navigationMs": 6073,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 5,
+        "visibleControls": 2
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "event-project-entry",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 2,
+          "visibleControls": 2,
+          "forms": [
+            {
+              "index": 0,
+              "id": "event-create-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 8,
+              "requiredCount": 2,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "event-form-project",
+                  "name": "ProjectID",
+                  "type": "select-one",
+                  "label": "ProjectID",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "event-project-picker-search",
+                  "name": "",
+                  "type": "search",
+                  "label": "جست‌وجوی پروژه",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "event-form-type",
+                  "name": "EventTypeID",
+                  "type": "select-one",
+                  "label": "نوع رویداد *",
+                  "required": true,
+                  "disabled": true
+                },
+                {
+                  "id": "event-form-date-jalali",
+                  "name": "",
+                  "type": "text",
+                  "label": "تاریخ و زمان وقوع *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "event-form-date",
+                  "name": "OccurredAt",
+                  "type": "hidden",
+                  "label": "OccurredAt",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "event-form-description",
+                  "name": "Description",
+                  "type": "textarea",
+                  "label": "شرح رویداد",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "event-amendment-source-event",
+                  "name": "",
+                  "type": "select-one",
+                  "label": "event-amendment-source-event",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "event-amendment-source-form",
+                  "name": "",
+                  "type": "select-one",
+                  "label": "event-amendment-source-form",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "safeButtonChecks": [
+        {
+          "id": "events-filter-toggle",
+          "label": "☷\nفیلترهای بیشتر\n⌄",
+          "clickCompleted": true,
+          "visibleContentChanged": false
+        }
+      ]
+    },
+    {
+      "requestedRoute": "workflows",
+      "currentHash": "workflows",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "workflow-create-button",
+          "label": "+ ثبت Workflow",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 2,
+      "visibleTextLength": 225,
+      "routeReadyMs": 4449,
+      "navigationMs": 7107,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 2
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "workflow-create-button",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 2,
+          "visibleControls": 3,
+          "forms": [
+            {
+              "index": 0,
+              "id": "workflow-create-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 3,
+              "requiredCount": 2,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "workflow-name",
+                  "name": "Name",
+                  "type": "text",
+                  "label": "نام فرآیند *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "workflow-code",
+                  "name": "Code",
+                  "type": "text",
+                  "label": "کد فرآیند *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "workflow-type",
+                  "name": "WorkflowType",
+                  "type": "select-one",
+                  "label": "نوع مسیر تولید",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedRoute": "project-statuses",
+      "currentHash": "project-statuses",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "project-status-create",
+          "label": "+ وضعیت جدید",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 109,
+      "routeReadyMs": 3417,
+      "navigationMs": 6075,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "project-status-create",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 1,
+          "visibleControls": 1,
+          "forms": [
+            {
+              "index": 0,
+              "id": "project-status-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 1,
+              "requiredCount": 1,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "project-status-name",
+                  "name": "Name",
+                  "type": "text",
+                  "label": "نام وضعیت *",
+                  "required": true,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "safeButtonChecks": [
+        {
+          "id": "project-status-create",
+          "label": "+ وضعیت جدید",
+          "clickCompleted": true,
+          "visibleContentChanged": false
+        }
+      ]
+    },
+    {
+      "requestedRoute": "event-types",
+      "currentHash": "event-types",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "event-type-create-button",
+          "label": "+ ثبت نوع رویداد",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 4,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 5,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 6,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 7,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 8,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 9,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 10,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 11,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 12,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 13,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 14,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 15,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 16,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 17,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 18,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 19,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 20,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 21,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 22,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 23,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 24,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 25,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 26,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 27,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 28,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 29,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 30,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 31,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 32,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 33,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 34,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 35,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 36,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 37,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 38,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 39,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 40,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 41,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 42,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 43,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 44,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 45,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 46,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 47,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 48,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 49,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 50,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 51,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 52,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 53,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 54,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 55,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 56,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 57,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 58,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 59,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 60,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 61,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 62,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 63,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 64,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 65,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 66,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 67,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 68,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 69,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 70,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 71,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 72,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 73,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 74,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 75,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 76,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 77,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 78,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 79,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 80,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 81,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 82,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 83,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 84,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 500,
+      "routeReadyMs": 4936,
+      "navigationMs": 7602,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 85,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "event-type-create-button",
+          "opened": false,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 1,
+          "visibleControls": 1,
+          "forms": []
+        }
+      ]
+    },
+    {
+      "requestedRoute": "information-types",
+      "currentHash": "information-types",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "information-type-create",
+          "label": "+ تعریف نوع اطلاعات",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 183,
+      "routeReadyMs": 3433,
+      "navigationMs": 6092,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "information-type-create",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 1,
+          "visibleControls": 9,
+          "forms": [
+            {
+              "index": 0,
+              "id": "information-type-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 9,
+              "requiredCount": 2,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "",
+                  "name": "Name",
+                  "type": "text",
+                  "label": "Name",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Code",
+                  "type": "text",
+                  "label": "Code",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Description",
+                  "type": "textarea",
+                  "label": "Description",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Cardinality",
+                  "type": "select-one",
+                  "label": "Cardinality",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Status",
+                  "type": "select-one",
+                  "label": "Status",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "ShowOnCard",
+                  "type": "checkbox",
+                  "label": "نمایش این نوع اطلاعات در کارت پروژه",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "DataType",
+                  "type": "select-one",
+                  "label": "DataType",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Options",
+                  "type": "text",
+                  "label": "قرمز، آبی، مشکی",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Rules",
+                  "type": "text",
+                  "label": "{\"min\":1,\"max\":100}",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "safeButtonChecks": [
+        {
+          "id": "information-type-create",
+          "label": "+ تعریف نوع اطلاعات",
+          "clickCompleted": true,
+          "visibleContentChanged": false
+        }
+      ]
+    },
+    {
+      "requestedRoute": "procurement",
+      "currentHash": "procurement",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "procurement-create-project-order",
+          "label": "+ سفارش مرتبط با پروژه",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "procurement-create-general-order",
+          "label": "+ سفارش عمومی",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "procurement-create-receipt",
+          "label": "+ ثبت دریافت انبار",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "procurement-refresh",
+          "label": "↻ بروزرسانی",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 4,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 5,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 6,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 7,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 8,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 0,
+      "visibleTextLength": 500,
+      "routeReadyMs": 2404,
+      "navigationMs": 27995,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 9,
+        "visibleControls": 0
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "procurement-create-project-order",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 0,
+          "visibleControls": 11,
+          "forms": [
+            {
+              "index": 0,
+              "id": "procurement-order-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 14,
+              "requiredCount": 4,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "",
+                  "name": "ProjectID",
+                  "type": "select-one",
+                  "label": "کد پروژه *\nانتخاب پروژه\n1 — شومیز چهار خونه\n2 — پیراهن کوتاه لینن ایرانی صورتی\n3 — اورال کوتاه\n4 — پیراهن فلامنت و گیپور",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "SupplierName",
+                  "type": "text",
+                  "label": "تأمین‌کننده",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-v0nqy1k-jalali",
+                  "name": "",
+                  "type": "text",
+                  "label": "تاریخ سفارش (اختیاری)\n▦",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-v0nqy1k",
+                  "name": "OrderDate",
+                  "type": "hidden",
+                  "label": "۱۴۰۵/۰۷/۲۷",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-t42z5vn-jalali",
+                  "name": "",
+                  "type": "text",
+                  "label": "تاریخ تحویل مورد انتظار\n▦",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-t42z5vn",
+                  "name": "ExpectedDeliveryDate",
+                  "type": "hidden",
+                  "label": "۱۴۰۵/۰۷/۲۷",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Notes",
+                  "type": "text",
+                  "label": "توضیحات سفارش",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "MaterialNeedID",
+                  "type": "hidden",
+                  "label": "MaterialNeedID",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "ItemName",
+                  "type": "text",
+                  "label": "نام ملزوم *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Unit",
+                  "type": "select-one",
+                  "label": "واحد اندازه‌گیری *\nانتخاب واحد\nعدد\nمتر\nسانتی‌متر\nمیلی‌متر\nمترمربع\nکیلوگرم\nگرم\nلیتر\nمیلی‌لیتر\nرول\nبسته\nجفت\nدست\nیارد",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "",
+                  "type": "text",
+                  "label": "نیاز اصلی",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "OrderedQuantity",
+                  "type": "number",
+                  "label": "مقدار سفارش *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "UnitPrice",
+                  "type": "number",
+                  "label": "قیمت واحد (اختیاری)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Notes",
+                  "type": "text",
+                  "label": "توضیحات قلم",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "openerId": "procurement-create-general-order",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 0,
+          "visibleControls": 10,
+          "forms": [
+            {
+              "index": 0,
+              "id": "procurement-order-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 13,
+              "requiredCount": 3,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "",
+                  "name": "SupplierName",
+                  "type": "text",
+                  "label": "تأمین‌کننده",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-nhks2la-jalali",
+                  "name": "",
+                  "type": "text",
+                  "label": "تاریخ سفارش (اختیاری)\n▦",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-nhks2la",
+                  "name": "OrderDate",
+                  "type": "hidden",
+                  "label": "۱۴۰۵/۰۷/۲۷",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-08inzor-jalali",
+                  "name": "",
+                  "type": "text",
+                  "label": "تاریخ تحویل مورد انتظار\n▦",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-08inzor",
+                  "name": "ExpectedDeliveryDate",
+                  "type": "hidden",
+                  "label": "۱۴۰۵/۰۷/۲۷",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Notes",
+                  "type": "text",
+                  "label": "توضیحات سفارش",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "MaterialNeedID",
+                  "type": "hidden",
+                  "label": "MaterialNeedID",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "ItemName",
+                  "type": "text",
+                  "label": "نام ملزوم *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Unit",
+                  "type": "select-one",
+                  "label": "واحد اندازه‌گیری *\nانتخاب واحد\nعدد\nمتر\nسانتی‌متر\nمیلی‌متر\nمترمربع\nکیلوگرم\nگرم\nلیتر\nمیلی‌لیتر\nرول\nبسته\nجفت\nدست\nیارد",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "",
+                  "type": "text",
+                  "label": "نیاز اصلی",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "OrderedQuantity",
+                  "type": "number",
+                  "label": "مقدار سفارش *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "UnitPrice",
+                  "type": "number",
+                  "label": "قیمت واحد (اختیاری)",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Notes",
+                  "type": "text",
+                  "label": "توضیحات قلم",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "openerId": "procurement-create-receipt",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 0,
+          "visibleControls": 3,
+          "forms": [
+            {
+              "index": 0,
+              "id": "procurement-receipt-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 4,
+              "requiredCount": 1,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "",
+                  "name": "ProjectID",
+                  "type": "select-one",
+                  "label": "پروژه / نوع سفارش *\nانتخاب پروژه یا سفارش عمومی\nسفارش عمومی\n1 — شومیز چهار خونه\n2 — پیراهن کوتاه لینن ایرانی صورتی\n3 — ا",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-j8p4z62-jalali",
+                  "name": "",
+                  "type": "text",
+                  "label": "تاریخ دریافت\n▦",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "pms-date-j8p4z62",
+                  "name": "ReceivedAt",
+                  "type": "hidden",
+                  "label": "۱۴۰۵/۰۷/۲۷",
+                  "required": false,
+                  "disabled": false
+                },
+                {
+                  "id": "",
+                  "name": "Notes",
+                  "type": "text",
+                  "label": "توضیحات دریافت",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "safeButtonChecks": [
+        {
+          "id": "procurement-create-project-order",
+          "label": "+ سفارش مرتبط با پروژه",
+          "clickCompleted": true,
+          "visibleContentChanged": true
+        }
+      ]
+    },
+    {
+      "requestedRoute": "attachments",
+      "currentHash": "attachments",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "attachment-upload-button",
+          "label": "+ بارگذاری فایل",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 135,
+      "routeReadyMs": 3413,
+      "navigationMs": 6073,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "attachment-upload-button",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 1,
+          "visibleControls": 4,
+          "forms": [
+            {
+              "index": 0,
+              "id": "attachment-upload-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 4,
+              "requiredCount": 3,
+              "submitCount": 1,
+              "fields": [
+                {
+                  "id": "attachment-upload-entity-type",
+                  "name": "",
+                  "type": "select-one",
+                  "label": "اتصال فایل به *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "attachment-upload-entity",
+                  "name": "",
+                  "type": "select-one",
+                  "label": "انتخاب مورد *",
+                  "required": true,
+                  "disabled": true
+                },
+                {
+                  "id": "attachment-upload-file",
+                  "name": "",
+                  "type": "file",
+                  "label": "فایل *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "attachment-upload-filename",
+                  "name": "",
+                  "type": "text",
+                  "label": "نام فایل",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedRoute": "reports",
+      "currentHash": "reports",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "project-report-load",
+          "label": "ساخت گزارش",
+          "type": "button",
+          "disabled": true,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "project-report-print",
+          "label": "چاپ / ذخیره PDF",
+          "type": "button",
+          "disabled": true,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 4,
+          "id": "project-report-template-save",
+          "label": "",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 5,
+          "id": "project-report-template-load",
+          "label": "",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 6,
+          "id": "project-report-template-delete",
+          "label": "",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 7,
+          "id": "project-report-export-csv",
+          "label": "",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 12,
+      "visibleTextLength": 222,
+      "routeReadyMs": 4936,
+      "navigationMs": 7599,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 8,
+        "visibleControls": 12
+      },
+      "dynamicFormInventory": [],
+      "safeButtonChecks": [
+        {
+          "id": "project-report-template-save",
+          "label": "",
+          "clickCompleted": false,
+          "error": "Button was not visible and enabled after clean route navigation."
+        }
+      ]
+    },
+    {
+      "requestedRoute": "users",
+      "currentHash": "users",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "user-create-button",
+          "label": "+ ثبت کاربر",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 95,
+      "routeReadyMs": 3913,
+      "navigationMs": 6571,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "user-create-button",
+          "opened": false,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 1,
+          "visibleControls": 1,
+          "forms": []
+        }
+      ]
+    },
+    {
+      "requestedRoute": "departments",
+      "currentHash": "departments",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "department-create-button",
+          "label": "+ ثبت واحد",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 3,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 4,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 5,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 6,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 7,
+          "id": "",
+          "label": "dynamic-button",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 419,
+      "routeReadyMs": 3401,
+      "navigationMs": 6060,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 8,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "department-create-button",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 1,
+          "visibleControls": 3,
+          "forms": [
+            {
+              "index": 0,
+              "id": "department-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 3,
+              "requiredCount": 2,
+              "submitCount": 0,
+              "fields": [
+                {
+                  "id": "department-name",
+                  "name": "Name",
+                  "type": "text",
+                  "label": "نام واحد *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "department-code",
+                  "name": "Code",
+                  "type": "text",
+                  "label": "کد واحد *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "department-status",
+                  "name": "Status",
+                  "type": "select-one",
+                  "label": "وضعیت",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedRoute": "roles",
+      "currentHash": "roles",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "role-create-button",
+          "label": "+ ایجاد نقش",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 91,
+      "routeReadyMs": 4437,
+      "navigationMs": 7094,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [
+        {
+          "openerId": "role-create-button",
+          "opened": true,
+          "baselineFormCount": 0,
+          "baselineVisibleControls": 1,
+          "visibleControls": 3,
+          "forms": [
+            {
+              "index": 0,
+              "id": "role-form",
+              "name": "",
+              "method": "GET",
+              "fieldCount": 3,
+              "requiredCount": 2,
+              "submitCount": 0,
+              "fields": [
+                {
+                  "id": "role-name",
+                  "name": "Name",
+                  "type": "text",
+                  "label": "نام نقش *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "role-code",
+                  "name": "Code",
+                  "type": "text",
+                  "label": "کد نقش *",
+                  "required": true,
+                  "disabled": false
+                },
+                {
+                  "id": "role-status",
+                  "name": "Status",
+                  "type": "select-one",
+                  "label": "وضعیت",
+                  "required": false,
+                  "disabled": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedRoute": "permissions",
+      "currentHash": "permissions",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 81,
+      "routeReadyMs": 3930,
+      "navigationMs": 6588,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 0,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": []
+    },
+    {
+      "requestedRoute": "audit",
+      "currentHash": "audit",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "audit-refresh",
+          "label": "بروزرسانی",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 1,
+      "visibleTextLength": 132,
+      "routeReadyMs": 2914,
+      "navigationMs": 5569,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 1
+      },
+      "dynamicFormInventory": [],
+      "safeButtonChecks": [
+        {
+          "id": "audit-refresh",
+          "label": "بروزرسانی",
+          "clickCompleted": true,
+          "visibleContentChanged": false
+        }
+      ]
+    },
+    {
+      "requestedRoute": "settings",
+      "currentHash": "settings",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "settings-save-workflow",
+          "label": "ذخیره گردش کار پیش‌فرض",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 3,
+      "visibleTextLength": 484,
+      "routeReadyMs": 3414,
+      "navigationMs": 6072,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 1,
+        "visibleControls": 3
+      },
+      "dynamicFormInventory": []
+    },
+    {
+      "requestedRoute": "admin",
+      "currentHash": "admin",
+      "urlChanged": false,
+      "title": "مدیریت تولید",
+      "contentVisible": true,
+      "denied": false,
+      "errorVisible": false,
+      "forms": [],
+      "buttons": [
+        {
+          "index": 0,
+          "id": "admin-delete-project-preview",
+          "label": "بررسی اطلاعات وابسته",
+          "type": "button",
+          "disabled": false,
+          "inForm": false
+        },
+        {
+          "index": 1,
+          "id": "admin-delete-project-confirm",
+          "label": "حذف پروژه و اطلاعات وابسته",
+          "type": "button",
+          "disabled": true,
+          "inForm": false
+        },
+        {
+          "index": 2,
+          "id": "admin-sessions-refresh",
+          "label": "به‌روزرسانی",
+          "type": "button",
+          "disabled": true,
+          "inForm": false
+        }
+      ],
+      "linkCount": 0,
+      "navigation": [
+        {
+          "label": "navigation-link",
+          "route": "dashboard"
+        },
+        {
+          "label": "navigation-link",
+          "route": "projects"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-design"
+        },
+        {
+          "label": "navigation-link",
+          "route": "print-output"
+        },
+        {
+          "label": "navigation-link",
+          "route": "events"
+        },
+        {
+          "label": "navigation-link",
+          "route": "workflows"
+        },
+        {
+          "label": "navigation-link",
+          "route": "project-statuses"
+        },
+        {
+          "label": "navigation-link",
+          "route": "event-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "information-types"
+        },
+        {
+          "label": "navigation-link",
+          "route": "forms"
+        },
+        {
+          "label": "navigation-link",
+          "route": "procurement"
+        },
+        {
+          "label": "navigation-link",
+          "route": "attachments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "reports"
+        },
+        {
+          "label": "navigation-link",
+          "route": "users"
+        },
+        {
+          "label": "navigation-link",
+          "route": "departments"
+        },
+        {
+          "label": "navigation-link",
+          "route": "roles"
+        },
+        {
+          "label": "navigation-link",
+          "route": "permissions"
+        },
+        {
+          "label": "navigation-link",
+          "route": "audit"
+        },
+        {
+          "label": "navigation-link",
+          "route": "settings"
+        },
+        {
+          "label": "navigation-link",
+          "route": "admin"
+        }
+      ],
+      "visibleControlCount": 2,
+      "visibleTextLength": 500,
+      "routeReadyMs": 2414,
+      "navigationMs": 5072,
+      "status": "loaded",
+      "mobileLayout": {
+        "viewportWidth": 390,
+        "documentWidth": 390,
+        "bodyWidth": 390,
+        "horizontalOverflow": false,
+        "visibleForms": 0,
+        "visibleButtons": 3,
+        "visibleControls": 2
+      },
+      "dynamicFormInventory": [],
+      "safeButtonChecks": [
+        {
+          "id": "admin-delete-project-preview",
+          "label": "بررسی اطلاعات وابسته",
+          "clickCompleted": true,
+          "visibleContentChanged": true
+        }
+      ]
+    }
+  ],
+  "network": [
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 163
+    },
+    {
+      "path": "/PRSPRO2/pages/login.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 15
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "status": 302,
+      "durationMs": 4849
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 271
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4728
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 233
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 18
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3707
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 115
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 16
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3373
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 11
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4837
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2999
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 232
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3758
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 132
+    },
+    {
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/print-designer.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/api/print-templates/revision",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2668
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 162
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2450
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 103
+    },
+    {
+      "path": "/PRSPRO2/pages/print-designer.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 11
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 10
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2760
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 172
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 15
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 15
+    },
+    {
+      "path": "/api/print-templates",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2847
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2563
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 133
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/api/event-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2393
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 105
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3536
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 113
+    },
+    {
+      "path": "/api/events",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 6534
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "path": "/api/project-image-gallery/counts",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2610
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 113
+    },
+    {
+      "path": "/api/projects/:id/information",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4308
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "path": "/api/projects/:id/workflow-progress",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4544
+    },
+    {
+      "path": "/api/project-card-images",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4835
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 215
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 152
+    },
+    {
+      "path": "/api/event-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 7440
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 120
+    },
+    {
+      "path": "/api/events/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3310
+    },
+    {
+      "path": "/api/events/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3446
+    },
+    {
+      "path": "/api/event-types/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3178
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 114
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 414
+    },
+    {
+      "path": "/api/events/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4416
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "path": "/api/event-types/:id/forms",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2641
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 113
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3866
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/workflows.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 11
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3867
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 115
+    },
+    {
+      "path": "/PRSPRO2/pages/workflows.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3025
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 111
+    },
+    {
+      "path": "/PRSPRO2/pages/workflows.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 10
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 5472
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 100
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4221
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 183
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/event-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 12
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3770
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 109
+    },
+    {
+      "path": "/PRSPRO2/pages/event-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/api/event-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3777
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 123
+    },
+    {
+      "path": "/api/users",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2440
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2823
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 124
+    },
+    {
+      "path": "/PRSPRO2/pages/event-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 16
+    },
+    {
+      "path": "/api/information-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2970
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4289
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 103
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2122
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/information-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2163
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 94
+    },
+    {
+      "path": "/api/procurement/workspace",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3668
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3726
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 130
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/api/procurement/workspace",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3202
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 111
+    },
+    {
+      "path": "/api/procurement/dashboard",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 6326
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 111
+    },
+    {
+      "path": "/api/procurement/needs",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3267
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "path": "/api/procurement/orders",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3514
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 111
+    },
+    {
+      "path": "/api/procurement/reports",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4732
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4301
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 145
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2664
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 206
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 2
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2748
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 126
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3156
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 106
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2898
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 163
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/attachments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4030
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 112
+    },
+    {
+      "path": "/PRSPRO2/pages/attachments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4283
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 113
+    },
+    {
+      "path": "/PRSPRO2/pages/attachments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3336
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 118
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/users.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2792
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "path": "/PRSPRO2/pages/users.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 10
+    },
+    {
+      "path": "/api/departments",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2565
+    },
+    {
+      "path": "/api/users",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2671
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 106
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3098
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "path": "/PRSPRO2/pages/users.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/PRSPRO2/pages/departments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3167
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 101
+    },
+    {
+      "path": "/PRSPRO2/pages/departments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/api/departments",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2697
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 103
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3854
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 127
+    },
+    {
+      "path": "/PRSPRO2/pages/departments.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 10
+    },
+    {
+      "path": "/PRSPRO2/pages/roles.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3728
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 199
+    },
+    {
+      "path": "/PRSPRO2/pages/roles.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3558
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 116
+    },
+    {
+      "path": "/PRSPRO2/pages/roles.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/permissions.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2314
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "path": "/PRSPRO2/pages/permissions.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/api/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2783
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "path": "/api/audit",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2993
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2637
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 238
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/PRSPRO2/pages/settings.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 1970
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "path": "/PRSPRO2/pages/settings.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 6
+    },
+    {
+      "path": "/PRSPRO2/pages/admin.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 13
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4590
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "path": "/PRSPRO2/pages/admin.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 16
+    },
+    {
+      "path": "/api/admin/sessions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3696
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 138
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4089
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 104
+    },
+    {
+      "path": "/PRSPRO2/pages/dashboard.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 14
+    },
+    {
+      "path": "/api/project-dashboard/lookups",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3693
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 87
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3234
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 106
+    },
+    {
+      "path": "/PRSPRO2/pages/projects.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4431
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3087
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 101
+    },
+    {
+      "path": "/PRSPRO2/pages/project-detail.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 10
+    },
+    {
+      "path": "/PRSPRO2/pages/print-designer.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/print-designer.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 12
+    },
+    {
+      "path": "/api/print-templates",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2767
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 111
+    },
+    {
+      "path": "/api/print-templates/revision",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3338
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 157
+    },
+    {
+      "path": "/api/print-templates/sources",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4625
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2701
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/PRSPRO2/pages/print-designer.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/print-templates/revision",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4242
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 97
+    },
+    {
+      "path": "/api/print-templates/sources",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4774
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 142
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3571
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 165
+    },
+    {
+      "path": "/PRSPRO2/pages/print-output.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 12
+    },
+    {
+      "path": "/api/print-templates/revision",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2523
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 98
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2642
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 105
+    },
+    {
+      "path": "/api/event-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3168
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "path": "/api/events",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3618
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3749
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 151
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 156
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2718
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 94
+    },
+    {
+      "path": "/PRSPRO2/pages/events.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 8
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/api/project-image-gallery/counts",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2180
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 115
+    },
+    {
+      "path": "/api/project-statuses",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3416
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 88
+    },
+    {
+      "path": "/api/attachments/:id/download",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4341
+    },
+    {
+      "path": "/api/attachments/:id/download",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4341
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2180
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 100
+    },
+    {
+      "path": "/PRSPRO2/pages/project-statuses.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/project-statuses",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2588
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2049
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 116
+    },
+    {
+      "path": "/PRSPRO2/pages/information-types.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 9
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 13
+    },
+    {
+      "path": "/api/information-types",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3924
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 157
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3493
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "path": "/PRSPRO2/pages/procurement.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 3
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 14
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3037
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 116
+    },
+    {
+      "path": "/api/procurement/workspace",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3455
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 110
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 1
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2915
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 149
+    },
+    {
+      "path": "/PRSPRO2/pages/reports.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 7
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 5
+    },
+    {
+      "path": "/api/audit",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3424
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 187
+    },
+    {
+      "path": "/api/reports/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4221
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 102
+    },
+    {
+      "path": "/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 0
+    },
+    {
+      "path": "/api/auth/me/permissions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 2498
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 99
+    },
+    {
+      "path": "/PRSPRO2/pages/audit.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 12
+    },
+    {
+      "path": "/PRSPRO2/pages/admin.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 4
+    },
+    {
+      "path": "/PRSPRO2/pages/admin.html",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 15
+    },
+    {
+      "path": "/api/admin/sessions",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 3790
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 105
+    },
+    {
+      "path": "/api/audit",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4141
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 157
+    },
+    {
+      "path": "/api/projects",
+      "method": "GET",
+      "status": 302,
+      "durationMs": 4502
+    },
+    {
+      "path": "/macros/echo",
+      "method": "GET",
+      "status": 200,
+      "durationMs": 111
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "coverageGaps": [
+    "print-design: 1 submit control(s) inventoried but not submitted by the safe audit."
+  ],
+  "overallStatus": "needs-attention",
+  "login": {
+    "loginFormReadyMs": 301,
+    "loginAttemptMs": 10176,
+    "authenticated": true,
+    "errorMessage": ""
+  },
+  "eventFormDiagnostics": {
+    "modalReadyMs": 3956,
+    "projectWorkflowReadyMs": 4757,
+    "formDefinitionsReadyMs": 8082,
+    "warmFormDefinitionsRequestMs": 2756,
+    "warmFormDefinitionsTimedOut": false,
+    "projectOptions": 7,
+    "eligibleEventTypes": 10,
+    "configuredFormControls": 7,
+    "diagnosticEndpoints": []
+  },
+  "procurementDiagnostics": {
+    "measuredAt": "2026-11-19T18:04:26.130Z",
+    "headers": [
+      "مسیر",
+      "زمان مرورگر",
+      "کل بک‌اند",
+      "خواندن/پردازش بک‌اند"
+    ],
+    "endpoints": [
+      {
+        "endpoint": "/procurement/reports",
+        "browserMs": "4831 ms",
+        "backendMs": "3690 ms",
+        "details": "دسترسی 2526 / روتر 1164 / Sheets: findById:1055ms×1, getAll:922ms×1, getSheet:778ms×2"
+      },
+      {
+        "endpoint": "/procurement/orders",
+        "browserMs": "3625 ms",
+        "backendMs": "1626 ms",
+        "details": "دسترسی 1191 / روتر 435 / Sheets: getAll:388ms×1, findById:330ms×1, getHeaders:280ms×1"
+      },
+      {
+        "endpoint": "/procurement/needs",
+        "browserMs": "3387 ms",
+        "backendMs": "1793 ms",
+        "details": "دسترسی 1289 / روتر 503 / Sheets: getAll:511ms×1, getHeaders:437ms×1, findById:331ms×1"
+      },
+      {
+        "endpoint": "/procurement/dashboard",
+        "browserMs": "6437 ms",
+        "backendMs": "2565 ms",
+        "details": "دسترسی 1370 / روتر 1191 / Sheets: getAll:813ms×1, findById:444ms×1, getAll:281ms×1"
+      },
+      {
+        "endpoint": "/procurement/workspace",
+        "browserMs": "3315 ms",
+        "backendMs": "1604 ms",
+        "details": "دسترسی 1113 / روتر 490 / Sheets: findById:409ms×1, findById:240ms×1, getAll:230ms×1"
+      }
+    ]
+  },
+  "procurementPerformance": {
+    "measuredRequests": 7,
+    "failedRequests": 0,
+    "endpoints": [
+      {
+        "endpoint": "GET /api/procurement/workspace",
+        "requests": 3,
+        "failedRequests": 0,
+        "averageMs": 3442,
+        "medianMs": 3455,
+        "p95Ms": 3668,
+        "maxMs": 3668
+      },
+      {
+        "endpoint": "GET /api/procurement/dashboard",
+        "requests": 1,
+        "failedRequests": 0,
+        "averageMs": 6326,
+        "medianMs": 6326,
+        "p95Ms": 6326,
+        "maxMs": 6326
+      },
+      {
+        "endpoint": "GET /api/procurement/needs",
+        "requests": 1,
+        "failedRequests": 0,
+        "averageMs": 3267,
+        "medianMs": 3267,
+        "p95Ms": 3267,
+        "maxMs": 3267
+      },
+      {
+        "endpoint": "GET /api/procurement/orders",
+        "requests": 1,
+        "failedRequests": 0,
+        "averageMs": 3514,
+        "medianMs": 3514,
+        "p95Ms": 3514,
+        "maxMs": 3514
+      },
+      {
+        "endpoint": "GET /api/procurement/reports",
+        "requests": 1,
+        "failedRequests": 0,
+        "averageMs": 4732,
+        "medianMs": 4732,
+        "p95Ms": 4732,
+        "maxMs": 4732
+      }
+    ],
+    "note": "Browser and admin-only backend repository timings are captured in procurementDiagnostics."
+  }
+}
