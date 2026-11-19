@@ -1203,11 +1203,7 @@
           : (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">＋</span><span>ثبت رویداد</span></button>' : '');
         const historyAction = Events.canViewEventHistory
           ? '<button type="button" class="btn btn-secondary event-queue-history-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">◷</span><span>رویدادهای ثبت‌شده</span></button>' : '';
-        const router = PMS.Router;
-        const canViewGallery = !!(router && (
-          (typeof router.isAdmin === 'function' && router.isAdmin()) ||
-          (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
-        ));
+        const canViewGallery = Events.canViewProjectImageGallery();
         const galleryCount = Object.prototype.hasOwnProperty.call(Events.projectImageGalleryCounts, id)
           ? Events.projectImageGalleryCounts[id] : '—';
         const galleryAction = canViewGallery
@@ -1368,13 +1364,17 @@
       });
     },
 
-    loadProjectImageCounts: function (projects) {
+    canViewProjectImageGallery: function () {
       const router = PMS.Router;
-      const canView = !!(router && (
-        (typeof router.isAdmin === 'function' && router.isAdmin()) ||
-        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
-      ));
-      if (!canView) return Promise.resolve([]);
+      if (!router) return false;
+      if (typeof router.isAdmin === 'function' && router.isAdmin()) return true;
+      const permissions = Array.isArray(router.permissions) ? router.permissions : [];
+      return permissions.indexOf('ATTACHMENT_VIEW') !== -1 &&
+        (permissions.indexOf('PROJECT_VIEW') !== -1 || permissions.indexOf('EVENT_VIEW') !== -1);
+    },
+
+    loadProjectImageCounts: function (projects) {
+      if (!this.canViewProjectImageGallery()) return Promise.resolve([]);
       const now = Date.now();
       if (this.projectImageGalleryCountPromise) return this.projectImageGalleryCountPromise;
       if (this.projectImageGalleryCountsLoadedAt && now - this.projectImageGalleryCountsLoadedAt < 120000) {
@@ -1412,12 +1412,7 @@
     },
 
     openProjectImageGallery: async function (projectId, trigger) {
-      const router = PMS.Router;
-      const canView = !!(router && (
-        (typeof router.isAdmin === 'function' && router.isAdmin()) ||
-        (Array.isArray(router.permissions) && router.permissions.indexOf('ATTACHMENT_VIEW') !== -1)
-      ));
-      if (!canView || !projectId) return;
+      if (!this.canViewProjectImageGallery() || !projectId) return;
       if (this.projectImageGalleryState && this.projectImageGalleryState.dialog) {
         const previous = this.projectImageGalleryState.dialog;
         if (previous.open) previous.close();
