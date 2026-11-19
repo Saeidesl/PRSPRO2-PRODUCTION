@@ -22,7 +22,7 @@ test('shared image preview closes safely and releases only owned object URLs', (
   assert.match(projectsSource, /URL\.revokeObjectURL\(src\)/);
   assert.match(projectsSource, /event\.target === dialog/);
   assert.match(projectsSource, /pms-image-preview-close/);
-  assert.match(source, /URL\.revokeObjectURL\(url\)/);
+  assert.match(source, /revokeObjectUrl:true/);
 });
 
 test('event preview click is delegated once to avoid duplicate fetch/modal races', () => {
