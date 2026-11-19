@@ -66,7 +66,7 @@ test('progress modal keeps keyboard focus contained and allows Escape only after
 });
 
 test('result panel and retry code are removed', () => {
-  assert.doesNotMatch(source, /showEventSubmissionResult|event-result-panel|procurement-retry|showProcurementRetryNotice/);
+  assert.doesNotMatch(source, /showEventSubmissionResult|event-result-panel|event-result-close|procurement-retry|showProcurementRetryNotice/);
   assert.doesNotMatch(styles, /event-result-panel/);
 });
 
