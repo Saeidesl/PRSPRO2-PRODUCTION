@@ -1490,7 +1490,7 @@
         items.forEach((item) => {
           const eventId = String(item.EventID || (String(item.EntityType || '').toUpperCase() === 'EVENT' ? item.EntityID : '') || '');
           const rawDate = String(item.EventDate || item.UploadedAt || '');
-          const dateKey = /^\\d{4}-\\d{2}-\\d{2}/.test(rawDate)
+          const dateKey = /^\d{4}-\d{2}-\d{2}/.test(rawDate)
             ? rawDate.slice(0, 10)
             : (rawDate && !isNaN(new Date(rawDate).getTime()) ? new Date(rawDate).toISOString().slice(0, 10) : 'undated');
           const key = eventId + '|' + dateKey;
