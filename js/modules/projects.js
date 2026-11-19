@@ -2830,38 +2830,62 @@ ${isEditMode ? `            <div class="filter-group form-group project-form-fie
       });
     },
 
-    openProjectImage: function (src, alt) {
-      const existing = document.getElementById('project-image-lightbox');
-      if (existing) existing.remove();
+    openImagePreview: function (src, alt, options) {
+      if (!src) return null;
+      options = options || {};
 
-      const overlay = document.createElement('div');
-      overlay.id = 'project-image-lightbox';
-      overlay.className = 'project-image-lightbox';
-      overlay.setAttribute('role', 'dialog');
-      overlay.setAttribute('aria-modal', 'true');
-      overlay.setAttribute('aria-label', 'نمایش تصویر پروژه');
-      overlay.innerHTML = '<div class="project-image-lightbox-content">' +
-        '<button type="button" class="project-image-lightbox-close" aria-label="بستن تصویر" title="بستن">×</button>' +
-        '<img class="project-image-lightbox-image" alt="">' +
-        '</div>';
+      const existing = document.getElementById('pms-image-preview-dialog');
+      if (existing) {
+        if (existing.open && typeof existing.close === 'function') existing.close();
+        existing.remove();
+      }
 
-      const image = overlay.querySelector('.project-image-lightbox-image');
-      const closeButton = overlay.querySelector('.project-image-lightbox-close');
+      const dialog = document.createElement('dialog');
+      dialog.id = 'pms-image-preview-dialog';
+      dialog.className = 'pms-image-preview-dialog';
+      dialog.setAttribute('aria-label', 'نمایش تصویر');
+      dialog.style.cssText = 'position:fixed;margin:auto;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:14px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);width:min(1000px,calc(100vw - 24px));overflow:auto;background:#202833;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)';
+
+      const content = document.createElement('div');
+      content.style.cssText = 'display:flex;flex-direction:column;max-height:calc(100dvh - 26px)';
+      content.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.18)"><strong class="pms-image-preview-title" style="min-width:0;overflow-wrap:anywhere"></strong><button type="button" class="pms-image-preview-close" aria-label="بستن تصویر" title="بستن" style="flex:0 0 40px;width:40px;height:40px;border:1px solid rgba(255,255,255,.2);border-radius:9px;background:transparent;color:#fff;font-size:26px;line-height:1;cursor:pointer">×</button></div><div style="display:flex;align-items:center;justify-content:center;padding:12px;min-height:0;overflow:auto"><img class="pms-image-preview-image" alt="" style="display:block;max-width:100%;max-height:calc(100dvh - 110px);width:auto;height:auto;object-fit:contain"></div>';
+      const image = content.querySelector('.pms-image-preview-image');
+      const title = content.querySelector('.pms-image-preview-title');
+      const closeButton = content.querySelector('.pms-image-preview-close');
       image.src = src;
-      image.alt = alt || 'تصویر پروژه';
+      image.alt = alt || 'تصویر';
+      title.textContent = alt || 'پیش‌نمایش تصویر';
+      dialog.appendChild(content);
 
-      let keyboard = null;
-      const close = function () {
-        if (keyboard) keyboard.close();
-        else overlay.remove();
+      let cleaned = false;
+      const cleanup = function () {
+        if (cleaned) return;
+        cleaned = true;
+        if (options.revokeObjectUrl) URL.revokeObjectURL(src);
+        dialog.remove();
       };
-      closeButton.addEventListener('click', close);
-      overlay.addEventListener('click', function (event) {
-        if (event.target === overlay) close();
+      dialog.addEventListener('close', cleanup, { once: true });
+      closeButton.addEventListener('click', function () {
+        if (dialog.open) dialog.close();
+        else cleanup();
       });
-      document.body.appendChild(overlay);
-      keyboard = bindProjectModalKeyboard(overlay, () => overlay.remove());
-      keyboard.focusFirst();
+      dialog.addEventListener('click', function (event) {
+        if (event.target === dialog && dialog.open) dialog.close();
+      });
+
+      document.body.appendChild(dialog);
+      try {
+        dialog.showModal();
+        closeButton.focus();
+      } catch (error) {
+        cleanup();
+        throw error;
+      }
+      return dialog;
+    },
+
+    openProjectImage: function (src, alt) {
+      return this.openImagePreview(src, alt, { revokeObjectUrl: false });
     },
 
     // ========================================================
