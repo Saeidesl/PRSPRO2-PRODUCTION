@@ -1631,3 +1631,44 @@
 - ثبت پذیرش Task 4 در Backend PR #94 و Frontend PR #148 ادغام شد.
 - PR مستندات نهایی Backend #95 با commit `62922eb55eac6ea70dec47f7481b029157df75a6` ادغام شد.
 - این مرحله فقط مستندات است؛ هیچ deployment جدید Backend یا Frontend انجام نمی‌شود.
+
+
+## فاز: گالری تصاویر پروژه در صفحه رویدادها (2026-11-19)
+
+### هدف و تصمیمات محصول
+- افزودن گالری تصاویر تجمیعی پروژه و رویدادهای آن در صفحه رویدادها.
+- روی کارت پروژه فقط دکمه گالری و تعداد تصاویر؛ تصویر پروفایل موجود کارت حفظ می‌شود.
+- گروه‌بندی تصاویر بر اساس رویداد و تاریخ.
+- شمارنده سبک در بارگذاری اولیه؛ metadata کامل پس از کلیک؛ thumbnailها lazy-load با حداکثر سه درخواست هم‌زمان؛ دانلود تصویر اصلی فقط پس از انتخاب.
+- استفاده مجدد از preview موجود و عدم ساخت lightbox/overlay موازی.
+
+### نقشه فنی Frontend
+- مخزن: `Saeidesl/PRSPRO2-PRODUCTION`، شاخه `main`.
+- فایل‌های اصلی: `pages/events.html`, `js/modules/events.js`, `js/modules/projects.js`, `js/core/api.js`, `css/events.css`.
+- `Events.renderProjectQueue`: افزودن دکمه گالری و شمارنده روی کارت‌های پروژه.
+- `Events.loadProjectImageCounts`: دریافت شمارنده از `GET /project-image-gallery/counts` بدون دریافت metadata یا محتوای گالری.
+- `Events.openProjectImageGallery`: دریافت `GET /projects/:projectId/image-gallery` فقط پس از کلیک و گروه‌بندی تصاویر بر اساس رویداد/تاریخ.
+- `Events.processProjectImageGalleryThumbnailQueue`: بارگذاری thumbnail با `IntersectionObserver` و سقف concurrency برابر ۳؛ endpoint مصرفی `GET /attachments/:attachmentId/thumbnail`.
+- انتخاب تصویر از مسیر دانلود اصلی موجود `Events.openEventImageAttachment(attachmentId)` و `GET /attachments/:attachmentId/download` عبور می‌کند؛ preview مشترک `PMS.Modules.Projects.openImagePreview(src, alt, options)` در `js/modules/projects.js` با Native `<dialog>` حفظ شده است.
+- هنگام بستن modal، observerها و Object URLهای مربوط به thumbnail پاک‌سازی می‌شوند.
+- `Events.canViewProjectImageGallery` مجوز Frontend را با Backend هماهنگ می‌کند: `ATTACHMENT_VIEW` به‌علاوه یکی از `PROJECT_VIEW` یا `EVENT_VIEW` (با رعایت مسیر Admin موجود).
+- `Events.invalidateProjectImageGalleryCounts` شمارنده را پس از upload/delete پیوست stale می‌کند؛ `Projects.invalidateProjectCardAttachmentMetadata` نیز invalidation مرتبط را فراخوانی می‌کند.
+- CSS در `css/events.css` modal، grid، وضعیت loading و چیدمان واکنش‌گرا را تعریف می‌کند.
+- تست‌ها: `tests/project-image-gallery-ui.test.js` برای شمارنده، fetch-on-click، گروه‌بندی، lazy loading/concurrency، preview، cleanup، permission و invalidation؛ تست‌های قبلی `tests/event-image-preview-modal.test.js`, `tests/event-queue-project-cards.test.js` و `tests/event-history-project-cards.test.js` نیز مسیرهای موجود را پوشش می‌دهند.
+
+### انتشار و پذیرش Frontend
+- PR #162 با squash ادغام شد؛ merge commit: `8320a6b02c8f12f65dfa70cc8577a8cfa28edcc3`.
+- GitHub Pages workflow run `44583178273` روی commit ادغام‌شده با موفقیت منتشر شد.
+- Backend پیش از پذیرش نهایی در Apps Script Production مستقر شد.
+- Product Owner در 2026-11-19 تست عملی را موفق اعلام کرد: شمارنده، بازشدن و گروه‌بندی گالری، بارگذاری تدریجی thumbnailها، بازشدن تصویر اصلی در preview مشترک، بستن/بازکردن مجدد، refresh شمارنده پس از upload/delete و واکنش‌گرایی موبایل/دسکتاپ.
+
+### Log پذیرش نهایی
+- [x] Task 1 — Discovery & Planning: بررسی جریان کارت پروژه، attachmentها، API و preview مشترک؛ تعیین قرارداد یکپارچه با Backend.
+- [x] Task 2 — Backend gallery metadata & count contract: مصرف endpointهای تجمیعی و امن Backend.
+- [x] Task 3 — Frontend gallery experience: افزودن کنترل کارت، modal، گروه‌بندی، lazy thumbnail و preview اصلی.
+- [x] Task 4 — Integration, performance & regression acceptance: CI و browser audit موفق؛ GitHub Pages منتشر شد؛ تست عملی Product Owner موفق و ثبت شد.
+
+### وضعیت نهایی فاز
+- Frontend روی `main` و GitHub Pages منتشر و توسط Product Owner تأیید شد.
+- Backend هماهنگ روی Google Apps Script Production مستقر شد.
+- این فاز بسته شد؛ TODO5 برای قابلیت بعدی آماده است.
