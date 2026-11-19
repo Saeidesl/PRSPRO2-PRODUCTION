@@ -13,6 +13,12 @@ test('project cards show one gallery action with aggregate metadata counts', () 
   assert.match(events, /loadProjectImageCounts: function/);
 });
 
+test('gallery UI requires both attachment access and project or event visibility', () => {
+  assert.match(events, /canViewProjectImageGallery: function/);
+  assert.match(events, /permissions\.indexOf\('ATTACHMENT_VIEW'\) !== -1/);
+  assert.match(events, /permissions\.indexOf\('PROJECT_VIEW'\) !== -1 \|\| permissions\.indexOf\('EVENT_VIEW'\) !== -1/);
+});
+
 test('full gallery metadata is requested only after the gallery button is activated', () => {
   const openAt = events.indexOf('openProjectImageGallery: async function');
   const metadataAt = events.indexOf("'/projects/' + encodeURIComponent(projectId) + '/image-gallery'", openAt);
