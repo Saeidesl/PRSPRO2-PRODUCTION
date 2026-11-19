@@ -56,7 +56,7 @@ test('clearing history filters removes the selected project filter', () => {
 test('project and events modules use refreshed production assets', () => {
   const index = read('index.html');
   assert.match(index, /project-detail\.js\?v=20261112-project-detail-attachment-cache-1/);
-  assert.match(index, /events\.js\?v=20261118-event-image-native-dialog-3/);
+  assert.match(index, /events\.js\?v=20261119-event-submit-auto-close-5s-2/);
 });
 
 test('events route grants access to users who can view or create events', () => {
