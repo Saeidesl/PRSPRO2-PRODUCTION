@@ -115,6 +115,10 @@
     queueProjectImageObserver: null,
     queueProjectImageRequestId: 0,
     queueProjectImageAttachments: Object.create(null),
+    projectImageGalleryCounts: Object.create(null),
+    projectImageGalleryCountPromise: null,
+    projectImageGalleryCountsLoadedAt: 0,
+    projectImageGalleryState: null,
 
     init: function () {
       this.bindEvents();
@@ -326,6 +330,13 @@
           if (PMS.Alert && typeof PMS.Alert.info === 'function') {
             PMS.Alert.info('این امکان فعلاً در دسترس نیست و به‌زودی فعال می‌شود');
           }
+          return;
+        }
+
+        const galleryAction = target.closest('.event-queue-gallery-button');
+        if (galleryAction) {
+          event.preventDefault();
+          Events.openProjectImageGallery(String(galleryAction.dataset.projectId || ''), galleryAction);
           return;
         }
 
@@ -1192,8 +1203,14 @@
           : (Events.canCreateEvents ? '<button type="button" class="btn btn-secondary event-queue-register-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">＋</span><span>ثبت رویداد</span></button>' : '');
         const historyAction = Events.canViewEventHistory
           ? '<button type="button" class="btn btn-secondary event-queue-history-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">◷</span><span>رویدادهای ثبت‌شده</span></button>' : '';
+        const canViewGallery = Events.canViewProjectImageGallery();
+        const galleryCount = Object.prototype.hasOwnProperty.call(Events.projectImageGalleryCounts, id)
+          ? Events.projectImageGalleryCounts[id] : '—';
+        const galleryAction = canViewGallery
+          ? '<button type="button" class="btn btn-secondary event-queue-gallery-button" data-project-id="' + Events.escape(id) + '" aria-label="گالری تصاویر پروژه ' + Events.escape(code) + '"><span aria-hidden="true">▧</span><span>گالری تصاویر <b data-project-gallery-count="' + Events.escape(id) + '">' + Events.escape(galleryCount) + '</b></span></button>'
+          : '';
         const viewAction = '<button type="button" class="btn btn-secondary event-queue-view-button" data-project-id="' + Events.escape(id) + '"><span aria-hidden="true">◉</span><span>مشاهده</span></button>';
-        const actions = [primaryAction, historyAction, viewAction].filter(Boolean).join('');
+        const actions = [primaryAction, historyAction, galleryAction, viewAction].filter(Boolean).join('');
         return '<article class="event-queue-project event-project-card-unified queue-' + queueKey + '" data-queue="' + queueKey + '" data-event-project-card="' + Events.escape(id) + '">' +
           '<div class="event-queue-project-main"><div class="event-queue-project-media" data-event-project-media="' + Events.escape(id) + '" data-image-state="loading">' +
           '<img data-event-project-thumbnail alt="تصویر پروفایل پروژه" role="button" tabindex="0" aria-label="نمایش بزرگ تصویر پروژه" hidden><span class="event-queue-project-image-placeholder">در حال بارگذاری تصویر</span></div>' +
@@ -1206,6 +1223,7 @@
       }).join('');
       if (container.innerHTML !== markup) container.innerHTML = markup;
       this.loadQueueProjectImages(projects);
+      this.loadProjectImageCounts(projects);
     },
 
     loadQueueProjectImages: async function (projects) {
@@ -1344,6 +1362,246 @@
           }
         });
       });
+    },
+
+    canViewProjectImageGallery: function () {
+      const router = PMS.Router;
+      if (!router) return false;
+      if (typeof router.isAdmin === 'function' && router.isAdmin()) return true;
+      const permissions = Array.isArray(router.permissions) ? router.permissions : [];
+      return permissions.indexOf('ATTACHMENT_VIEW') !== -1 &&
+        (permissions.indexOf('PROJECT_VIEW') !== -1 || permissions.indexOf('EVENT_VIEW') !== -1);
+    },
+
+    loadProjectImageCounts: function (projects) {
+      if (!this.canViewProjectImageGallery()) return Promise.resolve([]);
+      const now = Date.now();
+      if (this.projectImageGalleryCountPromise) return this.projectImageGalleryCountPromise;
+      if (this.projectImageGalleryCountsLoadedAt && now - this.projectImageGalleryCountsLoadedAt < 120000) {
+        this.applyProjectImageGalleryCounts();
+        return Promise.resolve(this.projectImageGalleryCounts);
+      }
+      this.projectImageGalleryCountPromise = PMS.Api.get('/project-image-gallery/counts', { trackSync: false })
+        .then((response) => {
+          const rows = PMS.Api.extractData(response) || [];
+          this.projectImageGalleryCounts = Object.create(null);
+          (Array.isArray(rows) ? rows : []).forEach((row) => {
+            const id = String(row && (row.projectId || row.ProjectID) || '');
+            if (id) this.projectImageGalleryCounts[id] = Math.max(0, Number(row.count !== undefined ? row.count : row.Count) || 0);
+          });
+          this.projectImageGalleryCountsLoadedAt = Date.now();
+          this.applyProjectImageGalleryCounts();
+          return this.projectImageGalleryCounts;
+        })
+        .catch((error) => {
+          console.warn('Project image counts could not be loaded:', error);
+          return this.projectImageGalleryCounts;
+        })
+        .finally(() => { this.projectImageGalleryCountPromise = null; });
+      return this.projectImageGalleryCountPromise;
+    },
+
+    invalidateProjectImageGalleryCounts: function () {
+      // Keep the last visible count while marking it stale; the next queue
+      // render refreshes it without briefly replacing valid numbers with dashes.
+      this.projectImageGalleryCountsLoadedAt = 0;
+    },
+
+    applyProjectImageGalleryCounts: function () {
+      const container = document.getElementById('event-queue-all');
+      if (!container) return;
+      container.querySelectorAll('[data-project-gallery-count]').forEach((node) => {
+        const id = String(node.getAttribute('data-project-gallery-count') || '');
+        node.textContent = Object.prototype.hasOwnProperty.call(this.projectImageGalleryCounts, id)
+          ? String(this.projectImageGalleryCounts[id]) : '—';
+      });
+    },
+
+    openProjectImageGallery: async function (projectId, trigger) {
+      if (!this.canViewProjectImageGallery() || !projectId) return;
+      if (this.projectImageGalleryState && this.projectImageGalleryState.dialog) {
+        const previous = this.projectImageGalleryState.dialog;
+        if (previous.open) previous.close();
+        else previous.remove();
+      }
+
+      const project = this.findById(this.projects, projectId) || {};
+      const code = project.ProjectCode || projectId;
+      const title = project.Title || project.Name || project.ProjectName || '';
+      const dialog = document.createElement('dialog');
+      dialog.className = 'event-project-image-gallery-dialog';
+      dialog.setAttribute('aria-label', 'گالری تصاویر پروژه ' + code);
+      dialog.innerHTML =
+        '<div class="event-project-image-gallery-shell">' +
+          '<header class="event-project-image-gallery-header">' +
+            '<div class="event-project-image-gallery-heading"><strong></strong><span></span></div>' +
+            '<button type="button" class="event-project-image-gallery-close" aria-label="بستن گالری">×</button>' +
+          '</header>' +
+          '<div class="event-project-image-gallery-content" aria-live="polite">' +
+            '<div class="event-project-image-gallery-loading"><span class="event-gallery-spinner"></span><span>در حال دریافت فهرست تصاویر…</span></div>' +
+          '</div>' +
+        '</div>';
+      dialog.querySelector('.event-project-image-gallery-heading strong').textContent = 'گالری تصاویر · ' + code;
+      dialog.querySelector('.event-project-image-gallery-heading span').textContent = title;
+      const content = dialog.querySelector('.event-project-image-gallery-content');
+      const state = {
+        dialog: dialog, content: content, closed: false, observer: null,
+        queue: [], active: 0, urls: new Set(), requested: Object.create(null), trigger: trigger || null
+      };
+      this.projectImageGalleryState = state;
+
+      const cleanup = () => {
+        if (state.closed) return;
+        state.closed = true;
+        if (state.observer) state.observer.disconnect();
+        state.queue.length = 0;
+        state.urls.forEach((url) => URL.revokeObjectURL(url));
+        state.urls.clear();
+        if (this.projectImageGalleryState === state) this.projectImageGalleryState = null;
+        if (state.trigger && state.trigger.isConnected) state.trigger.focus();
+        dialog.remove();
+      };
+      dialog.addEventListener('close', cleanup, { once: true });
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) { dialog.close(); return; }
+        const imageButton = event.target.closest('[data-gallery-image-id]');
+        if (imageButton && imageButton.dataset.galleryImageId) {
+          this.openEventImageAttachment(imageButton.dataset.galleryImageId);
+        }
+      });
+      dialog.querySelector('.event-project-image-gallery-close').addEventListener('click', () => dialog.close());
+      document.body.appendChild(dialog);
+      try { dialog.showModal(); }
+      catch (error) {
+        cleanup();
+        this.showNotice('بازکردن گالری تصاویر ممکن نشد.', 'warning');
+        return;
+      }
+
+      try {
+        const response = await PMS.Api.get('/projects/' + encodeURIComponent(projectId) + '/image-gallery', { trackSync: false });
+        if (state.closed) return;
+        const payload = PMS.Api.extractData(response) || {};
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        if (!items.length) {
+          content.innerHTML = '<div class="event-project-image-gallery-empty">برای این پروژه تصویری ثبت نشده است.</div>';
+          return;
+        }
+        const groups = new Map();
+        items.forEach((item) => {
+          const eventId = String(item.EventID || (String(item.EntityType || '').toUpperCase() === 'EVENT' ? item.EntityID : '') || '');
+          const rawDate = String(item.EventDate || item.UploadedAt || '');
+          const dateKey = /^\d{4}-\d{2}-\d{2}/.test(rawDate)
+            ? rawDate.slice(0, 10)
+            : (rawDate && !isNaN(new Date(rawDate).getTime()) ? new Date(rawDate).toISOString().slice(0, 10) : 'undated');
+          const key = eventId + '|' + dateKey;
+          if (!groups.has(key)) groups.set(key, {
+            eventName: String(item.EventTypeName || (eventId ? 'رویداد ثبت‌شده' : 'تصاویر پروژه')),
+            dateKey: dateKey, items: []
+          });
+          groups.get(key).items.push(item);
+        });
+
+        content.replaceChildren();
+        groups.forEach((group) => {
+          const section = document.createElement('section');
+          section.className = 'event-project-image-gallery-group';
+          const heading = document.createElement('header');
+          heading.className = 'event-project-image-gallery-group-heading';
+          const label = document.createElement('strong');
+          label.textContent = group.eventName;
+          const date = document.createElement('span');
+          date.textContent = group.dateKey === 'undated'
+            ? 'بدون تاریخ'
+            : new Date(group.dateKey + 'T12:00:00').toLocaleDateString('fa-IR');
+          heading.append(label, date);
+          const grid = document.createElement('div');
+          grid.className = 'event-project-image-gallery-grid';
+          group.items.forEach((item) => {
+            const id = String(item.ID || '');
+            if (!id) return;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'event-project-image-gallery-item';
+            button.dataset.galleryImageId = id;
+            button.setAttribute('aria-label', 'نمایش تصویر ' + String(item.FileName || 'پیوست'));
+            const preview = document.createElement('span');
+            preview.className = 'event-project-image-gallery-preview';
+            preview.textContent = 'در انتظار بارگذاری';
+            const name = document.createElement('span');
+            name.className = 'event-project-image-gallery-name';
+            name.textContent = String(item.FileName || 'تصویر');
+            button.append(preview, name);
+            grid.appendChild(button);
+            button._galleryItem = item;
+          });
+          section.append(heading, grid);
+          content.appendChild(section);
+        });
+
+        const enqueue = (button) => {
+          if (state.closed || !button || button.dataset.thumbnailQueued === '1') return;
+          button.dataset.thumbnailQueued = '1';
+          state.queue.push(button);
+          this.processProjectImageGalleryThumbnailQueue(state);
+        };
+        if ('IntersectionObserver' in window) {
+          state.observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              state.observer.unobserve(entry.target);
+              enqueue(entry.target);
+            });
+          }, { root: content, rootMargin: '100px 0px', threshold: 0.01 });
+          content.querySelectorAll('[data-gallery-image-id]').forEach((button) => state.observer.observe(button));
+        } else {
+          content.querySelectorAll('[data-gallery-image-id]').forEach(enqueue);
+        }
+      } catch (error) {
+        if (state.closed) return;
+        content.innerHTML = '<div class="event-project-image-gallery-error">دریافت فهرست تصاویر ناموفق بود. گالری را ببندید و دوباره تلاش کنید.</div>';
+        console.warn('Project image gallery could not be loaded:', error);
+      }
+    },
+
+    processProjectImageGalleryThumbnailQueue: function (state) {
+      if (!state || state.closed) return;
+      while (state.active < 3 && state.queue.length) {
+        const button = state.queue.shift();
+        if (!button || !button.isConnected) continue;
+        const item = button._galleryItem || {};
+        const attachmentId = String(item.ID || '');
+        if (!attachmentId) continue;
+        state.active += 1;
+        const preview = button.querySelector('.event-project-image-gallery-preview');
+        PMS.Api.get('/attachments/' + encodeURIComponent(attachmentId) + '/thumbnail', { trackSync: false })
+          .then((response) => {
+            if (state.closed || !button.isConnected) return;
+            const data = PMS.Api.extractData(response) || {};
+            if (!data.Base64 || String(data.MimeType || '').toLowerCase().indexOf('image/') !== 0) {
+              throw new Error('پیش‌نمایش کوچک تصویر معتبر نیست.');
+            }
+            const binary = atob(data.Base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+            const url = URL.createObjectURL(new Blob([bytes], { type: data.MimeType }));
+            if (state.closed) { URL.revokeObjectURL(url); return; }
+            state.urls.add(url);
+            const image = document.createElement('img');
+            image.alt = '';
+            image.loading = 'lazy';
+            image.decoding = 'async';
+            image.src = url;
+            preview.replaceChildren(image);
+          })
+          .catch(() => {
+            if (!state.closed && preview && preview.isConnected) preview.textContent = 'پیش‌نمایش موجود نیست';
+          })
+          .finally(() => {
+            state.active = Math.max(0, state.active - 1);
+            if (!state.closed) this.processProjectImageGalleryThumbnailQueue(state);
+          });
+      }
     },
 
     render: function (events) {
@@ -3546,6 +3804,7 @@
       const result = PMS.Api.extractData ? PMS.Api.extractData(response) : (response && response.data) || response;
       const attachment = result && (result.attachment || result.Attachment);
       if (!attachment || !(attachment.ID || attachment.Id)) throw new Error('اطلاعات فایل بارگذاری‌شده دریافت نشد.');
+      this.invalidateProjectImageGalleryCounts();
       const value = {AttachmentID:attachment.ID || attachment.Id,FileName:attachment.FileName || file.name,MimeType:attachment.MimeType || mime,FileSize:Number(attachment.FileSize || file.size),AttachmentType:attachmentType};
       this.recordSubmitProgressUpload(file);
       if (input) {
