@@ -1877,11 +1877,8 @@
           const descriptionValue = prompt('شرح رویداد:', event.Description || '');
           if (descriptionValue === null) return;
           try {
-            let version = String(event.UpdatedAt || event.CreatedAt || '');
-            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'OccurredAt', value:parsedOccurredAt.toISOString(), expectedUpdatedAt:version});
-            const refreshed = this.extractObject(await PMS.Api.get('/events/' + encodeURIComponent(event.ID)));
-            version = String(refreshed.UpdatedAt || refreshed.CreatedAt || version);
-            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'Description', value:descriptionValue, expectedUpdatedAt:version});
+            const version = String(event.UpdatedAt || event.CreatedAt || '');
+            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/basic-fields', {values:{OccurredAt:parsedOccurredAt.toISOString(), Description:descriptionValue}, expectedUpdatedAt:version});
             this.showNotice('اطلاعات رویداد به‌روزرسانی شد.', 'success');
             await this.reloadEvents(); this.openDetails(event.ID);
           } catch (error) { this.showNotice(this.errorMessage(error), 'error'); }
