@@ -34,8 +34,9 @@ Extend the existing event performer selector from admin-only to all users with e
 
 - [x] Task 1 — Discovery & Planning
   - *Log:* Verified the merged admin selector and the existing backend tenant/active-user validation. Reuse the selector, GET /users, EventService.create and existing attribution fields; no schema or route changes.
-- [ ] Task 2 — Frontend selector for all event creators (IN PROGRESS)
+- [x] Task 2 — Frontend selector for all event creators
   - *Log:* `js/modules/events.js` now renders the performer selector for all event-create users and loads active users; current authenticated user is selected by default. Cache-busting in `index.html` updated.
-- [ ] Task 3 — Backend selected performer compatibility & regression validation
+- [x] Task 3 — Backend selected performer compatibility & regression validation
   - *Log:* `EventService.js` now honors `event.PerformedBy` for ordinary users as well as admins; existing tenant, active-user, department, event-type and project access checks remain. Added `tests/ordinary-event-performer-selection.test.js`.
-- [ ] Task 4 — Integration & Acceptance
+- [ ] Task 4 — Integration & Acceptance (IN PROGRESS)
+  - *Log:* Backend PR #99 merged to main (SHA `357e89e1c95892c2095c426609df1296177a255e`); Frontend PR #165 merged to main (SHA `be0dd759eee2fe6f56056ee21949cde48d0471a5`). Frontend checks and frontend agent suite passed; backend source checks, PMS agent suite, and diagnostics tests passed. Comprehensive UI performance audit still running at merge time. Awaiting user acceptance test; live deployment not verified.
