@@ -52,3 +52,13 @@ Investigate the ordinary-user event performer selector remaining indefinitely at
 - [ ] Task 2 — Frontend timeout and explicit failure state (IN PROGRESS): PR #166 adds a 15-second timeout race, loading disable-state, clearer timeout/error option and refreshed module cache key. No new API, route, or schema.
 - [ ] Task 3 — CI and regression checks.
 - [ ] Task 4 — Live diagnosis and acceptance: use the surfaced timeout result to distinguish stalled request from ordinary API error; then verify successful list load on ordinary account.
+
+
+## 📋 Macro-Task Queue & Implementation Log — Timeout Fix Extension
+
+- [x] Task 2 — Frontend timeout and explicit failure state
+  - *Log:* `js/modules/events.js` adds a 15-second timeout to the existing `/users` request, disables the selector during loading, and displays explicit timeout/failure messages. `index.html` cache key was updated while preserving existing compatibility tokens. PR #166 merged to frontend main (merge SHA `fd175c9a677f9cc5dc691f7007a1839f1e4f9a4e`).
+- [x] Task 3 — CI and regression checks
+  - *Log:* On PR head `11cd2c20aa63d16bdd3821cd4ee51dd32a32263e`, Frontend checks, PMS cross-repository QA, PMS comprehensive UI performance audit, and PMS frontend agent suite all passed. Initial CI failures were due to cache-version assertions; compatibility was corrected and the latest CI set passed before merge.
+- [ ] Task 4 — Live diagnosis and acceptance (IN PROGRESS)
+  - *Log:* Fix merged to main. Awaiting ordinary-user live verification of user-list response; deployment/live app state is not independently verified.
