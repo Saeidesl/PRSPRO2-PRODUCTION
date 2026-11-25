@@ -1873,7 +1873,7 @@
             version = String(refreshed.UpdatedAt || refreshed.CreatedAt || version);
             await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'Description', value:descriptionValue, expectedUpdatedAt:version});
             PMS.Alert && PMS.Alert.success && PMS.Alert.success('اطلاعات رویداد به‌روزرسانی شد.');
-            this.load(); this.openDetails(event.ID);
+            await this.reloadEvents(); this.openDetails(event.ID);
           } catch (error) { PMS.Alert && PMS.Alert.error && PMS.Alert.error(this.errorMessage(error)); }
         });
         const voidBtn = document.getElementById('event-details-void');
@@ -1884,7 +1884,7 @@
           try {
             await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/void', {reason:reason.trim()});
             PMS.Alert && PMS.Alert.success && PMS.Alert.success('رویداد با موفقیت باطل شد.');
-            this.load(); this.closeModal();
+            await this.reloadEvents(); this.closeModal();
           } catch (error) { PMS.Alert && PMS.Alert.error && PMS.Alert.error(this.errorMessage(error)); }
         });
       } catch (error) {
