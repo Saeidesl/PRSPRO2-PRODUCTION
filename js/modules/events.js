@@ -2194,6 +2194,7 @@
         '<div id="event-context-content" class="event-context-content"><p class="event-muted">برای مشاهده اطلاعات مرتبط، پروژه و نوع رویداد را انتخاب کنید.</p></div></aside></div>';
 
       document.body.appendChild(modal);
+      if (this.isSystemAdmin) this.loadEventPerformerOptions();
       modal.addEventListener('click', (event) => {
         if (!event.target.closest('#event-project-picker')) {
           this.setProjectPickerOpen(false);
