@@ -1854,10 +1854,46 @@
           });
         }
 
-        const content = document.getElementById('event-details-content');
-        if (content) {
-          content.innerHTML = html;
+        const canEditEvents = !!(PMS.Router && ((typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin()) || (Array.isArray(PMS.Router.permissions) && PMS.Router.permissions.indexOf('EVENT_EDIT') !== -1)));
+        const eventStatusForActions = String(event.Status || '').toUpperCase();
+        if (canEditEvents && ['VOID','CANCELLED','CANCELED'].indexOf(eventStatusForActions) === -1) {
+          html += '<div class="event-details-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">';
+          if (event.ProjectID) {
+            html += '<button type="button" class="btn btn-secondary" id="event-details-edit-basic">ویرایش تاریخ و شرح</button>';
+          }
+          html += '<button type="button" class="btn btn-danger" id="event-details-void">ابطال رویداد</button></div>';
         }
+        const content = document.getElementById('event-details-content');
+        if (content) { content.innerHTML = html; }
+        const editBtn = document.getElementById('event-details-edit-basic');
+        if (editBtn) editBtn.addEventListener('click', async () => {
+          const dateValue = prompt('تاریخ و ساعت وقوع را به قالب قابل تشخیص مرورگر وارد کنید (ترجیحاً ISO):', event.OccurredAt || '');
+          if (dateValue === null) return;
+          const parsedOccurredAt = new Date(String(dateValue).trim());
+          if (!String(dateValue).trim() || isNaN(parsedOccurredAt.getTime())) {
+            this.showNotice('تاریخ واردشده معتبر نیست؛ از قالب ISO استفاده کنید.', 'error');
+            return;
+          }
+          const descriptionValue = prompt('شرح رویداد:', event.Description || '');
+          if (descriptionValue === null) return;
+          try {
+            const version = String(event.UpdatedAt || event.CreatedAt || '');
+            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/basic-fields', {values:{OccurredAt:parsedOccurredAt.toISOString(), Description:descriptionValue}, expectedUpdatedAt:version});
+            this.showNotice('اطلاعات رویداد به‌روزرسانی شد.', 'success');
+            await this.reloadEvents(); this.openDetails(event.ID);
+          } catch (error) { this.showNotice(this.errorMessage(error), 'error'); }
+        });
+        const voidBtn = document.getElementById('event-details-void');
+        if (voidBtn) voidBtn.addEventListener('click', async () => {
+          const reason = prompt('دلیل ابطال رویداد را وارد کنید:');
+          if (!reason || !reason.trim()) return;
+          if (!confirm('آیا از ابطال این رویداد مطمئن هستید؟')) return;
+          try {
+            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/void', {reason:reason.trim()});
+            this.showNotice('رویداد با موفقیت باطل شد.', 'success');
+            await this.reloadEvents(); this.closeModal();
+          } catch (error) { this.showNotice(this.errorMessage(error), 'error'); }
+        });
       } catch (error) {
         const content = document.getElementById('event-details-content');
 
