@@ -2249,7 +2249,7 @@
         '<div id="event-context-content" class="event-context-content"><p class="event-muted">برای مشاهده اطلاعات مرتبط، پروژه و نوع رویداد را انتخاب کنید.</p></div></aside></div>';
 
       document.body.appendChild(modal);
-      if (this.isSystemAdmin) this.loadEventPerformerOptions();
+      this.loadEventPerformerOptions();
       modal.addEventListener('click', (event) => {
         if (!event.target.closest('#event-project-picker')) {
           this.setProjectPickerOpen(false);
@@ -4103,7 +4103,7 @@
         EventTypeVersion: type ? Number(type.Version || 1) : 1,
         OccurredAt: date.toISOString(),
         Description: description,
-        PerformedBy: this.isSystemAdmin ? String((document.getElementById('event-form-performer') || {}).value || (PMS.Router.getUser() || {}).ID || '') : undefined,
+        PerformedBy: String((document.getElementById('event-form-performer') || {}).value || (PMS.Router.getUser() || {}).ID || ''),
         FormResponses: this.amendmentMode ? [] : formResponses,
         VariantQuantity: (form.querySelector('[data-event-quantity-input]') || {}).value || ''
       };

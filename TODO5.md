@@ -69,3 +69,16 @@ Investigate the ordinary-user event performer selector remaining indefinitely at
 
 - [ ] Task 4 — Live diagnosis (IN PROGRESS)
   - *Log:* Diagnostic branch `fix/performer-selector-diagnostics-v2` adds a persistent status line beside the performer selector, independent of the modal's general error renderer. It reports function entry, request start, response/error, timeout, HTTP status/error code where available, and active-user count. Console logs are supplemental. No backend/API/schema changes.
+
+
+## 🎯 Current Objective — Fix ordinary-user performer selector invocation
+
+Resolve the root cause of the ordinary-user event performer selector remaining on “در حال دریافت کاربران...”: the loader was invoked only for system admins, while ordinary users never ran it. Also ensure the selected performer value is sent in the event payload for all creators, consistent with the existing backend validation and attribution rules.
+
+## 📋 Macro-Task Queue & Implementation Log — Root-cause fix
+
+- [x] Task 1 — Discovery: inspected main and the merged diagnostic code; confirmed `openForm()` conditionally called `loadEventPerformerOptions()` only when `this.isSystemAdmin` was true, leaving ordinary users with the static loading option and no diagnostic line. Also confirmed payload construction guarded `PerformedBy` behind the same admin-only condition.
+- [ ] Task 2 — Correct selector initialization and payload (IN PROGRESS): call the existing loader for all event creators and send selected `PerformedBy` for all creators; preserve current-user fallback and backend validation.
+- [ ] Task 3 — CI, compatibility, and regression checks.
+- [ ] Task 4 — Live ordinary-user acceptance test.
+
