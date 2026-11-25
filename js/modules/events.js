@@ -1867,10 +1867,11 @@
           const descriptionValue = prompt('شرح رویداد:', event.Description || '');
           if (descriptionValue === null) return;
           try {
-            for (const fieldUpdate of [{field:'OccurredAt',value:dateValue},{field:'Description',value:descriptionValue}]) {
-              const response = await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', Object.assign({}, fieldUpdate, {expectedUpdatedAt:String(event.UpdatedAt || event.CreatedAt || '')}));
-              event.UpdatedAt = (response && response.data && response.data.UpdatedAt) || new Date().toISOString();
-            }
+            let version = String(event.UpdatedAt || event.CreatedAt || '');
+            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'OccurredAt', value:dateValue, expectedUpdatedAt:version});
+            const refreshed = this.extractObject(await PMS.Api.get('/events/' + encodeURIComponent(event.ID)));
+            version = String(refreshed.UpdatedAt || refreshed.CreatedAt || version);
+            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'Description', value:descriptionValue, expectedUpdatedAt:version});
             PMS.Alert && PMS.Alert.success && PMS.Alert.success('اطلاعات رویداد به‌روزرسانی شد.');
             this.load(); this.openDetails(event.ID);
           } catch (error) { PMS.Alert && PMS.Alert.error && PMS.Alert.error(this.errorMessage(error)); }
