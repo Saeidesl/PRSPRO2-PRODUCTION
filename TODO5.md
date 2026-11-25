@@ -24,3 +24,18 @@ Allow SYS_ADMIN/ADMIN users to select the actual event performer during event cr
   - *Log:* `js/modules/events.js` provides admin-only performer selector using existing `/users` API and includes `PerformedBy` in the event-create payload; PR #163 merged to frontend main.
 - [x] Task 4 — Integration & Regression Validation
   - *Log:* PO acceptance test successful. Fixed missing invocation of `Events.loadEventPerformerOptions()` after the event-create modal is inserted in `js/modules/events.js`; existing `GET /users` path reused, no API/schema changes. Frontend PR #164 merged to main (commit `956f82f8b677f40dd3379f378b2a6ed94e5af771`); CI successful. User verified active users list loads and performer can be selected. Live deployment status remains separately unverified.
+
+
+## 🎯 Current Objective — Performer Selection for Ordinary Users
+
+Extend the existing event performer selector from admin-only to all users with event-create permission. Default to the current user; preserve CreatedBy separately; continue using existing users endpoint and EventService validations.
+
+## 📋 Macro-Task Queue & Implementation Log — Extension
+
+- [x] Task 1 — Discovery & Planning
+  - *Log:* Verified the merged admin selector and the existing backend tenant/active-user validation. Reuse the selector, GET /users, EventService.create and existing attribution fields; no schema or route changes.
+- [ ] Task 2 — Frontend selector for all event creators (IN PROGRESS)
+  - *Log:* `js/modules/events.js` now renders the performer selector for all event-create users and loads active users; current authenticated user is selected by default. Cache-busting in `index.html` updated.
+- [ ] Task 3 — Backend selected performer compatibility & regression validation
+  - *Log:* `EventService.js` now honors `event.PerformedBy` for ordinary users as well as admins; existing tenant, active-user, department, event-type and project access checks remain. Added `tests/ordinary-event-performer-selection.test.js`.
+- [ ] Task 4 — Integration & Acceptance
