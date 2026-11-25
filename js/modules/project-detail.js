@@ -2180,7 +2180,7 @@
         const eventTitle = eventType ? (eventType.Name || eventType.Title || eventType.Code || 'رویداد') : (event.EventTypeName || event.EventTypeTitle || event.EventTypeCode || 'رویداد');
         const eventId = String(event.ID || event.Id || ''), dynamicData = ProjectDetail.eventData[eventId];
         const fields = ProjectDetail.eventFields[String(eventTypeId || '')] || [];
-        const occurredAt = event.OccurredAt || event.occurredAt || event.CreatedAt || event.createdAt;
+        const occurredAt = event.OccurredAt || event.occurredAt || null;
         const performerName = performer ? performer.Name || performer.Username : (event.PerformedByName || event.PerformerName || '');
         const department = ProjectDetail.findById(ProjectDetail.departments, event.DepartmentID || event.DepartmentId);
         const departmentName = department ? department.Name || department.Title || department.Code : (event.DepartmentName || '');
@@ -2193,11 +2193,7 @@
     getEventTimestamp: function (event) {
       if (!event) return null;
 
-      const value =
-        event.OccurredAt ||
-        event.occurredAt ||
-        event.CreatedAt ||
-        event.createdAt;
+      const value = event.OccurredAt || event.occurredAt || null;
 
       if (!value) return null;
 
