@@ -17,7 +17,10 @@ Allow SYS_ADMIN/ADMIN users to select the actual event performer during event cr
 
 - [x] Task 1 — Discovery & Planning
   - *Log:* Inspected operational main branches, EventService.js, EventValidator.js, UserRepository.js, UserService.js, Router.js, frontend pages/events.html, js/modules/events.js and js/core/api.js. Existing CreatedBy/PerformedBy attribution and GET /users route identified. Dedicated feature branches created from main.
-- [ ] Task 2 — Backend Validation & Attribution (IN PROGRESS)
+- [x] Task 2 — Backend Validation & Attribution
+  - *Log:* `EventService.js` validates selected performer tenant and active status; `tests/admin-event-performer-validation.test.js` covers the contract; PR #98 merged to backend main.
   - *Log:* EventService.js now rejects a selected performer who is not in the authenticated tenant or is inactive. CreatedBy remains authenticated user; existing admin-only selection path remains. Added tests/admin-event-performer-validation.test.js static contract test.
-- [ ] Task 3 — Frontend Selection UI
-- [ ] Task 4 — Integration & Regression Validation
+- [x] Task 3 — Frontend Selection UI
+  - *Log:* `js/modules/events.js` provides admin-only performer selector using existing `/users` API and includes `PerformedBy` in the event-create payload; PR #163 merged to frontend main.
+- [x] Task 4 — Integration & Regression Validation
+  - *Log:* PO acceptance test successful. Fixed missing invocation of `Events.loadEventPerformerOptions()` after the event-create modal is inserted in `js/modules/events.js`; existing `GET /users` path reused, no API/schema changes. Frontend PR #164 merged to main (commit `956f82f8b677f40dd3379f378b2a6ed94e5af771`); CI successful. User verified active users list loads and performer can be selected. Live deployment status remains separately unverified.
