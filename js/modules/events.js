@@ -1854,7 +1854,7 @@
           });
         }
 
-        const canEditEvents = this.isSystemAdmin || (Array.isArray(PMS.Router && PMS.Router.permissions) && PMS.Router.permissions.indexOf('EVENT_EDIT') !== -1);
+        const canEditEvents = !!(PMS.Router && ((typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin()) || (Array.isArray(PMS.Router.permissions) && PMS.Router.permissions.indexOf('EVENT_EDIT') !== -1)));
         if (canEditEvents && String(event.Status || '').toUpperCase() !== 'VOID') {
           html += '<div class="event-details-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px"><button type="button" class="btn btn-secondary" id="event-details-edit-basic">ویرایش تاریخ و شرح</button><button type="button" class="btn btn-danger" id="event-details-void">ابطال رویداد</button></div>';
         }
