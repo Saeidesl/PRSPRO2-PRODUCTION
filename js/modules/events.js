@@ -140,6 +140,7 @@
       const permissions = PMS.Router && Array.isArray(PMS.Router.permissions)
         ? PMS.Router.permissions : [];
       const isAdmin = !!(PMS.Router && typeof PMS.Router.isAdmin === 'function' && PMS.Router.isAdmin());
+      this.isSystemAdmin = isAdmin;
       this.canCreateEvents = isAdmin || permissions.indexOf('EVENT_CREATE') !== -1;
       this.canCreateProjects = isAdmin || permissions.indexOf('PROJECT_CREATE') !== -1;
       this.canViewEventHistory = isAdmin || permissions.indexOf('EVENT_VIEW') !== -1;
@@ -1715,6 +1716,7 @@
         '<p>در حال دریافت جزئیات رویداد...</p></div></div></div>';
 
       document.body.appendChild(modal);
+      if (this.isSystemAdmin) this.loadEventPerformerOptions();
       this.modalOpen = true;
       const detailsFirstFocusable = modal.querySelector('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
       if (detailsFirstFocusable) detailsFirstFocusable.focus();
@@ -2098,6 +2100,27 @@
       }
     },
 
+    loadEventPerformerOptions: async function () {
+      const select = document.getElementById('event-form-performer');
+      if (!select || !this.isSystemAdmin) return;
+      try {
+        const response = await PMS.Api.get('/users', { trackSync: false });
+        const data = PMS.Api.extractData(response);
+        const users = Array.isArray(data) ? data : (data && Array.isArray(data.users) ? data.users : []);
+        const current = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
+        const active = users.filter(function (user) { return user && user.ID && String(user.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'; }).sort(function (a, b) { return String(a.Name || '').localeCompare(String(b.Name || ''), 'fa'); });
+        select.replaceChildren();
+        active.forEach(function (user) { const option = document.createElement('option'); option.value = String(user.ID); option.textContent = String(user.Name || user.Username || user.ID); select.appendChild(option); });
+        if (!active.length) { const empty = document.createElement('option'); empty.value = ''; empty.textContent = 'کاربر فعال یافت نشد'; select.appendChild(empty); select.disabled = true; return; }
+        select.disabled = false;
+        select.value = String(current.ID || current.Id || current.id || '');
+        if (!select.value) select.value = String(active[0].ID);
+      } catch (error) {
+        select.replaceChildren(); const failed = document.createElement('option'); failed.value = ''; failed.textContent = 'دریافت فهرست کاربران ناموفق بود'; select.appendChild(failed); select.disabled = true;
+        this.showFormError('فهرست اجراکنندگان دریافت نشد. ثبت رویداد را پس از بارگذاری مجدد صفحه امتحان کنید.');
+      }
+    },
+
     openForm: async function () {
       if (!this.canCreateEvents || this.modalOpen || this.submitting) return;
       if (this.preselectedProjectId) this.entryMode = 'project';
@@ -2142,6 +2165,7 @@
         '<div class="event-field"><label for="event-form-type">نوع رویداد <span class="event-required">*</span></label>' +
         '<div class="event-type-control"><select id="event-form-type" name="EventTypeID" required><option value="">انتخاب نوع رویداد</option></select>' +
         '<div id="event-type-loading" class="event-type-loading" hidden></div></div></div>' +
+        (this.isSystemAdmin ? '<div class="event-field"><label for="event-form-performer">اجراکننده</label><select id="event-form-performer" name="PerformedBy"><option value="">در حال دریافت کاربران...</option></select><small class="event-muted">رویداد به نام کاربر انتخاب‌شده ثبت می‌شود؛ ثبت‌کننده همچنان مدیر خواهد بود.</small></div>' : '') +
         '<div class="event-field"><label for="event-form-date">تاریخ و زمان وقوع <span class="event-required">*</span></label>' +
         '<input id="event-form-date" name="OccurredAt" type="datetime-local" required></div>' +
         '<div class="event-field event-field-wide"><label for="event-form-description">شرح رویداد</label>' +
@@ -4023,6 +4047,7 @@
         EventTypeVersion: type ? Number(type.Version || 1) : 1,
         OccurredAt: date.toISOString(),
         Description: description,
+        PerformedBy: this.isSystemAdmin ? String((document.getElementById('event-form-performer') || {}).value || (PMS.Router.getUser() || {}).ID || '') : undefined,
         FormResponses: this.amendmentMode ? [] : formResponses,
         VariantQuantity: (form.querySelector('[data-event-quantity-input]') || {}).value || ''
       };
