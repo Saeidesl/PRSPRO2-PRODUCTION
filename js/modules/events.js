@@ -2103,21 +2103,46 @@
     loadEventPerformerOptions: async function () {
       const select = document.getElementById('event-form-performer');
       if (!select) return;
+      select.disabled = true;
+      select.replaceChildren();
+      const loading = document.createElement('option');
+      loading.value = '';
+      loading.textContent = 'در حال دریافت کاربران...';
+      select.appendChild(loading);
+      let timeoutId = null;
       try {
-        const response = await PMS.Api.get('/users', { trackSync: false });
+        const response = await Promise.race([
+          PMS.Api.get('/users', { trackSync: false, retry: false }),
+          new Promise(function (_, reject) {
+            timeoutId = window.setTimeout(function () {
+              const error = new Error('TIMEOUT');
+              error.code = 'USER_LIST_TIMEOUT';
+              reject(error);
+            }, 15000);
+          })
+        ]);
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
         const data = PMS.Api.extractData(response);
         const users = Array.isArray(data) ? data : (data && Array.isArray(data.users) ? data.users : []);
         const current = PMS.Router && typeof PMS.Router.getUser === 'function' ? PMS.Router.getUser() || {} : {};
         const active = users.filter(function (user) { return user && user.ID && String(user.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'; }).sort(function (a, b) { return String(a.Name || '').localeCompare(String(b.Name || ''), 'fa'); });
         select.replaceChildren();
         active.forEach(function (user) { const option = document.createElement('option'); option.value = String(user.ID); option.textContent = String(user.Name || user.Username || user.ID); select.appendChild(option); });
-        if (!active.length) { const empty = document.createElement('option'); empty.value = ''; empty.textContent = 'کاربر فعال یافت نشد'; select.appendChild(empty); select.disabled = true; return; }
+        if (!active.length) { const empty = document.createElement('option'); empty.value = ''; empty.textContent = 'کاربر فعال در این مجموعه یافت نشد'; select.appendChild(empty); select.disabled = true; return; }
         select.disabled = false;
         select.value = String(current.ID || current.Id || current.id || '');
         if (!select.value) select.value = String(active[0].ID);
       } catch (error) {
-        select.replaceChildren(); const failed = document.createElement('option'); failed.value = ''; failed.textContent = 'دریافت فهرست کاربران ناموفق بود'; select.appendChild(failed); select.disabled = true;
-        this.showFormError('فهرست اجراکنندگان دریافت نشد. ثبت رویداد را پس از بارگذاری مجدد صفحه امتحان کنید.');
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        select.replaceChildren();
+        const failed = document.createElement('option');
+        failed.value = '';
+        failed.textContent = error && error.code === 'USER_LIST_TIMEOUT' ? 'پاسخ سرور بیش از ۱۵ ثانیه طول کشید' : 'دریافت فهرست کاربران ناموفق بود';
+        select.appendChild(failed);
+        select.disabled = true;
+        this.showFormError(error && error.code === 'USER_LIST_TIMEOUT'
+          ? 'دریافت فهرست اجراکنندگان بیش از ۱۵ ثانیه طول کشید. ارتباط سرور یا نسخه منتشرشده را بررسی کنید.'
+          : 'فهرست اجراکنندگان دریافت نشد. ارتباط سرور یا نشست کاربری را بررسی کنید.');
       }
     },
 
