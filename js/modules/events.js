@@ -1862,13 +1862,18 @@
         if (content) { content.innerHTML = html; }
         const editBtn = document.getElementById('event-details-edit-basic');
         if (editBtn) editBtn.addEventListener('click', async () => {
-          const dateValue = prompt('تاریخ وقوع (ISO یا تاریخ قابل تشخیص مرورگر):', event.OccurredAt || '');
+          const dateValue = prompt('تاریخ و ساعت وقوع را به قالب قابل تشخیص مرورگر وارد کنید (ترجیحاً ISO):', event.OccurredAt || '');
           if (dateValue === null) return;
+          const parsedOccurredAt = new Date(String(dateValue).trim());
+          if (!String(dateValue).trim() || isNaN(parsedOccurredAt.getTime())) {
+            this.showNotice('تاریخ واردشده معتبر نیست؛ از قالب ISO استفاده کنید.', 'error');
+            return;
+          }
           const descriptionValue = prompt('شرح رویداد:', event.Description || '');
           if (descriptionValue === null) return;
           try {
             let version = String(event.UpdatedAt || event.CreatedAt || '');
-            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'OccurredAt', value:dateValue, expectedUpdatedAt:version});
+            await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'OccurredAt', value:parsedOccurredAt.toISOString(), expectedUpdatedAt:version});
             const refreshed = this.extractObject(await PMS.Api.get('/events/' + encodeURIComponent(event.ID)));
             version = String(refreshed.UpdatedAt || refreshed.CreatedAt || version);
             await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'Description', value:descriptionValue, expectedUpdatedAt:version});
