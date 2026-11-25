@@ -63,3 +63,9 @@ Investigate the ordinary-user event performer selector remaining indefinitely at
 - [ ] Task 4 — Live diagnosis and acceptance (IN PROGRESS)
   - *Log:* Verified backend production sync/deploy workflow run #52 succeeded (isolated Apps Script push and deploy steps completed). Verified GitHub Pages deployment run #479 succeeded on frontend main after PR #166 merge. Both code deployment pipelines succeeded; live user-flow acceptance remains pending.
   - *Log:* Fix merged to main. Awaiting ordinary-user live verification of user-list response; deployment/live app state is not independently verified.
+
+
+## 📋 Macro-Task Queue & Implementation Log — Persistent Diagnostic Extension
+
+- [ ] Task 4 — Live diagnosis (IN PROGRESS)
+  - *Log:* Diagnostic branch `fix/performer-selector-diagnostics-v2` adds a persistent status line beside the performer selector, independent of the modal's general error renderer. It reports function entry, request start, response/error, timeout, HTTP status/error code where available, and active-user count. Console logs are supplemental. No backend/API/schema changes.
