@@ -1716,7 +1716,7 @@
         '<p>در حال دریافت جزئیات رویداد...</p></div></div></div>';
 
       document.body.appendChild(modal);
-      if (this.isSystemAdmin) this.loadEventPerformerOptions();
+      this.loadEventPerformerOptions();
       this.modalOpen = true;
       const detailsFirstFocusable = modal.querySelector('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
       if (detailsFirstFocusable) detailsFirstFocusable.focus();
@@ -2102,7 +2102,7 @@
 
     loadEventPerformerOptions: async function () {
       const select = document.getElementById('event-form-performer');
-      if (!select || !this.isSystemAdmin) return;
+      if (!select) return;
       try {
         const response = await PMS.Api.get('/users', { trackSync: false });
         const data = PMS.Api.extractData(response);
@@ -2165,7 +2165,7 @@
         '<div class="event-field"><label for="event-form-type">نوع رویداد <span class="event-required">*</span></label>' +
         '<div class="event-type-control"><select id="event-form-type" name="EventTypeID" required><option value="">انتخاب نوع رویداد</option></select>' +
         '<div id="event-type-loading" class="event-type-loading" hidden></div></div></div>' +
-        (this.isSystemAdmin ? '<div class="event-field"><label for="event-form-performer">اجراکننده</label><select id="event-form-performer" name="PerformedBy"><option value="">در حال دریافت کاربران...</option></select><small class="event-muted">رویداد به نام کاربر انتخاب‌شده ثبت می‌شود؛ ثبت‌کننده همچنان مدیر خواهد بود.</small></div>' : '') +
+        '<div class="event-field"><label for="event-form-performer">اجراکننده</label><select id="event-form-performer" name="PerformedBy"><option value="">در حال دریافت کاربران...</option></select><small class="event-muted">اجراکننده انتخاب‌شده؛ ثبت‌کننده همچنان کاربر جاری خواهد بود.</small></div>' +
         '<div class="event-field"><label for="event-form-date">تاریخ و زمان وقوع <span class="event-required">*</span></label>' +
         '<input id="event-form-date" name="OccurredAt" type="datetime-local" required></div>' +
         '<div class="event-field event-field-wide"><label for="event-form-description">شرح رویداد</label>' +
