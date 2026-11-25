@@ -4,7 +4,7 @@
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
 - فقط Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION` شاخه کاری `feat/compact-project-event-timeline-20261125`; شاخه مبنا `main`.
 - صفحه: `pages/project-detail.html`؛ container موجود `#project-detail-events` حفظ می‌شود.
-- رندر و منطق: `js/modules/project-detail.js` تابع `ProjectDetail.renderEvents(events)`; مرتب‌سازی با `getEventTimestamp`; منبع تاریخ وقوع `OccurredAt/occurredAt` (fallback legacy به CreatedAt).
+- رندر و منطق: `js/modules/project-detail.js` تابع `ProjectDetail.renderEvents(events)`; مرتب‌سازی با `getEventTimestamp`; منبع تاریخ وقوع `OccurredAt/occurredAt` بدون fallback به تاریخ ثبت؛ داده فاقد OccurredAt تاریخ خالی خواهد داشت.
 - مجری از `PerformedBy/PerformedByID` و users lookup موجود؛ ثبت‌کننده در حالت خلاصه نمایش داده نمی‌شود.
 - Details native برای جزئیات بازشونده؛ dynamic data و summary cutting فعلی حفظ می‌شوند؛ بدون API/schema جدید.
 - Backend فقط برای بررسی قرارداد داده؛ هیچ تغییری در مخزن Backend لازم نیست.
