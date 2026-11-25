@@ -16,5 +16,6 @@ Implement secure editing and removal (soft-void) of existing events for SYS_ADMI
 - [x] Task 1 — Discovery & Planning
   - *Log:* Reviewed operational events module and Router.js access model and identified existing backend EVENT_EDIT-protected soft-void endpoint. Dedicated feature branch created.
 - [ ] Task 2 — Backend event edit/removal authorization and integrity (IN PROGRESS)
-- [ ] Task 3 — Frontend event actions and editing experience
+- [ ] Task 3 — Frontend event actions and editing experience (partially implemented; integration review pending)
+- *Implementation log:* Event details modal now adds permission-gated basic edit and logical-void actions; refresh uses existing reloadEvents; edit uses optimistic UpdatedAt/CreatedAt token and re-fetches version between field updates. Admin display check uses existing PMS.Router.isAdmin. Pending integration review.
 - [ ] Task 4 — Integration, automated regression tests and release readiness
