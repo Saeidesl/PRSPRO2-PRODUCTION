@@ -11,6 +11,6 @@
 ## 📋 Macro-Task Queue & Implementation Log
 - [x] Task 1 — Discovery & Planning: بررسی TODO5/ARCHITECTURE، branch/main، دکمه history، renderer فعلی تاریخچه و renderer مرجع پروژه.
   - *Log:* `Events.applyProjectHistoryFilter(projectId)` فیلتر تاریخچه عمومی را فعال می‌کند؛ `Events.render(events)` فعلی کارت‌های بلند و دکمه `event-details-button` را تولید می‌کند؛ `Events.openDetails(eventId)` بارگذاری جزئیات، data و forms را از APIهای موجود انجام می‌دهد. Renderer مرجع `ProjectDetail.renderEvents` دارای ردیف‌های native details با 50px حداقل ارتفاع، تاریخ وقوع و اجراکننده است. این task باید مسیر تاریخچه فیلترشده پروژه را به نمایش همسان تبدیل کند بدون تخریب فیلترها.
-- [ ] **Task 2 — IN PROGRESS: Compact Project Event History UI:** نمایش رویدادهای پروژه در تاریخچه صفحه رویدادها با ردیف‌های فشرده بازشونده، تاریخ وقوع، اجراکننده و جزئیات کامل؛ حفظ فیلتر/جستجو و مجوزها.
+- [ ] **Task 2 — IN PROGRESS: Compact Project Event History UI:** پیاده‌سازی اولیه renderer فشرده inline در `Events.render` برای حالت فیلتر پروژه؛ ردیف‌های collapsed با تاریخ وقوع، اجراکننده، شرح/واحد/وضعیت/شناسه و دکمه جزئیات کامل از مسیر API/modal موجود. مرتب‌سازی تاریخ وقوع نزولی و حفظ نمایش عادی برای تاریخچه عمومی. هنوز بازبینی و آزمون CI لازم است.
 - [ ] Task 3 — Integration, Regression & Operational Acceptance: بررسی CI، سازگاری، انتشار و تست کاربر؛ ترتیب، محتوا، باز/بسته‌شدن و موبایل RTL.
 
