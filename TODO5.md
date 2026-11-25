@@ -40,3 +40,15 @@ Extend the existing event performer selector from admin-only to all users with e
   - *Log:* `EventService.js` now honors `event.PerformedBy` for ordinary users as well as admins; existing tenant, active-user, department, event-type and project access checks remain. Added `tests/ordinary-event-performer-selection.test.js`.
 - [ ] Task 4 — Integration & Acceptance (IN PROGRESS)
   - *Log:* Backend PR #99 merged to main (SHA `357e89e1c95892c2095c426609df1296177a255e`); Frontend PR #165 merged to main (SHA `be0dd759eee2fe6f56056ee21949cde48d0471a5`). Frontend checks and frontend agent suite passed; backend source checks, PMS agent suite, and diagnostics tests passed. Comprehensive UI performance audit still running at merge time. Awaiting user acceptance test; live deployment not verified.
+
+
+## 🎯 Current Objective — Diagnose stalled ordinary-user performer list loading
+
+Investigate the ordinary-user event performer selector remaining indefinitely at “در حال دریافت کاربران...”. Preserve existing API and attribution architecture; make the frontend fail visibly on prolonged requests.
+
+## 📋 Macro-Task Queue & Implementation Log — Extension
+
+- [x] Task 1 — Discovery: Confirmed existing `loadEventPerformerOptions()` calls `PMS.Api.get('/users')` without a timeout; its catch path never executes if the request remains pending.
+- [ ] Task 2 — Frontend timeout and explicit failure state (IN PROGRESS): PR #166 adds a 15-second timeout race, loading disable-state, clearer timeout/error option and refreshed module cache key. No new API, route, or schema.
+- [ ] Task 3 — CI and regression checks.
+- [ ] Task 4 — Live diagnosis and acceptance: use the surfaced timeout result to distinguish stalled request from ordinary API error; then verify successful list load on ordinary account.
