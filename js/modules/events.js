@@ -1872,9 +1872,9 @@
             const refreshed = this.extractObject(await PMS.Api.get('/events/' + encodeURIComponent(event.ID)));
             version = String(refreshed.UpdatedAt || refreshed.CreatedAt || version);
             await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/fields', {field:'Description', value:descriptionValue, expectedUpdatedAt:version});
-            PMS.Alert && PMS.Alert.success && PMS.Alert.success('اطلاعات رویداد به‌روزرسانی شد.');
+            this.showNotice('اطلاعات رویداد به‌روزرسانی شد.', 'success');
             await this.reloadEvents(); this.openDetails(event.ID);
-          } catch (error) { PMS.Alert && PMS.Alert.error && PMS.Alert.error(this.errorMessage(error)); }
+          } catch (error) { this.showNotice(this.errorMessage(error), 'error'); }
         });
         const voidBtn = document.getElementById('event-details-void');
         if (voidBtn) voidBtn.addEventListener('click', async () => {
@@ -1883,9 +1883,9 @@
           if (!confirm('آیا از ابطال این رویداد مطمئن هستید؟')) return;
           try {
             await PMS.Api.put('/events/' + encodeURIComponent(event.ID) + '/void', {reason:reason.trim()});
-            PMS.Alert && PMS.Alert.success && PMS.Alert.success('رویداد با موفقیت باطل شد.');
+            this.showNotice('رویداد با موفقیت باطل شد.', 'success');
             await this.reloadEvents(); this.closeModal();
-          } catch (error) { PMS.Alert && PMS.Alert.error && PMS.Alert.error(this.errorMessage(error)); }
+          } catch (error) { this.showNotice(this.errorMessage(error), 'error'); }
         });
       } catch (error) {
         const content = document.getElementById('event-details-content');
