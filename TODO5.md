@@ -61,4 +61,5 @@ Investigate the ordinary-user event performer selector remaining indefinitely at
 - [x] Task 3 — CI and regression checks
   - *Log:* On PR head `11cd2c20aa63d16bdd3821cd4ee51dd32a32263e`, Frontend checks, PMS cross-repository QA, PMS comprehensive UI performance audit, and PMS frontend agent suite all passed. Initial CI failures were due to cache-version assertions; compatibility was corrected and the latest CI set passed before merge.
 - [ ] Task 4 — Live diagnosis and acceptance (IN PROGRESS)
+  - *Log:* Verified backend production sync/deploy workflow run #52 succeeded (isolated Apps Script push and deploy steps completed). Verified GitHub Pages deployment run #479 succeeded on frontend main after PR #166 merge. Both code deployment pipelines succeeded; live user-flow acceptance remains pending.
   - *Log:* Fix merged to main. Awaiting ordinary-user live verification of user-list response; deployment/live app state is not independently verified.
