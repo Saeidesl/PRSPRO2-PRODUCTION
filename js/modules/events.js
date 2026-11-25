@@ -2109,10 +2109,32 @@
       loading.value = '';
       loading.textContent = 'در حال دریافت کاربران...';
       select.appendChild(loading);
+
+      let status = document.getElementById('event-performer-diagnostic-status');
+      if (!status) {
+        status = document.createElement('div');
+        status.id = 'event-performer-diagnostic-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.style.cssText = 'font-size:12px;margin-top:6px;opacity:.85';
+        select.insertAdjacentElement('afterend', status);
+      }
+      const setStatus = function (message) {
+        status.textContent = message;
+        console.info('[PMS performer selector]', message);
+      };
+      setStatus('مرحله ۱: تابع اجرا شد؛ در حال ارسال درخواست فهرست کاربران...');
       let timeoutId = null;
+      let settled = false;
       try {
+        const requestPromise = PMS.Api.get('/users', { trackSync: false, retry: false });
+        requestPromise.then(function () {
+          if (!settled) setStatus('مرحله ۲: پاسخ درخواست دریافت شد؛ در حال پردازش...');
+        }).catch(function (error) {
+          if (!settled) setStatus('مرحله ۲: درخواست با خطا برگشت: ' + String(error && error.message || error));
+        });
         const response = await Promise.race([
-          PMS.Api.get('/users', { trackSync: false, retry: false }),
+          requestPromise,
           new Promise(function (_, reject) {
             timeoutId = window.setTimeout(function () {
               const error = new Error('TIMEOUT');
@@ -2121,6 +2143,7 @@
             }, 15000);
           })
         ]);
+        settled = true;
         if (timeoutId !== null) window.clearTimeout(timeoutId);
         const data = PMS.Api.extractData(response);
         const users = Array.isArray(data) ? data : (data && Array.isArray(data.users) ? data.users : []);
@@ -2128,11 +2151,17 @@
         const active = users.filter(function (user) { return user && user.ID && String(user.Status || 'ACTIVE').toUpperCase() === 'ACTIVE'; }).sort(function (a, b) { return String(a.Name || '').localeCompare(String(b.Name || ''), 'fa'); });
         select.replaceChildren();
         active.forEach(function (user) { const option = document.createElement('option'); option.value = String(user.ID); option.textContent = String(user.Name || user.Username || user.ID); select.appendChild(option); });
-        if (!active.length) { const empty = document.createElement('option'); empty.value = ''; empty.textContent = 'کاربر فعال در این مجموعه یافت نشد'; select.appendChild(empty); select.disabled = true; return; }
+        if (!active.length) {
+          const empty = document.createElement('option'); empty.value = ''; empty.textContent = 'کاربر فعال در این مجموعه یافت نشد'; select.appendChild(empty); select.disabled = true;
+          setStatus('مرحله ۳: پاسخ دریافت شد اما کاربر فعال قابل نمایش نیست (تعداد پاسخ: ' + users.length + ').');
+          return;
+        }
         select.disabled = false;
         select.value = String(current.ID || current.Id || current.id || '');
         if (!select.value) select.value = String(active[0].ID);
+        setStatus('موفق: ' + active.length + ' کاربر فعال دریافت شد.');
       } catch (error) {
+        settled = true;
         if (timeoutId !== null) window.clearTimeout(timeoutId);
         select.replaceChildren();
         const failed = document.createElement('option');
@@ -2140,9 +2169,10 @@
         failed.textContent = error && error.code === 'USER_LIST_TIMEOUT' ? 'پاسخ سرور بیش از ۱۵ ثانیه طول کشید' : 'دریافت فهرست کاربران ناموفق بود';
         select.appendChild(failed);
         select.disabled = true;
+        setStatus('خطا: ' + String(error && error.message || error) + (error && error.status ? ' (HTTP ' + error.status + ')' : '') + (error && error.code ? ' [' + error.code + ']' : ''));
         this.showFormError(error && error.code === 'USER_LIST_TIMEOUT'
-          ? 'دریافت فهرست اجراکنندگان بیش از ۱۵ ثانیه طول کشید. ارتباط سرور یا نسخه منتشرشده را بررسی کنید.'
-          : 'فهرست اجراکنندگان دریافت نشد. ارتباط سرور یا نشست کاربری را بررسی کنید.');
+          ? 'دریافت فهرست اجراکنندگان بیش از ۱۵ ثانیه طول کشید. وضعیت تشخیصی کنار فهرست را بررسی کنید.'
+          : 'فهرست اجراکنندگان دریافت نشد. وضعیت تشخیصی کنار فهرست را بررسی کنید.');
       }
     },
 
