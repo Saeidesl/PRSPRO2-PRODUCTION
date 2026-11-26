@@ -1631,57 +1631,37 @@
       this.projects.forEach(function (project) { projectMap.set(Events.idOf(project), project); });
       this.eventTypes.forEach(function (type) { typeMap.set(Events.idOf(type), type); });
 
-      const cards = events.map(function (event) {
-        const project = projectMap.get(String(event.ProjectID || '')) || null;
-        const type = typeMap.get(String(event.EventTypeID || '')) || null;
-        const projectCode = (project && project.ProjectCode) || event.ProjectCode || event.ProjectID || '-';
-        const projectTitle = (project && (project.Title || project.Name || project.ProjectName)) ||
-          event.ProjectTitle || event.ProjectName || 'بدون عنوان';
-        const typeName = event.EventTypeName || (type && (type.Name || type.Code)) ||
-          event.EventTypeID || 'رویداد ثبت‌شده';
-        const description = event.Description || 'بدون شرح';
-        const creator = Events.creatorValue(event) || '-';
-        const department = Events.departmentValue(event) || '-';
-        const status = String(event.Status || '').toUpperCase();
-        const statusClass = Events.statusClass(status);
-        const eventId = Events.escape(event.ID || '');
-        const occurredAt = Events.formatDate(event.OccurredAt) || '-';
-        const createdAt = Events.formatDate(event.CreatedAt) || '-';
-
-        return '<article class="event-list-card">' +
-          '<div class="event-list-card-main">' +
-            '<div class="event-list-card-heading">' +
-              '<div class="event-list-card-project">' +
-                '<span class="event-list-card-eyebrow">پروژه</span>' +
-                '<strong class="event-list-card-code">' + Events.escape(projectCode) + '</strong>' +
-                '<span class="event-list-card-title">' + Events.escape(projectTitle) + '</span>' +
-              '</div>' +
-              '<span class="event-list-card-status ' + statusClass + '">' +
-                Events.escape(Events.statusText(event.Status)) +
-              '</span>' +
-            '</div>' +
-            '<div class="event-list-card-type"><span class="event-list-card-type-dot" aria-hidden="true"></span>' +
-              Events.escape(typeName) +
-            '</div>' +
-            '<div class="event-list-card-description">' +
-              '<span class="event-list-card-label">شرح فعالیت</span>' +
-              '<p>' + Events.escape(description) + '</p>' +
-            '</div>' +
-            '<div class="event-list-card-meta">' +
-              '<div class="event-list-card-meta-item"><span class="event-list-card-label">تاریخ وقوع</span><strong>' + Events.escape(occurredAt) + '</strong></div>' +
-              '<div class="event-list-card-meta-item"><span class="event-list-card-label">تاریخ ثبت</span><strong>' + Events.escape(createdAt) + '</strong></div>' +
-              '<div class="event-list-card-meta-item"><span class="event-list-card-label">ثبت‌کننده</span><strong>' + Events.escape(creator) + '</strong></div>' +
-              '<div class="event-list-card-meta-item"><span class="event-list-card-label">واحد</span><strong>' + Events.escape(department) + '</strong></div>' +
-            '</div>' +
-          '</div>' +
-          '<div class="event-list-card-actions">' +
-            '<span class="event-list-card-id">شناسه: ' + Events.escape(event.ID || '-') + '</span>' +
-            '<button type="button" class="btn btn-secondary event-details-button" data-event-id="' + eventId + '">مشاهده جزئیات <span aria-hidden="true">←</span></button>' +
-          '</div>' +
-        '</article>';
-      }).join('');
-
-      container.innerHTML = '<div class="event-history-card-grid" aria-label="فهرست رویدادهای ثبت‌شده">' + cards + '</div>';
+      const projectFilter = document.getElementById('event-project-filter');
+      const projectHistoryMode = !!(projectFilter && projectFilter.value);
+      let cards;
+      if (projectHistoryMode) {
+        if (!document.getElementById('events-page-compact-timeline-styles')) {
+          const style = document.createElement('style'); style.id = 'events-page-compact-timeline-styles';
+          style.textContent = '.events-page-compact-timeline{padding-right:18px;position:relative}.events-page-compact-timeline:before{content:"";position:absolute;right:7px;top:12px;bottom:12px;width:2px;background:var(--color-border)}.events-page-compact-item{position:relative;border-bottom:1px solid var(--color-border);padding-right:24px}.events-page-compact-summary{display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 0;cursor:pointer;list-style:none}.events-page-compact-summary::-webkit-details-marker{display:none}.events-page-compact-marker{position:absolute;right:0;top:17px;width:12px;height:12px;border-radius:50%;background:var(--color-primary);border:2px solid var(--color-surface);box-shadow:0 0 0 1px var(--color-border)}.events-page-compact-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.events-page-compact-line{display:flex;justify-content:space-between;align-items:center;gap:10px}.events-page-compact-title{font-size:13px;font-weight:700;overflow-wrap:anywhere}.events-page-compact-date,.events-page-compact-performer{font-size:11px;color:var(--color-text-muted)}.events-page-compact-chevron{width:7px;height:7px;border-left:1.5px solid var(--color-text-muted);border-bottom:1.5px solid var(--color-text-muted);transform:rotate(-45deg);margin:0 4px}.events-page-compact-item[open] .events-page-compact-chevron{transform:rotate(135deg)}.events-page-compact-expanded{padding:0 0 12px;display:flex;flex-direction:column;gap:8px;font-size:12px}.events-page-compact-meta{display:flex;flex-wrap:wrap;gap:12px}.events-page-compact-meta span{color:var(--color-text-muted)}@media(max-width:600px){.events-page-compact-line{flex-wrap:wrap}}';
+          document.head.appendChild(style);
+        }
+        cards = events.slice().sort(function(a,b){return (Date.parse(b.OccurredAt||b.occurredAt||0)||0)-(Date.parse(a.OccurredAt||a.occurredAt||0)||0);}).map(function(event){
+          const type=typeMap.get(String(event.EventTypeID||''));
+          const title=event.EventTypeName||(type&&(type.Name||type.Code))||event.EventTypeID||'رویداد';
+          const performer=event.PerformedByName||event.PerformerName||event.PerformedBy||event.PerformedByID||'';
+          const occurred=Events.formatDate(event.OccurredAt||event.occurredAt)||'-', desc=event.Description||'', department=Events.departmentValue(event)||'', status=Events.statusText(event.Status)||'', eventId=Events.escape(event.ID||event.Id||'');
+          return '<details class="events-page-compact-item"><summary class="events-page-compact-summary"><span class="events-page-compact-marker"></span><span class="events-page-compact-copy"><span class="events-page-compact-line"><strong class="events-page-compact-title">'+Events.escape(title)+'</strong><span class="events-page-compact-date">'+Events.escape(occurred)+'</span></span>'+(performer?'<span class="events-page-compact-performer">انجام‌دهنده: '+Events.escape(performer)+'</span>':'')+'</span><span class="events-page-compact-chevron" aria-hidden="true"></span></summary><div class="events-page-compact-expanded">'+(desc?'<div>'+Events.escape(desc)+'</div>':'')+'<div class="events-page-compact-meta">'+(department?'<span>واحد: '+Events.escape(department)+'</span>':'')+(status?'<span>وضعیت: '+Events.escape(status)+'</span>':'')+'<span>شناسه: '+eventId+'</span></div><button type="button" class="btn btn-secondary event-details-button" data-event-id="'+eventId+'">جزئیات کامل و فرم‌ها</button></div></details>';
+        }).join('');
+        container.innerHTML='<div class="events-page-compact-timeline" aria-label="تاریخچه فشرده پروژه">'+cards+'</div>';
+      } else {
+        cards = events.map(function (event) {
+          const project = projectMap.get(String(event.ProjectID || '')) || null;
+          const type = typeMap.get(String(event.EventTypeID || '')) || null;
+          const projectCode = (project && project.ProjectCode) || event.ProjectCode || event.ProjectID || '-';
+          const projectTitle = (project && (project.Title || project.Name || project.ProjectName)) || event.ProjectTitle || event.ProjectName || 'بدون عنوان';
+          const typeName = event.EventTypeName || (type && (type.Name || type.Code)) || event.EventTypeID || 'رویداد ثبت‌شده';
+          const description = event.Description || 'بدون شرح', creator = Events.creatorValue(event) || '-', department = Events.departmentValue(event) || '-';
+          const status = String(event.Status || '').toUpperCase(), statusClass = Events.statusClass(status), eventId = Events.escape(event.ID || '');
+          const occurredAt = Events.formatDate(event.OccurredAt) || '-', createdAt = Events.formatDate(event.CreatedAt) || '-';
+          return '<article class="event-list-card"><div class="event-list-card-main"><div class="event-list-card-heading"><div class="event-list-card-project"><span class="event-list-card-eyebrow">پروژه</span><strong class="event-list-card-code">' + Events.escape(projectCode) + '</strong><span class="event-list-card-title">' + Events.escape(projectTitle) + '</span></div><span class="event-list-card-status ' + statusClass + '">' + Events.escape(Events.statusText(event.Status)) + '</span></div><div class="event-list-card-type"><span class="event-list-card-type-dot" aria-hidden="true"></span>' + Events.escape(typeName) + '</div><div class="event-list-card-description"><span class="event-list-card-label">شرح فعالیت</span><p>' + Events.escape(description) + '</p></div><div class="event-list-card-meta"><div class="event-list-card-meta-item"><span class="event-list-card-label">تاریخ وقوع</span><strong>' + Events.escape(occurredAt) + '</strong></div><div class="event-list-card-meta-item"><span class="event-list-card-label">تاریخ ثبت</span><strong>' + Events.escape(createdAt) + '</strong></div><div class="event-list-card-meta-item"><span class="event-list-card-label">ثبت‌کننده</span><strong>' + Events.escape(creator) + '</strong></div><div class="event-list-card-meta-item"><span class="event-list-card-label">واحد</span><strong>' + Events.escape(department) + '</strong></div></div></div><div class="event-list-card-actions"><span class="event-list-card-id">شناسه: ' + Events.escape(event.ID || '-') + '</span><button type="button" class="btn btn-secondary event-details-button" data-event-id="' + eventId + '">مشاهده جزئیات <span aria-hidden="true">←</span></button></div></article>';
+        }).join('');
+      }
+      if (!projectHistoryMode) container.innerHTML = '<div class="event-history-card-grid" aria-label="فهرست رویدادهای ثبت‌شده">' + cards + '</div>';
       container.hidden = false;
     },
 

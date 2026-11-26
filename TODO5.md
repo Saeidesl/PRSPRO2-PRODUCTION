@@ -1,18 +1,16 @@
 ## 🎯 Current Objective
-بازطراحی خط زمانی رویدادهای صفحه جزئیات پروژه به لیست فشرده و بازشونده، با ارتفاع کم برای مشاهده مسیر پروژه در یک نگاه.
+یکسان‌سازی نمایش رویدادهای ثبت‌شده برای پروژه در صفحه رویدادها با خط زمانی فشرده و بازشونده صفحه جزئیات پروژه.
 
 ## 🗺️ Technical Spec & Architecture Map (DO NOT DELETE)
-- فقط Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION` شاخه کاری `feat/compact-project-event-timeline-20261125`; شاخه مبنا `main`.
-- صفحه: `pages/project-detail.html`؛ container موجود `#project-detail-events` حفظ می‌شود.
-- رندر و منطق: `js/modules/project-detail.js` تابع `ProjectDetail.renderEvents(events)`; مرتب‌سازی با `getEventTimestamp`; منبع تاریخ وقوع `OccurredAt/occurredAt` بدون fallback به تاریخ ثبت.
-- مجری از `PerformedBy/PerformedByID` و users lookup موجود؛ ثبت‌کننده در حالت خلاصه نمایش داده نمی‌شود.
-- Details native برای جزئیات بازشونده؛ dynamic data و summary cutting فعلی حفظ می‌شوند؛ بدون API/schema جدید.
-- Backend فقط برای بررسی قرارداد داده؛ هیچ تغییری در مخزن Backend لازم نیست.
+- فقط Frontend عملیاتی: `Saeidesl/PRSPRO2-PRODUCTION`; مبنا `main`، شاخه کاری `feat/events-page-compact-project-history-20261125`.
+- مسیر نمایش: `pages/events.html` و ماژول `js/modules/events.js`؛ دکمه فعلی `.event-queue-history-button` به `Events.applyProjectHistoryFilter(projectId)` متصل است و فهرست تاریخچه با `Events.render(events)` نمایش داده می‌شود.
+- Renderer مرجع: `js/modules/project-detail.js`، `ProjectDetail.renderEvents(events)` و `ensureTimelineStyles()`; کلاس‌های `pms-timeline-compact`, `pms-timeline-details`, `pms-timeline-summary`, `pms-timeline-expanded`؛ مرتب‌سازی OccurredAt نزولی، نمایش اجراکننده و محتوای بازشونده.
+- `Events.openDetails(eventId)` و APIهای موجود `GET /events/:id`, `GET /events/:id/data`, `GET /events/:id/forms` برای جزئیات و پاسخ‌های فرم بررسی می‌شوند؛ از مسیر/API موازی پرهیز.
+- بدون تغییر Backend/schema مگر اینکه قرارداد موجود واقعاً ناکافی تشخیص داده شود.
 
 ## 📋 Macro-Task Queue & Implementation Log
-- [x] Task 1 — Discovery & Planning: بررسی مخازن عملیاتی، branch `main`, TODO5/ARCHITECTURE و مسیر فعلی `renderEvents`.
-  - *Log:* `ProjectDetail.renderEvents`, `getEventTimestamp`, `metaItem`, `renderDynamicData`, `ensureTimelineStyles` و container موجود بررسی شدند؛ تغییر فقط Frontend.
-- [x] Task 2 — Compact Event Timeline UI: ردیف‌های فشرده، تاریخ وقوع، انجام‌دهنده و جزئیات بازشونده؛ PR #170 با squash merge در commit `3aea738c8342b7b11a758d256d6c412c88100ea8`.
-  - *Log:* `js/modules/project-detail.js`: `ProjectDetail.renderEvents(events)` به ردیف‌های native `<details>/<summary>` تبدیل شد؛ مرتب‌سازی صرفاً بر اساس `OccurredAt/occurredAt` نزولی؛ مجری از `PerformedBy/PerformedByID` و fallback نام؛ ثبت‌کننده از خلاصه حذف شد؛ جزئیات پویا و cutting summary حفظ شدند. هیچ API/schema یا Backend تغییر نکرد. PR #170 ادغام شد. CI، regression، cross-repository QA، contract/diff review و browser audit همگی success (runs: 45688210182, 45688210231, 45688210206, 45688210147).
-- [ ] **Task 3 — IN PROGRESS: Integration, Regression & Operational Acceptance:** بررسی انتشار و نمایش نسخه live و پذیرش Product Owner؛ ترتیب تاریخ، مجری، جزئیات بازشونده و RTL/mobile.
-  - *Log (failure diagnosis):* تست کاربر نشان داد UI قبلی همچنان نمایش داده می‌شود. بررسی `main` تأیید کرد renderer جدید در `js/modules/project-detail.js` وجود دارد اما URL بارگذاری ماژول در `index.html` همچنان cache key قدیمی `20261112-project-detail-attachment-cache-1` داشت؛ این مانع احتمالی cache باعث می‌شد مرورگر/کش نسخه قدیمی را نگه دارد. cache-busting به `20261125-compact-event-timeline-1` تغییر کرد؛ commit `e389f8678f9874b77f640eb896ea46da3482090a`. این تغییر فقط frontend است و نیازمند بررسی انتشار و تست مجدد.
+- [x] Task 1 — Discovery & Planning: بررسی TODO5/ARCHITECTURE، branch/main، دکمه history، renderer فعلی تاریخچه و renderer مرجع پروژه.
+  - *Log:* `Events.applyProjectHistoryFilter(projectId)` فیلتر تاریخچه عمومی را فعال می‌کند؛ `Events.render(events)` فعلی کارت‌های بلند و دکمه `event-details-button` را تولید می‌کند؛ `Events.openDetails(eventId)` بارگذاری جزئیات، data و forms را از APIهای موجود انجام می‌دهد. Renderer مرجع `ProjectDetail.renderEvents` دارای ردیف‌های native details با 50px حداقل ارتفاع، تاریخ وقوع و اجراکننده است. این task باید مسیر تاریخچه فیلترشده پروژه را به نمایش همسان تبدیل کند بدون تخریب فیلترها.
+- [ ] **Task 2 — IN PROGRESS: Compact Project Event History UI:** پیاده‌سازی اولیه renderer فشرده inline در `Events.render` برای حالت فیلتر پروژه؛ ردیف‌های collapsed با تاریخ وقوع، اجراکننده، شرح/واحد/وضعیت/شناسه و دکمه جزئیات کامل از مسیر API/modal موجود. مرتب‌سازی تاریخ وقوع نزولی و حفظ نمایش عادی برای تاریخچه عمومی. هنوز بازبینی و آزمون CI لازم است.
+- [ ] Task 3 — Integration, Regression & Operational Acceptance: بررسی CI، سازگاری، انتشار و تست کاربر؛ ترتیب، محتوا، باز/بسته‌شدن و موبایل RTL.
+
